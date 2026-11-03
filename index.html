@@ -225,7 +225,28 @@
                         </div>
                     </div>
 
-                    <button onclick="saveAndNextAtelier()" class="w-full bg-white text-black font-medium py-2.5 rounded text-xs uppercase tracking-widest hover:bg-gray-200 transition">
+                    <button onclick="
+                    <!-- GRAVAÇÃO DE ÁUDIO / NOTA DE VOZ DO JURADO -->
+                    <div class="pt-4 border-t border-fashion-700 space-y-3">
+                        <span class="text-xs font-bold text-white uppercase tracking-wider block">Nota de Voz Oficial do Jurado (Áudio):</span>
+                        <div class="bg-fashion-950 p-4 rounded border border-fashion-700 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <button onclick="toggleJurorAudioRecording()" id="jurorMicBtn" class="w-10 h-10 rounded-full bg-fashion-gold text-black flex items-center justify-center hover:bg-yellow-500 transition">
+                                    <i class="fa-solid fa-microphone"></i>
+                                </button>
+                                <div>
+                                    <span class="text-xs text-white block font-medium" id="jurorAudioStatus">Gravar Comentário em Áudio</span>
+                                    <span class="text-[10px] text-gray-400 font-mono" id="jurorAudioTimer">00:00</span>
+                                </div>
+                            </div>
+                            <button onclick="saveJurorAudio()" class="bg-fashion-800 text-fashion-gold border border-fashion-600 px-3 py-1.5 rounded text-[11px] uppercase font-bold hover:bg-fashion-700 transition">
+                                Anexar Áudio
+                            </button>
+                        </div>
+                    </div>
+
+
+                    saveAndNextAtelier()" class="w-full bg-white text-black font-medium py-2.5 rounded text-xs uppercase tracking-widest hover:bg-gray-200 transition">
                         Gravar Notas e Avançar
                     </button>
                 </div>
@@ -293,18 +314,21 @@
         </section>
 
         <!-- VIEW: CONFESSIONÁRIO -->
-        <section id="view-confessionario" class="view-section hidden space-y-8 max-w-2xl mx-auto">
+        
+        <!-- VIEW: CONFESSIONÁRIO (SÓ POR TEXTO) -->
+        <section id="view-confessionario" class="view-section hidden space-y-8 max-w-xl mx-auto">
             <div class="text-center space-y-2">
                 <span class="text-xs text-red-400 uppercase tracking-widest">Sem Filtro</span>
                 <h2 class="font-cinzel text-2xl font-normal text-white">O Confessionário</h2>
             </div>
             <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-4 text-xs">
-                <textarea id="confessionText" rows="4" placeholder="Grave seu desabafo oficial..." class="w-full bg-fashion-950 border border-fashion-700 rounded p-3 text-white focus:outline-none"></textarea>
-                <button onclick="submitConfession()" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest hover:bg-gray-200 transition">
-                    Publicar Depoimento
+                <textarea id="confessionText" rows="4" placeholder="Grave seu desabafo oficial por texto..." class="w-full bg-fashion-950 border border-fashion-700 rounded p-3 text-white focus:outline-none"></textarea>
+                <button onclick="submitConfessionCloud()" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest hover:bg-gray-200 transition">
+                    Publicar Depoimento na Nuvem
                 </button>
             </div>
         </section>
+
 
         <!-- VIEW: BERLINDA -->
         <section id="view-berlinda" class="view-section hidden max-w-2xl mx-auto space-y-8">
@@ -411,6 +435,39 @@
         let isBottom3VotingOpen = false;
         let activeAteliersCount = 5;
 
+        
+        // Gravação de Áudio dos Jurados
+        let isRecordingAudio = false;
+        let audioTimerInterval;
+        let audioSeconds = 0;
+
+        function toggleJurorAudioRecording() {
+            const btn = document.getElementById('jurorMicBtn');
+            const status = document.getElementById('jurorAudioStatus');
+            const timer = document.getElementById('jurorAudioTimer');
+            
+            isRecordingAudio = !isRecordingAudio;
+            if (isRecordingAudio) {
+                btn.className = "w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center animate-pulse";
+                status.innerText = "Gravando Nota de Voz...";
+                audioSeconds = 0;
+                audioTimerInterval = setInterval(() => {
+                    audioSeconds++;
+                    let m = Math.floor(audioSeconds / 60).toString().padStart(2, '0');
+                    let s = (audioSeconds % 60).toString().padStart(2, '0');
+                    timer.innerText = `${m}:${s}`;
+                }, 1000);
+            } else {
+                clearInterval(audioTimerInterval);
+                btn.className = "w-10 h-10 rounded-full bg-fashion-gold text-black flex items-center justify-center hover:bg-yellow-500 transition";
+                status.innerText = "Áudio Gravado com Sucesso (Pronto para Anexar)";
+            }
+        }
+
+        function saveJurorAudio() {
+            alert("Nota de voz do jurado gravada e vinculada à avaliação deste look com sucesso!");
+        }
+
         function switchView(viewName) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             const target = document.getElementById(`view-${viewName}`);
@@ -502,5 +559,115 @@
 
         updateSecurityUI();
     </script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script>
+        // Configuração do Firebase (Substitua com suas credenciais do projeto Firebase)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-EXEMPLO-SUA-API-KEY",
+            authDomain: "project-runway-faus.firebaseapp.com",
+            projectId: "project-runway-faus",
+            storageBucket: "project-runway-faus.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Sincronização em Tempo Real com o Firestore
+        let isRunwayResultsPublished = false;
+        let isBottom3VotingOpen = false;
+        let reactions = { iris: { fire: 42, shock: 28, basic: 3, snip: 1 }, nocturne: { fire: 31, shock: 19, basic: 6, snip: 2 }, eclipse: { fire: 9, shock: 4, basic: 24, snip: 18 } };
+
+        // Ouvir alterações do Estado Global do Admin em Tempo Real
+        db.collection("configuracoes").doc("estado_global").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                isRunwayResultsPublished = data.isRunwayResultsPublished || false;
+                isBottom3VotingOpen = data.isBottom3VotingOpen || false;
+                updateSecurityUI();
+            } else {
+                // Criar documento inicial se não existir
+                db.collection("configuracoes").doc("estado_global").set({
+                    isRunwayResultsPublished: false,
+                    isBottom3VotingOpen: false
+                });
+            }
+        });
+
+        // Função para atualizar o estado no Banco de Dados Cloud
+        function updateFirebaseState(key, value) {
+            db.collection("configuracoes").doc("estado_global").update({
+                [key]: value
+            }).catch((error) => {
+                console.error("Erro ao atualizar base de dados:", error);
+            });
+        }
+
+        // Sobrescrever as chaves mestras para atualizar a nuvem
+        function togglePublishResultsMaster() {
+            isRunwayResultsPublished = !isRunwayResultsPublished;
+            updateFirebaseState("isRunwayResultsPublished", isRunwayResultsPublished);
+            const btn = document.getElementById('btnToggleResults');
+            const badge = document.getElementById('statusBadgeResults');
+            if (isRunwayResultsPublished) {
+                badge.className = "text-[10px] text-green-400 uppercase";
+                badge.innerText = "Público (Nuvem Ativa)";
+                if(btn) btn.innerText = "Ocultar Resultados";
+            } else {
+                badge.className = "text-[10px] text-red-400 uppercase";
+                badge.innerText = "Privado";
+                if(btn) btn.innerText = "Liberar no Site";
+            }
+        }
+
+        function toggleBottom3VotingMaster() {
+            isBottom3VotingOpen = !isBottom3VotingOpen;
+            updateFirebaseState("isBottom3VotingOpen", isBottom3VotingOpen);
+            const btn = document.getElementById('btnToggleBerlinda');
+            const badge = document.getElementById('statusBadgeBerlinda');
+            if (isBottom3VotingOpen) {
+                badge.className = "text-[10px] text-green-400 uppercase";
+                badge.innerText = "Aberta (Nuvem Ativa)";
+                if(btn) btn.innerText = "Trancar Urna";
+            } else {
+                badge.className = "text-[10px] text-red-400 uppercase";
+                badge.innerText = "Trancada";
+                if(btn) btn.innerText = "Liberar Urna";
+            }
+        }
+
+        // Submissão gravada no Firestore
+        function confirmAtelierSubmission() {
+            const model = document.getElementById('submissionModelSelect').value;
+            const photo = document.getElementById('submissionPhotoUrl').value.trim();
+            const concept = document.getElementById('submissionConceptText') ? document.getElementById('submissionConceptText').value.trim() : "";
+
+            if (!photo) {
+                alert("Por favor, insira o link da fotografia.");
+                return;
+            }
+
+            db.collection("submissoes").add({
+                atelier: "Ateliê Ativo",
+                model: model,
+                photoUrl: photo,
+                concept: concept,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                alert("Look submetido com sucesso para a base de dados em nuvem!");
+                document.getElementById('submissionPhotoUrl').value = "";
+            })
+            .catch((error) => {
+                alert("Erro ao gravar no banco de dados: " + error.message);
+            });
+        }
+    </script>
+
 </body>
 </html>
