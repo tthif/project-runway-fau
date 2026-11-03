@@ -38,7 +38,45 @@
 </head>
 <body class="min-h-screen flex flex-col selection:bg-fashion-gold selection:text-black">
 
-    <!-- HEADER / NAVEGAÇÃO CLEAN -->
+    <!-- MODAL DE LOGIN / IDENTIFICAÇÃO E AUDITORIA DE ELENCO -->
+    <div id="profileCreatorModal" class="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-6">
+        <div class="bg-fashion-900 border border-fashion-700 rounded-lg max-w-md w-full p-8 space-y-6 shadow-2xl">
+            <div class="text-center space-y-2">
+                <span class="text-xs uppercase tracking-[0.2em] text-fashion-gold font-medium">Autenticação & Acesso</span>
+                <h2 class="font-cinzel text-2xl font-normal text-white">Project Runway: FAU'S</h2>
+                <p class="text-xs text-gray-400 font-light">Insira suas credenciais e identifique-se na temporada.</p>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-gray-400 mb-1">Papel na Temporada</label>
+                    <select id="modalRoleSelect" onchange="toggleModalFields(this.value)" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2.5 text-white">
+                        <option value="participant" selected>Estilista / Ateliê</option>
+                        <option value="juror">Jurado Convidado</option>
+                        <option value="admin">Direção Executiva (Admin)</option>
+                        <option value="public">Primeira Fila (Público)</option>
+                    </select>
+                </div>
+                <div id="modalRealNameField">
+                    <label class="block text-gray-400 mb-1">Seu Nome Real (Para Auditoria)</label>
+                    <input type="text" id="modalRealPersonName" placeholder="Ex: Thiago Costa" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2.5 text-white">
+                </div>
+                <div id="modalAtelierNameField">
+                    <label class="block text-gray-400 mb-1">Nome do seu Ateliê / Marca</label>
+                    <input type="text" id="modalCustomAtelierName" placeholder="Ex: Ateliê DÉTHI" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2.5 text-white">
+                </div>
+                <div>
+                    <label class="block text-gray-400 mb-1">Chave de Acesso / Senha</label>
+                    <input type="password" id="modalAccessPassword" placeholder="Digite sua senha de acesso..." class="w-full bg-fashion-950 border border-fashion-700 rounded p-2.5 text-white">
+                </div>
+                <button onclick="applyUserProfileWithRealIdentity()" class="w-full bg-white text-black font-medium py-3 rounded text-xs uppercase tracking-widest hover:bg-gray-200 transition">
+                    Entrar no Sistema
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER / NAVEGAÇÃO -->
     <header class="border-b border-fashion-700 bg-fashion-900 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('home')">
@@ -49,186 +87,80 @@
             <nav class="hidden lg:flex space-x-6 text-xs font-medium uppercase tracking-widest">
                 <button onclick="switchView('home')" class="text-fashion-sand hover:text-fashion-gold transition">Início</button>
                 <button onclick="switchView('workroom')" class="text-fashion-sand hover:text-fashion-gold transition">Workroom</button>
+                <button onclick="switchView('wargroom')" class="text-fashion-sand hover:text-fashion-gold transition text-fashion-gold">Sala de Guerra</button>
                 <button onclick="switchView('juror')" class="text-fashion-sand hover:text-fashion-gold transition">Bancada</button>
                 <button onclick="switchView('passarela')" class="text-fashion-sand hover:text-fashion-gold transition">Runway</button>
-                <button onclick="switchView('confronto')" class="text-fashion-sand hover:text-fashion-gold transition">Face-Off</button>
-                <button onclick="switchView('tribunal')" class="text-fashion-sand hover:text-fashion-gold transition">Tribunal</button>
                 <button onclick="switchView('confessionario')" class="text-fashion-sand hover:text-fashion-gold transition">Confessionário</button>
                 <button onclick="switchView('berlinda')" class="text-fashion-sand hover:text-fashion-gold transition">Berlinda</button>
-                <button onclick="switchView('ranking')" class="text-fashion-sand hover:text-fashion-gold transition">Classificação</button>
                 <button onclick="switchView('admin')" class="text-fashion-gold font-semibold transition">Admin</button>
             </nav>
 
             <div class="flex items-center space-x-2 bg-fashion-800 px-3 py-1.5 rounded border border-fashion-700 text-xs">
-                <span class="text-gray-400">Perfil:</span>
-                <select id="roleSelector" onchange="changeRole(this.value)" class="bg-fashion-800 text-fashion-sand focus:outline-none font-medium">
-                    <option value="admin" selected>Direção 🔒</option>
-                    <option value="juror">Jurado ⚖️</option>
-                    <option value="participant">Ateliê</option>
-                    <option value="public">Público</option>
-                </select>
+                <span id="activeUserProfileLabel" class="text-fashion-gold font-medium">Ateliê Ativo</span>
+                <button onclick="reopenIdentityModal()" class="text-gray-400 hover:text-white ml-2" title="Alterar Perfil"><i class="fa-solid fa-user-pen"></i></button>
             </div>
         </div>
     </header>
 
-    <!-- BANNER DE VETO DISCRETO -->
-    <div id="vetoActiveAlert" class="bg-fashion-900 border-b border-fashion-700 text-xs py-2 px-6 text-center text-gray-400 flex justify-center items-center gap-2">
-        <span class="text-fashion-gold font-medium">VETO ATIVO:</span>
-        <span>Sophia Martins barrada na R5 (Exclusivo Ateliê Iris).</span>
-    </div>
-
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-grow max-w-6xl w-full mx-auto px-6 py-12 space-y-12">
-
-        <!-- VIEW: HOME -->
+        
+        <!-- HOME -->
         <section id="view-home" class="view-section space-y-12">
             <div class="py-24 px-6 text-center bg-fashion-900 border border-fashion-700 rounded-lg space-y-6">
-                <span class="text-xs uppercase tracking-[0.2em] text-fashion-gold font-medium">Temporada Oficial</span>
+                <span class="text-xs uppercase tracking-[0.2em] text-fashion-gold font-medium">Plataforma Oficial em Nuvem</span>
                 <h2 class="font-cinzel text-3xl sm:text-5xl font-normal tracking-wide text-white">One season. Five looks. One crown.</h2>
                 <p class="max-w-xl mx-auto text-gray-400 text-sm font-light leading-relaxed">
-                    Plataforma editorial de gestão e apuração do reality show. Minimalista, privativa e sob rigoroso controle de passarela.
+                    Sincronização em tempo real via Firebase, login protegido por chaves, sala de guerra de bastidores e auditoria de elenco.
                 </p>
-                <div class="pt-4 flex justify-center gap-4">
-                    <button onclick="switchView('workroom')" class="bg-white text-black font-medium px-6 py-2.5 rounded text-xs tracking-widest uppercase hover:bg-gray-200 transition">
-                        Aceder ao Workroom
-                    </button>
-                    <button onclick="switchView('admin')" class="border border-fashion-600 text-fashion-sand font-medium px-6 py-2.5 rounded text-xs tracking-widest uppercase hover:border-fashion-gold transition">
-                        Painel Executivo
-                    </button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-fashion-900 p-6 rounded border border-fashion-700 space-y-2">
-                    <span class="text-xs text-fashion-gold uppercase tracking-wider font-medium">Fase Atual</span>
-                    <h3 class="font-cinzel text-lg font-normal text-white">Rodada 4: Avant-Garde</h3>
-                    <p class="text-xs text-gray-400 font-light">Submissões e cronômetro ativos no workroom.</p>
-                </div>
-                <div class="bg-fashion-900 p-6 rounded border border-fashion-700 space-y-2">
-                    <span class="text-xs text-fashion-gold uppercase tracking-wider font-medium">Favorito da Passarela</span>
-                    <h3 class="font-cinzel text-lg font-normal text-white">Ateliê Iris</h3>
-                    <p class="text-xs text-gray-400 font-light">Detém o poder de veto de casting.</p>
-                </div>
-                <div class="bg-fashion-900 p-6 rounded border border-fashion-700 space-y-2">
-                    <span class="text-xs text-fashion-gold uppercase tracking-wider font-medium">Risco Imediato</span>
-                    <h3 class="font-cinzel text-lg font-normal text-white">Ateliê Eclipse</h3>
-                    <p class="text-xs text-gray-400 font-light">Sujeito a desempate sumário na Berlinda.</p>
-                </div>
             </div>
         </section>
 
-        <!-- VIEW: WORKROOM -->
+        <!-- WORKROOM & UPLOAD -->
         <section id="view-workroom" class="view-section hidden space-y-8">
-            <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div class="space-y-2">
-                    <span class="text-xs text-fashion-gold uppercase tracking-widest font-medium">Workroom & Prazos</span>
-                    <h2 class="font-cinzel text-2xl sm:text-3xl font-normal text-white">Rodada 4: Avant-Garde Noturno</h2>
-                    <p class="text-xs text-gray-400 font-light max-w-lg">
-                        Tema: "A desconstrução da silhueta através de texturas nobres e sombras volumétricas."
-                    </p>
-                </div>
-                <div class="bg-fashion-950 border border-fashion-700 px-6 py-4 rounded text-center">
-                    <span class="text-[10px] text-gray-400 uppercase tracking-widest block mb-1">Encerramento</span>
-                    <div class="font-mono text-xl font-medium text-fashion-gold" id="roundCountdown">04h : 22m : 15s</div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-6">
-                    <h3 class="font-cinzel text-lg font-normal text-white">Termômetro Anônimo</h3>
-                    <div class="grid grid-cols-3 gap-4 text-center">
-                        <div class="bg-fashion-950 p-4 rounded border border-fashion-700">
-                            <span class="text-[10px] text-gray-400 uppercase block">Enviados</span>
-                            <span class="text-xl font-medium text-white font-cinzel mt-1 block">4</span>
-                        </div>
-                        <div class="bg-fashion-950 p-4 rounded border border-fashion-700">
-                            <span class="text-[10px] text-gray-400 uppercase block">Pendentes</span>
-                            <span class="text-xl font-medium text-fashion-gold font-cinzel mt-1 block">2</span>
-                        </div>
-                        <div class="bg-fashion-950 p-4 rounded border border-fashion-700">
-                            <span class="text-[10px] text-gray-400 uppercase block">Ativos</span>
-                            <span class="text-xl font-medium text-white font-cinzel mt-1 block">6</span>
-                        </div>
+            <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-6 max-w-xl">
+                <h3 class="font-cinzel text-xl font-normal text-white">Mesa de Corte & Envio Cloud</h3>
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Selecionar Imagem do Look (Direto do Dispositivo)</label>
+                        <input type="file" id="uploadImageFile" accept="image/*" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
                     </div>
-                </div>
-
-                <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-6">
-                    <h3 class="font-cinzel text-lg font-normal text-white">Mesa de Corte & Envio</h3>
-                    <div class="space-y-4 text-xs">
-                        <div>
-                            <label class="block text-gray-400 mb-1">Modelo Selecionada</label>
-                            <select id="submissionModelSelect" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
-                                <option value="01. Helena Becker [F]">01. Helena Becker [F] (Disponível)</option>
-                                <option value="04. Clara Valente [F]">04. Clara Valente [F] (Disponível)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-gray-400 mb-1">Link do Look / Foto</label>
-                            <input type="text" id="submissionPhotoUrl" placeholder="https://..." class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
-                        </div>
-                        <button onclick="confirmAtelierSubmission()" class="w-full bg-white text-black font-medium py-2.5 rounded text-xs uppercase tracking-widest hover:bg-gray-200 transition">
-                            Confirmar Submissão
-                        </button>
+                    <div>
+                        <label class="block text-gray-400 mb-1">Memorial Conceitual</label>
+                        <textarea id="submissionConceptText" rows="3" placeholder="Descreva a silhueta e inspiração..." class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white"></textarea>
                     </div>
+                    <button onclick="uploadImageAndSubmit()" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest hover:bg-gray-200 transition">
+                        Enviar para a Nuvem com Upload
+                    </button>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: JUROR -->
-        <section id="view-juror" class="view-section hidden space-y-8">
-            <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg flex justify-between items-center">
-                <div>
-                    <span class="text-xs text-fashion-gold uppercase tracking-widest">Avaliação Técnica</span>
-                    <h2 class="font-cinzel text-xl font-normal text-white">Console dos Jurados</h2>
+        <!-- SALA DE GUERRA (CHAT AO VIVO) -->
+        <section id="view-wargroom" class="view-section hidden space-y-6 max-w-2xl mx-auto">
+            <div class="text-center space-y-1">
+                <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium">Bastidores Confinados</span>
+                <h2 class="font-cinzel text-2xl font-normal text-white">Sala de Guerra ao Vivo</h2>
+                <p class="text-xs text-gray-400">Troque mensagens em tempo real com os demais ateliês da temporada.</p>
+            </div>
+            <div class="bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-4">
+                <div id="warRoomChatBox" class="h-80 overflow-y-auto space-y-3 bg-fashion-950 p-4 rounded border border-fashion-700 text-xs font-mono">
+                    <p class="text-gray-500 text-center italic">Conectando ao feed de bastidores...</p>
                 </div>
-                <div class="space-x-2">
-                    <button onclick="selectAtelierToJudge('iris')" class="px-3 py-1.5 rounded border border-fashion-gold text-fashion-gold text-xs">Iris</button>
-                    <button onclick="selectAtelierToJudge('nocturne')" class="px-3 py-1.5 rounded border border-fashion-700 text-gray-400 text-xs">Nocturne</button>
+                <div class="flex gap-2">
+                    <input type="text" id="warRoomInputMsg" placeholder="Enviar alfinetada ou comentário..." class="flex-grow bg-fashion-950 border border-fashion-700 rounded p-2.5 text-xs text-white">
+                    <button onclick="sendWarRoomMessage()" class="bg-white text-black px-5 py-2.5 rounded text-xs uppercase tracking-wider font-medium">Enviar</button>
                 </div>
             </div>
+        </section>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <div class="lg:col-span-5 bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
-                    <h3 class="font-cinzel text-base font-normal text-white" id="judgeAtelierName">Ateliê Iris</h3>
-                    <div class="h-64 bg-fashion-950 border border-fashion-700 flex items-center justify-center text-gray-500 text-xs">
-                        [ Fotografia Oficial ]
-                    </div>
-                    <p class="text-xs text-gray-400 italic" id="judgeConceptText">"Alfaiataria desconstruída em lã fria chumbo e corset metálico."</p>
-                </div>
-
-                <div class="lg:col-span-7 bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6">
-                    <div class="flex justify-between items-center border-b border-fashion-700 pb-3">
-                        <span class="text-xs uppercase tracking-wider text-gray-400">Matriz (5 Critérios)</span>
-                        <div class="font-cinzel text-lg font-normal text-fashion-gold"><span id="judgeLiveTotal">48.5</span> / 50.0</div>
-                    </div>
-
-                    <div class="space-y-4 text-xs">
-                        <div class="space-y-1">
-                            <div class="flex justify-between"><span>Criatividade & Originalidade</span><span id="val-crit-1" class="text-fashion-gold">9.8</span></div>
-                            <input type="range" min="0" max="10" step="0.1" value="9.8" id="slider-crit-1" oninput="updateLiveScore()" class="w-full h-1 bg-fashion-700 rounded">
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex justify-between"><span>Cumprimento do Briefing</span><span id="val-crit-2" class="text-fashion-gold">10.0</span></div>
-                            <input type="range" min="0" max="10" step="0.1" value="10.0" id="slider-crit-2" oninput="updateLiveScore()" class="w-full h-1 bg-fashion-700 rounded">
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex justify-between"><span>Conceito & Memorial</span><span id="val-crit-3" class="text-fashion-gold">9.5</span></div>
-                            <input type="range" min="0" max="10" step="0.1" value="9.5" id="slider-crit-3" oninput="updateLiveScore()" class="w-full h-1 bg-fashion-700 rounded">
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex justify-between"><span>Fotografia & Styling</span><span id="val-crit-4" class="text-fashion-gold">9.4</span></div>
-                            <input type="range" min="0" max="10" step="0.1" value="9.4" id="slider-crit-4" oninput="updateLiveScore()" class="w-full h-1 bg-fashion-700 rounded">
-                        </div>
-                        <div class="space-y-1">
-                            <div class="flex justify-between"><span>Coesão (Texto vs Imagem)</span><span id="val-crit-5" class="text-fashion-gold">9.8</span></div>
-                            <input type="range" min="0" max="10" step="0.1" value="9.8" id="slider-crit-5" oninput="updateLiveScore()" class="w-full h-1 bg-fashion-700 rounded">
-                        </div>
-                    </div>
-
-                    <button onclick="
-                    <!-- GRAVAÇÃO DE ÁUDIO / NOTA DE VOZ DO JURADO -->
-                    <div class="pt-4 border-t border-fashion-700 space-y-3">
-                        <span class="text-xs font-bold text-white uppercase tracking-wider block">Nota de Voz Oficial do Jurado (Áudio):</span>
+        <!-- JUROR CONSOLE -->
+        <section id="view-juror" class="view-section hidden space-y-8">
+            <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-6 max-w-xl">
+                <h3 class="font-cinzel text-xl font-normal text-white">Console de Avaliação do Jurado</h3>
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <label class="block text-gray-400 mb-1">Nota de Voz Oficial (Áudio)</label>
                         <div class="bg-fashion-950 p-4 rounded border border-fashion-700 flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <button onclick="toggleJurorAudioRecording()" id="jurorMicBtn" class="w-10 h-10 rounded-full bg-fashion-gold text-black flex items-center justify-center hover:bg-yellow-500 transition">
@@ -239,83 +171,29 @@
                                     <span class="text-[10px] text-gray-400 font-mono" id="jurorAudioTimer">00:00</span>
                                 </div>
                             </div>
-                            <button onclick="saveJurorAudio()" class="bg-fashion-800 text-fashion-gold border border-fashion-600 px-3 py-1.5 rounded text-[11px] uppercase font-bold hover:bg-fashion-700 transition">
-                                Anexar Áudio
-                            </button>
                         </div>
                     </div>
-
-
-                    saveAndNextAtelier()" class="w-full bg-white text-black font-medium py-2.5 rounded text-xs uppercase tracking-widest hover:bg-gray-200 transition">
-                        Gravar Notas e Avançar
-                    </button>
+                    <button onclick="saveJurorAudio()" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest">Salvar Avaliação com Áudio</button>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: PASSARELA -->
+        <!-- RUNWAY -->
         <section id="view-passarela" class="view-section hidden space-y-8">
             <div id="lockedRunwayNotice" class="hidden text-center py-24 bg-fashion-900 border border-fashion-700 rounded-lg space-y-4">
                 <i class="fa-solid fa-lock text-fashion-gold text-2xl"></i>
                 <h3 class="font-cinzel text-xl font-normal text-white">Desfile sob Sigilo da Direção</h3>
                 <p class="text-xs text-gray-400 font-light max-w-sm mx-auto">Os resultados da passarela e notas serão divulgados em breve pela produção.</p>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="runwayCardsGrid">
-                <div class="bg-fashion-900 border border-fashion-700 rounded-lg overflow-hidden space-y-4 p-6">
-                    <div class="flex justify-between items-center border-b border-fashion-700 pb-3">
-                        <h3 class="font-cinzel text-base font-normal text-white">Ateliê Iris</h3>
-                        <span class="text-[10px] text-fashion-gold uppercase tracking-wider">WIN R3</span>
-                    </div>
-                    <div class="h-64 bg-fashion-950 border border-fashion-700 flex items-center justify-center text-xs text-gray-500">
-                        [ Foto Oficial ]
-                    </div>
-                    <div class="grid grid-cols-4 gap-2 pt-2 text-center text-xs">
-                        <button onclick="addReaction('iris', 'fire')" class="bg-fashion-950 p-2 rounded border border-fashion-700 hover:border-fashion-gold transition">🔥 <span id="react-iris-fire" class="block text-[10px] text-gray-400 mt-1">42</span></button>
-                        <button onclick="addReaction('iris', 'shock')" class="bg-fashion-950 p-2 rounded border border-fashion-700 hover:border-fashion-gold transition">🤯 <span id="react-iris-shock" class="block text-[10px] text-gray-400 mt-1">28</span></button>
-                        <button onclick="addReaction('iris', 'basic')" class="bg-fashion-950 p-2 rounded border border-fashion-700 hover:border-fashion-gold transition">🥱 <span id="react-iris-basic" class="block text-[10px] text-gray-400 mt-1">3</span></button>
-                        <button onclick="addReaction('iris', 'snip')" class="bg-fashion-950 p-2 rounded border border-fashion-700 hover:border-fashion-gold transition">✂️ <span id="react-iris-snip" class="block text-[10px] text-gray-400 mt-1">1</span></button>
-                    </div>
+            <div id="runwayCardsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-4">
+                    <h3 class="font-cinzel text-base text-white">Ateliê Iris</h3>
+                    <div class="h-48 bg-fashion-950 border border-fashion-700 flex items-center justify-center text-xs text-gray-500">[ Foto na Nuvem ]</div>
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: CONFRONTO -->
-        <section id="view-confronto" class="view-section hidden space-y-8">
-            <div class="text-center space-y-2">
-                <span class="text-xs text-fashion-gold uppercase tracking-widest">Duelo Editorial</span>
-                <h2 class="font-cinzel text-2xl font-normal text-white">Face-Off: Look vs Look</h2>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
-                    <h3 class="font-cinzel text-lg font-normal text-white">Ateliê Iris</h3>
-                    <div class="h-80 bg-fashion-950 border border-fashion-700 flex items-center justify-center text-xs text-gray-500">[ Look A ]</div>
-                </div>
-                <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
-                    <h3 class="font-cinzel text-lg font-normal text-white">Maison Nocturne</h3>
-                    <div class="h-80 bg-fashion-950 border border-fashion-700 flex items-center justify-center text-xs text-gray-500">[ Look B ]</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VIEW: TRIBUNAL -->
-        <section id="view-tribunal" class="view-section hidden max-w-2xl mx-auto space-y-8">
-            <div class="text-center space-y-2">
-                <span class="text-xs text-fashion-gold uppercase tracking-widest">Primeira Fila</span>
-                <h2 class="font-cinzel text-2xl font-normal text-white">Tribunal Front Row</h2>
-            </div>
-            <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-6 text-center">
-                <p class="text-xs text-gray-400 font-light">Vote no seu favorito da rodada ou indique quem merece o selo 'Fora de Moda'.</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="voteBest('Ateliê Iris')" class="bg-fashion-950 border border-fashion-700 p-4 rounded text-xs uppercase tracking-widest hover:border-fashion-gold transition">Ateliê Iris (Favorito)</button>
-                    <button onclick="voteWorst('Ateliê Eclipse')" class="bg-fashion-950 border border-fashion-700 p-4 rounded text-xs uppercase tracking-widest hover:border-red-600 transition text-red-400">Ateliê Eclipse (Fora de Moda)</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- VIEW: CONFESSIONÁRIO -->
-        
-        <!-- VIEW: CONFESSIONÁRIO (SÓ POR TEXTO) -->
+        <!-- CONFESSIONÁRIO -->
         <section id="view-confessionario" class="view-section hidden space-y-8 max-w-xl mx-auto">
             <div class="text-center space-y-2">
                 <span class="text-xs text-red-400 uppercase tracking-widest">Sem Filtro</span>
@@ -323,105 +201,42 @@
             </div>
             <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-4 text-xs">
                 <textarea id="confessionText" rows="4" placeholder="Grave seu desabafo oficial por texto..." class="w-full bg-fashion-950 border border-fashion-700 rounded p-3 text-white focus:outline-none"></textarea>
-                <button onclick="submitConfessionCloud()" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest hover:bg-gray-200 transition">
+                <button onclick="submitConfessionCloud()" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest">
                     Publicar Depoimento na Nuvem
                 </button>
             </div>
         </section>
 
-
-        <!-- VIEW: BERLINDA -->
-        <section id="view-berlinda" class="view-section hidden max-w-2xl mx-auto space-y-8">
+        <!-- BERLINDA -->
+        <section id="view-berlinda" class="view-section hidden max-w-xl mx-auto space-y-8">
             <div id="lockedBerlindaNotice" class="hidden text-center py-24 bg-fashion-900 border border-fashion-700 rounded-lg space-y-4">
                 <i class="fa-solid fa-gavel text-red-500 text-2xl"></i>
                 <h3 class="font-cinzel text-xl font-normal text-white">Urna da Berlinda Trancada</h3>
                 <p class="text-xs text-gray-400 font-light max-w-sm mx-auto">A votação secreta será aberta pelo administrador após o anúncio dos emparedados.</p>
             </div>
-
             <div id="berlindaVotingContent" class="space-y-6">
                 <div class="bg-red-950/40 border border-red-900/60 p-4 rounded text-xs text-gray-300">
-                    <strong class="text-red-400 block mb-1 font-cinzel">PUNIÇÃO IMEDIATA:</strong>
-                    Ateliê Eclipse foi eleito 'Fora de Moda' nesta rodada e perderá o desempate sumariamente em caso de igualdade de votos.
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-fashion-900 border border-fashion-700 p-6 rounded text-center space-y-4">
-                        <h3 class="font-cinzel text-sm font-normal text-white">Ateliê Eclipse</h3>
-                        <button onclick="registerBottomVote('Ateliê Eclipse')" class="w-full bg-white text-black py-2 rounded text-[10px] uppercase tracking-widest font-medium">Salvar</button>
-                    </div>
-                    <div class="bg-fashion-900 border border-fashion-700 p-6 rounded text-center space-y-4">
-                        <h3 class="font-cinzel text-sm font-normal text-white">Ateliê Aureum</h3>
-                        <button onclick="registerBottomVote('Ateliê Aureum')" class="w-full bg-white text-black py-2 rounded text-[10px] uppercase tracking-widest font-medium">Salvar</button>
-                    </div>
-                    <div class="bg-fashion-900 border border-fashion-700 p-6 rounded text-center space-y-4">
-                        <h3 class="font-cinzel text-sm font-normal text-white">Ateliê Sombra</h3>
-                        <button onclick="registerBottomVote('Ateliê Sombra')" class="w-full bg-white text-black py-2 rounded text-[10px] uppercase tracking-widest font-medium">Salvar</button>
-                    </div>
+                    <strong class="text-red-400 block mb-1 font-cinzel">PUNIÇÃO IMEDIATA:</strong> Ateliê Eclipse perde desempate na Berlinda desta rodada.
                 </div>
             </div>
         </section>
 
-        <!-- VIEW: RANKING -->
-        <section id="view-ranking" class="view-section hidden space-y-8">
-            <div class="border-b border-fashion-700 pb-4">
-                <h2 class="font-cinzel text-2xl font-normal text-white">Quadro de Classificação</h2>
-            </div>
-            <div class="bg-fashion-900 border border-fashion-700 rounded-lg overflow-hidden">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="border-b border-fashion-700 text-fashion-gold uppercase tracking-widest font-cinzel text-[10px]">
-                            <th class="p-4">Pos</th>
-                            <th class="p-4">Ateliê</th>
-                            <th class="p-4">Status</th>
-                            <th class="p-4">Portfólio</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-fashion-700 text-gray-300">
-                        <tr>
-                            <td class="p-4 text-fashion-gold">#1</td>
-                            <td class="p-4 font-medium text-white">Ateliê Iris</td>
-                            <td class="p-4"><span class="text-[10px] text-fashion-gold uppercase">WIN</span></td>
-                            <td class="p-4"><button onclick="openPortfolio('Ateliê Iris')" class="text-xs text-gray-400 hover:text-white">Ver Cartão</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- VIEW: ADMIN -->
+        <!-- ADMIN -->
         <section id="view-admin" class="view-section hidden space-y-8">
-            <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg flex justify-between items-center">
-                <div>
-                    <span class="text-[10px] text-red-400 uppercase tracking-widest block">Área Restrita</span>
-                    <h2 class="font-cinzel text-xl font-normal text-white">Mesa da Direção</h2>
-                </div>
-            </div>
-
-            <!-- CHAVES MESTRAS -->
             <div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg space-y-6">
-                <h3 class="font-cinzel text-base font-normal text-white">Chaves Mestras de Transmissão</h3>
+                <h3 class="font-cinzel text-xl font-normal text-white">Chaves Mestras & Controle Cloud</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
                     <div class="bg-fashion-950 p-6 rounded border border-fashion-700 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-fashion-gold uppercase tracking-wider">Resultados do Desfile</span>
-                            <span id="statusBadgeResults" class="text-[10px] text-red-400 uppercase">Privado</span>
-                        </div>
-                        <button onclick="togglePublishResultsMaster()" id="btnToggleResults" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest hover:bg-gray-200 transition">
-                            Liberar no Site
-                        </button>
+                        <span id="statusBadgeResults" class="text-red-400 uppercase">Privado</span>
+                        <button onclick="togglePublishResultsMaster()" id="btnToggleResults" class="w-full bg-white text-black font-medium py-2.5 rounded uppercase tracking-widest">Liberar Resultados</button>
                     </div>
                     <div class="bg-fashion-950 p-6 rounded border border-fashion-700 space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-red-400 uppercase tracking-wider">Votação da Berlinda</span>
-                            <span id="statusBadgeBerlinda" class="text-[10px] text-red-400 uppercase">Trancada</span>
-                        </div>
-                        <button onclick="toggleBottom3VotingMaster()" id="btnToggleBerlinda" class="w-full bg-red-600 text-white font-medium py-2.5 rounded uppercase tracking-widest hover:bg-red-500 transition">
-                            Liberar Urna
-                        </button>
+                        <span id="statusBadgeBerlinda" class="text-red-400 uppercase">Trancada</span>
+                        <button onclick="toggleBottom3VotingMaster()" id="btnToggleBerlinda" class="w-full bg-red-600 text-white font-medium py-2.5 rounded uppercase tracking-widest">Liberar Urna</button>
                     </div>
                 </div>
             </div>
         </section>
-
     </main>
 
     <!-- FOOTER -->
@@ -429,14 +244,44 @@
         PROJECT RUNWAY: FAU'S EDITION &mdash; All Rights Reserved
     </footer>
 
-    <!-- SCRIPTS -->
+    <!-- SCRIPTS CORE -->
     <script>
-        let isRunwayResultsPublished = false;
-        let isBottom3VotingOpen = false;
-        let activeAteliersCount = 5;
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`view-${viewName}`);
+            if (target) { target.classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        }
 
-        
-        // Gravação de Áudio dos Jurados
+        function toggleModalFields(role) {
+            const atelierField = document.getElementById('modalAtelierNameField');
+            const realNameField = document.getElementById('modalRealNameField');
+            if (role === 'participant') {
+                atelierField.classList.remove('hidden');
+                realNameField.classList.remove('hidden');
+            } else {
+                atelierField.classList.add('hidden');
+                realNameField.classList.remove('hidden');
+            }
+        }
+
+        function applyUserProfileWithRealIdentity() {
+            const role = document.getElementById('modalRoleSelect').value;
+            const realName = document.getElementById('modalRealPersonName').value.trim();
+            const atelierName = document.getElementById('modalCustomAtelierName').value.trim();
+            const pass = document.getElementById('modalAccessPassword').value;
+
+            if (role === 'admin' && pass !== 'fau2026') { alert('Senha da Direção incorreta!'); return; }
+            if (role === 'participant' && (!realName || !atelierName)) { alert('Informe seu nome real e o nome do ateliê!'); return; }
+
+            const sessionData = { role, realName: realName || role, atelierName: atelierName || role };
+            localStorage.setItem('fau_user_identity', JSON.stringify(sessionData));
+            document.getElementById('profileCreatorModal').classList.add('hidden');
+            document.getElementById('activeUserProfileLabel').innerText = sessionData.atelierName;
+            updateSecurityUI();
+        }
+
+        function reopenIdentityModal() { document.getElementById('profileCreatorModal').classList.remove('hidden'); }
+
         let isRecordingAudio = false;
         let audioTimerInterval;
         let audioSeconds = 0;
@@ -445,7 +290,6 @@
             const btn = document.getElementById('jurorMicBtn');
             const status = document.getElementById('jurorAudioStatus');
             const timer = document.getElementById('jurorAudioTimer');
-            
             isRecordingAudio = !isRecordingAudio;
             if (isRecordingAudio) {
                 btn.className = "w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center animate-pulse";
@@ -460,33 +304,58 @@
             } else {
                 clearInterval(audioTimerInterval);
                 btn.className = "w-10 h-10 rounded-full bg-fashion-gold text-black flex items-center justify-center hover:bg-yellow-500 transition";
-                status.innerText = "Áudio Gravado com Sucesso (Pronto para Anexar)";
+                status.innerText = "Áudio Gravado com Sucesso";
             }
         }
 
-        function saveJurorAudio() {
-            alert("Nota de voz do jurado gravada e vinculada à avaliação deste look com sucesso!");
-        }
+        function saveJurorAudio() { alert("Nota de voz do jurado anexada com sucesso!"); }
 
-        function switchView(viewName) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-            const target = document.getElementById(`view-${viewName}`);
-            if (target) {
-                target.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('fau_user_identity');
+            if (saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('activeUserProfileLabel').innerText = data.atelierName || data.role;
+                document.getElementById('profileCreatorModal').classList.add('hidden');
             }
-            updateSecurityUI();
-        }
+        });
+    </script>
 
-        function changeRole(role) {
-            updateSecurityUI();
-        }
+    <!-- FIREBASE SDKs & LOGICA EM TEMPO REAL -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "SUA-API-KEY",
+            authDomain: "project-runway-faus.firebaseapp.com",
+            projectId: "project-runway-faus",
+            storageBucket: "project-runway-faus.appspot.com",
+            messagingSenderId: "123",
+            appId: "123"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        let isRunwayResultsPublished = false;
+        let isBottom3VotingOpen = false;
+
+        // Ouvir alterações globais
+        db.collection("configuracoes").doc("estado_global").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                isRunwayResultsPublished = data.isRunwayResultsPublished || false;
+                isBottom3VotingOpen = data.isBottom3VotingOpen || false;
+                updateSecurityUI();
+            }
+        });
 
         function updateSecurityUI() {
-            const role = document.getElementById('roleSelector').value;
+            const session = JSON.parse(localStorage.getItem('fau_user_identity') || '{}');
+            const role = session.role || 'public';
+
             const runwayCards = document.getElementById('runwayCardsGrid');
             const runwayLock = document.getElementById('lockedRunwayNotice');
-            
             if (role === 'admin' || isRunwayResultsPublished) {
                 if (runwayCards) runwayCards.classList.remove('hidden');
                 if (runwayLock) runwayLock.classList.add('hidden');
@@ -497,9 +366,8 @@
 
             const berlindaContent = document.getElementById('berlindaVotingContent');
             const berlindaLock = document.getElementById('lockedBerlindaNotice');
-
             if (role === 'admin' || isBottom3VotingOpen) {
-                if (berlindaContent) berlindaContent.classList.remove('hidden');
+                if (berlindaContent)berlindaContent.classList.remove('hidden');
                 if (berlindaLock) berlindaLock.classList.add('hidden');
             } else {
                 if (berlindaContent) berlindaContent.classList.add('hidden');
@@ -507,167 +375,87 @@
             }
         }
 
-        function togglePublishResultsMaster() {
-            isRunwayResultsPublished = !isRunwayResultsPublished;
-            const btn = document.getElementById('btnToggleResults');
-            const badge = document.getElementById('statusBadgeResults');
-            if (isRunwayResultsPublished) {
-                badge.className = "text-[10px] text-green-400 uppercase";
-                badge.innerText = "Público";
-                btn.innerText = "Ocultar Resultados";
-            } else {
-                badge.className = "text-[10px] text-red-400 uppercase";
-                badge.innerText = "Privado";
-                btn.innerText = "Liberar no Site";
-            }
-            updateSecurityUI();
-        }
-
-        function toggleBottom3VotingMaster() {
-            isBottom3VotingOpen = !isBottom3VotingOpen;
-            const btn = document.getElementById('btnToggleBerlinda');
-            const badge = document.getElementById('statusBadgeBerlinda');
-            if (isBottom3VotingOpen) {
-                badge.className = "text-[10px] text-green-400 uppercase";
-                badge.innerText = "Aberta";
-                btn.innerText = "Trancar Urna";
-            } else {
-                badge.className = "text-[10px] text-red-400 uppercase";
-                badge.innerText = "Trancada";
-                btn.innerText = "Liberar Urna";
-            }
-            updateSecurityUI();
-        }
-
-        function updateLiveScore() {
-            let total = 0;
-            for (let i = 1; i <= 5; i++) {
-                const val = parseFloat(document.getElementById(`slider-crit-${i}`).value);
-                document.getElementById(`val-crit-${i}`).innerText = val.toFixed(1);
-                total += val;
-            }
-            document.getElementById('judgeLiveTotal').innerText = total.toFixed(1);
-        }
-
-        function saveAndNextAtelier() { alert("Notas gravadas com sucesso."); }
-        function confirmAtelierSubmission() { alert("Submissão realizada."); }
-        function voteBest(at) { alert(`Voto registrado para ${at}`); }
-        function voteWorst(at) { alert(`Indicação registrada para ${at}`); }
-        function submitConfession() { alert("Depoimento publicado."); }
-        function registerBottomVote(at) { alert(`Salvo: ${at}`); }
-        function openPortfolio(name) { alert(`Abrindo portfólio de ${name}`); }
-
-        updateSecurityUI();
-    </script>
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script>
-        // Configuração do Firebase (Substitua com suas credenciais do projeto Firebase)
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-EXEMPLO-SUA-API-KEY",
-            authDomain: "project-runway-faus.firebaseapp.com",
-            projectId: "project-runway-faus",
-            storageBucket: "project-runway-faus.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
-        };
-
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Sincronização em Tempo Real com o Firestore
-        let isRunwayResultsPublished = false;
-        let isBottom3VotingOpen = false;
-        let reactions = { iris: { fire: 42, shock: 28, basic: 3, snip: 1 }, nocturne: { fire: 31, shock: 19, basic: 6, snip: 2 }, eclipse: { fire: 9, shock: 4, basic: 24, snip: 18 } };
-
-        // Ouvir alterações do Estado Global do Admin em Tempo Real
-        db.collection("configuracoes").doc("estado_global").onSnapshot((doc) => {
-            if (doc.exists) {
-                const data = doc.data();
-                isRunwayResultsPublished = data.isRunwayResultsPublished || false;
-                isBottom3VotingOpen = data.isBottom3VotingOpen || false;
-                updateSecurityUI();
-            } else {
-                // Criar documento inicial se não existir
-                db.collection("configuracoes").doc("estado_global").set({
-                    isRunwayResultsPublished: false,
-                    isBottom3VotingOpen: false
-                });
-            }
-        });
-
-        // Função para atualizar o estado no Banco de Dados Cloud
         function updateFirebaseState(key, value) {
-            db.collection("configuracoes").doc("estado_global").update({
-                [key]: value
-            }).catch((error) => {
-                console.error("Erro ao atualizar base de dados:", error);
-            });
+            db.collection("configuracoes").doc("estado_global").update({ [key]: value }).catch(err => console.error(err));
         }
 
-        // Sobrescrever as chaves mestras para atualizar a nuvem
         function togglePublishResultsMaster() {
             isRunwayResultsPublished = !isRunwayResultsPublished;
             updateFirebaseState("isRunwayResultsPublished", isRunwayResultsPublished);
-            const btn = document.getElementById('btnToggleResults');
-            const badge = document.getElementById('statusBadgeResults');
-            if (isRunwayResultsPublished) {
-                badge.className = "text-[10px] text-green-400 uppercase";
-                badge.innerText = "Público (Nuvem Ativa)";
-                if(btn) btn.innerText = "Ocultar Resultados";
-            } else {
-                badge.className = "text-[10px] text-red-400 uppercase";
-                badge.innerText = "Privado";
-                if(btn) btn.innerText = "Liberar no Site";
-            }
         }
 
         function toggleBottom3VotingMaster() {
             isBottom3VotingOpen = !isBottom3VotingOpen;
             updateFirebaseState("isBottom3VotingOpen", isBottom3VotingOpen);
-            const btn = document.getElementById('btnToggleBerlinda');
-            const badge = document.getElementById('statusBadgeBerlinda');
-            if (isBottom3VotingOpen) {
-                badge.className = "text-[10px] text-green-400 uppercase";
-                badge.innerText = "Aberta (Nuvem Ativa)";
-                if(btn) btn.innerText = "Trancar Urna";
-            } else {
-                badge.className = "text-[10px] text-red-400 uppercase";
-                badge.innerText = "Trancada";
-                if(btn) btn.innerText = "Liberar Urna";
-            }
         }
 
-        // Submissão gravada no Firestore
-        function confirmAtelierSubmission() {
-            const model = document.getElementById('submissionModelSelect').value;
-            const photo = document.getElementById('submissionPhotoUrl').value.trim();
-            const concept = document.getElementById('submissionConceptText') ? document.getElementById('submissionConceptText').value.trim() : "";
+        // Upload de Imagem no Storage
+        function uploadImageAndSubmit() {
+            const fileInput = document.getElementById('uploadImageFile');
+            const concept = document.getElementById('submissionConceptText').value.trim();
+            const session = JSON.parse(localStorage.getItem('fau_user_identity') || '{}');
 
-            if (!photo) {
-                alert("Por favor, insira o link da fotografia.");
-                return;
-            }
+            if (fileInput.files.length === 0) { alert("Selecione uma imagem."); return; }
+            const file = fileInput.files[0];
+            const storageRef = storage.ref(`looks/${Date.now()}_${file.name}`);
 
-            db.collection("submissoes").add({
-                atelier: "Ateliê Ativo",
-                model: model,
-                photoUrl: photo,
-                concept: concept,
+            storageRef.put(file).then(snapshot => snapshot.ref.getDownloadURL()).then(downloadURL => {
+                db.collection("submissoes").add({
+                    realName: session.realName || "Desconhecido",
+                    atelierName: session.atelierName || "Ateliê",
+                    photoUrl: downloadURL,
+                    concept: concept,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    alert("Look enviado com imagem na nuvem com sucesso!");
+                    document.getElementById('submissionConceptText').value = "";
+                });
+            }).catch(error => alert("Erro no upload: " + error.message));
+        }
+
+        // Sala de Guerra em Tempo Real
+        db.collection("sala_de_guerra").orderBy("timestamp", "asc").onSnapshot((snapshot) => {
+            const chatBox = document.getElementById('warRoomChatBox');
+            if (!chatBox) return;
+            chatBox.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const msg = doc.data();
+                const p = document.createElement('p');
+                p.innerHTML = `<strong class="text-fashion-gold">[${msg.sender}]:</strong> <span class="text-gray-300">${msg.text}</span>`;
+                chatBox.appendChild(p);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        function sendWarRoomMessage() {
+            const input = document.getElementById('warRoomInputMsg');
+            const text = input.value.trim();
+            const session = JSON.parse(localStorage.getItem('fau_user_identity') || '{}');
+            if (!text) return;
+
+            db.collection("sala_de_guerra").add({
+                sender: session.atelierName || session.role || "Participante",
+                text: text,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                alert("Look submetido com sucesso para a base de dados em nuvem!");
-                document.getElementById('submissionPhotoUrl').value = "";
-            })
-            .catch((error) => {
-                alert("Erro ao gravar no banco de dados: " + error.message);
+            }).then(() => {
+                input.value = "";
+            });
+        }
+
+        function submitConfessionCloud() {
+            const text = document.getElementById('confessionText').value.trim();
+            const session = JSON.parse(localStorage.getItem('fau_user_identity') || '{}');
+            if(!text) { alert("Escreva seu depoimento."); return; }
+
+            db.collection("confessionarios").add({
+                author: session.atelierName || "Anônimo",
+                text: text,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                alert("Depoimento publicado na nuvem!");
+                document.getElementById('confessionText').value = "";
             });
         }
     </script>
-
 </body>
 </html>
