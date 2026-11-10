@@ -65,6 +65,10 @@
         #splash .k { color: #d4af37; letter-spacing: .6em; font-size: .7rem; font-family: Cinzel, serif; }
         #splash .q { color: #9ca3af; font-style: italic; font-size: .8rem; animation: rise 2s ease both; }
         #quoteStrip { transition: opacity .6s; }
+
+        #winReveal { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; background: radial-gradient(ellipse at 50% 40%, rgba(42,34,16,.97), rgba(10,10,12,.98)); cursor: pointer; animation: rise .8s ease both; }
+        .cf { position: fixed; top: -20px; width: 8px; height: 14px; z-index: 91; animation: fall 3.2s linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
@@ -90,6 +94,8 @@
 <!-- BANNER GLOBAL DE STATUS -->
 <div id="globalStatusBanner" class="hidden bg-fashion-900 border-b border-fashion-700 text-xs py-2 px-4 text-center"></div>
 
+<div id="challengeHero" class="hidden text-center py-3 border-b border-fashion-700 bg-fashion-950/60"></div>
+<div id="poderCard" class="hidden max-w-2xl mx-auto my-3 mx-4 p-4 rounded-lg border border-fashion-gold/50 bg-fashion-900 text-center text-xs space-y-2"></div>
 <div id="quoteStrip" class="text-center text-[11px] italic text-fashion-gold/80 font-cinzel py-2 px-4 border-b border-fashion-800"></div>
 
 <!-- ÁREA PRINCIPAL -->
@@ -168,14 +174,14 @@
     ];
 
     const ROTULOS_ABAS = {
-        work: 'The Workroom (Prompt)',
+        work: 'The Workroom',
         runway: 'The Runway',
-        tribunal: 'Votação do Elenco',
-        berlinda: 'A Berlinda (Bottom)',
+        tribunal: 'The Votes',
+        berlinda: 'Elimination Pool',
         conf: 'Confessionário',
-        historico: 'Histórico da Temporada',
-        bancada: 'Bancada de Júri',
-        direcao: 'Direção Executiva',
+        historico: 'Track Record',
+        bancada: "Judges' Table",
+        direcao: 'A Produção',
         manual: 'O Manual'
     };
 
@@ -375,6 +381,13 @@
             bannerMsg += `<span class="bg-blue-900/40 text-blue-300 border border-blue-600 px-2 py-0.5 rounded ml-2 font-mono uppercase font-bold">✨ RODADA NÃO ELIMINATÓRIA</span> `;
         } else if (globalState.elimDupla || globalState.elimTipo === 'double') {
             bannerMsg += `<span class="bg-fashion-red/20 text-red-400 px-2 py-0.5 rounded ml-2 font-mono uppercase font-bold">⚠️ ELIMINAÇÃO DUPLA (2 OUT)</span> `;
+        }
+
+        if ((globalState.numSubmissoes || 1) > 1 && globalState.fase !== 'final') {
+            bannerMsg += `<span class="bg-fashion-gold/20 text-fashion-gold border border-fashion-gold/40 px-2 py-0.5 rounded ml-2 font-mono uppercase font-bold">📸 ${globalState.numSubmissoes} FOTOS NESTA RODADA</span> `;
+        }
+        if (globalState.regras) {
+            bannerMsg += `<div class="mt-2 text-fashion-sand"><span class="text-fashion-gold font-cinzel uppercase tracking-widest">Regras desta rodada:</span> ${esc(globalState.regras)}</div>`;
         }
 
         if (bannerMsg) {
@@ -1571,28 +1584,57 @@
                     </div>
                 </div>
 
-                <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
-                    <h3 class="font-cinzel text-white text-base">Configurar e Iniciar Rodada (AI Edition)</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 text-xs">
-                        <input id="newRoundId" placeholder="ID da Rodada (ex: thefirstsin, seduction)" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
-                        <input id="newRoundDeadline" type="datetime-local" value="${roundPz}" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
-                        <select id="newRoundPhase" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
-                            <option value="normal" ${globalState.fase === 'normal' ? 'selected' : ''}>Rodada Padrão</option>
-                            <option value="top5" ${globalState.fase === 'top5' ? 'selected' : ''}>Top 5 (Afunilamento)</option>
-                            <option value="final" ${globalState.fase === 'final' ? 'selected' : ''}>A Grande Final (Top 3)</option>
-                        </select>
-                        <select id="newRoundSubmissions" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
-                            <option value="1" ${(globalState.numSubmissoes || 1) == 1 ? 'selected' : ''}>1 Look por Maison</option>
-                            <option value="2" ${globalState.numSubmissoes == 2 ? 'selected' : ''}>2 Looks (Rodada Dupla)</option>
-                        </select>
-                        <select id="newRoundElimType" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
-                            <option value="none" ${globalState.elimTipo === 'none' || globalState.naoEliminatoria ? 'selected' : ''}>Não Eliminatória</option>
-                            <option value="single" ${(!globalState.elimTipo || globalState.elimTipo === 'single') && !globalState.naoEliminatoria && !globalState.elimDupla ? 'selected' : ''}>Eliminação Simples (1 OUT)</option>
-                            <option value="double" ${globalState.elimTipo === 'double' || globalState.elimDupla ? 'selected' : ''}>Eliminação Dupla (2 OUT)</option>
-                        </select>
+                <div class="bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg space-y-3">
+                    <h3 class="font-cinzel text-white text-base">👑 O Poder do Ícone — Próximo Tema</h3>
+                    <p class="text-[11px] text-gray-400">Depois da apuração, escreva de 2 a 4 opções, uma por linha, assim: <code>Nome | pista</code>. O sistema define quem escolhe: o Ícone da Moda ou, se não houver, o WIN.</p>
+                    <textarea id="poderOpcoes" rows="4" placeholder="Veneno | algo que fere e encanta&#10;Aurora | o começo de tudo" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full text-xs"></textarea>
+                    <div class="flex flex-wrap gap-2">
+                        <button id="btnPoderAbrir" class="px-4 py-2 rounded text-xs uppercase font-semibold bg-fashion-gold text-black">Abrir escolha</button>
+                        <button id="btnPoderVer" class="px-4 py-2 rounded text-xs uppercase font-semibold bg-fashion-800 border border-fashion-600 text-fashion-gold">Ver escolha</button>
                     </div>
+                    <div id="poderStatus" class="text-xs text-fashion-sand space-y-2"></div>
+                </div>
+
+                <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
+                    <h3 class="font-cinzel text-white text-base">Nova Rodada</h3>
+                    <details class="bg-fashion-950 border border-fashion-700 rounded p-3 text-xs text-gray-300">
+                        <summary class="cursor-pointer text-fashion-gold font-cinzel">📋 Como conduzir uma rodada (passo a passo)</summary>
+                        <ol class="list-decimal ml-5 mt-2 space-y-1">
+                            <li>Crie a rodada aqui embaixo: escolha o tipo, o nome do tema e o prazo.</li>
+                            <li>Os estilistas enviam os looks. No prazo, clique em <strong>Encerrar</strong>.</li>
+                            <li>Os jurados dão as notas na Bancada de Júri.</li>
+                            <li>Apure o ranking e publique na Runway. Use <strong>Liberar Looks</strong> para mostrar os looks a todos.</li>
+                            <li>Abra a <strong>Urna</strong> (Ícone, Fora de Moda e salvamento), apure e confirme o OUT.</li>
+                        </ol>
+                    </details>
+                    <div class="space-y-1">
+                        <span class="text-[10px] uppercase tracking-wider text-gray-400">1 · Tipo de rodada (preenche o resto sozinho)</span>
+                        <div id="presetChips" class="flex flex-wrap gap-2 text-[11px]">
+                            ${[['normal','Padrão'],['dupla','📸📸 2 fotos'],['livre','✨ Não eliminatória'],['double','⚠️ Eliminação dupla'],['top5','🔥 Top 5'],['final','🏁 Grande Final']].map(([k, l]) => `<button type="button" data-preset="${k}" class="preset-chip px-3 py-1.5 rounded border border-fashion-700 bg-fashion-950 text-gray-300">${l}</button>`).join('')}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">2 · Nome do tema</span><input id="newRoundId" placeholder="ex: thefirstsin" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></label>
+                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">3 · Prazo de entrega</span><input id="newRoundDeadline" type="datetime-local" value="${roundPz}" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></label>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-[11px] items-center"><span class="text-gray-500">Prazo rápido:</span>
+                        ${[2, 24, 48, 72].map(h => `<button type="button" data-addh="${h}" class="px-2 py-1 rounded bg-fashion-800 border border-fashion-600 text-fashion-gold">+${h}h</button>`).join('')}
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Fase</span>
+                            <select id="newRoundPhase" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="normal">Padrão</option><option value="top5">Top 5</option><option value="final">Grande Final</option></select></label>
+                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Fotos por estilista</span>
+                            <select id="newRoundSubmissions" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="1">1 foto</option><option value="2">2 fotos</option><option value="3">3 fotos</option><option value="4">4 fotos</option></select></label>
+                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Eliminação</span>
+                            <select id="newRoundElimType" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="single">1 OUT</option><option value="double">2 OUT</option><option value="none">Ninguém sai</option></select></label>
+                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Nota com várias fotos</span>
+                            <select id="newRoundSoma" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="media">Média (máx. 50)</option><option value="soma">Soma das fotos</option></select></label>
+                    </div>
+                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">Regras especiais desta rodada (aparecem para todos)</span>
+                        <textarea id="newRoundRules" rows="3" placeholder="Opcional. Ex: O look precisa ter a cor vermelha." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
+                    <div id="roundSummary" class="text-[11px] text-fashion-gold font-mono"></div>
                     <button id="btnStartRound" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black py-2.5 rounded uppercase font-semibold text-xs tracking-wider">
-                        Salvar e Iniciar Desafio AI Edition
+                        Iniciar Rodada
                     </button>
                 </div>
 
@@ -1676,13 +1718,18 @@
                 let currentRoundScore = 0;
                 const looksObj = evaluationsByLook[doc.id] || {};
 
+                const perRound = {};
                 for (const lookKey in looksObj) {
                     const lookData = looksObj[lookKey];
                     const avg = lookData.scores.reduce((a, b) => a + b, 0) / lookData.scores.length;
-                    if (lookData.r === globalState.rodada) currentRoundScore += avg;
-                    if (globalState.fase !== 'final' || lookData.r === globalState.rodada) {
-                        totalAccumulated += avg;
-                    }
+                    const pr = (perRound[lookData.r] ??= { sum: 0, n: 0 });
+                    pr.sum += avg; pr.n++;
+                }
+                for (const r in perRound) {
+                    // Rodadas antigas (sem modo salvo) continuam somando, como antes.
+                    const v = globalState.modos?.[r] === 'media' ? perRound[r].sum / perRound[r].n : perRound[r].sum;
+                    if (r === globalState.rodada) currentRoundScore += v;
+                    if (globalState.fase !== 'final' || r === globalState.rodada) totalAccumulated += v;
                 }
 
                 return { uid: doc.id, ate: doc.data().ate, tot: Number(totalAccumulated.toFixed(2)), rd: Number(currentRoundScore.toFixed(2)) };
@@ -1767,6 +1814,56 @@
             showToast('Tempo esgotado para as maisons.');
         });
 
+        const PRESETS = { normal: ['normal', 1, 'single', 'media'], dupla: ['normal', 2, 'single', 'media'], livre: ['normal', 1, 'none', 'media'], double: ['normal', 1, 'double', 'media'], top5: ['top5', 1, 'single', 'media'], final: ['final', 4, 'none', 'soma'] };
+        const refreshRoundSummary = () => {
+            const el = $('#roundSummary'); if (!el) return;
+            const e = { single: '1 OUT', double: '2 OUT', none: 'ninguém sai' }[$('#newRoundElimType').value];
+            el.textContent = `▶ ${$('#newRoundId').value.trim() || 'tema?'} · ${$('#newRoundSubmissions').value} foto(s) · ${e} · nota por ${$('#newRoundSoma').value === 'soma' ? 'soma' : 'média'}`;
+        };
+        const applyPreset = k => {
+            const [f, n, e, m] = PRESETS[k];
+            $('#newRoundPhase').value = f; $('#newRoundSubmissions').value = n; $('#newRoundElimType').value = e; $('#newRoundSoma').value = m;
+            document.querySelectorAll('.preset-chip').forEach(c => c.classList.toggle('!border-fashion-gold', c.dataset.preset === k));
+            document.querySelectorAll('.preset-chip').forEach(c => c.classList.toggle('!text-fashion-gold', c.dataset.preset === k));
+            refreshRoundSummary();
+        };
+        document.querySelectorAll('.preset-chip').forEach(c => c.onclick = () => applyPreset(c.dataset.preset));
+        document.querySelectorAll('[data-addh]').forEach(c => c.onclick = () => {
+            const d = new Date(Date.now() + Number(c.dataset.addh) * 36e5);
+            $('#newRoundDeadline').value = new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+        });
+        ['#newRoundId', '#newRoundPhase', '#newRoundSubmissions', '#newRoundElimType', '#newRoundSoma'].forEach(q => { $(q).oninput = refreshRoundSummary; });
+        applyPreset('normal');
+
+        $('#btnPoderAbrir').onclick = safeExec(async () => {
+            const linhas = $('#poderOpcoes').value.split('\n').map(l => l.trim()).filter(Boolean);
+            if (linhas.length < 2 || linhas.length > 4) throw new Error('Informe de 2 a 4 opções, uma por linha (Nome | pista).');
+            const opcoes = linhas.map((l, i) => { const [n, ...p] = l.split('|'); return { id: 'o' + i, nome: n.trim(), pista: p.join('|').trim() }; });
+            const standings = (await computeSeasonStandings()).sort((a, b) => b.rd - a.rd);
+            const votes = await tallyVotes('veto');
+            const cand = standings.filter(x => votes[x.uid]).sort((a, b) => (votes[b.uid] - votes[a.uid]) || (b.rd - a.rd) || (b.tot - a.tot));
+            const igual = (a, b) => a && b && votes[a.uid] === votes[b.uid] && a.rd === b.rd && a.tot === b.tot;
+            const icone = cand[0] && !igual(cand[0], cand[1]) ? cand[0] : null;
+            const dono = icone || standings[0];
+            if (!dono) throw new Error('Não há estilistas ativos.');
+            await db.doc('config/estado').set({ proxOpcoes: opcoes, poderUid: dono.uid, poderNome: dono.ate, poderTipo: icone ? 'icone' : 'win', proxTema: null }, { merge: true });
+            $('#poderStatus').textContent = `Escolha aberta para ${dono.ate} (${icone ? 'Ícone da Moda' : 'WIN da rodada'}).`;
+        });
+
+        $('#btnPoderVer').onclick = safeExec(async () => {
+            const box = $('#poderStatus');
+            if (!globalState.poderUid) { box.textContent = 'Nenhuma escolha aberta ainda.'; return; }
+            const snap = await db.doc(`escolhas/${globalState.rodada}`).get();
+            if (!snap.exists) { box.textContent = `Aguardando ${globalState.poderNome} escolher…`; return; }
+            const o = (globalState.proxOpcoes || []).find(x => x.id === snap.data().opcaoId);
+            box.innerHTML = `<div>${esc(globalState.poderNome)} escolheu: <strong class="text-fashion-gold">${esc(o ? o.nome : '?')}</strong></div><button id="btnPoderRevelar" class="px-3 py-1.5 rounded text-[11px] uppercase font-semibold bg-fashion-gold text-black">Revelar a todos e usar na próxima rodada</button>`;
+            $('#btnPoderRevelar').onclick = safeExec(async () => {
+                await db.doc('config/estado').set({ proxTema: { nome: o.nome } }, { merge: true });
+                $('#newRoundId').value = slug(o.nome); refreshRoundSummary();
+                showToast('Tema revelado! O nome já foi para o formulário de nova rodada.');
+            });
+        });
+
         $('#btnStartRound').onclick = safeExec(async () => {
             const rid = slug($('#newRoundId').value);
             const pzVal = $('#newRoundDeadline').value;
@@ -1788,7 +1885,10 @@
                 naoEliminatoria,
                 liberado: false,
                 urna: false,
-                berlinda: []
+                berlinda: [],
+                regras: $('#newRoundRules').value.trim(),
+                proxTema: null, proxOpcoes: [], poderUid: null, poderNome: null,
+                modos: { [rid]: $('#newRoundSoma').value }
             }, { merge: true });
 
             showToast(`Rodada ${rid} iniciada! (${naoEliminatoria ? 'Não Eliminatória' : elimDupla ? 'Eliminação Dupla' : 'Elimina 1'})`);
@@ -1833,8 +1933,8 @@
             const statuses = standings.map((item, idx) => {
                 if (isFinal) return ['VENCEDOR DA TEMPORADA', '2º LUGAR', '3º LUGAR'][idx] || '';
                 if (idx === 0) return 'WIN (PROTEGIDO)';
-                if (isNonElim) return idx <= 2 ? 'TOP (HIGH SCORE)' : 'SAFE';
-                if (idx >= count - 2) return 'BOTTOM (BERLINDA)';
+                if (isNonElim) return idx <= 2 ? 'TOP' : 'SAFE';
+                if (idx >= count - 2) return 'BOTTOM';
                 return 'SAFE';
             });
 
@@ -2206,6 +2306,75 @@
         const el = document.getElementById('quoteStrip'); let i = 0;
         const show = () => { el.style.opacity = 0; setTimeout(() => { el.textContent = Q[i++ % Q.length]; el.style.opacity = 1; }, 600); };
         show(); setInterval(show, 7000);
+    })();
+
+    (() => {
+        const hero = document.getElementById('challengeHero');
+        const pretty = r => String(r || '').toUpperCase();
+        setInterval(() => {
+            if (typeof currentUser === 'undefined' || !currentUser || !globalState || !globalState.rodada) { hero.classList.add('hidden'); return; }
+            const fase = globalState.fase === 'final' ? 'THE GRAND FINALE' : globalState.fase === 'top5' ? 'TOP 5 — THE FINAL FILTER' : 'THE CHALLENGE';
+            const d = (globalState.prazo || 0) - Date.now();
+            const t = d <= 0 ? "TIME'S UP!" : `⏳ ${Math.floor(d / 36e5)}h ${String(Math.floor(d % 36e5 / 6e4)).padStart(2, '0')}m ${String(Math.floor(d % 6e4 / 1e3)).padStart(2, '0')}s`;
+            hero.innerHTML = `<div class="text-[10px] tracking-[.4em] text-fashion-gold font-cinzel">${fase}</div><div class="font-cinzel text-white text-lg tracking-widest">${esc(pretty(globalState.rodada))}</div><div class="font-mono text-xs ${d <= 0 ? 'text-red-400' : 'text-gray-300'}">${t}</div>`;
+            hero.classList.remove('hidden');
+        }, 1000);
+
+        let unsubRk = null;
+        auth.onAuthStateChanged(u => {
+            if (unsubRk) { unsubRk(); unsubRk = null; }
+            if (!u) return;
+            unsubRk = db.doc('ranking/atual').onSnapshot(snap => {
+                const rk = snap.data(); if (!rk || !rk.rows) return;
+                const w = rk.rows.find(r => /WIN|VENCEDOR/.test(r.status)); if (!w) return;
+                const key = `win_${rk.rodada}_${w.ate}`;
+                try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
+                const ov = document.createElement('div'); ov.id = 'winReveal';
+                ov.innerHTML = `<div class="text-xs tracking-[.5em] text-fashion-gold font-cinzel">WINNER ANNOUNCEMENT</div><div style="font-size:3rem">🏆</div><div class="font-cinzel text-white" style="font-size:clamp(1.6rem,7vw,3rem);letter-spacing:.15em">${esc(w.ate)}</div><div class="text-gray-400 italic text-sm">“Make it work. Make it fashion. Make it count.”</div>`;
+                ov.onclick = () => ov.remove(); document.body.appendChild(ov);
+                const cols = ['#d4af37', '#e8dcc4', '#c0283c', '#ffffff'];
+                for (let i = 0; i < 45; i++) { const c = document.createElement('span'); c.className = 'cf'; c.style.cssText = `left:${Math.random() * 100}%;background:${cols[i % 4]};animation-delay:${Math.random() * 1.5}s`; document.body.appendChild(c); setTimeout(() => c.remove(), 5200); }
+                setTimeout(() => ov.remove(), 7000);
+            }, () => {});
+        });
+    })();
+
+    (() => {
+        const card = document.getElementById('poderCard');
+        let escolhido = null, escSub = null, escKey = '', lastKey = '';
+        const render = () => {
+            const g = globalState;
+            if (typeof currentUser === 'undefined' || !currentUser || !g || !g.rodada) { card.classList.add('hidden'); return; }
+            const eu = !!g.poderUid && g.poderUid === currentUser.uid;
+            const k = [g.rodada, g.poderUid, g.proxTema && g.proxTema.nome, eu, escolhido, (g.proxOpcoes || []).length].join('|');
+            if (k === lastKey) return; lastKey = k;
+            let html = '';
+            if (g.proxTema) html = `<div class="text-fashion-gold font-cinzel tracking-widest uppercase text-[10px]">Próximo tema revelado</div><div class="font-cinzel text-white text-lg tracking-widest">🎭 ${esc(String(g.proxTema.nome).toUpperCase())}</div>`;
+            else if (g.poderUid && (g.proxOpcoes || []).length) {
+                if (eu && !escolhido) html = `<div class="text-fashion-gold font-cinzel tracking-widest uppercase">👑 O poder do ${g.poderTipo === 'icone' ? 'Ícone da Moda' : 'WIN'} é seu</div><p class="text-gray-400">Escolha o próximo tema. Só há pistas e a decisão é definitiva.</p><div class="flex flex-col sm:flex-row gap-2 justify-center">${g.proxOpcoes.map(o => `<button data-op="${esc(o.id)}" class="flex-1 px-3 py-2 rounded border border-fashion-gold/60 bg-fashion-950 hover:bg-fashion-800 text-white"><strong class="font-cinzel block">${esc(o.nome)}</strong><span class="text-gray-400 italic">${esc(o.pista)}</span></button>`).join('')}</div>`;
+                else if (eu) html = '<div class="text-fashion-gold font-cinzel">👑 Escolha registrada. Aguarde a produção revelar o tema.</div>';
+                else html = `<div class="text-gray-300 italic">👑 ${esc(g.poderNome || '')} está escolhendo o próximo tema…</div>`;
+            }
+            card.innerHTML = html; card.classList.toggle('hidden', !html);
+        };
+        card.onclick = async e => {
+            const b = e.target.closest('[data-op]'); if (!b) return;
+            const o = (globalState.proxOpcoes || []).find(x => x.id === b.dataset.op); if (!o) return;
+            if (!confirm(`Confirmar "${o.nome}" como próximo tema? A decisão é definitiva.`)) return;
+            try { await db.doc(`escolhas/${globalState.rodada}`).set({ rodada: globalState.rodada, uid: currentUser.uid, opcaoId: o.id, t: Date.now() }); }
+            catch (err) { showToast('Não foi possível registrar: ' + err.message); }
+        };
+        setInterval(() => {
+            const g = globalState;
+            const eu = typeof currentUser !== 'undefined' && currentUser && g && g.poderUid === currentUser.uid;
+            const key = eu ? g.rodada : '';
+            if (key !== escKey) {
+                escKey = key; escolhido = null; lastKey = '';
+                if (escSub) { escSub(); escSub = null; }
+                if (key) escSub = db.doc(`escolhas/${key}`).onSnapshot(sn => { escolhido = sn.exists ? sn.data().opcaoId : null; lastKey = ''; }, () => {});
+            }
+            render();
+        }, 1000);
     })();
 </script>
 </body>
