@@ -1,3 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Runway: Fau's Edition (AI Edition)</title>
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome (ícones) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    },
+                    colors: {
+                        fashion: {
+                            950: '#0a0a0c',
+                            900: '#121216',
+                            800: '#1b1b21',
+                            700: '#2a2a33',
+                            600: '#3d3d49',
+                            gold: '#d4af37',
+                            red: '#c0283c',
+                            sand: '#e8dcc4'
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        html, body { background: #0a0a0c; }
+        .img-look { aspect-ratio: 3 / 4; object-fit: cover; background: #121216; }
+        .score-slider { width: 100%; accent-color: #d4af37; }
+        ::-webkit-scrollbar { height: 6px; width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #2a2a33; border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
+
 <!-- CABEÇALHO -->
 <header class="border-b border-fashion-700 bg-fashion-900/90 backdrop-blur-md sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -54,6 +106,11 @@
     <i class="fa-solid fa-circle-info text-fashion-gold"></i>
     <span id="toastMsg"></span>
 </div>
+
+<!-- Firebase (SDK compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
     const firebaseConfig = {
@@ -1951,7 +2008,7 @@
             $('#adminOutput').innerHTML = `
                 <div class="space-y-2">
                     <span class="text-green-400 font-bold block font-cinzel">Texto Formatado para o WhatsApp:</span>
-                    <textarea class="w-full h-48 bg-fashion-900 border border-fashion-700 rounded p-2 text-white font-mono text-xs focus:outline-none">${lines}</textarea>
+                    <textarea class="w-full h-48 bg-fashion-900 border border-fashion-700 rounded p-2 text-white font-mono text-xs focus:outline-none">${esc(lines)}</textarea>
                     <a href="https://api.whatsapp.com/send?text=${encodeURIComponent(lines)}" target="_blank" class="inline-block bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded uppercase font-bold text-xs">
                         <i class="fa-brands fa-whatsapp"></i> Abrir no WhatsApp
                     </a>
@@ -2072,3 +2129,5 @@
     window.closeBroadcastModal = () => { $('#broadcastModal').classList.add('hidden'); };
 </script>
 
+</body>
+</html>
