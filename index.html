@@ -46,9 +46,30 @@
         .score-slider { width: 100%; accent-color: #d4af37; }
         ::-webkit-scrollbar { height: 6px; width: 6px; }
         ::-webkit-scrollbar-thumb { background: #2a2a33; border-radius: 3px; }
+
+        body { background: radial-gradient(ellipse at 50% -10%, #2a2210 0%, #0a0a0c 55%) fixed; }
+        body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; mix-blend-mode: screen;
+            background: conic-gradient(from 200deg at 50% -20%, transparent 0 40%, rgba(212,175,55,.12) 48%, transparent 56% 100%),
+                        conic-gradient(from 160deg at 15% -20%, transparent 0 44%, rgba(255,255,255,.06) 50%, transparent 56% 100%);
+            animation: sweep 9s ease-in-out infinite alternate; }
+        @keyframes sweep { to { transform: translateX(6%) skewX(-4deg); opacity: .55; } }
+        main, footer { position: relative; z-index: 1; }
+        #mainView > * { animation: rise .6s ease both; }
+        @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+        h2.font-cinzel { background: linear-gradient(90deg, #fff, #e8dcc4, #d4af37, #fff); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent !important; animation: shine 6s linear infinite; }
+        @keyframes shine { to { background-position: 200% center; } }
+        details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
+        details[open] { border-color: #d4af37; }
+        #splash { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; background: radial-gradient(ellipse at 50% 30%, #2a2210, #0a0a0c 70%); transition: opacity 1s; cursor: pointer; }
+        #splash .t { font-family: Cinzel, serif; font-size: clamp(1.8rem, 8vw, 3.6rem); letter-spacing: .25em; color: #fff; animation: rise 1.2s ease both; }
+        #splash .k { color: #d4af37; letter-spacing: .6em; font-size: .7rem; font-family: Cinzel, serif; }
+        #splash .q { color: #9ca3af; font-style: italic; font-size: .8rem; animation: rise 2s ease both; }
+        #quoteStrip { transition: opacity .6s; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
+
+<div id="splash" onclick="this.remove()"><div class="k">F · A · U</div><div class="t">PROJECT RUNWAY</div><div class="q">“In fashion, one day you're in, and the next day you're out.”</div><div class="q" style="font-size:.6rem;letter-spacing:.3em">TOQUE PARA ENTRAR</div></div>
 
 <!-- CABEÇALHO -->
 <header class="border-b border-fashion-700 bg-fashion-900/90 backdrop-blur-md sticky top-0 z-40">
@@ -68,6 +89,8 @@
 
 <!-- BANNER GLOBAL DE STATUS -->
 <div id="globalStatusBanner" class="hidden bg-fashion-900 border-b border-fashion-700 text-xs py-2 px-4 text-center"></div>
+
+<div id="quoteStrip" class="text-center text-[11px] italic text-fashion-gold/80 font-cinzel py-2 px-4 border-b border-fashion-800"></div>
 
 <!-- ÁREA PRINCIPAL -->
 <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6">
@@ -137,11 +160,11 @@
 
     // Critérios Oficiais da AI Edition (Duas Notas: Direção Criativa e Runway)
     const CRITERIOS = [
-        'Creative Direction (Prompt & Conceito)',
-        'Runway Score (Impacto Visual)',
-        'Fidelidade à Maison (Estilista Fixo)',
-        'Styling & Composição',
-        'Interpretação do Briefing'
+        'Criatividade e Originalidade',
+        'Conceito e Narrativa',
+        'Qualidade Visual',
+        'Styling e Composição',
+        'Interpretação do Desafio'
     ];
 
     const ROTULOS_ABAS = {
@@ -152,7 +175,8 @@
         conf: 'Confessionário',
         historico: 'Histórico da Temporada',
         bancada: 'Bancada de Júri',
-        direcao: 'Direção Executiva'
+        direcao: 'Direção Executiva',
+        manual: 'O Manual'
     };
 
     const ABAS_POR_PERFIL = {
@@ -162,6 +186,7 @@
         admin: ['direcao', 'bancada', 'runway', 'tribunal', 'conf', 'historico']
     };
 
+    Object.values(ABAS_POR_PERFIL).forEach(a => a.push('manual'));
     let currentUser = null;
     let isAdmin = false;
     let globalState = {};
@@ -363,7 +388,7 @@
     const navigate = tabKey => {
         let allowedTabs = ABAS_POR_PERFIL[currentUser?.role] || ['runway', 'tribunal', 'conf'];
         if (currentUser?.out && currentUser?.role === 'estilista') {
-            allowedTabs = ['runway', 'conf', 'historico'];
+            allowedTabs = ['runway', 'conf', 'historico', 'manual'];
         }
 
         activeTab = allowedTabs.includes(tabKey) ? tabKey : allowedTabs[0];
@@ -386,6 +411,41 @@
     const VIEWS = {};
 
     // 1. CONFESSIONÁRIO
+
+    VIEWS.manual = () => {
+        const S = [
+            ['📖','01 · The Competition','Competição entre estilistas usando IA. Não basta uma imagem bonita: é preciso ideia, narrativa e identidade autoral.'],
+            ['🎯','02 · The Challenges','Cada rodada traz um briefing com tema, requisitos, restrições e instruções. O briefing da rodada prevalece sobre o manual.'],
+            ['📸','03 · The Runway','Entrega obrigatória: FOTO + NOME DA CRIAÇÃO + CONCEITO (máx. 500 caracteres). Os três contam na avaliação.'],
+            ['⚖️','04 · The Judging','5 critérios de 0 a 10: criatividade, conceito, qualidade visual, styling e interpretação do desafio. Soma das médias = até 50 pontos.'],
+            ['💬','05 · Judges\' Critiques','Críticas individuais para TOP e BOTTOM, e para o WIN da rodada anterior. Todos recebem suas notas.'],
+            ['🏆','06 · The Results','WIN · TOP · SAFE · BOTTOM · THE ELIMINATION POOL · OUT. BOTTOM é o desempenho da semana; só o Pool pode ser eliminado.'],
+            ['📈','07 · The Ranking','Ranking acumulado da temporada. Ele define quem entra no Elimination Pool: consistência também vence.'],
+            ['👑','08 · The Win','Protege o estilista na vaga do ranking acumulado, só naquela rodada (não é imunidade). Decide o desempate do voto de salvamento.'],
+            ['✨','09 · Ícone da Moda','Voto secreto no melhor estilista. O Ícone escolhe o próximo tema às cegas, só com pistas. Não dá imunidade.'],
+            ['🥀','10 · Fora de Moda','Voto secreto no pior estilista. Se empatar no salvamento, perde automaticamente.'],
+            ['🗳️','11 · The Votes','Todos os votos são secretos. Ninguém vota em si mesmo. Só os resultados são anunciados.'],
+            ['🚨','12 · The Elimination Pool','3 estilistas: os 2 piores da rodada + o pior do ranking acumulado (se já estiver no bottom, entra o próximo elegível).'],
+            ['🛟','13 · The Save Vote','Mais votado e 2º mais votado são salvos; o menos votado é OUT. Empate: Fora de Moda perde → Ícone tem prioridade → WIN decide.'],
+            ['🔥','14 · Top 5 — The Final Filter','Rodada somada ao acumulado: 1º vai direto à final, 5º sai. Os 3 do meio disputam 2 vagas só pela nota do Top 5.'],
+            ['🏁','15 · The Grand Finale','Três finalistas, placar ZERADO, igualdade total. Vence quem brilhar na etapa final.'],
+            ['🎤','16 · Final Word','Respeite briefings e prazos, defenda suas ideias. THE RUNWAY IS YOURS. MAKE IT COUNT.']
+        ];
+        renderView(`
+            <div class="space-y-5">
+                <div class="text-center space-y-2 py-4">
+                    <span class="text-xs uppercase tracking-[0.3em] text-fashion-gold font-cinzel">F · A · U — Fashion, Art & Uniqueness</span>
+                    <h2 class="font-cinzel text-2xl">Manual Oficial do Participante</h2>
+                    <p class="text-gray-400 italic text-xs">“In fashion, one day you're in, and the next day you're out.”</p>
+                </div>
+                ${S.map((x, i) => `
+                    <details class="bg-fashion-900 border border-fashion-700 rounded-lg p-4 group" ${i === 0 ? 'open' : ''}>
+                        <summary class="cursor-pointer font-cinzel text-fashion-gold text-sm tracking-wider">${x[0]} ${x[1]}</summary>
+                        <p class="text-gray-300 text-xs leading-relaxed mt-3">${x[2]}</p>
+                    </details>`).join('')}
+            </div>`);
+    };
+
     VIEWS.conf = () => {
         if (!globalState.rodada && !isAdmin) {
             renderView(`
@@ -1772,7 +1832,7 @@
 
             const statuses = standings.map((item, idx) => {
                 if (isFinal) return ['VENCEDOR DA TEMPORADA', '2º LUGAR', '3º LUGAR'][idx] || '';
-                if (idx === 0) return 'WIN (IMUNE)';
+                if (idx === 0) return 'WIN (PROTEGIDO)';
                 if (isNonElim) return idx <= 2 ? 'TOP (HIGH SCORE)' : 'SAFE';
                 if (idx >= count - 2) return 'BOTTOM (BERLINDA)';
                 return 'SAFE';
@@ -1784,8 +1844,9 @@
                     stateUpdate.berlinda = [];
                     stateUpdate.imune = standings[0].uid;
                 } else {
-                    const worstRound = standings.filter(x => x.uid !== globalState.imune).slice(-2);
-                    const worstAccum = [...standings].sort((a, b) => a.tot - b.tot).find(x => x.uid !== globalState.imune && !worstRound.some(w => w.uid === x.uid));
+                    const winUid = standings[0].uid;
+                    const worstRound = standings.slice(-2);
+                    const worstAccum = [...standings].sort((a, b) => a.tot - b.tot).find(x => x.uid !== winUid && !worstRound.some(w => w.uid === x.uid));
                     stateUpdate.berlinda = [...worstRound, worstAccum].filter(Boolean).map(x => ({ uid: x.uid, ate: x.ate }));
                     stateUpdate.imune = standings[0].uid;
                 }
@@ -1829,12 +1890,18 @@
 
             const votes = await tallyVotes('ber');
             const isDouble = globalState.elimDupla === true;
-            const sorted = [...berlinda].sort((a, b) => (votes[a.uid] || 0) - (votes[b.uid] || 0));
+            const topOf = async t => { const e = Object.entries(await tallyVotes(t)).sort((a, b) => b[1] - a[1]); return e.length && (e.length < 2 || e[0][1] > e[1][1]) ? e[0][0] : null; };
+            const fdmUid = await topOf('fdm'), iconeUid = await topOf('veto');
+            const key = u => u === fdmUid ? -1 : u === iconeUid ? 1 : 0;
+            const sorted = [...berlinda].sort((a, b) => ((votes[a.uid] || 0) - (votes[b.uid] || 0)) || (key(a.uid) - key(b.uid)));
+            const lowV = votes[sorted[0].uid] || 0;
+            const tied = sorted.filter(x => (votes[x.uid] || 0) === lowV && key(x.uid) === key(sorted[0].uid));
+            const tieNote = tied.length > 1 ? '<div class="text-yellow-300">⚖️ Empate sem Fora de Moda nem Ícone: o WIN da rodada decide quem é salvo.</div>' : '';
             let toEliminate = isDouble ? [sorted[0], sorted[1]].filter(Boolean) : [sorted[0]];
 
             $('#adminOutput').innerHTML = `
                 <div class="space-y-3">
-                    <span class="text-fashion-gold font-bold uppercase block font-cinzel">Veredito da Berlinda:</span>
+                    <span class="text-fashion-gold font-bold uppercase block font-cinzel">Veredito do Elimination Pool:</span>${tieNote}
                     ${berlinda.map(b => `<div>${esc(b.ate)}: <strong>${votes[b.uid] || 0} voto(s)</strong> para salvar</div>`).join('')}
                     <div class="p-3 bg-fashion-red/20 border border-fashion-red/40 rounded space-y-1 text-red-300">
                         <strong>Eliminados:</strong>
@@ -1988,7 +2055,7 @@
                 '*PROJECT RUNWAY: FAU\'S EDITION* (AI EDITION) 🪡🤖',
                 `*RESULTADO OFICIAL — THE RUNWAY · RODADA ${globalState.rodada ? globalState.rodada.toUpperCase() : ''}*`,
                 '---------------------------------------------',
-                `👑 *WINNER:* ${standings[0]?.ate || 'N/A'} (IMUNE!)`,
+                `👑 *WINNER:* ${standings[0]?.ate || 'N/A'} (PROTEGIDO NO POOL)`,
                 '',
                 '📊 *CLASSIFICAÇÃO:*',
                 ...standings.map((s, idx) => `#${idx + 1} *${s.ate}* — Nota: ${s.rd} | Total: ${s.tot}`),
@@ -2129,5 +2196,17 @@
     window.closeBroadcastModal = () => { $('#broadcastModal').classList.add('hidden'); };
 </script>
 
+<script>
+    (() => {
+        const sp = document.getElementById('splash');
+        let seen = false; try { seen = sessionStorage.getItem('splash'); sessionStorage.setItem('splash', '1'); } catch (e) {}
+        if (sp && seen) sp.remove();
+        else if (sp) setTimeout(() => { sp.style.opacity = 0; setTimeout(() => sp.remove(), 1000); }, 2800);
+        const Q = ['“Make it work. And make it unforgettable.”', '“Designers, you have a challenge!”', '“I don\'t want to see safe. I want to see fashion.”', '“You have to take risks to stand out.”', '“One challenge can change everything.”', '“Auf Wiedersehen!”', '“This is the final countdown. Make it count.”'];
+        const el = document.getElementById('quoteStrip'); let i = 0;
+        const show = () => { el.style.opacity = 0; setTimeout(() => { el.textContent = Q[i++ % Q.length]; el.style.opacity = 1; }, 600); };
+        show(); setInterval(show, 7000);
+    })();
+</script>
 </body>
 </html>
