@@ -593,7 +593,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 numSubmissoes: 4,
                 slotLabels: ["ACT I — THE ORIGIN", "ACT II — THE REINVENTION", "ACT III — THE CONFRONTATION", "ACT IV — THE LEGEND"],
                 drawType: "none",
-                mandate: "🏆 THE FOUR ACTS OF A LEGEND — Crie quatro editoriais originais com uma narrativa e um HOUSE CODE reconhecível. ACT I — THE ORIGIN: escolha uma referência histórica, cultural ou estética e traduza sua essência em moda, sem fantasia literal. ACT II — THE REINVENTION: reinvente um look oficialmente eleito FORA DE MODA na temporada, preservando conexão reconhecível e transformando-o pela identidade da sua Maison. ACT III — THE CONFRONTATION: releia um look oficialmente eleito ÍCONE DA MODA, dialogando com a criação consagrada sem copiá-la. ACT IV — THE LEGEND: apresente o editorial definitivo da Maison e seu legado. A referência do Ato I e o House Code devem conectar os quatro capítulos. Cada ato exige imagem, título, conceito de até 500 caracteres. Informe também nome da Maison, referência de origem, cinco pilares do House Code (silhueta, materiais/texturas, paleta, detalhes, filosofia), manifesto da coleção e identificação dos looks originais dos atos II e III com autores e rodadas. Cada ato vale até 50 pontos, total de 200. O placar da temporada é zerado na final.",
+                mandate: "🏆 THE FOUR ACTS OF A LEGEND — Crie quatro editoriais originais com uma narrativa e um HOUSE CODE reconhecível. ACT I — THE ORIGIN: escolha uma referência histórica, cultural ou estética e traduza sua essência em moda, sem fantasia literal. ACT II — THE REINVENTION: reinvente um look oficialmente eleito FORA DE MODA na temporada, preservando conexão reconhecível e transformando-o pela identidade da seu Designer. ACT III — THE CONFRONTATION: releia um look oficialmente eleito ÍCONE DA MODA, dialogando com a criação consagrada sem copiá-la. ACT IV — THE LEGEND: apresente o editorial definitivo da Maison e seu legado. A referência do Ato I e o House Code devem conectar os quatro capítulos. Cada ato exige imagem, título, conceito de até 500 caracteres. Informe também nome da Maison, referência de origem, cinco pilares do House Code (silhueta, materiais/texturas, paleta, detalhes, filosofia), manifesto da coleção e identificação dos looks originais dos atos II e III com autores e rodadas. Cada ato vale até 50 pontos, total de 200. O placar da temporada é zerado na final.",
                 extraField: null
             }
         };
@@ -690,6 +690,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     const restRef = () => db.doc(`rest_dinamicas/${globalState.rodada}`);
     const restState = async () => (await restRef().get()).data() || {phase:'first'};
     const restSecondLookId = uid => `${globalState.rodada}_${uid}_rest_funeral`;
+    // IMPORTANTE: rest_avaliacoes é um júri especial de eliminação. Nunca integrar à coleção 'avaliacoes' ou ao acumulado.
+    const REST_SPECIAL_VOTES_COLLECTION = 'rest_avaliacoes';
     const restCriteria = ['Criatividade e originalidade','Conceito e narrativa','Qualidade visual','Styling e composição','Interpretação do desafio'];
     const supremeRef = () => db.doc(`supreme_etapas/${globalState.rodada}`);
     const supremeState = async () => (await supremeRef().get()).data() || {phase:'submissions'};
@@ -813,6 +815,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         berlinda: 'The Elimination Pool',
         conf: 'The Confessional Room',
         historico: 'The Track Record',
+        legado: 'The Fashion Archive',
         bancada: "The Judges' Panel",
         direcao: 'The Control Room',
         manual: 'The Rulebook'
@@ -825,13 +828,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         admin: ['direcao', 'bancada', 'runway', 'tribunal', 'conf', 'historico']
     };
 
-    Object.values(ABAS_POR_PERFIL).forEach(a => a.push('manual'));
+    Object.values(ABAS_POR_PERFIL).forEach(a => { a.push('legado'); a.push('manual'); });
     let currentUser = null;
     let isAdmin = false;
     let globalState = {};
     let activeTab = 'runway';
     const hasMaisonIdentity = () => !!(currentUser?.ate && currentUser.ate !== 'Público' && currentUser.ate.trim());
-    const isRoundLive = () => !!(globalState.rodada && globalState.themeId && globalState.prazo && now() < globalState.prazo);
     const isCastVoter = () => currentUser?.role === 'estilista' && !currentUser.out && !currentUser.disabled && hasMaisonIdentity();
     let unsubsGlobal = [];
     let unsubsTab = [];
@@ -870,7 +872,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     const stageAtLeast = id => stageIndex(currentFlowStage()) >= stageIndex(id);
     const flowHint = role => {
       const stage=FLOW_STAGES.find(x=>x.id===currentFlowStage())||FLOW_STAGES[0];
-      const roleTips={estilista:{preparation:'Defina sua Maison, a assinatura criativa que você levará à passarela, e aguarde a estreia.',creation:'Confira o desafio e envie sua criação antes do prazo.',runway:'Acompanhe a passarela quando for liberada.',judging:'A bancada está avaliando as criações.',voting:'Entre na cabine somente se a votação estiver aberta.',results:'Aguarde as revelações oficiais da produção.',next:'A próxima escolha pode estar nas mãos do Ícone da Moda.'},jurado:{preparation:'Aguarde a estreia da temporada.',creation:'Conheça o desafio; as avaliações ainda não começaram.',runway:'Observe as criações e seus Creative Dossiers.',judging:'Entre na bancada e registre suas notas.',voting:'Os estilistas votam em segredo. Sua avaliação continua independente.',results:'Acompanhe os resultados oficialmente revelados.',next:'Aguarde o anúncio do próximo desafio.'},plateia:{preparation:'A passarela ainda não estreou.',creation:'As Maisons estão trabalhando nos bastidores.',runway:'Acompanhe o desfile assim que for liberado.',judging:'Os jurados estão deliberando.',voting:'A votação é exclusiva dos estilistas.',results:'Acompanhe as revelações autorizadas.',next:'As pistas do próximo desafio aguardam a escolha.'}};
+      const roleTips={estilista:{preparation:'Defina seu Designer, a assinatura criativa que você levará à passarela, e aguarde a estreia.',creation:'Confira o desafio e envie sua criação antes do prazo.',runway:'Acompanhe a passarela quando for liberada.',judging:'A bancada está avaliando as criações.',voting:'Entre na cabine somente se a votação estiver aberta.',results:'Aguarde as revelações oficiais da produção.',next:'A próxima escolha pode estar nas mãos do Ícone da Moda.'},jurado:{preparation:'Aguarde a estreia da temporada.',creation:'Conheça o desafio; as avaliações ainda não começaram.',runway:'Observe as criações e seus Creative Dossiers.',judging:'Entre na bancada e registre suas notas.',voting:'Os estilistas votam em segredo. Sua avaliação continua independente.',results:'Acompanhe os resultados oficialmente revelados.',next:'Aguarde o anúncio do próximo desafio.'},plateia:{preparation:'A passarela ainda não estreou.',creation:'As Maisons estão trabalhando nos bastidores.',runway:'Acompanhe o desfile assim que for liberado.',judging:'Os jurados estão deliberando.',voting:'A votação é exclusiva dos estilistas.',results:'Acompanhe as revelações autorizadas.',next:'As pistas do próximo desafio aguardam a escolha.'}};
       return {stage,tip:(roleTips[role]||roleTips.plateia)[stage.id]};
     };
 
@@ -1067,7 +1069,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
         if (isAdmin) {
             currentUser.role = 'admin';
-            currentUser.ate = profileData.ate || 'Direção Executiva (Admin & Júri)';
+            currentUser.ate = profileData.ate || 'The Control Room (Admin & Júri)';
         }
 
         $('#userHeaderSlot').innerHTML = `
@@ -1132,8 +1134,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const flow=getSeasonFlow();
         let tabs=[...(ABAS_POR_PERFIL[role] || ['runway','conf','manual'])];
         if(role==='estilista') {
-            if(currentUser.out) return ['runway','conf','historico','manual'];
-            if(!hasMaisonIdentity() || !flow.configured) return ['work','manual'];
+            if(currentUser.out) return ['runway','conf','historico','legado','manual'];
+            if(!hasMaisonIdentity() || !flow.configured) return ['work','legado','manual'];
             if(!flow.runwayOpen) tabs=tabs.filter(t=>t!=='runway');
             if(!flow.ballotOpen) tabs=tabs.filter(t=>t!=='tribunal');
             if(!flow.rankingVisible && !flow.ballotOpen) tabs=tabs.filter(t=>t!=='berlinda');
@@ -1186,12 +1188,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             plateia: {
                 title: 'FRONT ROW · VIP ACCESS',
                 desc: intermission ? 'O desfile entrou para o arquivo da temporada. Reveja os looks, os resultados públicos e os confessionários enquanto a próxima estreia permanece em segredo.' : !flow.runwayOpen ? 'A passarela ainda está fechada. Explore os confessionários e conheça as regras enquanto aguarda a estreia oficial.' : 'Você está na primeira fila: acompanhe os looks, os confessionários e o histórico público. A plateia não vota e não acessa notas privadas.',
-                links: [['runway','Ver desfile'],['conf','Confessionários'],['historico','Track Record']]
+                links: [['runway','Ver desfile'],['conf','Confessional Room'],['historico','Track Record']]
             },
             admin: {
                 title: 'PRODUCTION HEADQUARTERS',
                 desc: !hasRound ? 'Prepare a temporada: cadastre Maisons, jurados, temas e pistas antes da estreia.' : receiving ? 'Desafio em andamento. Acompanhe entregas, prazos e ajustes antes de abrir as próximas etapas.' : 'Conduza a apuração e as revelações na ordem correta. Verifique os registros antes de publicar qualquer resultado.',
-                links: [['direcao','Control Room'],['bancada','Bancada'],['runway','Desfile']]
+                links: [['direcao','Control Room'],['bancada',"Judges' Panel"],['runway','Desfile']]
             }
         };
         const data = profiles[role] || profiles.plateia;
@@ -1226,12 +1228,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               const out=!!currentUser.out || /\bOUT\b|ELIMINAD/.test(status);
               let key=out?'out':/VENCEDOR DA TEMPORADA/.test(status)?'champion':/\bWIN\b/.test(status)?'win':/\bHIGH\b|\bTOP\b/.test(status)?'high':/\bLOW\b|\bBOTTOM\b/.test(status)?'low':'safe';
               const messages={
-                champion:['THE LEGEND IS BORN','Sua Maison conquistou a temporada. A passarela agora faz parte do seu legado.','🏆'],
+                champion:['THE LEGEND IS BORN','Seu Designer conquistou a temporada. A passarela agora faz parte do seu legado.','🏆'],
                 win:['THE WINNING LOOK','Esta foi a sua passarela. Sua criação venceu o desafio e conquistou o destaque máximo da rodada.','🏆'],
-                high:['THE STANDOUTS','Seu look chamou a atenção dos jurados e colocou sua Maison entre os destaques da semana.','✨'],
-                safe:['YOU ARE SAFE','Sua Maison continua na competição. A próxima passarela será uma nova oportunidade de surpreender.','🕊️'],
+                high:['THE STANDOUTS','Seu look chamou a atenção dos jurados e colocou seu Designer entre os destaques da semana.','✨'],
+                safe:['YOU ARE SAFE','Seu Designer continua na competição. A próxima passarela será uma nova oportunidade de surpreender.','🕊️'],
                 low:['A CLOSE CALL','Os jurados esperavam mais desta criação. A próxima oportunidade ainda pode mudar sua trajetória.','⚠️'],
-                out:['THE FINAL WALK','Sua jornada competitiva terminou, mas a história da sua Maison continua no arquivo da temporada.','🥀']
+                out:['THE FINAL WALK','Sua jornada competitiva terminou, mas a história da seu Designer continua no arquivo da temporada.','🥀']
               };
               const [headline,description,symbol]=messages[key];
               inter.dataset.maisonStatus=key;
@@ -1246,7 +1248,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               const achievements=[];
               if(/\bICON[EÊ]\b|[ÍI]CONE DA MODA/i.test(status))achievements.push(['👑','Ícone da Moda','Escolhido pelos estilistas na votação secreta.']);
               if(/FORA DE MODA/i.test(status))achievements.push(['🥀','Fora de Moda','Título decidido pela votação secreta dos estilistas.']);
-              if(/SALV[OA]|SAVED|SAVE VOTE/i.test(status)&&!out)achievements.push(['🛟','Saved by the Atelier','Sua Maison foi salva pelo voto dos outros estilistas.']);
+              if(/SALV[OA]|SAVED|SAVE VOTE/i.test(status)&&!out)achievements.push(['🛟','Saved by the Atelier','Seu Designer foi salva pelo voto dos outros estilistas.']);
               if(achievements.length){
                 const award=document.createElement('div');award.className='flex flex-wrap gap-2 mt-3';
                 award.innerHTML=achievements.map(([icon,label,detail])=>`<div class="rounded-xl border border-fashion-gold/40 bg-fashion-gold/5 p-3 flex-1 min-w-[190px]"><p class="font-cinzel text-fashion-gold">${icon} ${esc(label)}</p><p class="text-xs text-gray-300 mt-1">${esc(detail)}</p></div>`).join('');
@@ -1255,9 +1257,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               db.collection('fau_titulos_publicos').doc(round).get().then(t=>{
                 if(!t.exists||!t.data().published||!inter.isConnected||currentUser?.uid!==uid||String(globalState.rodada)!==round)return;
                 const d=t.data(),badges=[];
-                if(d.icon===uid)badges.push(['👑','THE FASHION ICON','Sua Maison foi escolhida pelos estilistas. Você conquistou o direito de escolher o próximo tema entre as opções disponíveis.']);
-                if(d.fora===uid)badges.push(['🥀','FORA DE MODA','Os votos da rodada marcaram sua Maison. Seu resultado permanece parte da história da competição.']);
-                if((d.saved||[]).includes(uid))badges.push(['🛟','SAVED BY THE ATELIER','Seus concorrentes escolheram manter sua Maison na competição.']);
+                if(d.icon===uid)badges.push(['👑','THE FASHION ICON','Seu Designer foi escolhida pelos estilistas. Você conquistou o direito de escolher o próximo tema entre as opções disponíveis.']);
+                if(d.fora===uid)badges.push(['🥀','FORA DE MODA','Os votos da rodada marcaram seu Designer. Seu resultado permanece parte da história da competição.']);
+                if((d.saved||[]).includes(uid))badges.push(['🛟','SAVED BY THE ATELIER','Seus concorrentes escolheram manter seu Designer na competição.']);
                 if(!badges.length)return;
                 const el=document.createElement('section');el.className='mt-4 grid gap-3';
                 el.innerHTML=badges.map(([emoji,title,desc])=>`<div class="rounded-xl border border-fashion-gold/50 bg-fashion-gold/10 p-5"><p class="text-3xl mb-2">${emoji}</p><p class="font-cinzel text-lg text-fashion-gold">${title}</p><p class="text-xs text-gray-200 mt-2">${desc}</p></div>`).join('');
@@ -1351,7 +1353,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 </div>
 
                 ${canPost ? `
-                    <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3" aria-label="Confessional booth"><div class="flex justify-between items-center"><span class="font-cinzel text-fashion-gold tracking-widest text-xs">🎥 CONFESSIONAL BOOTH</span><span class="text-red-400 text-xs font-mono">● REC</span></div><p class="text-xs text-gray-400">A câmera é sua. Depoimento livre, sem perguntas da produção. A publicação será pública e identificada pela sua Maison.</p><textarea id="chatInput" maxlength="1500" rows="4" class="w-full bg-fashion-900 border border-fashion-700 rounded p-3 text-xs text-white focus:outline-none focus:border-fashion-gold" placeholder="O que você tem a dizer sobre a competição?"></textarea><div class="flex flex-wrap justify-between gap-2 items-center"><span id="confCounter" class="text-[10px] text-gray-400">0 / 1500 caracteres</span><div class="flex gap-2"><button id="confPreviewButton" class="border border-fashion-gold/40 text-fashion-gold px-4 py-2 rounded text-xs">Prévia</button><button id="btnSendChat" class="bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold px-4 py-2 rounded text-xs uppercase">Publicar depoimento</button></div></div><div id="confPreview" class="hidden rounded-lg bg-fashion-900 border border-fashion-700 p-4 text-xs text-gray-200 whitespace-pre-wrap"></div></section>
+                    <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3" aria-label="Confessional booth"><div class="flex justify-between items-center"><span class="font-cinzel text-fashion-gold tracking-widest text-xs">🎥 CONFESSIONAL BOOTH</span><span class="text-red-400 text-xs font-mono">● REC</span></div><p class="text-xs text-gray-400">A câmera é sua. Depoimento livre, sem perguntas da produção. A publicação será pública e identificada pela seu Designer.</p><textarea id="chatInput" maxlength="1500" rows="4" class="w-full bg-fashion-900 border border-fashion-700 rounded p-3 text-xs text-white focus:outline-none focus:border-fashion-gold" placeholder="O que você tem a dizer sobre a competição?"></textarea><div class="flex flex-wrap justify-between gap-2 items-center"><span id="confCounter" class="text-[10px] text-gray-400">0 / 1500 caracteres</span><div class="flex gap-2"><button id="confPreviewButton" class="border border-fashion-gold/40 text-fashion-gold px-4 py-2 rounded text-xs">Prévia</button><button id="btnSendChat" class="bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold px-4 py-2 rounded text-xs uppercase">Publicar depoimento</button></div></div><div id="confPreview" class="hidden rounded-lg bg-fashion-900 border border-fashion-700 p-4 text-xs text-gray-200 whitespace-pre-wrap"></div></section>
                 ` : `
                     <div class="bg-fashion-900 border border-fashion-700/60 p-3 rounded text-center text-xs text-gray-400">
                         <i class="fa-solid fa-lock text-fashion-gold mr-1"></i> Só estilistas publicam depoimentos; todos podem ler.
@@ -1443,7 +1445,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             <div class="space-y-6">
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div class="space-y-1">
-                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">THE ATELIER · O espaço de criação da sua Maison</span>
+                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">THE ATELIER · O espaço de criação da seu Designer</span>
                         <h2 class="font-cinzel text-2xl text-white font-normal">The Workroom · Rodada ${esc(globalState.rodada || 'Pendente')}</h2>
                         <p class="text-xs text-gray-400">Meta do desafio: <strong class="text-fashion-gold">${requiredLooks} look(s) gerados por IA</strong> para a passarela.</p>
                     </div>
@@ -1527,7 +1529,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                             </div>
                             <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-1.5">
                                 <label class="block text-fashion-gold uppercase tracking-wider font-semibold font-cinzel">Manifesto / Biografia da Maison</label>
-                                <textarea id="setupAtelierBioInput" rows="2" maxlength="300" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white text-xs focus:outline-none focus:border-fashion-gold" placeholder="Descreva a visão, a estética e a assinatura criativa da sua Maison...">${esc(myBio)}</textarea>
+                                <textarea id="setupAtelierBioInput" rows="2" maxlength="300" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white text-xs focus:outline-none focus:border-fashion-gold" placeholder="Descreva a visão, a estética e a assinatura criativa da seu Designer...">${esc(myBio)}</textarea>
                             </div>
                             <button id="btnLockAtelierIdentity" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-widest text-xs transition font-cinzel">
                                 ${hasMaisonIdentity() ? "Salvar nome do Designer" : "Confirmar nome do Designer"}
@@ -1661,7 +1663,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     const actTitles = ['🌍 ACT I — THE ORIGIN','♻️ ACT II — THE REINVENTION','⚔️ ACT III — THE CONFRONTATION','👑 ACT IV — THE LEGEND'];
                     const actHints = [
                       'Escolha a raiz histórica, cultural ou estética da Maison. Transforme sua essência em moda, sem fantasia literal.',
-                      'Reinterprete um look que recebeu oficialmente FORA DE MODA. Preserve elementos reconhecíveis, mas transforme-o pela identidade da sua Maison.',
+                      'Reinterprete um look que recebeu oficialmente FORA DE MODA. Preserve elementos reconhecíveis, mas transforme-o pela identidade da seu Designer.',
                       'Reinterprete um look que recebeu oficialmente ÍCONE DA MODA. Preserve a essência e apresente uma assinatura autoral própria.',
                       'Apresente a imagem definitiva da Maison: o legado, a assinatura e a evolução dos três atos anteriores.'
                     ];
@@ -1748,7 +1750,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <p class="text-[10px] text-gray-400 line-clamp-2 italic">${esc(l.mem)}</p>
                     </div>
                 `;
-            }).join('') || '<div class="col-span-full text-center text-gray-500 py-4">Sua maison ainda não enviou looks.</div>';
+            }).join('') || '<div class="col-span-full text-center text-gray-500 py-4">Seu Designer ainda não enviou looks.</div>';
         };
 
         $('#mainView').onclick = safeExec(async e => {
@@ -1920,7 +1922,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         if (!isAdmin) {
             const slot = $('#trackRecordTableContainer');
             if (currentUser.role === 'estilista') {
-                slot.innerHTML = '<p class="text-gray-400 py-6 text-center">Preparando o arquivo pessoal da sua Maison...</p>';
+                slot.innerHTML = '<p class="text-gray-400 py-6 text-center">Preparando o arquivo pessoal da seu Designer...</p>';
                 const [mine, ownEvals] = await Promise.all([
                     db.collection('looks').where('uid','==',currentUser.uid).get(),
                     db.collection('avaliacoes').where('alvo','==',currentUser.uid).get()
@@ -2047,6 +2049,114 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         }
     };
 
+
+    // V84 — Acervo de resultados publicados, sem consultar entregas privadas.
+    const fauArchiveSort=(a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true});
+    VIEWS.legado=async()=>{
+      renderView(`<section id="fauArchive" class="space-y-7">
+        <header class="fau-archive-head rounded-xl p-7 border border-fashion-gold/40">
+          <p class="text-fashion-gold text-[10px] tracking-[.3em]">PROJECT RUNWAY: FAU · THE OFFICIAL ARCHIVE</p>
+          <h2 class="font-cinzel text-3xl text-white mt-3">THE FASHION ARCHIVE</h2>
+          <p class="text-gray-300 text-sm mt-3">The Hall of Fashion · Designer Legacy · The Season Story</p>
+        </header>
+        <div id="fauArchiveLoading" class="text-gray-400 text-sm" role="status">Abrindo os arquivos publicados…</div>
+        <div id="fauArchiveBody" class="space-y-8"></div>
+      </section>`);
+      const body=$('#fauArchiveBody'),loading=$('#fauArchiveLoading');
+      const roundKey=x=>String(x??'');
+      try{
+        // Nunca ler a coleção privada "looks" para montar uma página pública.
+        const [ranksResult,titlesResult,publicationsResult]=await Promise.allSettled([
+          db.collection('ranking_historico').get(),
+          db.collection('fau_titulos_publicos').get(),
+          db.collection('fau_publications').where('published','==',true).get()
+        ]);
+        if(!body?.isConnected)return;
+        const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>d.data().publishedAt&&d.data().publishedBy).map(d=>({round:d.id,...d.data()})):[];
+        const titles=titlesResult.status==='fulfilled'?titlesResult.value.docs.filter(d=>d.data().published===true).map(d=>({round:d.id,...d.data()})):[];
+        const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
+        const roundMap=new Map();
+        ranks.forEach(r=>roundMap.set(roundKey(r.round),{round:roundKey(r.round),rank:r,title:null}));
+        titles.forEach(t=>{const k=roundKey(t.round),v=roundMap.get(k)||{round:k,rank:null,title:null};v.title=t;roundMap.set(k,v);});
+        const rounds=[...roundMap.values()].sort((a,b)=>fauArchiveSort(a.round,b.round));
+        const people=new Map(),awards=[];
+        const getPerson=(uid,name)=>{
+          if(!uid)return null;
+          if(!people.has(uid))people.set(uid,{uid,name:name||'Designer',wins:0,icons:0,highs:0,rounds:new Set(),achievements:[]});
+          const p=people.get(uid);if(name&&p.name==='Designer')p.name=name;return p;
+        };
+        // A imagem só pode ser ligada ao vencedor quando o arquivo público
+        // identifica explicitamente o UID E há exatamente um look publicado.
+        // Em desafios de múltiplos looks, a galeria não adivinha qual venceu.
+        const findImage=(round,uid)=>{
+          const candidates=publications.filter(x=>roundKey(x.round)===roundKey(round)&&x.uid===uid&&typeof x.image==='string'&&/^https:\/\//i.test(x.image));
+          return candidates.length===1?candidates[0]:null;
+        };
+        rounds.forEach(({round,rank,title})=>{
+          const rows=Array.isArray(rank?.rows)?rank.rows:[];
+          rows.forEach(r=>{
+            const p=getPerson(r.uid,r.ate);if(!p)return;
+            p.rounds.add(round);
+            const status=String(r.status||'').toUpperCase();
+            if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'WIN'});awards.push({round,uid:r.uid,name:r.ate,type:'WIN'});}
+            if(/\b(HIGH|TOP)\b/.test(status))p.highs++;
+          });
+          if(title?.icon){
+            const uid=title.icon,match=rows.find(r=>r.uid===uid);
+            const p=getPerson(uid,match?.ate);
+            if(p){p.icons++;p.rounds.add(round);p.achievements.push({round,type:'Ícone da Moda'});}
+            awards.push({round,uid,name:p?.name||'Designer',type:'ÍCONE DA MODA'});
+          }
+        });
+        const grouped=new Map();
+        awards.forEach(a=>{
+          const k=a.round+'|'+a.uid;
+          if(!grouped.has(k))grouped.set(k,{...a,types:new Set()});
+          grouped.get(k).types.add(a.type);
+        });
+        const hall=[...grouped.values()].sort((a,b)=>fauArchiveSort(b.round,a.round)).map(a=>{
+          const pub=findImage(a.round,a.uid),types=[...a.types].join(' + ');
+          return `<article class="rounded-xl border border-fashion-gold/25 bg-fashion-950 overflow-hidden">
+            ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
+            <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · WEEK ${esc(a.round)}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
+          </article>`;
+        }).join('');
+        const profiles=[...people.values()].sort((a,b)=>(b.wins+b.icons)-(a.wins+a.icons)||a.name.localeCompare(b.name,'pt-BR')).map(p=>
+          `<article class="border border-fashion-700 rounded-xl bg-fashion-950 p-4"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>
+          <p class="text-xs text-fashion-gold mt-2">${p.wins} WIN · ${p.icons} Ícone da Moda</p>
+          <p class="text-xs text-gray-400 mt-1">${p.rounds.size} semanas registradas · ${p.highs} TOP/HIGH</p>
+          <p class="text-xs text-gray-300 mt-2">${p.achievements.map(a=>`Week ${esc(a.round)}: ${esc(a.type)}`).join(' · ')||'História em construção'}</p></article>`).join('');
+        const story=[...rounds].reverse().map(({round,rank,title},index)=>{
+          const rows=Array.isArray(rank?.rows)?rank.rows:[];
+          const winners=rows.filter(r=>/\bWIN\b/i.test(r.status||''));
+          const out=rows.filter(r=>/\bOUT\b|ELIMINAD/i.test(r.status||''));
+          const icon=title?.icon?rows.find(r=>r.uid===title.icon):null;
+          const lines=[
+            winners.length?'🏆 WIN · '+winners.map(x=>esc(x.ate)).join(', '):'',
+            icon?'👑 Ícone da Moda · '+esc(icon.ate):'',
+            out.length?'🥀 OUT · '+out.map(x=>esc(x.ate)).join(', '):''
+          ].filter(Boolean);
+          return `<article class="border-l-2 border-fashion-gold/40 pl-4 py-3">
+            <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'LATEST CHAPTER · ':''}WEEK ${esc(round)}</p>
+            <h4 class="font-cinzel text-white mt-2">The Week ${esc(round)} Story</h4>
+            ${lines.length?lines.map(l=>`<p class="text-gray-300 text-sm mt-1">${l}</p>`).join(''):'<p class="text-gray-400 text-sm mt-1">Aguardando resultados oficiais.</p>'}
+          </article>`;
+        }).join('');
+        body.innerHTML=`
+          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">The Winners & The Icons</h3>
+          <p class="text-gray-400 text-sm">WIN é a vitória dos jurados. Ícone da Moda é uma distinção separada, decidida pelos participantes. Ambas entram no Hall.</p>
+          ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm">Nenhuma conquista oficial disponível ainda.</p>'}</section>
+          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">The Designers' Dossiers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
+          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
+          <p class="text-gray-400 text-sm">A história da competição, capítulo por capítulo, com base apenas nos anúncios oficiais.</p>
+          <div class="bg-fashion-950 border border-fashion-700 rounded-xl p-5 space-y-3">${story||'<p class="text-gray-400 text-sm">A primeira história ainda será escrita.</p>'}</div></section>
+          ${ranksResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O histórico oficial não está acessível com as permissões atuais. O site não tentará ler notas privadas.</p>':''}
+          ${titlesResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Os títulos publicados não estão acessíveis com as permissões atuais.</p>':''}
+          ${publicationsResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O acervo de imagens publicadas não está acessível com as permissões atuais.</p>':''}`;
+        loading?.remove();
+      }catch(e){console.error('Fashion Archive',e);if(loading?.isConnected)loading.textContent='Não foi possível abrir o arquivo agora.';}
+    };
+
     // 4. BANCADA DE JÚRI (AI EDITION)
     // V54 · Critique Call: notas primeiro, uma crítica opcional por Maison apenas quando convocada.
     const fauCritiqueTargets = async () => {
@@ -2060,8 +2170,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const selected=new Map();
         currentRows.forEach(r=>{
             const status=String(r.status||'');
-            if(/\b(WIN|TOP|BOTTOM)\b/i.test(status)||r.ate===previousWinner){
-                selected.set(r.ate,{ate:r.ate,reason:/\b(WIN|TOP|BOTTOM)\b/i.test(status)?status:'WIN anterior'});
+            if(/\b(WIN|TOP|HIGH|BOTTOM|LOW)\b/i.test(status)||r.ate===previousWinner){
+                selected.set(r.ate,{ate:r.ate,reason:/\b(WIN|TOP|HIGH|BOTTOM|LOW)\b/i.test(status)?status:'WIN anterior'});
             }
         });
         return [...selected.values()];
@@ -2161,7 +2271,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <div class="border-b border-fashion-700 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Avaliação Técnica (Fashion, Art & Uniqueness)</span>
-                        <h2 class="font-cinzel text-xl text-white font-normal">Bancada de Júri · Rodada ${esc(globalState.rodada || '')}</h2>
+                        <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel · Rodada ${esc(globalState.rodada || '')}</h2>
                     </div>
                     <div class="flex gap-2">
                         <button id="btnOpenMatrix" class="bg-fashion-800 hover:bg-fashion-700 text-fashion-sand px-3 py-1.5 rounded border border-fashion-600 text-xs">
@@ -2762,13 +2872,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const st=await restState();
             if(st.phase==='judging'&&currentUser.role==='estilista'&&!(st.pool||[]).some(x=>x.uid===currentUser.uid)){
                 const snaps=await Promise.all(st.pool.map(x=>db.doc(`rest_looks/${restSecondLookId(x.uid)}`).get()));
-                renderView(`<div class="space-y-6"><h2 class="font-cinzel text-fashion-gold text-2xl">🕯️ THE LAST JUDGMENT</h2><p class="text-gray-300 text-sm">Você está entre os convidados. Avalie individualmente os três últimos looks (0 a 10 em cada critério). Seu voto é secreto e só a produção vê a apuração.</p>${snaps.map((d,i)=>{const l=d.data();return `<section class="bg-fashion-900 border border-fashion-gold/30 rounded-lg p-5 space-y-3"><h3 class="font-cinzel text-white">${esc(st.pool[i].ate)} — ${esc(l?.titulo||'')}</h3><img src="${esc(l?.url||'')}" class="max-w-sm w-full rounded"><p class="text-sm text-gray-300">${esc(l?.mem||'')}</p>${restCriteria.map((c,j)=>`<label class="flex items-center justify-between text-xs gap-3">${esc(c)}<input type="number" min="0" max="10" step="0.5" value="5" data-rest-uid="${esc(st.pool[i].uid)}" data-rest-criterion="${j}" class="w-20 bg-black text-white border border-fashion-700 p-2 rounded"></label>`).join('')}<button data-rest-save="${esc(st.pool[i].uid)}" class="bg-fashion-gold text-black font-bold text-xs rounded px-4 py-2">Salvar avaliação</button></section>`}).join('')}</div>`);
+                renderView(`<div class="space-y-6"><h2 class="font-cinzel text-fashion-gold text-2xl">🕯️ THE LAST JUDGMENT</h2><p class="text-gray-300 text-sm">Você está entre os convidados. Avalie individualmente os três últimos looks (0 a 10 em cada critério). Seu voto é secreto e só a produção vê a apuração.</p><p class="text-xs text-fashion-gold border border-fashion-gold/40 rounded-lg p-3">JÚRI ESPECIAL · Estas notas decidem apenas o último adeus. Não entram no ranking da rodada, na média oficial, no Track Record nem no acumulado da temporada.</p>${snaps.map((d,i)=>{const l=d.data();return `<section class="bg-fashion-900 border border-fashion-gold/30 rounded-lg p-5 space-y-3"><h3 class="font-cinzel text-white">${esc(st.pool[i].ate)} — ${esc(l?.titulo||'')}</h3><img src="${esc(l?.url||'')}" class="max-w-sm w-full rounded"><p class="text-sm text-gray-300">${esc(l?.mem||'')}</p>${restCriteria.map((c,j)=>`<label class="flex items-center justify-between text-xs gap-3">${esc(c)}<input type="number" min="0" max="10" step="0.5" value="5" data-rest-uid="${esc(st.pool[i].uid)}" data-rest-criterion="${j}" class="w-20 bg-black text-white border border-fashion-700 p-2 rounded"></label>`).join('')}<button data-rest-save="${esc(st.pool[i].uid)}" class="bg-fashion-gold text-black font-bold text-xs rounded px-4 py-2">Salvar avaliação</button></section>`}).join('')}</div>`);
                 document.querySelectorAll('[data-rest-save]').forEach(b=>b.onclick=safeExec(async()=>{
                     if((await restState()).phase!=='judging')throw new Error('Julgamento encerrado.');
                     const uid=b.dataset.restSave;
                     const scores=[...document.querySelectorAll(`[data-rest-uid="${uid}"]`)].map(x=>Number(x.value));
                     if(scores.length!==5||scores.some(v=>!Number.isFinite(v)||v<0||v>10))throw new Error('As cinco notas devem estar entre 0 e 10.');
-                    await db.doc(`rest_avaliacoes/${globalState.rodada}_${uid}_${currentUser.uid}`).set({rodada:globalState.rodada,alvo:uid,jurado:currentUser.uid,nota:scores,total:scores.reduce((a,b)=>a+b,0),t:now()});
+                    await db.doc(`${REST_SPECIAL_VOTES_COLLECTION}/${globalState.rodada}_${uid}_${currentUser.uid}`).set({rodada:globalState.rodada,alvo:uid,jurado:currentUser.uid,nota:scores,total:scores.reduce((a,b)=>a+b,0),tipo:'rest_funeral_special_jury',contaNoAcumulado:false,contaNoTrackRecord:false,t:now()});
                     showToast('Avaliação enviada em sigilo para a produção.');
                 }));return;
             }
@@ -2780,7 +2890,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             renderView(`
                 <div class="bg-fashion-900 border border-fashion-700 p-12 rounded-lg text-center space-y-4 max-w-xl mx-auto my-12">
                     <i class="fa-solid fa-lock text-fashion-gold text-3xl"></i>
-                    <h2 class="font-cinzel text-xl text-white">Votação do Elenco Fechada</h2>
+                    <h2 class="font-cinzel text-xl text-white">The Voting Room · Fechada</h2>
                     <p class="text-xs text-gray-400 leading-relaxed font-light">A votação interna para <strong>Ícone da Moda</strong> e <strong>Fora de Moda</strong> só fica ativa enquanto a rodada estiver em andamento e aberta!</p>
                 </div>
             `);
@@ -2895,8 +3005,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               <div class="absolute inset-0 pointer-events-none fau-elimination-vignette"></div>
               <div class="relative space-y-4"><p class="text-[10px] uppercase tracking-[.4em] text-red-300">The judges have made their decision</p><div class="text-5xl">🥀</div>
               <h2 class="font-cinzel text-3xl md:text-4xl text-white">YOUR FATE IS NOT SEALED</h2>
-              <p class="font-cinzel text-red-200 text-lg">${esc(currentUser.ate||'Sua Maison')}</p>
-              <p class="text-gray-300 text-sm leading-relaxed max-w-lg mx-auto">Sua Maison está no <strong>Elimination Pool</strong>. Você não participa desta votação. Agora, os outros estilistas decidirão quem merece continuar na competição.</p>
+              <p class="font-cinzel text-red-200 text-lg">${esc(currentUser.ate||'Seu Designer')}</p>
+              <p class="text-gray-300 text-sm leading-relaxed max-w-lg mx-auto">Seu Designer está no <strong>Elimination Pool</strong>. Você não participa desta votação. Agora, os outros estilistas decidirão quem merece continuar na competição.</p>
               <p class="text-xs text-gray-400">Estar no Pool não significa estar eliminado. O resultado permanece secreto até o anúncio oficial da produção.</p></div>
             </div>
             <section class="rounded-2xl bg-fashion-900 border border-fashion-700 p-6 space-y-3">
@@ -2935,7 +3045,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
                     <div>
                         <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Controle da Temporada (Fashion, Art & Uniqueness)</span>
-                        <h2 class="font-cinzel text-2xl text-white font-normal">Direção Executiva (Admin & Júri)</h2>
+                        <h2 class="font-cinzel text-2xl text-white font-normal">The Control Room (Admin & Júri)</h2>
                     </div>
                     <span class="text-xs font-mono text-gray-400">Rodada: <strong>${esc(globalState.rodada || '-')}</strong> (${esc(globalState.fase || 'normal')})</span>
                 </div>
@@ -3046,7 +3156,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <ol class="list-decimal ml-5 mt-2 space-y-1">
                             <li>Crie a rodada aqui embaixo: escolha o tipo, o nome do tema e o prazo.</li>
                             <li>Os estilistas enviam os looks. No prazo, clique em <strong>Encerrar</strong>.</li>
-                            <li>Os jurados dão as notas na Bancada de Júri.</li>
+                            <li>Os jurados dão as notas no Judges&#39; Panel.</li>
                             <li>Apure o ranking e publique na Runway. Use <strong>Liberar Looks</strong> para mostrar os looks a todos.</li>
                             <li>Abra a <strong>Urna</strong> (Ícone, Fora de Moda e salvamento), apure e confirme o OUT.</li>
                         </ol>
@@ -3185,7 +3295,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             showToast('Envelopes abertos! Os estilistas podem consultar os resultados.');
         });
         $('#ctrlDraws').onclick = safeExec(async () => {
-            const collections = ['sorteios','draws','envelopes','escolhas'];
+            const collections = ['sorteios','escolhas'];
             const results = await Promise.allSettled(collections.map(c => db.collection(c).get()));
             ctrl.innerHTML = '<h4 class="text-fashion-gold mb-2">🎲 Resultados de sorteios e escolhas</h4>';
             results.forEach((r,i) => {
@@ -3561,14 +3671,14 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           const snap=await db.collection('ranking_historico').doc(round).get();
           if(!snap.exists)throw new Error('Publique primeiro o resultado oficial da rodada.');
           const rows=(snap.data().rows||[]).filter(x=>x.uid&&x.ate);
-          if(!rows.length)throw new Error('Nenhuma Maison encontrada no resultado publicado.');
+          if(!rows.length)throw new Error('Nenhum Designer encontrado no resultado publicado.');
           const options=rows.map(x=>`<option value="${esc(x.uid)}">${esc(x.ate)}</option>`).join('');
           $('#fauOfficialIcon').innerHTML='<option value="">Sem título / não apurado</option>'+options;
           $('#fauOfficialFora').innerHTML='<option value="">Sem título / não apurado</option>'+options;
           $('#fauOfficialSaved').innerHTML=options;
           const old=await db.collection('fau_titulos_publicos').doc(round).get();
           if(old.exists){const d=old.data();$('#fauOfficialIcon').value=d.icon||'';$('#fauOfficialFora').value=d.fora||'';Array.from($('#fauOfficialSaved').options).forEach(o=>o.selected=(d.saved||[]).includes(o.value));}
-          $('#fauOfficialStatus').textContent='Maisons carregadas. Confira a apuração oficial antes de publicar.';
+          $('#fauOfficialStatus').textContent='Designers carregados. Confira a apuração oficial antes de publicar.';
         });
         $('#fauOfficialCopy').onclick=safeExec(async()=>{
           const d=fauOfficialGet();const label=id=>$('#fauOfficialIcon').querySelector(`option[value="${CSS.escape(id)}"]`)?.textContent||'Não atribuído';
@@ -3579,7 +3689,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           if(!isAdmin||!globalState.rodada)throw new Error('Acesso exclusivo da produção.');
           if(!getSeasonFlow().rankingVisible)throw new Error('Publique o ranking oficial antes de registrar os títulos.');
           const round=String(globalState.rodada),d=fauOfficialGet();
-          if(d.saved.length>2)throw new Error('Selecione no máximo duas Maisons salvas.');
+          if(d.saved.length>2)throw new Error('Selecione no máximo dois Designers salvos.');
           if(d.saved.length!==new Set(d.saved).size)throw new Error('Seleção duplicada.');
           if(!productionConfirm('Você já anunciou os títulos no WhatsApp e conferiu os desempates? Eles ficarão visíveis no After Show.'))return;
           await db.collection('fau_titulos_publicos').doc(round).set({...d,round,published:true,updatedAt:now(),updatedBy:currentUser.uid});
@@ -3618,7 +3728,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
             if(!image||typeof image!=='string'||!/^https:\/\//i.test(image))continue;
             const id='round_'+String(globalState.rodada).replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
-            batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round:String(globalState.rodada),title:String(l.title||l.titulo||l.ate||'Look').slice(0,120),description:String(l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,createdAt:now(),createdBy:currentUser.uid},{merge:true});count++;n++;
+            batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round:String(globalState.rodada),title:String(l.title||l.titulo||l.ate||'Look').slice(0,120),description:String(l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid||'',slot:l.slot||null,createdAt:now(),createdBy:currentUser.uid},{merge:true});count++;n++;
             if(n>=400){batches.push(batch);batch=db.batch();n=0;}
           }
           if(n)batches.push(batch);
@@ -4224,7 +4334,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const st=await restState();if(st.phase!=='first') throw new Error('A segunda etapa já foi ativada.');
             const pool=globalState.berlinda||[];
             if(pool.length!==3) throw new Error('Primeiro publique o ranking e forme o Elimination Pool com três estilistas.');
-            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-5 rounded"><h3 class="font-cinzel text-fashion-gold">⚰️ THE FINAL FAREWELL · PRÉVIA</h3><p class="text-xs mt-2">${pool.map(x=>esc(x.ate)).join(' · ')}</p><p class="text-xs text-gray-400 mt-2">Os três receberão a segunda missão. Nenhum participante será eliminado nesta ativação.</p></div>`;
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-5 rounded"><h3 class="font-cinzel text-fashion-gold">⚰️ THE FINAL FAREWELL · PRÉVIA</h3><p class="text-xs mt-2">${pool.map(x=>esc(x.ate)).join(' · ')}</p><p class="text-xs text-fashion-gold mt-2">O júri dos Designers decide somente a eliminação especial. Suas notas não somam pontos no acumulado geral.</p><p class="text-xs text-gray-400 mt-2">Os três receberão a segunda missão. Nenhum participante será eliminado nesta ativação.</p></div>`;
             if(!productionConfirm('Convocar os três estilistas para criarem seus próprios looks funerários sem branco?'))return;
             await restRef().set({phase:'twist',pool,activatedBy:currentUser.uid,activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
             await productionLog('rest_twist_activated',{round:globalState.rodada,pool:pool.map(x=>x.uid)});
@@ -4260,16 +4370,16 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const st=await restState();if(!['judging','closed'].includes(st.phase))throw new Error('O julgamento ainda não foi aberto.');
             const profiles=await db.collection('perfis').where('role','==','estilista').get();
             const eligible=profiles.docs.filter(d=>!d.data().out&&!d.data().disabled&&!(st.pool||[]).some(x=>x.uid===d.id));
-            const votes=await db.collection('rest_avaliacoes').where('rodada','==',globalState.rodada).get();
+            const votes=await db.collection(REST_SPECIAL_VOTES_COLLECTION).where('rodada','==',globalState.rodada).get();
             const all=votes.docs.map(d=>d.data());
             const rows=(st.pool||[]).map(x=>{
-                const arr=all.filter(v=>v.alvo===x.uid);
+                const arr=all.filter(v=>v.alvo===x.uid && (!v.tipo || v.tipo==='rest_funeral_special_jury'));
                 const missing=eligible.filter(d=>!arr.some(v=>v.jurado===d.id));
                 const score=arr.length?arr.reduce((a,v)=>a+v.total,0)/arr.length:0;
                 return {...x,score:Number(score.toFixed(2)),missing:missing.map(d=>d.data().ate||d.id)};
             });
             await saveProductionDraft('rest_funeral_verdict',{rows,round:globalState.rodada});
-            $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold rounded p-5 space-y-3"><h3 class="font-cinzel text-fashion-gold">🔒 THE LAST JUDGMENT — PRÉVIA PRIVADA</h3>${rows.map(r=>`<p class="text-sm">${esc(r.ate)} — ${r.score}/50 ${r.missing.length?`<span class="text-amber-300">· faltam: ${r.missing.map(esc).join(', ')}</span>`:''}</p>`).join('')}<p class="text-xs text-gray-400">O menor resultado é o candidato a OUT. A produção confirma a eliminação separadamente.</p></div>`;
+            $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold rounded p-5 space-y-3"><h3 class="font-cinzel text-fashion-gold">🔒 THE LAST JUDGMENT — PRÉVIA PRIVADA</h3>${rows.map(r=>`<p class="text-sm">${esc(r.ate)} — ${r.score}/50 ${r.missing.length?`<span class="text-amber-300">· faltam: ${r.missing.map(esc).join(', ')}</span>`:''}</p>`).join('')}<p class="text-xs text-gray-400">O menor resultado é o candidato a OUT. A produção confirma a eliminação separadamente. Estas notas são exclusivas do júri especial e não alteram o acumulado geral, o ranking oficial ou o Track Record.</p></div>`;
             if(rows.some(r=>r.missing.length))return;
             if(st.phase==='judging'&&productionConfirm('Encerrar as avaliações do funeral? O veredito permanecerá privado até sua confirmação.')){
                 await restRef().update({phase:'closed',verdict:rows,closedBy:currentUser.uid,closedAt:firebase.firestore.FieldValue.serverTimestamp()});
@@ -4388,7 +4498,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if (globalState.fase === 'normal') {
                 if (isNonElim) {
                     stateUpdate.berlinda = [];
-                    stateUpdate.imune = standings[0].uid;
+                    stateUpdate.winUid = standings[0].uid; // WIN da rodada: protegido do Pool só nesta rodada
                 } else {
                     const winUid = standings[0].uid;
                     if (globalState.themeId === 'theme_tarantino') {
@@ -4418,7 +4528,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         const worstAccum = [...standings].sort((a, b) => a.tot - b.tot).find(x => x.uid !== winUid && !worstRound.some(w => w.uid === x.uid));
                         stateUpdate.berlinda = [...worstRound, worstAccum].filter(Boolean).map(x => ({ uid: x.uid, ate: x.ate }));
                     }
-                    stateUpdate.imune = standings[0].uid;
+                    stateUpdate.winUid = standings[0].uid; // WIN da rodada: protegido do Pool só nesta rodada
                 }
             }
 
@@ -4436,7 +4546,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await db.doc('config/estado').set(stateUpdate, { merge: true });
             $('#adminOutput').innerHTML = `
                 <p class="text-green-400 font-bold mb-2 font-cinzel">Classificação publicada no The Runway!</p>
-                ${stateUpdate.berlinda?.length ? `<p><strong>NO BOTTOM (BERLINDA):</strong> ${stateUpdate.berlinda.map(b => esc(b.ate)).join(', ')}</p>` : '<p class="text-blue-300"><strong>Rodada Não Eliminatória:</strong> Ninguém na berlinda!</p>'}
+                ${stateUpdate.berlinda?.length ? `<p><strong>THE ELIMINATION POOL:</strong> ${stateUpdate.berlinda.map(b => esc(b.ate)).join(', ')}</p>` : '<p class="text-blue-300"><strong>Rodada Não Eliminatória:</strong> Ninguém na berlinda!</p>'}
                 <p><strong>WINNER DA RODADA:</strong> ${esc(standings[0]?.ate || 'N/A')}</p>
             `;
         });
@@ -4691,7 +4801,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 '📊 *CLASSIFICAÇÃO:*',
                 ...standings.map((s, idx) => `#${idx + 1} *${s.ate}* — Nota: ${s.rd} | Total: ${s.tot}`),
                 '',
-                globalState.berlinda?.length ? `⚠️ *BERLINDA:* ${globalState.berlinda.map(b => b.ate).join(' vs ')}` : '',
+                globalState.berlinda?.length ? `🚨 *THE ELIMINATION POOL:* ${globalState.berlinda.map(b => b.ate).join(' vs ')}` : '',
                 '---------------------------------------------',
                 '💬 *PARECERES DOS JURADOS:*',
                 ...standings.map(s => {
@@ -5181,96 +5291,58 @@ apply();
  schedule();
 })();
 </script>
-<script id="fau-immersion-v1">
-(() => {
-    /* ---------- Estilo ---------- */
-    const st = document.createElement('style');
-    st.textContent = `
-      :root{--acc:#d1b38b}
-      #themeAura{position:fixed;inset:0;pointer-events:none;z-index:0;transition:background 1.2s;
-        background:radial-gradient(ellipse at 50% -10%,color-mix(in srgb,var(--acc) 22%,transparent),transparent 60%),radial-gradient(ellipse at 90% 110%,color-mix(in srgb,var(--acc) 12%,transparent),transparent 55%)}
-      #challengeHero{border-bottom-color:color-mix(in srgb,var(--acc) 55%,transparent)!important}
-      #fauFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:95}
-      #fauFlash.on{animation:fauFl .35s ease-out}@keyframes fauFl{0%{opacity:.8}100%{opacity:0}}
-      #themeCard{position:fixed;inset:0;z-index:92;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;cursor:pointer;transition:opacity 1s;
-        background:radial-gradient(ellipse at 50% 35%,color-mix(in srgb,var(--acc) 30%,#0a0a0c),#0a0a0c 72%)}
-      #themeCard:before,#themeCard:after{content:"";position:absolute;left:0;right:0;height:11vh;background:#000}
-      #themeCard:before{top:0}#themeCard:after{bottom:0}
-      #themeCard .k{font-family:Cinzel,serif;letter-spacing:.55em;font-size:.7rem;color:var(--acc)}
-      #themeCard .t{font-family:Cinzel,serif;font-size:clamp(1.7rem,7vw,3.4rem);letter-spacing:.18em;color:#fff;animation:fauUp 1.3s ease both}
-      #themeCard .s{max-width:34rem;color:#b8b0b6;font-style:italic;font-size:.85rem;animation:fauUp 2s ease both}
-      @keyframes fauUp{from{opacity:0;transform:translateY(16px);filter:blur(6px)}}
-      #liveBar{max-width:42rem;margin:8px auto;padding:0 16px;font-size:11px;color:#c9c0c7}
-      #liveBar .bar{height:4px;border-radius:99px;background:#393039;overflow:hidden;margin-top:4px}
-      #liveBar .bar i{display:block;height:100%;background:var(--acc);transition:width .8s}
-      #liveBar .ev{font-style:italic;color:var(--acc);transition:opacity .6s}
-      @media(prefers-reduced-motion:reduce){#fauFlash.on,#themeCard .t,#themeCard .s{animation:none}}`;
-    document.head.appendChild(st);
-    const aura = document.createElement('div'); aura.id = 'themeAura'; aura.setAttribute('aria-hidden', 'true'); document.body.prepend(aura);
-    const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches);
 
-    const flash = document.createElement('div'); flash.id = 'fauFlash'; document.body.appendChild(flash);
-    document.addEventListener('click', e => {
-        if (e.target.closest && e.target.closest('#mainView img')) { if (!reduce) { flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on'); } }
-    }, true);
+<style id="fau-v83-editorial-style">
+.fau-archive-head{background:radial-gradient(ellipse at 80% 0%,rgba(142,52,70,.27),transparent 58%),linear-gradient(135deg,#171316,#2c2026)}
+.fau-archive-img{transition:transform .4s ease}.fau-archive-img:hover{transform:scale(1.025)}
+body[data-fau-theme="theme_rest_style"] .fau-archive-head,body[data-fau-theme="theme_rest_in_style"] .fau-archive-head{background:linear-gradient(125deg,#141419,#352a39)}
+body[data-fau-theme="theme_traitors"] .fau-archive-head{background:linear-gradient(120deg,#120e0f,#44222b)}
+body[data-fau-theme="theme_pink"] .fau-archive-head{background:linear-gradient(120deg,#291724,#823a64)}
+body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gradient(120deg,#121c28,#344351)}
+#fauV83Premiere{position:fixed;inset:0;z-index:9999;background:rgba(12,9,13,.97);display:flex;align-items:center;justify-content:center;padding:20px}
+#fauV83Premiere[hidden]{display:none}
+#fauV83Premiere .fau-stage{max-width:850px;width:100%;max-height:92vh;overflow:auto;text-align:center}
+#fauV83Premiere img{max-height:62vh;width:auto;max-width:100%;margin:16px auto;object-fit:contain}
+#fauV83Premiere button{border:1px solid #b99b74;padding:9px 16px;color:#f0eae1;margin:5px;border-radius:4px}
+#fauV83Premiere button:disabled{opacity:.4}
+@media(prefers-reduced-motion:reduce){.fau-archive-img{transition:none}}
+</style>
 
-    /* ---------- Identidade visual por tema ---------- */
-    const PAL = { theme_traitors: '#b3263a', theme_tarantino: '#e0b012', theme_beauty_eye: '#e08aa8', theme_rest_in_style: '#8a8f98', theme_plaid_bay: '#6aa84f', theme_wedding_party: '#e8d9b5', theme_pink_controversy: '#ff4fa3', theme_nature_brutal: '#7f9a4a', theme_seven_deadly: '#c2410c', theme_climate_chaos: '#3b9ad9', theme_the_awards: '#d4af37', theme_mathematics: '#5eb1bf', theme_next_supreme: '#a855f7', theme_amoras_cut: '#9d174d' };
-    const accFor = id => !id ? '#d1b38b' : (PAL[id] || `hsl(${[...String(id)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % 360} 55% 62%)`);
-    let lastTheme = '__';
-    const themeStep = g => {
-        if (g.themeId === lastTheme) return; lastTheme = g.themeId;
-        document.documentElement.style.setProperty('--acc', accFor(g.themeId));
-        const t = (typeof SEASON_THEMES !== 'undefined' && SEASON_THEMES[g.themeId]) || null;
-        if (!t || !t.title || !g.rodada || (g.prazo || 0) < Date.now()) return;
-        const k = `tc_${g.rodada}_${g.themeId}`;
-        try { if (localStorage.getItem(k)) return; localStorage.setItem(k, '1'); } catch (e) {}
-        const o = document.createElement('div'); o.id = 'themeCard';
-        o.innerHTML = `<div class="k">THE NEXT CHALLENGE</div><div class="t">${esc(t.title)}</div><div class="s">${esc(String(t.subtitle || '').slice(0, 180))}</div>`;
-        const close = () => { o.style.opacity = 0; setTimeout(() => o.remove(), 1000); };
-        o.onclick = close; document.body.appendChild(o); setTimeout(close, 5200);
-    };
-
-    /* ---------- Sensação de ao vivo: entregas e bastidores ---------- */
-    const live = document.createElement('div'); live.id = 'liveBar'; live.className = 'hidden';
-    const hero = document.getElementById('challengeHero'); (hero ? hero.after(live) : document.body.prepend(live));
-    let evs = [], envUnsub = null, envKey = '', envCount = {}, total = 0, first = true, prev = null, lastHtml = '';
-    const pushEv = t => { evs.unshift({ t, at: Date.now() }); evs = evs.slice(0, 3); };
-    const watchEnv = g => {
-        const key = (currentUser && g.rodada) ? String(g.rodada) : '';
-        if (key === envKey) return; envKey = key; envCount = {}; total = 0; first = true;
-        if (envUnsub) { envUnsub(); envUnsub = null; } if (!key) return;
-        db.collection('perfis').where('role', '==', 'estilista').get().then(sn => { total = sn.docs.filter(d => !d.data().out && !d.data().disabled).length; }).catch(() => {});
-        envUnsub = db.collection('envios').where('rodada', '==', key).onSnapshot(sn => {
-            envCount = {}; sn.docs.forEach(d => { const u = d.data().uid; envCount[u] = (envCount[u] || 0) + 1; });
-            if (!first) sn.docChanges().forEach(c => { if (c.type === 'added') pushEv('📸 Uma Maison acabou de entregar um look'); });
-            first = false;
-        }, () => {});
-    };
-    const stateEvents = g => {
-        const cur = { urna: !!g.urna, liberado: !!g.liberado, poder: g.poderNome || '', tema: g.proxTema ? 1 : 0, rodada: g.rodada || '' };
-        if (prev && prev.rodada === cur.rodada) {
-            if (cur.urna !== prev.urna) pushEv(cur.urna ? '🗳️ A urna foi aberta' : '🔒 A urna foi fechada');
-            if (cur.liberado && !prev.liberado) pushEv('🎞️ Os looks foram liberados na passarela');
-            if (cur.poder && cur.poder !== prev.poder && !cur.tema) pushEv(`👑 ${esc(cur.poder)} está escolhendo o próximo tema`);
-            if (cur.tema && !prev.tema) pushEv('🎭 Novo tema revelado');
-        } else if (prev && cur.rodada && cur.rodada !== prev.rodada) pushEv('🎬 Nova rodada iniciada');
-        prev = cur;
-    };
-    const drawLive = g => {
-        if (!currentUser || !g.rodada || !total) { if (!live.classList.contains('hidden')) live.classList.add('hidden'); return; }
-        const need = Math.max(1, Number(g.numSubmissoes) || 1);
-        const done = Object.values(envCount).filter(n => n >= need).length;
-        const now = Date.now(); evs = evs.filter(e => now - e.at < 90000);
-        const html = `<div class="flex justify-between"><span>📥 ${done} de ${total} Maisons entregaram</span><span>${Math.round(done / total * 100)}%</span></div><div class="bar"><i style="width:${Math.min(100, done / total * 100)}%"></i></div>${evs.map((e, i) => `<div class="ev" style="opacity:${1 - i * .3}">${e.t}</div>`).join('')}`;
-        if (html !== lastHtml) { lastHtml = html; live.innerHTML = html; }
-        live.classList.remove('hidden');
-    };
-    setInterval(() => {
-        const g = (typeof globalState !== 'undefined' && globalState) || {};
-        if (typeof currentUser === 'undefined' || !currentUser) { lastTheme = '__'; prev = null; if (envKey) watchEnv({}); return drawLive({}); }
-        themeStep(g); watchEnv(g); stateEvents(g); drawLive(g);
-    }, 1000);
+<script id="fau-v84-premiere">
+(()=>{
+ const $=s=>document.querySelector(s);
+ const overlay=document.createElement('div');overlay.id='fauV83Premiere';overlay.hidden=true;
+ overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Runway Premiere');
+ overlay.innerHTML='<div class="fau-stage"><p style="font-size:11px;color:#d1b38b;letter-spacing:.3em">PROJECT RUNWAY: FAU</p><h2 id="fauV83SlideTitle" style="font-family:Cinzel,serif;font-size:24px;color:#fff;margin:16px 0">THE RUNWAY PREMIERE</h2><p id="fauV83SlideCounter" style="color:#d1b38b;font-size:12px"></p><img id="fauV83SlideImg" alt="Look na passarela"><div><button id="fauV83Prev">Anterior</button><button id="fauV83Next">Próximo look</button><button id="fauV83Close">Fechar</button></div></div>';
+ document.body.appendChild(overlay);
+ let slides=[],idx=0;
+ const close=()=>{overlay.hidden=true;document.body.style.overflow='';};
+ const show=()=>{const x=slides[idx];if(!x)return;$('#fauV83SlideImg').src=x.src;$('#fauV83SlideImg').alt=x.alt;$('#fauV83SlideTitle').textContent=x.alt;$('#fauV83SlideCounter').textContent=`LOOK ${idx+1} / ${slides.length}`;$('#fauV83Prev').disabled=idx===0;$('#fauV83Next').disabled=idx===slides.length-1;};
+ $('#fauV83Prev').onclick=()=>{idx=Math.max(0,idx-1);show();};
+ $('#fauV83Next').onclick=()=>{idx=Math.min(slides.length-1,idx+1);show();};
+ $('#fauV83Close').onclick=close;
+ overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+ document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')$('#fauV83Next').click();if(e.key==='ArrowLeft')$('#fauV83Prev').click();});
+ const launch=document.createElement('button');launch.type='button';launch.id='fauV83Launch';launch.textContent='▶ RUNWAY PREMIERE';
+ launch.className='border border-fashion-gold/60 text-fashion-gold rounded px-4 py-2 text-xs my-3';launch.hidden=true;
+ launch.onclick=()=>{
+  const grid=$('#runwayGrid');
+  // Somente os looks do desfile principal, nunca os grupos de votações/twists.
+  const candidates=[...(grid?.querySelectorAll('img.img-look')||[])].filter(el=>el.getAttribute('src')&&el.getBoundingClientRect().width>0);
+  slides=candidates.map(el=>({src:el.getAttribute('src'),alt:el.getAttribute('alt')||'Look da passarela'}));
+  if(!slides.length)return;idx=0;show();overlay.hidden=false;document.body.style.overflow='hidden';$('#fauV83Close').focus();
+ };
+ const update=()=>{
+  const grid=$('#runwayGrid'),nav=$('#navContainer');
+  const onRunway=[...(nav?.querySelectorAll('button')||[])].some(b=>b.getAttribute('aria-current')==='page'&&b.textContent.trim()==='The Runway');
+  if(!grid||!onRunway){launch.hidden=true;return;}
+  if(launch.parentNode!==grid.parentNode)grid.parentNode.insertBefore(launch,grid);
+  launch.hidden=!grid.querySelector('img.img-look');
+ };
+ const observer=new MutationObserver(()=>{if(!window.requestAnimationFrame)return;requestAnimationFrame(update);});
+ const main=$('#mainView');if(main)observer.observe(main,{childList:true,subtree:true});
+ const nav=$('#navContainer');if(nav)observer.observe(nav,{childList:true,subtree:true});
+ update();
 })();
 </script>
 </body>
