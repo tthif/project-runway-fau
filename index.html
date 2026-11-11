@@ -105,6 +105,27 @@
 .fau-production-desk button:focus-visible{outline:2px solid #e4c17f;outline-offset:3px}
 .fau-production-desk [data-production-stage]{scroll-snap-align:start}
 @media(prefers-reduced-motion:reduce){.fau-production-desk *{scroll-behavior:auto!important;transition:none!important}}
+
+/* V75 — The Complete Experience: restrained, readable, color-independent. */
+:root{--fau-episode-accent:#d1b38b;--fau-episode-glow:rgba(209,179,139,.12)}
+#mainView{max-width:100%;min-width:0}
+#mainView img{max-width:100%}
+#mainView input:not([type=checkbox]):not([type=radio]),#mainView textarea,#mainView select{min-height:44px}
+#mainView button,#navContainer button{min-height:40px}
+#mainView button:focus-visible,#mainView input:focus-visible,#mainView select:focus-visible,#mainView textarea:focus-visible,#navContainer button:focus-visible{outline:3px solid #f0eae1;outline-offset:3px}
+.fau-v75-director-look{border:1px solid var(--fau-episode-accent);border-radius:14px;overflow:hidden;background:linear-gradient(130deg,var(--fau-episode-glow),rgba(20,18,21,.95));padding:20px;position:relative}
+.fau-v75-director-look::before{content:'';position:absolute;inset:0 0 auto;height:3px;background:var(--fau-episode-accent)}
+.fau-v75-director-look .fau-v75-kicker{font:600 10px Inter,sans-serif;letter-spacing:.24em;color:var(--fau-episode-accent)}
+.fau-v75-director-look h4{font:600 clamp(24px,4vw,36px) 'Cormorant Garamond',serif;color:#f0eae1;line-height:1.08;margin:12px 0}
+.fau-v75-director-look p{color:#d5cbd3;font-size:12px;line-height:1.6}
+.fau-v75-look-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.fau-v75-look-row span{font-size:10px;border:1px solid #625760;padding:6px 10px;border-radius:6px;color:#f0eae1}
+.fau-v75-guide{background:#211c22;border:1px solid #716074;border-left:4px solid #d1b38b;border-radius:12px;padding:16px;margin-bottom:18px;color:#f0eae1}
+.fau-v75-guide button{border:1px solid #d1b38b;border-radius:7px;padding:8px 13px;color:#f0eae1;font-size:12px}
+.fau-v75-guide p{color:#d9d0d8;font-size:13px;line-height:1.55}
+.fau-v75-guide strong{font-family:'Cormorant Garamond',serif;font-size:22px}
+@media(max-width:640px){#mainView{overflow-wrap:anywhere}.fau-v75-director-look{padding:15px}.fau-v75-guide{padding:13px}}
+@media(prefers-reduced-motion:reduce){#mainView>*,h2.font-cinzel,body::before{animation:none!important;transition:none!important}}
 </style>
 <style>
 /* FAU UX: consistent keyboard focus, touch targets and reduced motion. */
@@ -960,19 +981,19 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <div class="p-7 sm:p-12 flex flex-col justify-center space-y-6 text-center md:text-left">
                   <p class="text-fashion-gold text-[10px] tracking-[.38em] uppercase">Fashion · Art · Uniqueness</p>
                   <div class="space-y-2"><p class="text-gray-300 text-[11px] tracking-[.3em] uppercase">The entrance</p><h1 class="font-cinzel text-3xl sm:text-5xl text-white leading-tight">PROJECT<br>RUNWAY <span class="text-fashion-gold">F.A.U.</span></h1></div>
-                  <p class="text-gray-300 text-sm leading-relaxed">Toda criação tem uma assinatura. Toda Maison tem uma história. A sua começa aqui.</p>
+                  <p class="text-gray-300 text-sm leading-relaxed">Toda criação tem uma assinatura. Todo Designer tem uma história. A sua começa aqui.</p>
                   <p class="font-cinzel italic text-fashion-gold text-sm">“One day you're in. The next day you're out.”</p>
                   <div class="hidden md:flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-400"><span class="w-8 h-px bg-fashion-gold/60"></span> The show starts here</div>
                 </div>
                 <div class="bg-fashion-950/90 backdrop-blur-sm border-t md:border-t-0 md:border-l border-fashion-gold/20 p-6 sm:p-10 flex flex-col justify-center gap-5">
-                  <div class="space-y-2"><p class="text-fashion-gold text-[10px] uppercase tracking-[.28em]">Backstage · Authorized access</p><h2 class="font-cinzel text-xl sm:text-2xl text-white">WELCOME BACK</h2><p class="text-xs text-gray-300">Estilistas, jurados, plateia e produção: entre com suas credenciais.</p></div>
+                  <div class="space-y-2"><p class="text-fashion-gold text-[10px] uppercase tracking-[.28em]">Backstage · Authorized access</p><h2 class="font-cinzel text-xl sm:text-2xl text-white">WELCOME BACK</h2><p class="text-xs text-gray-300">Designer, jurado ou produção? Entre com seu usuário e senha. Para assistir, não é necessário cadastro.</p></div>
                   <form id="fauLoginForm" class="space-y-4" novalidate>
                     <div class="space-y-1"><label for="loginName" class="block text-[11px] text-gray-300 uppercase tracking-wider">Usuário</label><input id="loginName" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg px-4 py-3.5 text-white focus:outline-none focus:border-fashion-gold" placeholder="Seu usuário"></div>
                     <div class="space-y-1"><label for="loginPass" class="block text-[11px] text-gray-300 uppercase tracking-wider">Senha</label><div class="flex items-stretch"><input id="loginPass" name="password" type="password" autocomplete="current-password" required class="min-w-0 flex-1 bg-fashion-900 border border-fashion-700 rounded-l-lg px-4 py-3.5 text-white focus:outline-none focus:border-fashion-gold" placeholder="Sua senha"><button id="toggleLoginPass" type="button" aria-label="Mostrar senha" aria-pressed="false" class="border border-l-0 border-fashion-700 rounded-r-lg px-4 text-gray-300 hover:text-white focus:outline-none focus:border-fashion-gold"><i class="fa-solid fa-eye" aria-hidden="true"></i></button></div></div>
                     <p id="loginError" role="alert" aria-live="polite" class="hidden text-xs text-red-300 rounded-lg border border-red-800/70 bg-red-950/40 p-3"></p>
                     <button id="btnLogin" type="submit" class="w-full bg-fashion-gold hover:brightness-110 text-fashion-950 font-bold py-3.5 rounded-lg text-xs uppercase tracking-[.18em] transition disabled:opacity-60">ENTER THE RUNWAY <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i></button>
                   </form>
-                  <p class="text-[11px] text-gray-400 leading-relaxed">Primeiro acesso ou esqueceu a senha? Solicite suas credenciais à produção. Não é necessário selecionar seu perfil.</p>
+                  <div class="rounded-xl border border-fashion-gold/30 bg-fashion-900/50 p-4 space-y-3"><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE FRONT ROW · PLATEIA</p><h3 class="font-cinzel text-white text-lg">YOUR SEAT IS WAITING.</h3><p class="text-xs text-gray-200">Quer acompanhar o reality? Entre diretamente na plateia, sem criar usuário ou senha.</p><button type="button" id="fauAudienceEntry" class="w-full border border-fashion-gold rounded-lg px-4 py-3.5 font-bold text-fashion-gold text-xs tracking-widest hover:bg-fashion-gold/10 disabled:opacity-60">ENTRAR COMO PLATEIA <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i></button><p id="fauAudienceError" class="hidden text-xs text-red-200" role="alert"></p></div><p class="text-[11px] text-gray-400 leading-relaxed">Designer ou jurado sem acesso? Solicite suas credenciais à produção.</p>
                   <p class="text-[10px] text-gray-500 tracking-wider text-center">THE SHOW BEGINS BACKSTAGE</p>
                 </div>
               </div>
@@ -980,6 +1001,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           </section>
         `);
         const showError = message => { const el=$('#loginError'); if(el){el.textContent=message;el.classList.remove('hidden');} else showToast(message); };
+        $('#fauAudienceEntry').onclick=async()=>{
+            const btn=$('#fauAudienceEntry'),error=$('#fauAudienceError');
+            btn.disabled=true;btn.textContent='ABRINDO A PRIMEIRA FILA…';error.classList.add('hidden');
+            try{await auth.signInAnonymously();}
+            catch(err){console.error('Audience entry:',err);error.textContent=err?.code==='auth/operation-not-allowed'?'A entrada da plateia precisa ser habilitada no Firebase Authentication (método Anônimo).':'Não foi possível abrir a plateia. Verifique sua conexão ou tente novamente.';error.classList.remove('hidden');btn.disabled=false;btn.textContent='ENTRAR COMO PLATEIA';}
+        };
         $('#toggleLoginPass').onclick = () => { const input=$('#loginPass'); const show=input.type==='password'; input.type=show?'text':'password'; $('#toggleLoginPass').setAttribute('aria-pressed',String(show)); $('#toggleLoginPass').setAttribute('aria-label',show?'Ocultar senha':'Mostrar senha'); $('#toggleLoginPass').innerHTML=`<i class="fa-solid fa-eye${show?'-slash':''}" aria-hidden="true"></i>`; };
         $('#fauLoginForm').onsubmit = async event => {
             event.preventDefault();
@@ -1005,13 +1032,18 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             return showLogin();
         }
 
-        const adminCheck = await db.doc(`admins/${user.uid}`).get();
-        const adminByEmail = user.email ? await db.doc(`admins/${user.email}`).get() : { exists: false };
-        isAdmin = adminCheck.exists || adminByEmail.exists;
-
-        const profileSnap = await db.doc(`perfis/${user.uid}`).get();
-        const profileData = profileSnap.data() || {};
-        if (user.isAnonymous || (!profileSnap.exists && !isAdmin)) { await auth.signOut(); showToast('Acesso restrito a contas cadastradas pela produção.'); return showLogin(); }
+        // Spectators use anonymous authentication and have no registered profile.
+        // They must receive only public data via Firestore Security Rules.
+        let profileData={};
+        if(user.isAnonymous){isAdmin=false;profileData={role:'plateia',ate:'Plateia',username:'spectator'};}
+        else {
+            const adminCheck=await db.doc(`admins/${user.uid}`).get();
+            const adminByEmail=user.email?await db.doc(`admins/${user.email}`).get():{exists:false};
+            isAdmin=adminCheck.exists||adminByEmail.exists;
+            const profileSnap=await db.doc(`perfis/${user.uid}`).get();
+            profileData=profileSnap.data()||{};
+            if(!profileSnap.exists&&!isAdmin){await auth.signOut();showToast('Acesso restrito a Designers e Jurados cadastrados.');return showLogin();}
+        }
 
         if (profileData.disabled && !isAdmin) {
             await auth.signOut();
@@ -1135,9 +1167,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const intermission = flow.phase === 'intermission';
         const profiles = {
             estilista: {
-                title: hasMaisonIdentity() ? 'THE MAISON · YOUR CREATIVE IDENTITY' : 'WELCOME TO THE WORKROOM',
-                desc: !hasMaisonIdentity() ? 'Primeiro, dê nome à sua casa de moda. Você compete como designer; sua Maison é a identidade criativa apresentada na passarela.' : !hasRound ? 'Sua Maison está pronta. Aguarde a produção abrir o primeiro desafio.' : receiving ? 'Sua missão está aberta. Confira o briefing, as exigências e seu envio antes do prazo.' : intermission ? 'O resultado foi divulgado. Seu look agora faz parte da história da temporada. Confira seu Track Record e aguarde a próxima missão: a produção ainda não revelou o novo tema.' : flow.ballotOpen ? 'A votação está aberta. Registre seus votos secretos na cabine oficial.' : flow.runwayOpen ? 'O desfile está no ar! Acompanhe as criações e as revelações autorizadas.' : 'Seu prazo de criação terminou. Aguarde a produção abrir o desfile e as próximas etapas.',
-                links: !hasMaisonIdentity() || !hasRound ? [['work','Minha Maison · identidade']] : receiving ? [['work','Abrir meu Workroom']] : intermission ? [['historico','Meu resultado oficial'],['runway','Rever a passarela']] : flow.ballotOpen ? [['tribunal','Registrar meus votos'],['runway','Ver o Runway']] : flow.runwayOpen ? [['runway','Acompanhar desfile'],['historico','Meu Track Record']] : [['work','Rever meu desafio'],['historico','Meu Track Record']]
+                title: hasMaisonIdentity() ? 'THE DESIGNER · YOUR CREATIVE IDENTITY' : 'WELCOME TO THE WORKROOM',
+                desc: !hasMaisonIdentity() ? 'Primeiro, escolha seu nome de Designer. É ele que identificará suas criações na passarela.' : !hasRound ? 'Seu nome de Designer está confirmado. Aguarde a produção abrir o primeiro desafio.' : receiving ? 'Sua missão está aberta. Confira o briefing, as exigências e seu envio antes do prazo.' : intermission ? 'O resultado foi divulgado. Seu look agora faz parte da história da temporada. Confira seu Track Record e aguarde a próxima missão: a produção ainda não revelou o novo tema.' : flow.ballotOpen ? 'A votação está aberta. Registre seus votos secretos na cabine oficial.' : flow.runwayOpen ? 'O desfile está no ar! Acompanhe as criações e as revelações autorizadas.' : 'Seu prazo de criação terminou. Aguarde a produção abrir o desfile e as próximas etapas.',
+                links: !hasMaisonIdentity() || !hasRound ? [['work','Meu nome de Designer']] : receiving ? [['work','Abrir meu Workroom']] : intermission ? [['historico','Meu resultado oficial'],['runway','Rever a passarela']] : flow.ballotOpen ? [['tribunal','Registrar meus votos'],['runway','Ver o Runway']] : flow.runwayOpen ? [['runway','Acompanhar desfile'],['historico','Meu Track Record']] : [['work','Rever meu desafio'],['historico','Meu Track Record']]
             },
             jurado: {
                 title: 'THE JUDGES’ LOUNGE',
@@ -1370,29 +1402,28 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         if (!hasMaisonIdentity() || !globalState.rodada) {
             renderView(`<div class="max-w-2xl mx-auto space-y-6 py-8">
                 <div class="text-center space-y-3"><span class="text-fashion-gold text-xs tracking-[.3em] font-cinzel">WELCOME TO PROJECT RUNWAY: FAU</span>
-                <h2 class="text-white text-3xl font-cinzel">${hasMaisonIdentity() ? 'YOUR MAISON IS READY' : 'CREATE YOUR MAISON'}</h2>
-                <p class="text-gray-300 text-sm">${hasMaisonIdentity() ? 'Sua identidade está registrada. A produção anunciará o primeiro desafio quando a temporada começar.' : 'Antes de entrar na competição, apresente sua Maison. Não há desafio ou envio de look liberado neste momento.'}</p></div>
-                ${!hasMaisonIdentity() ? `<div class="rounded-2xl bg-fashion-900 border border-fashion-gold/40 p-6 space-y-4">
-                    <label class="text-fashion-gold text-xs uppercase tracking-widest block">Nome da Maison · sua casa de moda *</label><p class="text-[11px] text-gray-400 mt-1 mb-2">Você é o designer. Esta é a assinatura criativa que aparecerá nos desfiles e no seu Track Record.</p>
-                    <input id="welcomeMaison" maxlength="70" placeholder="Ex.: Maison Noire" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" />
-                    <label class="text-fashion-gold text-xs uppercase tracking-widest block">Estilista de referência (opcional)</label>
-                    <input id="welcomeDesigner" maxlength="100" placeholder="Sua inspiração estética" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" />
-                    <label class="text-fashion-gold text-xs uppercase tracking-widest block">House Manifesto · identidade criativa (opcional)</label>
-                    <textarea id="welcomeBio" maxlength="300" rows="3" placeholder="Qual é a identidade da sua Maison?" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></textarea>
-                    <button id="welcomeSave" class="w-full bg-fashion-gold text-black font-cinzel font-bold rounded-lg p-3">OFICIALIZAR MINHA MAISON</button>
-                </div>` : `<div class="rounded-2xl bg-fashion-900 border border-fashion-gold/40 p-6 text-center space-y-3"><div class="text-4xl">✦</div><h3 class="text-fashion-gold font-cinzel text-xl">${esc(currentUser.ate)}</h3><p class="text-gray-300 text-sm">Identidade confirmada. Aguarde a estreia para conhecer o Workroom e seu primeiro desafio.</p></div>`}
+                <h2 class="text-white text-3xl font-cinzel">${hasMaisonIdentity() ? 'YOUR DESIGNER IDENTITY' : 'CREATE YOUR DESIGNER'}</h2>
+                <p class="text-gray-300 text-sm">${hasMaisonIdentity() ? 'Antes da estreia, você pode escolher e editar seu nome de Designer e sua apresentação quantas vezes quiser. Quando a primeira rodada começar, o nome será bloqueado.' : 'Antes de entrar na competição, escolha seu nome de Designer. É esse nome que aparecerá nas passarelas, avaliações e resultados. Você poderá alterá-lo até a estreia.'}</p></div>
+                ${!globalState.rodada ? `<div class="rounded-2xl bg-fashion-900 border border-fashion-gold/40 p-6 space-y-4">
+                    <label class="text-fashion-gold text-xs uppercase tracking-widest block">Nome do Designer · sua identidade na competição *</label><p class="text-[11px] text-gray-400 mt-1 mb-2">Escolha o nome com que você quer competir. Ele aparecerá nas entregas, na passarela e no Track Record.</p>
+                    <input id="welcomeMaison" value="${esc(currentUser.ate && currentUser.ate !== 'Público' ? currentUser.ate : '')}" maxlength="70" placeholder="Ex.: Alexander Noir" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" />
+                    <label class="text-fashion-gold text-xs uppercase tracking-widest block">Manifesto do Designer (opcional)</label>
+                    <textarea id="welcomeBio" maxlength="300" rows="3" placeholder="Qual é a sua visão de moda como Designer?" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></textarea>
+                    <button id="welcomeSave" class="w-full bg-fashion-gold text-black font-cinzel font-bold rounded-lg p-3">${hasMaisonIdentity() ? 'SALVAR ALTERAÇÕES' : 'CONFIRMAR MEU NOME'}</button>
+                </div>` : `<div class="rounded-2xl bg-fashion-900 border border-fashion-gold/40 p-6 text-center space-y-3"><div class="text-4xl">✦</div><h3 class="text-fashion-gold font-cinzel text-xl">${esc(currentUser.ate)}</h3><p class="text-gray-300 text-sm">Nome de Designer confirmado. Aguarde a estreia para conhecer seu Atelier e o primeiro desafio.</p></div>`}
                 <p class="text-gray-500 text-center text-xs">Os desafios, envios, votações e resultados só aparecem quando a produção liberar cada etapa.</p>
             </div>`);
             const save = document.getElementById('welcomeSave');
             if (save) save.onclick = safeExec(async () => {
+                if (globalState.rodada || globalState.themeId) throw new Error('A temporada já começou. Para alterar sua identidade, procure a produção.');
                 const ate = document.getElementById('welcomeMaison').value.trim();
-                if (ate.length < 2) throw new Error('Escolha um nome para sua Maison (mínimo de 2 caracteres).');
-                const estilistaFixo = document.getElementById('welcomeDesigner').value.trim();
+                if (ate.length < 2 || ate.length > 70) throw new Error('O nome do Designer precisa ter entre 2 e 70 caracteres.');
                 const bio = document.getElementById('welcomeBio').value.trim();
-                await db.doc(`perfis/${currentUser.uid}`).update({ate, estilistaFixo, bio});
-                Object.assign(currentUser, {ate, estilistaFixo, bio});
+                if (bio.length > 300) throw new Error('O manifesto pode ter até 300 caracteres.');
+                await db.doc(`perfis/${currentUser.uid}`).update({ate, bio});
+                Object.assign(currentUser, {ate, bio});
                 document.querySelector('#userHeaderSlot .font-cinzel').textContent = ate;
-                showToast('Sua Maison está oficialmente no elenco!');
+                showToast('Nome do Designer salvo. Você pode editá-lo até a estreia!');
                 navigate('work');
             });
             return;
@@ -1418,7 +1449,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 </div>
 
                 <section class="fau-atelier-identity rounded-2xl border border-fashion-gold/30 bg-gradient-to-r from-fashion-950 via-fashion-900 to-fashion-950 p-5 md:p-7 space-y-4" aria-label="Identidade da Maison e espaço de criação">
-                    <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] uppercase tracking-[.3em] text-fashion-gold">THE MAISON · ${esc(currentUser.ate || 'FAU')}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">YOUR HOUSE. YOUR VISION.</h3><p class="text-[11px] text-gray-300 mt-1">DESIGNER · Você assina as criações. MAISON · Sua identidade de moda. ATELIER · Seu espaço de criação.</p></div><span class="text-[10px] text-gray-400 tracking-widest">WEEK ${esc(globalState.rodada || '—')}</span></div>
+                    <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] uppercase tracking-[.3em] text-fashion-gold">THE DESIGNER · ${esc(currentUser.ate || 'FAU')}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">YOUR NAME. YOUR VISION.</h3><p class="text-[11px] text-gray-300 mt-1">DESIGNER · Sua identidade na competição. ATELIER · Seu espaço de criação.</p></div><span class="text-[10px] text-gray-400 tracking-widest">WEEK ${esc(globalState.rodada || '—')}</span></div>
                     ${currentUser.bio ? `<p class="text-sm italic text-gray-300 border-l-2 border-fashion-gold/50 pl-4">${esc(currentUser.bio)}</p>` : '<p class="text-xs text-gray-400">Cada criação é uma assinatura. Faça desta rodada a sua declaração de moda.</p>'}
                     <div class="grid grid-cols-3 gap-2 text-center text-[10px] uppercase tracking-wider">
                         <div class="rounded-lg border border-fashion-700 p-3"><span class="block text-fashion-gold text-lg mb-1">01</span>Read the Brief</div>
@@ -1470,33 +1501,28 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         }
         const refreshWorkroomUI = async () => {
             const maisonName = currentUser.ate || '';
-            const stilistaFixo = currentUser.estilistaFixo || '';
             const myBio = currentUser.bio || '';
 
-            if (!stilistaFixo || maisonName === 'Público' || (!globalState.rodada && !globalState.themeId)) {
+            if (maisonName === 'Público' || (!globalState.rodada && !globalState.themeId)) {
                 $('#atelierSetupModule').innerHTML = `
                     <div class="bg-fashion-900 border-2 border-fashion-gold p-6 rounded-lg space-y-4 shadow-xl">
                         <div class="border-b border-fashion-700 pb-2">
-                            <span class="text-xs uppercase tracking-widest text-fashion-gold font-bold font-cinzel">1. THE MAISON · Identidade criativa e designer de referência</span>
-                            <h3 class="font-cinzel text-lg text-white font-bold">Nome do Ateliê & Estilista Real de Referência</h3>
-                            <p class="text-xs text-gray-400">Defina o nome da sua maison e escolha qual **estilista ou diretor criativo do mundo real** (ex: Alexander McQueen, Mugler, Schiaparelli) guiará a estética de todas as suas criações na temporada.</p>
+                            <span class="text-xs uppercase tracking-widest text-fashion-gold font-bold font-cinzel">1. THE MAISON · Sua identidade criativa</span>
+                            <h3 class="font-cinzel text-lg text-white font-bold">Nome e manifesto da Maison</h3>
+                            <p class="text-xs text-gray-400">Você é o designer da sua própria Maison. Defina o nome e a identidade criativa que representarão suas criações na temporada.</p>
                         </div>
 
                         <div class="space-y-4 text-xs">
                             <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-1.5">
-                                <label class="block text-fashion-gold uppercase tracking-wider font-semibold font-cinzel">Nome da Maison</label>
+                                <label class="block text-fashion-gold uppercase tracking-wider font-semibold font-cinzel">Nome do Designer</label>
                                 <input id="setupAtelierNameInput" value="${esc(maisonName !== 'Público' ? maisonName : '')}" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white font-cinzel font-bold text-sm focus:outline-none focus:border-fashion-gold" placeholder="Ex: Maison Mugler FAU">
                             </div>
                             <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-1.5">
-                                <label class="block text-fashion-gold uppercase tracking-wider font-semibold font-cinzel">Estilista Fixo do Mundo Real (Assinatura Estética)</label>
-                                <input id="setupDesignerInput" value="${esc(stilistaFixo)}" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white font-bold text-sm focus:outline-none focus:border-fashion-gold" placeholder="Ex: Thierry Mugler, Vivienne Westwood, John Galliano...">
-                            </div>
-                            <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-1.5">
                                 <label class="block text-fashion-gold uppercase tracking-wider font-semibold font-cinzel">Manifesto / Biografia da Maison</label>
-                                <textarea id="setupAtelierBioInput" rows="2" maxlength="300" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white text-xs focus:outline-none focus:border-fashion-gold" placeholder="Descreva como a sua maison traduz o DNA do estilista escolhido...">${esc(myBio)}</textarea>
+                                <textarea id="setupAtelierBioInput" rows="2" maxlength="300" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white text-xs focus:outline-none focus:border-fashion-gold" placeholder="Descreva a visão, a estética e a assinatura criativa da sua Maison...">${esc(myBio)}</textarea>
                             </div>
                             <button id="btnLockAtelierIdentity" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-widest text-xs transition font-cinzel">
-                                ${stilistaFixo ? "Salvar alterações da Maison" : "Confirmar Identidade da Maison"}
+                                ${hasMaisonIdentity() ? "Salvar nome do Designer" : "Confirmar nome do Designer"}
                             </button>
                         </div>
                     </div>
@@ -1723,19 +1749,16 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if (target.id === 'btnLockAtelierIdentity') {
                 if (globalState.rodada || globalState.themeId) throw new Error('A identidade da Maison fica bloqueada após o início da competição. Solicite mudanças à produção.');
                 const atelierName = $('#setupAtelierNameInput').value.trim();
-                const designerName = $('#setupDesignerInput').value.trim();
                 const atelierBio = $('#setupAtelierBioInput').value.trim();
 
-                if (!atelierName || !designerName) throw new Error('Preencha o nome da maison e o estilista de referência.');
+                if (atelierName.length < 2 || atelierName.length > 70 || atelierBio.length > 300) throw new Error('Informe um nome de Maison (2–70 caracteres) e manifesto (até 300).');
 
                 await db.doc(`perfis/${currentUser.uid}`).update({
                     ate: atelierName,
-                    estilistaFixo: designerName,
                     bio: atelierBio
                 });
 
                 currentUser.ate = atelierName;
-                currentUser.estilistaFixo = designerName;
                 currentUser.bio = atelierBio;
 
                 showToast('Identidade da Maison oficializada com sucesso!');
@@ -1800,7 +1823,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 batch.set(db.doc(`looks/${lookDocId}`), {
                     uid: currentUser.uid,
                     ate: currentUser.ate,
-                    estilistaFixo: currentUser.estilistaFixo || '',
                     rodada: globalState.rodada,
                     themeId: theme?.id || null,
                     slot: index + 1,
@@ -2205,7 +2227,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
                                 <img src="${esc(look.url)}" class="w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
-                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(look.ate)} <span class="text-[10px] text-gray-400 font-sans block">Estilista Fixo: ${esc(look.estilistaFixo || 'N/D')}</span></div>
+                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(look.ate)}</div>
                                 ${creativeDossier(look)}
                                 ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}<p class="text-xs text-gray-300">Elemento reinterpretado: ${esc(look.themeExtra||'Não informado')}</p></div>`;})() : ''}
                                 <div class="bg-fashion-950 p-2.5 rounded border border-fashion-700 space-y-1">
@@ -3066,19 +3088,17 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
-                        <h3 class="font-cinzel text-white text-base">Cadastrar Novo Perfil</h3>
-                        <div class="space-y-2 text-xs">
-                            <input id="createRealName" placeholder="Nome Real (Sigiloso)" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full">
-                            <input id="createUsername" placeholder="Nome de Usuário / Login de Acesso" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full">
-                            <input id="createPassword" type="password" placeholder="Senha (mínimo 6 dígitos)" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full">
-                            <select id="createRole" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full">
-                                <option value="estilista">Estilista (Maison Concorrente)</option>
-                                <option value="jurado">Jurado Convidado</option>
-                                <option value="plateia">Público / Primeira Fila</option>
-                            </select>
-                            <button id="btnCreateAccount" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black py-2 rounded uppercase font-semibold text-xs">
-                                Cadastrar no Reality
-                            </button>
+                        <p class="text-[10px] uppercase tracking-[.25em] text-fashion-gold">CASTING DESK · ACCESS PASSES</p>
+                        <h3 class="font-cinzel text-white text-base">Criar acesso</h3>
+                        <p class="text-xs text-gray-300">Cadastre apenas Designers e Jurados. A plateia entra sozinha, sem usuário ou senha. O Designer escolhe seu nome de competição antes da estreia.</p>
+                        <div class="space-y-3 text-xs">
+                            <label class="block space-y-1"><span class="text-gray-200">Tipo de acesso</span><select id="createRole" class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white w-full"><option value="estilista">Designer · Participante</option><option value="jurado">Jurado · Avaliações</option></select></label>
+                            <p id="createRoleHint" class="text-gray-300" role="status">O Designer poderá definir seu nome e manifesto antes da estreia.</p>
+                            <label class="block space-y-1"><span class="text-gray-200">Nome real (somente produção)</span><input id="createRealName" autocomplete="off" placeholder="Nome para controle interno" class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white w-full"></label>
+                            <label class="block space-y-1"><span class="text-gray-200">Usuário para entrar</span><input id="createUsername" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Ex.: designer07" class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white w-full"></label>
+                            <label class="block space-y-1"><span class="text-gray-200">Senha inicial</span><div class="flex gap-2"><input id="createPassword" type="text" autocomplete="off" placeholder="Gerar senha segura" class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white min-w-0 flex-1"><button type="button" id="generateAccountPassword" class="border border-fashion-gold/50 rounded-lg px-3 text-fashion-gold">Gerar</button></div></label>
+                            <button id="btnCreateAccount" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black py-3 rounded-lg uppercase font-semibold text-xs">Criar acesso</button>
+                            <div id="createdAccountReceipt" class="hidden border border-fashion-gold/40 rounded-lg p-3 space-y-2" role="status" aria-live="polite"><p class="text-fashion-gold font-bold">Acesso criado</p><p class="text-gray-300">Copie as credenciais e envie diretamente à pessoa. A senha não será mostrada novamente.</p><button type="button" id="copyCreatedCredentials" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-3 py-2">Copiar dados de acesso</button></div>
                         </div>
                     </div>
 
@@ -3407,7 +3427,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                             return `
                                 <tr class="border-b border-fashion-800 hover:bg-fashion-950/60 transition">
                                     <td class="p-2"><strong class="text-white">${esc(p.ate)}</strong></td>
-                                    <td class="p-2 text-fashion-gold font-sans">${esc(p.estilistaFixo || 'Não definido')}</td>
+                                    <td class="p-2 text-fashion-gold font-sans">${esc(p.ate || 'Não definido')}</td>
                                     <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold ${p.role === 'admin' ? 'bg-fashion-gold/20 text-fashion-gold' : p.role === 'jurado' ? 'bg-purple-900/30 text-purple-300' : p.role === 'estilista' ? 'bg-blue-900/30 text-blue-300' : 'bg-fashion-800 text-gray-300'}">${esc(p.role || 'plateia')}</span></td>
                                     <td class="p-2">
                                         <select data-role-select="${p.id}" ${isSelf ? 'disabled' : ''} class="bg-fashion-950 border border-fashion-700 rounded px-2 py-1 text-[11px] text-white focus:outline-none">
@@ -3903,27 +3923,44 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         renderDirectorPreview();
         fauRoundPreflight();
 
+        const fauCreateRoleHints={estilista:'O Designer escolhe seu nome de competição e manifesto antes da estreia.',jurado:'O jurado entra direto na bancada quando as avaliações forem liberadas.',plateia:'A plateia entra sem cadastro e vê somente conteúdos públicos.'};
+        $('#createRole').addEventListener('change',e=>{$('#createRoleHint').textContent=fauCreateRoleHints[e.target.value]||'';});
+        $('#generateAccountPassword').onclick=()=>{
+            const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#';
+            const bytes=new Uint8Array(14);
+            crypto.getRandomValues(bytes);
+            $('#createPassword').value=Array.from(bytes,b=>alphabet[b%alphabet.length]).join('');
+        };
+        let lastCreatedCredentials='';
+        $('#copyCreatedCredentials').onclick=async()=>{
+            if(!lastCreatedCredentials)return;
+            try{await navigator.clipboard.writeText(lastCreatedCredentials);showToast('Dados de acesso copiados.');}
+            catch{showToast('Não foi possível copiar automaticamente. Selecione os dados manualmente.');}
+        };
         $('#btnCreateAccount').onclick = safeExec(async () => {
             const real = $('#createRealName').value.trim();
             const username = $('#createUsername').value.trim();
             const pass = $('#createPassword').value;
             const role = $('#createRole').value;
-
-            if (!real || !username || pass.length < 6) throw new Error('Preencha o nome real, nome de usuário e senha (mínimo 6 dígitos).');
-
-            const ate = role === 'estilista' ? 'Maison ' + username : username;
-
+            if (!real) {$('#createRealName').focus();throw new Error('Informe o nome real para controle da produção.');}
+            if (!/^[a-zA-Z0-9._-]{3,30}$/.test(username)) {$('#createUsername').focus();throw new Error('Use um usuário de 3 a 30 caracteres: letras, números, ponto, hífen ou underline.');}
+            if (pass.length < 8) {$('#createPassword').focus();throw new Error('A senha precisa ter pelo menos 8 caracteres.');}
+            const button=$('#btnCreateAccount');button.disabled=true;button.textContent='CRIANDO ACESSO…';
+            const ate = role === 'estilista' ? username : username;
             const tempAppName = `app_${Date.now()}`;
             const secondaryApp = firebase.initializeApp(firebaseConfig, tempAppName);
             try {
                 const cred = await secondaryApp.auth().createUserWithEmailAndPassword(formatEmail(username), pass);
-                await db.doc(`perfis/${cred.user.uid}`).set({ ate, username, role, disabled: false, estilistaFixo: '', bio: '', createdAt: now() });
+                await db.doc(`perfis/${cred.user.uid}`).set({ ate, username, role, disabled: false, bio: '', createdAt: now() });
                 await db.doc(`identidades/${cred.user.uid}`).set({ real, username, ate, createdAt: now() });
-                showToast(`Perfil de ${username} adicionado.`);
+                lastCreatedCredentials=`PROJECT RUNWAY: FAU\\nPerfil: ${role==='estilista'?'Designer':role==='jurado'?'Jurado':'Plateia'}\\nUsuário: ${username}\\nSenha: ${pass}`;
+                $('#createdAccountReceipt').classList.remove('hidden');
+                showToast(`Acesso de ${username} criado.`);
                 $('#createRealName').value = '';
                 $('#createUsername').value = '';
                 $('#createPassword').value = '';
             } finally {
+                button.disabled=false;button.textContent='Criar acesso';
                 await secondaryApp.delete();
             }
         });
@@ -4750,7 +4787,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         let bioHtml = '';
         if (perfilData.bio) {
             bioHtml = `<div class="col-span-full bg-fashion-950 p-3 rounded border border-fashion-gold/40 text-left text-xs text-gray-300 italic mb-2">
-                <strong class="text-fashion-gold not-italic font-cinzel">Estilista Assinatura: ${esc(perfilData.estilistaFixo || 'N/D')}</strong> — "${esc(perfilData.bio)}"
+                <strong class="text-fashion-gold not-italic font-cinzel">Maison: ${esc(perfilData.ate || 'Não definida')}</strong> — "${esc(perfilData.bio)}"
             </div>`;
         }
 
@@ -5063,6 +5100,76 @@ apply();
   const watcher=new MutationObserver(()=>{const root=document.getElementById('fauStatusDashboard');if(root!==lastRoot)refresh();});
   watcher.observe(document.body,{childList:true,subtree:true});
   refresh();
+})();
+</script>
+
+<script id="fau-complete-experience-v75">
+(()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const palettes={
+  theme_traitors:['#ad394b','rgba(173,57,75,.18)','THE BLACK BANQUET','A night of secrets. A runway of suspicion.'],
+  theme_wedding_party:['#d8bca5','rgba(216,188,165,.15)','THE INVITATION BOX','Two looks. One invitation. Three surprises.'],
+  theme_beauty_eye:['#b6a0d8','rgba(182,160,216,.17)','BEAUTY IS IN THE EYE','One vision. A thousand ways to see it.'],
+  theme_mathematics:['#86c7ce','rgba(134,199,206,.13)','THE BEAUTY OF MATHEMATICS','Make the formula visible. Then break it.'],
+  theme_rest_in_style:['#d5c5a8','rgba(213,197,168,.14)','REST IN STYLE','An editorial beyond convention.'],
+  theme_next_supreme:['#c4a0db','rgba(196,160,219,.16)','THE NEXT SUPREME','When a new Supreme rises, the old one fades away.'],
+  theme_pink_controversy:['#f29ac5','rgba(242,154,197,.16)','THE PINK CONTROVERSY','Pink is never just a color.'],
+  theme_tarantino:['#d5a04e','rgba(213,160,78,.15)','THE FINAL CUT','Every detail has consequences.'],
+  theme_unica_maria:['#c6ad8c','rgba(198,173,140,.15)','A ÚNICA MARIA DO MUNDO','One name. Infinite stories.'],
+  theme_climate_chaos:['#9cc6b2','rgba(156,198,178,.15)','SEASONS COLLIDE','Two seasons. One silhouette.']
+ };
+ function updateDirector(){
+  const select=$('newThemeId'),host=$('directorPreviewScreen');
+  if(!select||!host)return;
+  const theme=select.value;
+  const t=palettes[theme]||['#d1b38b','rgba(209,179,139,.12)','THE NEXT EPISODE','Every challenge deserves its own visual identity.'];
+  let banner=$('fauV75DirectorIdentity');
+  if(!banner){banner=document.createElement('section');banner.id='fauV75DirectorIdentity';banner.className='fau-v75-director-look';banner.setAttribute('aria-label','Direção de arte da rodada — prévia privada');host.parentNode.insertBefore(banner,host);}
+  banner.style.setProperty('--fau-episode-accent',t[0]);banner.style.setProperty('--fau-episode-glow',t[1]);
+  const title=document.createElement('h4');title.textContent=t[2];
+  const kicker=document.createElement('div');kicker.className='fau-v75-kicker';kicker.textContent='THE DIRECTOR’S MONITOR · PRIVATE ART DIRECTION';
+  const desc=document.createElement('p');desc.textContent=t[3]+' · Prévia estética. A navegação, os formulários e a acessibilidade permanecem consistentes.';
+  const tags=document.createElement('div');tags.className='fau-v75-look-row';
+  for(const label of ['DESIGNER · THE WORKROOM','JUROR · THE PANEL','AUDIENCE · THE FRONT ROW']){const el=document.createElement('span');el.textContent=label;tags.append(el);}
+  banner.replaceChildren(kicker,title,desc,tags);
+ }
+ // Guide only when the actual view is rendered, once per browser and role.
+ function updateGuide(){
+  const root=$('mainView');if(!root||!root.children.length||!$('navContainer')?.children.length)return;
+  if($('fauV75Welcome'))return;
+  const nav=$('navContainer').textContent.toLowerCase();
+  const txt=root.textContent.slice(0,4500).toLowerCase();
+  let role='';
+  if($('newThemeId')&&txt.includes('nova rodada'))role='admin';
+  else if(txt.includes('the workroom')||txt.includes('your vision. your runway'))role='designer';
+  else if(txt.includes("judges' panel")||txt.includes('bancada de júri'))role='juror';
+  else if(txt.includes('front row')||txt.includes('the runway'))role='audience';
+  if(!role)return;
+  const key='fau:v75:welcome:'+role;
+  try{if(localStorage.getItem(key)==='dismissed')return;}catch{}
+  const messages={
+   admin:['WELCOME TO THE CONTROL ROOM','Prepare a rodada, teste o tema no Director’s Monitor e confira as pendências antes de publicar. Nenhuma prévia altera dados reais.'],
+   designer:['WELCOME TO YOUR ATELIER','Leia o briefing, selecione as imagens do seu dispositivo e confira a confirmação da entrega. Rascunho não é envio oficial.'],
+   juror:['WELCOME TO THE JUDGES’ PANEL','Analise cada look e preencha os cinco critérios. As notas são privadas e as críticas vêm depois da apuração.'],
+   audience:['YOUR FRONT-ROW SEAT AWAITS','Explore as criações liberadas pela produção. Informações privadas e resultados ainda não anunciados permanecem ocultos.']
+  };
+  const box=document.createElement('aside');box.id='fauV75Welcome';box.className='fau-v75-guide';box.setAttribute('aria-label','Orientação inicial');
+  const title=document.createElement('strong');title.textContent=messages[role][0];
+  const para=document.createElement('p');para.textContent=messages[role][1];
+  const btn=document.createElement('button');btn.type='button';btn.textContent='Entendi · Não mostrar novamente';
+  btn.addEventListener('click',()=>{try{localStorage.setItem(key,'dismissed');}catch{}box.remove();});
+  box.append(title,para,btn);root.prepend(box);
+ }
+ let scheduled=false;
+ const schedule=()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;updateDirector();updateGuide();});};
+ document.addEventListener('change',e=>{if(e.target?.id==='newThemeId')schedule();});
+ const observer=new MutationObserver(records=>{
+  // Only react to view replacement, not to our own preview or guide additions.
+  if(records.some(r=>r.target.id==='mainView'||r.target.id==='directorPreviewScreen'||r.target.id==='navContainer'))schedule();
+ });
+ observer.observe(document.body,{childList:true,subtree:true});
+ schedule();
 })();
 </script>
 </body>
