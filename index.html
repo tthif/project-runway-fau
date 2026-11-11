@@ -968,8 +968,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
     // Entrada da plateia sem cadastro ou senha. O Firebase usa uma sessão anônima
     // de leitura, que deve ser habilitada no console e limitada pelas Security Rules.
-    // INSCRIÇÃO OFICIAL — o Google autentica a identidade; a produção ativa o perfil.
-    // Não cria senhas, não concede cargo pelo cliente e não altera a temporada.
+    // INSCRIÇÃO OFICIAL — o participante cria a conta e recebe o perfil automaticamente.
+    // O administrador gerencia os perfis; permissões são validadas no Firestore.
     // A produção controla a janela de inscrições em documento público sem dados pessoais.
     const fauEnrollmentRef = db.doc('config/inscricoes');
     const fauEnrollmentState = async () => {
@@ -1063,17 +1063,31 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 if(!fauCanEnroll(await fauEnrollmentState())) throw new Error('As inscrições estão fechadas.');
                 if(!googleUser)sessionStorage.setItem('fauRegistrationDraft',JSON.stringify({real,designer,username}));
                 const user=googleUser|| (await auth.createUserWithEmailAndPassword(formatEmail(username),pass)).user;
-                await db.doc(`inscricoes_designers/${user.uid}`).set({real,designer,username:googleUser?'':username,email:user.email,uid:user.uid,status:'ativo',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-                await fauProvisionDesigner(user,{real,designer,username:googleUser?'':username});
+                await fauRegisterDesignerAtomic(user,{real,designer,username:googleUser?'':username});
                 sessionStorage.removeItem('fauRegistrationDraft');sessionStorage.removeItem('fauGoogleRegistration');
                 showRegistrationReceipt(user,false);
             }catch(ex){
                 console.error('Designer registration:',ex);
-                const messages={'auth/email-already-in-use':'Este usuário já está em uso. Escolha outro.','auth/weak-password':'Escolha uma senha mais forte.','auth/operation-not-allowed':'Habilite Email/Senha em Firebase Authentication.','permission-denied':'Não foi possível registrar no Firestore. Publique as regras V107.'};
+                const messages={'auth/email-already-in-use':'Este usuário já está em uso. Escolha outro.','auth/weak-password':'Escolha uma senha mais forte.','auth/operation-not-allowed':'Habilite Email/Senha em Firebase Authentication.','permission-denied':'Não foi possível registrar no Firestore. Publique as regras V116.'};
                 err.textContent=messages[ex.code]||ex.message||'Não foi possível criar a conta.';
                 btn.disabled=false;btn.textContent='CONFIRMAR INSCRIÇÃO';
             }
         };
+    };
+    // Inscrição e perfil no mesmo commit: não deixa cadastro pela metade.
+    const fauRegisterDesignerAtomic = async (user, enrollment) => {
+        if(!user || !enrollment)throw new Error('Dados de inscrição incompletos.');
+        const uid=user.uid, inscription=db.doc(`inscricoes_designers/${uid}`), profile=db.doc(`perfis/${uid}`);
+        const [oldInscription,oldProfile]=await Promise.all([inscription.get(),profile.get()]);
+        if(oldInscription.exists){
+            if(!oldProfile.exists)await fauProvisionDesigner(user,oldInscription.data());
+            return;
+        }
+        if(oldProfile.exists)throw new Error('Já existe um perfil para esta conta. Entre em contato com a produção.');
+        const batch=db.batch();
+        batch.set(inscription,{...enrollment,email:user.email,uid,status:'ativo',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        batch.set(profile,{ate:enrollment.designer,username:enrollment.username||'',role:'estilista',disabled:false,out:false,bio:'',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await batch.commit();
     };
     const fauProvisionDesigner = async (user, enrollment) => {
         if(!user || !enrollment) throw new Error('Inscrição não encontrada.');
@@ -1185,7 +1199,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(!profileSnap.exists&&!isAdmin){
                 const draft=sessionStorage.getItem('fauRegistrationDraft');
                 if(draft && user.providerData?.some(p=>p.providerId==='password')){
-                    try { const d=JSON.parse(draft);const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();if(enrollment.exists){await fauProvisionDesigner(user,enrollment.data());sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,true);return;}if(!fauCanEnroll(await fauEnrollmentState()))throw new Error('Inscrições fechadas.');await db.doc(`inscricoes_designers/${user.uid}`).set({real:d.real,designer:d.designer,username:d.username,email:user.email,uid:user.uid,status:'ativo',createdAt:firebase.firestore.FieldValue.serverTimestamp()});await fauProvisionDesigner(user,d);sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,false);return; }catch(ex){console.warn('Registration completion:',ex);}
+                    try { const d=JSON.parse(draft);const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();if(enrollment.exists){await fauProvisionDesigner(user,enrollment.data());sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,true);return;}if(!fauCanEnroll(await fauEnrollmentState()))throw new Error('Inscrições fechadas.');await fauRegisterDesignerAtomic(user,d);sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,false);return; }catch(ex){console.warn('Registration completion:',ex);}
                 }
                 const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();
                 if(enrollment.exists){
@@ -1207,6 +1221,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
         }
 
+        if (!isAdmin && !user.isAnonymous && !['estilista','jurado','plateia'].includes(profileData.role)) {
+            await auth.signOut();showToast('Seu perfil não possui uma função válida. Procure a produção.');return showLogin();
+        }
         if (profileData.disabled && !isAdmin) {
             await auth.signOut();
             showToast('Acesso desativado pela direção.');
@@ -1248,6 +1265,24 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 btn.disabled=false;
             }
         });
+        // Atualiza função, status e eliminação sem exigir novo login.
+        // Desativação é aplicada imediatamente na sessão aberta.
+        if(!isAdmin && !user.isAnonymous){
+            unsubsGlobal.push(db.doc(`perfis/${user.uid}`).onSnapshot(async snap=>{
+                if(auth.currentUser?.uid!==user.uid)return;
+                if(!snap.exists || snap.data()?.disabled===true){
+                    showToast('Seu acesso foi desativado ou removido pela produção.');
+                    await auth.signOut();return;
+                }
+                const updated=snap.data();
+                if(!['estilista','jurado','plateia'].includes(updated.role)){
+                    showToast('Perfil sem função válida.');await auth.signOut();return;
+                }
+                const changed=currentUser&&(currentUser.role!==updated.role||currentUser.out!==updated.out||currentUser.ate!==updated.ate);
+                currentUser={...currentUser,...updated};
+                if(changed)navigate(activeTab);
+            },err=>console.error('Monitoramento de perfil:',err)));
+        }
         unsubsGlobal.push(db.doc('config/estado').onSnapshot(snap => {
             globalState = snap.data() || {};
             updateGlobalBanner();
@@ -1532,7 +1567,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             feed.addEventListener('click', safeExec(async event => {
                 const button = event.target.closest('[data-conf-delete]');
                 if (!button || !feed.contains(button)) return;
-                if (!isAdmin || currentUser.role !== 'admin') throw new Error('Apenas a produção pode excluir depoimentos.');
+                if (!isAdmin) throw new Error('Apenas a produção pode excluir depoimentos.');
                 const docId = button.dataset.confDelete;
                 if (!docId) return;
                 const docRef = db.collection('confessionarios').doc(docId);
