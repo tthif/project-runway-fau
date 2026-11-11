@@ -885,7 +885,14 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         await productionLog('draft_saved', {kind, round});
     };
     const renderView = html => { $('#mainView').innerHTML = html; };
-    const sub = (query, callback) => unsubsTab.push(query.onSnapshot(callback, err => showToast(`Erro: ${err.message}`)));
+    const _subErr = { m: '', t: 0 };
+    const sub = (query, callback) => unsubsTab.push(query.onSnapshot(callback, err => {
+        console.error('[listener]', err.code, err.message);
+        const msg = err.code === 'permission-denied' ? 'Sem permissão para carregar parte desta tela. Avise a produção.' : `Erro: ${err.message}`;
+        const t = Date.now();
+        if (_subErr.m === msg && t - _subErr.t < 10000) return;
+        _subErr.m = msg; _subErr.t = t; showToast(msg);
+    }));
 
     const safeExec = fn => async (...args) => {
         try {
@@ -1418,6 +1425,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 if (globalState.rodada || globalState.themeId) throw new Error('A temporada já começou. Para alterar sua identidade, procure a produção.');
                 const ate = document.getElementById('welcomeMaison').value.trim();
                 if (ate.length < 2 || ate.length > 70) throw new Error('O nome do Designer precisa ter entre 2 e 70 caracteres.');
+                if (/[<>]/.test(ate)) throw new Error('O nome não pode conter os símbolos < ou >.');
                 const bio = document.getElementById('welcomeBio').value.trim();
                 if (bio.length > 300) throw new Error('O manifesto pode ter até 300 caracteres.');
                 await db.doc(`perfis/${currentUser.uid}`).update({ate, bio});
@@ -1752,6 +1760,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const atelierBio = $('#setupAtelierBioInput').value.trim();
 
                 if (atelierName.length < 2 || atelierName.length > 70 || atelierBio.length > 300) throw new Error('Informe um nome de Maison (2–70 caracteres) e manifesto (até 300).');
+                if (/[<>]/.test(atelierName)) throw new Error('O nome da Maison não pode conter os símbolos < ou >.');
 
                 await db.doc(`perfis/${currentUser.uid}`).update({
                     ate: atelierName,
@@ -4427,8 +4436,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await db.doc('config/estado').set(stateUpdate, { merge: true });
             $('#adminOutput').innerHTML = `
                 <p class="text-green-400 font-bold mb-2 font-cinzel">Classificação publicada no The Runway!</p>
-                ${stateUpdate.berlinda?.length ? `<p><strong>NO BOTTOM (BERLINDA):</strong> ${stateUpdate.berlinda.map(b => b.ate).join(', ')}</p>` : '<p class="text-blue-300"><strong>Rodada Não Eliminatória:</strong> Ninguém na berlinda!</p>'}
-                <p><strong>WINNER DA RODADA:</strong> ${standings[0]?.ate || 'N/A'}</p>
+                ${stateUpdate.berlinda?.length ? `<p><strong>NO BOTTOM (BERLINDA):</strong> ${stateUpdate.berlinda.map(b => esc(b.ate)).join(', ')}</p>` : '<p class="text-blue-300"><strong>Rodada Não Eliminatória:</strong> Ninguém na berlinda!</p>'}
+                <p><strong>WINNER DA RODADA:</strong> ${esc(standings[0]?.ate || 'N/A')}</p>
             `;
         });
 
