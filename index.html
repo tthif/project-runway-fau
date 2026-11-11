@@ -1394,7 +1394,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const round=String(globalState.rodada||'');
             const uid=currentUser.uid;
             const maison=currentUser.ate||'';
-            db.collection('ranking_historico').doc(round).get().then(snap=>{
+            (round ? db.collection('ranking_historico').doc(round).get() : Promise.resolve({exists:false})).then(snap=>{
               if(!inter.isConnected || !snap.exists || !getSeasonFlow().rankingVisible || String(globalState.rodada||'')!==round || currentUser?.uid!==uid)return;
               const rows=Array.isArray(snap.data().rows)?snap.data().rows:[];
               const mine=rows.find(x=>x.uid===uid) || rows.find(x=>String(x.ate||'').trim().toLocaleLowerCase('pt-BR')===maison.trim().toLocaleLowerCase('pt-BR'));
@@ -1429,7 +1429,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 award.innerHTML=achievements.map(([icon,label,detail])=>`<div class="rounded-xl border border-fashion-gold/40 bg-fashion-gold/5 p-3 flex-1 min-w-[190px]"><p class="font-cinzel text-fashion-gold">${icon} ${esc(label)}</p><p class="text-xs text-gray-300 mt-1">${esc(detail)}</p></div>`).join('');
                 statusLine.after(award);
               }
-              db.collection('fau_titulos_publicos').doc(round).get().then(t=>{
+              db.collection('fau_titulos_publicos').doc(round || '__sem_rodada__').get().then(t=>{
                 if(!t.exists||!t.data().published||!inter.isConnected||currentUser?.uid!==uid||String(globalState.rodada)!==round)return;
                 const d=t.data(),badges=[];
                 if(d.icon===uid)badges.push(['👑','THE FASHION ICON','Seu Designer foi escolhida pelos estilistas. Você conquistou o direito de escolher o próximo tema entre as opções disponíveis.']);
@@ -1441,7 +1441,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 statusLine.after(el);
               }).catch(err=>console.warn('Títulos públicos indisponíveis',err));
               // A publicação de críticas é independente da apuração. Exibir só as liberadas.
-              db.collection('fau_criticas_publicas').doc(round).get().then(critSnap=>{
+              db.collection('fau_criticas_publicas').doc(round || '__sem_rodada__').get().then(critSnap=>{
                 if(!inter.isConnected||!getSeasonFlow().rankingVisible||String(globalState.rodada||'')!==round||currentUser?.uid!==uid)return;
                 const pub=critSnap.data()||{};
                 if(!pub.published)return;
@@ -2384,7 +2384,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const current=await db.collection('ranking_historico').doc(round).get();
         if(!current.exists)return [];
         const currentRows=current.data().rows||[];
-        const prev=await db.collection('ranking_historico').doc(String(Number(round)-1)).get();
+        const prevRound=Number(round)-1;
+        const prev=prevRound>=1 ? await db.collection('ranking_historico').doc(String(prevRound)).get() : {exists:false};
         const previousWinner=prev.exists?(prev.data().rows||[]).find(r=>/\bWIN\b/i.test(r.status||''))?.ate:null;
         const selected=new Map();
         currentRows.forEach(r=>{
@@ -3017,8 +3018,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             refreshRunwayUI();
         });
 
-        sub(db.collection('criticas').where('rodada','==',globalState.rodada || '__sem_rodada__').orderBy('t', 'desc'), snap => {
-            critiques = snap.docs.map(d => d.data());
+        sub(db.collection('criticas').where('rodada','==',globalState.rodada || '__sem_rodada__'), snap => {
+            critiques = snap.docs.map(d => d.data()).sort((a,b)=>(Number(b.t)||0)-(Number(a.t)||0));
             refreshRunwayUI();
         });
 
@@ -4229,7 +4230,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 };
                 fieldset.addEventListener('input',update);update();
             });
-            $$('#directorPreviewTabs [data-preview-role]').forEach(b=>{const active=b.dataset.previewRole===directorRole;b.setAttribute('aria-pressed',String(active));b.classList.toggle('border-fashion-gold',active);b.classList.toggle('text-fashion-gold',active);});
+            document.querySelectorAll('#directorPreviewTabs [data-preview-role]').forEach(b=>{const active=b.dataset.previewRole===directorRole;b.setAttribute('aria-pressed',String(active));b.classList.toggle('border-fashion-gold',active);b.classList.toggle('text-fashion-gold',active);});
         };
         $('#directorPreviewTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-preview-role]');if(!b)return;directorRole=b.dataset.previewRole;renderDirectorPreview();});
         ['newRoundId','newRoundSubmissions','newRoundPhase','newRoundElimType','newRoundRules'].forEach(id=>$('#'+id)?.addEventListener('input',renderDirectorPreview));
