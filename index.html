@@ -1620,7 +1620,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     <label class="text-fashion-gold text-xs uppercase tracking-widest block">Nome do Designer · sua identidade na competição *</label><p class="text-[11px] text-gray-400 mt-1 mb-2">Escolha o nome com que você quer competir. Ele aparecerá nas entregas, na passarela e no Track Record.</p>
                     <input id="welcomeMaison" value="${esc(currentUser.ate && currentUser.ate !== 'Público' ? currentUser.ate : '')}" maxlength="70" placeholder="Ex.: Alexander Noir" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" />
                     <label class="text-fashion-gold text-xs uppercase tracking-widest block">Manifesto do Designer (opcional)</label>
-                    <textarea id="welcomeBio" maxlength="300" rows="3" placeholder="Qual é a sua visão de moda como Designer?" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></textarea>
+                    <textarea id="welcomeBio" maxlength="300" rows="3" placeholder="Qual é a sua visão de moda como Designer?" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white">${esc(currentUser.bio||'')}</textarea>
                     <button id="welcomeSave" class="w-full bg-fashion-gold text-black font-cinzel font-bold rounded-lg p-3">${hasMaisonIdentity() ? 'SALVAR ALTERAÇÕES' : 'CONFIRMAR MEU NOME'}</button>
                 </div>` : `<div class="rounded-2xl bg-fashion-900 border border-fashion-gold/40 p-6 text-center space-y-3"><div class="text-4xl">✦</div><h3 class="text-fashion-gold font-cinzel text-xl">${esc(currentUser.ate)}</h3><p class="text-gray-300 text-sm">Nome de Designer confirmado. Aguarde a estreia para conhecer seu Atelier e o primeiro desafio.</p></div>`}
                 <p class="text-gray-500 text-center text-xs">Os desafios, envios, votações e resultados só aparecem quando a produção liberar cada etapa.</p>
@@ -1636,11 +1636,48 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 await db.doc(`perfis/${currentUser.uid}`).update({ate, bio});
                 Object.assign(currentUser, {ate, bio});
                 document.querySelector('#userHeaderSlot .font-cinzel').textContent = ate;
-                showToast('Nome do Designer salvo. Você pode editá-lo até a estreia!');
+                showToast('Identidade e manifesto salvos. Você pode editar até a estreia!');
                 navigate('work');
             });
             return;
         }
+        // Manifesto pessoal permanece editável após a estreia, sem alterar o nome de Designer.
+        const addManifestoEditor=()=>{
+            const host=$('#mainView');if(!host||$('#fauManifestoEditor'))return;
+            const section=document.createElement('section');section.id='fauManifestoEditor';
+            section.className='rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3 mb-6';
+            section.innerHTML=`<h3 class="font-cinzel text-fashion-gold">YOUR DESIGNER MANIFESTO</h3><p class="text-xs text-gray-300">Seu manifesto fica salvo no seu perfil. Você pode atualizá-lo a qualquer momento; os outros participantes só poderão ler os manifestos quando a temporada começar.</p><textarea id="fauManifestoText" maxlength="300" rows="4" class="w-full bg-fashion-900 border border-fashion-700 rounded p-3 text-white" placeholder="Qual é sua visão de moda?">${esc(currentUser.bio||'')}</textarea><div class="flex items-center justify-between gap-2"><span id="fauManifestoCount" class="text-xs text-gray-400"></span><button id="fauManifestoSave" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">SALVAR MANIFESTO</button></div><p id="fauManifestoFeedback" class="text-xs text-gray-400" aria-live="polite"></p>`;
+            host.prepend(section);
+            const input=section.querySelector('#fauManifestoText'),counter=section.querySelector('#fauManifestoCount');
+            const update=()=>counter.textContent=`${input.value.length}/300 caracteres`;
+            input.addEventListener('input',update);update();
+            section.querySelector('#fauManifestoSave').onclick=safeExec(async()=>{
+                const bio=input.value.trim();if(bio.length>300)throw new Error('O manifesto pode ter até 300 caracteres.');
+                const button=section.querySelector('#fauManifestoSave');button.disabled=true;
+                try{await db.doc(`perfis/${currentUser.uid}`).update({bio});currentUser.bio=bio;section.querySelector('#fauManifestoFeedback').textContent='Última versão salva com sucesso.';showToast('Manifesto atualizado!');}
+                finally{button.disabled=false;}
+            });
+            // Mantém o texto sincronizado com a versão mais recente do banco, inclusive entre dispositivos.
+            sub(db.doc(`perfis/${currentUser.uid}`),snap=>{
+                if(!snap.exists||!section.isConnected)return;
+                const saved=snap.data().bio||'';
+                if(document.activeElement!==input){input.value=saved;update();}
+            });
+        };
+        queueMicrotask(addManifestoEditor);
+        queueMicrotask(()=>{
+            const host=$('#mainView');if(!host||$('#fauPublicManifestos'))return;
+            const panel=document.createElement('section');panel.id='fauPublicManifestos';panel.className='rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3 mb-6';
+            panel.innerHTML='<h3 class="font-cinzel text-fashion-gold">THE DESIGNER ROSTER · MANIFESTOS</h3><p class="text-xs text-gray-300">Conheça a visão criativa de cada Designer da temporada.</p><div id="fauPublicManifestosList" class="grid gap-3">Carregando manifestos…</div>';
+            host.appendChild(panel);
+            sub(db.collection('perfis').where('role','==','estilista'),snap=>{
+                const target=panel.querySelector('#fauPublicManifestosList');if(!target)return;
+                const entries=snap.docs.map(d=>d.data()).filter(p=>!p.disabled);
+                entries.sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR'));
+                target.innerHTML=entries.map(p=>`<article class="rounded-lg border border-fashion-700 bg-fashion-900 p-4"><h4 class="font-cinzel text-white">${esc(p.ate||'Designer')}</h4><p class="text-xs text-gray-300 whitespace-pre-wrap mt-2">${esc(p.bio||'Manifesto ainda não publicado.')}</p></article>`).join('')||'<p class="text-xs text-gray-400">Nenhum Designer disponível.</p>';
+            });
+        });
+
         const isFinalPhase = globalState.fase === 'final';
         const requiredLooks = isFinalPhase ? 4 : (globalState.numSubmissoes || 1);
 
@@ -4316,12 +4353,15 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(!rosterList||!rosterList.isConnected||!isAdmin)return;
             rosterList.textContent='Carregando inscrições…';
             try{
-                const snap=await db.collection('inscricoes_designers').get();
+                const [snap,profileSnap]=await Promise.all([db.collection('inscricoes_designers').get(),db.collection('perfis').get()]);
+                const bioByUid=new Map(profileSnap.docs.map(d=>[d.id,d.data().bio||'']));
                 const entries=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
-                rosterList.innerHTML=entries.length?entries.map(x=>`<article class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-2"><div class="flex justify-between gap-2"><div><p class="font-cinzel text-white">${esc(x.designer)}</p><p class="text-xs text-gray-300">${esc(x.real)} · ${esc(x.email)}</p></div><span class="text-[10px] text-fashion-gold">${esc(x.status||'aguardando')}</span></div><div class="flex flex-wrap gap-2"><span class="border border-fashion-gold/40 text-fashion-gold rounded px-3 py-2 text-xs">ACESSO AUTOMÁTICO</span><button data-roster="edit" data-roster-uid="${esc(x.uid)}" class="border border-fashion-700 text-white rounded px-3 py-2 text-xs">EDITAR</button><button data-roster="delete" data-roster-uid="${esc(x.uid)}" class="border border-red-800 text-red-300 rounded px-3 py-2 text-xs">EXCLUIR INSCRIÇÃO</button></div></article>`).join(''):'Nenhuma inscrição registrada ainda.';
+                rosterList.innerHTML=entries.length?entries.map(x=>`<article class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-2"><div class="flex justify-between gap-2"><div><p class="font-cinzel text-white">${esc(x.designer)}</p><p class="text-xs text-gray-300">${esc(x.real)} · ${esc(x.email)}</p></div><span class="text-[10px] text-fashion-gold">${esc(x.status||'aguardando')}</span></div><div class="border-l-2 border-fashion-gold/50 pl-3"><p class="text-[10px] uppercase tracking-widest text-fashion-gold">Manifesto do Designer</p><p class="text-xs text-gray-200 whitespace-pre-wrap">${esc(bioByUid.get(x.uid)||'Manifesto ainda não preenchido.')}</p></div><div class="flex flex-wrap gap-2"><span class="border border-fashion-gold/40 text-fashion-gold rounded px-3 py-2 text-xs">ACESSO AUTOMÁTICO</span><button data-roster="edit" data-roster-uid="${esc(x.uid)}" class="border border-fashion-700 text-white rounded px-3 py-2 text-xs">EDITAR</button><button data-roster="delete" data-roster-uid="${esc(x.uid)}" class="border border-red-800 text-red-300 rounded px-3 py-2 text-xs">EXCLUIR INSCRIÇÃO</button></div></article>`).join(''):'Nenhuma inscrição registrada ainda.';
             }catch(e){console.error(e);rosterList.textContent='Não foi possível carregar inscrições. Confira as regras V107.';}
         };
         $('#fauRosterRefresh')?.addEventListener('click',loadDesignerRoster);
+        sub(db.collection('perfis'),()=>{if(rosterList?.isConnected)loadDesignerRoster();});
+        sub(db.collection('inscricoes_designers'),()=>{if(rosterList?.isConnected)loadDesignerRoster();});
         rosterList?.addEventListener('click',async e=>{
             const btn=e.target.closest('[data-roster]');if(!btn||!isAdmin)return;
             const uid=btn.dataset.rosterUid,act=btn.dataset.roster;
