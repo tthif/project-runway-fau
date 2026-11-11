@@ -1013,6 +1013,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#navContainer').innerHTML=''; $('#userHeaderSlot').innerHTML='';
         renderView(`<section class="max-w-xl mx-auto my-8 rounded-3xl border border-fashion-gold/50 bg-fashion-950 p-6 sm:p-10 space-y-6">
           <div class="text-center space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">THE DESIGNER REGISTRATION</h1><p class="italic text-fashion-gold">Every legend starts with a name.</p><p class="text-sm text-gray-300">Crie sua própria conta e garanta sua vaga. A produção administra o elenco e libera o acesso ao Workroom.</p></div>
+          <button type="button" id="fauRegGoogle" class="w-full border border-fashion-gold text-white rounded-lg px-4 py-3 text-xs">CONTINUAR INSCRIÇÃO COM GOOGLE</button>
+          <p class="text-xs text-gray-400 text-center">Use o Google para preencher seu nome automaticamente ou crie usuário e senha abaixo. Para usar as duas formas na mesma conta, vincule o Google depois de entrar com usuário e senha.</p>
           <form id="fauRegistrationForm" class="space-y-4">
             <label class="block space-y-2 text-xs text-gray-200">01 · NOME REAL <input id="fauRegReal" maxlength="90" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" autocomplete="name" placeholder="Seu nome para a produção"></label>
             <label class="block space-y-2 text-xs text-gray-200">02 · NOME DE DESIGNER <input id="fauRegDesigner" maxlength="70" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Como aparecerá na passarela"></label>
@@ -1030,6 +1032,27 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           </form><button type="button" id="fauRegBack" class="text-xs text-gray-400 underline">Voltar ao login</button>
         </section>`);
         $('#fauRegBack').onclick=()=>showLogin();
+        if(signedUser?.providerData?.some(p=>p.providerId==='google.com')){
+            $('#fauRegReal').value=signedUser.displayName||'';
+            $('#fauRegGoogle').textContent='GOOGLE CONECTADO · '+(signedUser.email||'');
+            $('#fauRegGoogle').disabled=true;
+            $('#fauRegUsername').required=false;
+            $('#fauRegPassword').required=false;
+            $('#fauRegPasswordConfirm').required=false;
+            ['fauRegUsername','fauRegPassword','fauRegPasswordConfirm'].forEach(id=>$('#'+id).closest('label').classList.add('hidden'));
+            $('#fauRegSubmit').textContent='CONFIRMAR INSCRIÇÃO COM GOOGLE';
+        }
+        $('#fauRegGoogle').onclick=async()=>{
+            try{
+                if(!fauCanEnroll(await fauEnrollmentState()))throw new Error('As inscrições estão fechadas.');
+                sessionStorage.setItem('fauGoogleRegistration','1');
+                const result=await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                const user=result.user;
+                const existing=await db.doc('inscricoes_designers/'+user.uid).get();
+                if(existing.exists){sessionStorage.removeItem('fauGoogleRegistration');showRegistrationReceipt(user,true);return;}
+                await showDesignerRegistration(user);
+            }catch(ex){sessionStorage.removeItem('fauGoogleRegistration');const err=$('#fauRegError');if(err)err.textContent='Não foi possível conectar o Google: '+(ex.message||ex.code);}
+        };
         $('#fauRegistrationForm').onsubmit=async e=>{
             e.preventDefault();
             const real=$('#fauRegReal').value.trim(),designer=$('#fauRegDesigner').value.trim();
@@ -1037,17 +1060,17 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const err=$('#fauRegError'),btn=$('#fauRegSubmit');
             if(!$('#fauRegAccept').checked){err.textContent='Leia e aceite o manual oficial.';return;}
             if(real.length<2||designer.length<2||/[<>]/.test(real+designer)){err.textContent='Confira os nomes informados.';return;}
-            if(!/^[a-z0-9_]{3,24}$/.test(username)){err.textContent='O usuário deve ter de 3 a 24 letras, números ou _.';return;}
-            if(pass.length<8||pass!==confirmPass){err.textContent='A senha deve ter pelo menos 8 caracteres e coincidir com a confirmação.';return;}
+            if(!auth.currentUser?.providerData?.some(p=>p.providerId==='google.com')&&!/^[a-z0-9_]{3,24}$/.test(username)){err.textContent='O usuário deve ter de 3 a 24 letras, números ou _.';return;}
+            const googleUser=auth.currentUser?.providerData?.some(p=>p.providerId==='google.com')?auth.currentUser:null;
+            if(!googleUser&&(pass.length<8||pass!==confirmPass)){err.textContent='A senha deve ter pelo menos 8 caracteres e coincidir com a confirmação.';return;}
             btn.disabled=true;btn.textContent='CRIANDO CONTA…';err.textContent='';
             try {
                 if(!fauCanEnroll(await fauEnrollmentState()))throw new Error('As inscrições foram encerradas.');
-                sessionStorage.setItem('fauRegistrationDraft',JSON.stringify({real,designer,username}));
-                const credential=await auth.createUserWithEmailAndPassword(formatEmail(username),pass);
-                const user=credential.user;
+                if(!googleUser)sessionStorage.setItem('fauRegistrationDraft',JSON.stringify({real,designer,username}));
+                const user=googleUser|| (await auth.createUserWithEmailAndPassword(formatEmail(username),pass)).user;
                 if(!fauCanEnroll(await fauEnrollmentState()))throw new Error('As inscrições foram encerradas durante seu cadastro. Entre em contato com a produção.');
-                await db.doc(`inscricoes_designers/${user.uid}`).set({real,designer,username,email:user.email,uid:user.uid,status:'aguardando',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-                sessionStorage.removeItem('fauRegistrationDraft');
+                await db.doc(`inscricoes_designers/${user.uid}`).set({real,designer,username:googleUser?'':username,email:user.email,uid:user.uid,status:'aguardando',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+                sessionStorage.removeItem('fauRegistrationDraft');sessionStorage.removeItem('fauGoogleRegistration');
                 showRegistrationReceipt(user,false);
             }catch(ex){
                 console.error('Designer registration:',ex);
@@ -1059,7 +1082,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     };
     const showRegistrationReceipt = (user,already=false) => {
         $('#navContainer').innerHTML='';$('#userHeaderSlot').innerHTML='';
-        renderView(`<section class="max-w-lg mx-auto my-10 p-8 text-center border border-fashion-gold/50 rounded-3xl bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">${already?'YOU’RE ALREADY IN!':'YOU’RE IN!'}</h1><p class="italic text-fashion-gold">Your journey to the runway begins now.</p><p class="text-sm text-gray-200">Sua inscrição foi registrada. A produção ativará seu acesso ao Workroom. Depois, entre usando o usuário e a senha que você criou.</p><button id="fauRegLogout" class="border border-fashion-gold text-fashion-gold px-5 py-3 rounded-lg text-xs">VOLTAR AO LOGIN</button></section>`);
+        renderView(`<section class="max-w-lg mx-auto my-10 p-8 text-center border border-fashion-gold/50 rounded-3xl bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">${already?'YOU’RE ALREADY IN!':'YOU’RE IN!'}</h1><p class="italic text-fashion-gold">Your journey to the runway begins now.</p><p class="text-sm text-gray-200">Sua inscrição foi registrada. A produção ativará seu acesso ao Workroom. Depois, entre usando o mesmo método de acesso escolhido no cadastro.</p><button id="fauRegLogout" class="border border-fashion-gold text-fashion-gold px-5 py-3 rounded-lg text-xs">VOLTAR AO LOGIN</button></section>`);
         $('#fauRegLogout').onclick=()=>auth.signOut();
     };
     const showLogin = () => {
@@ -1167,6 +1190,10 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 }
                 const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();
                 if(enrollment.exists){showRegistrationReceipt(user,true);return;}
+                if(user.providerData?.some(p=>p.providerId==='google.com')&&sessionStorage.getItem('fauGoogleRegistration')==='1'){
+                    sessionStorage.removeItem('fauGoogleRegistration');
+                    if(fauCanEnroll(await fauEnrollmentState())){await showDesignerRegistration(user);return;}
+                }
                 await auth.signOut();showToast('Acesso restrito a Designers e Jurados cadastrados.');return showLogin();
             }
         }
@@ -1192,11 +1219,26 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#userHeaderSlot').innerHTML = `
             <span class="text-fashion-gold font-medium font-cinzel">${esc(currentUser.ate)}</span>
             <span class="text-[10px] bg-fashion-800 text-white px-2 py-0.5 rounded border border-fashion-700 uppercase font-semibold" aria-label="Seu perfil: ${currentUser.role}">${currentUser.role === 'estilista' ? 'DESIGNER' : currentUser.role === 'jurado' ? 'JURADO' : currentUser.role === 'plateia' ? 'PLATEIA' : 'PRODUÇÃO'}${isAdmin ? ' · JÚRI' : ''}</span>
+            ${!user.isAnonymous && !user.providerData?.some(p=>p.providerId==='google.com')?'<button id="fauLinkGoogle" class="text-[10px] text-fashion-gold border border-fashion-gold/40 rounded px-2 py-1" title="Usar Google nesta mesma conta">VINCULAR GOOGLE</button>':''}
             <button onclick="auth.signOut()" class="text-gray-400 hover:text-white transition ml-2" title="Sair">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </button>
         `;
 
+        $('#fauLinkGoogle')?.addEventListener('click',async()=>{
+            const btn=$('#fauLinkGoogle');btn.disabled=true;
+            try{
+                const before=auth.currentUser.uid;
+                const result=await auth.currentUser.linkWithPopup(new firebase.auth.GoogleAuthProvider());
+                if(result.user.uid!==before)throw new Error('A conta mudou inesperadamente.');
+                showToast('Google vinculado! Os dois métodos agora usam o mesmo perfil.');
+                btn.remove();
+            }catch(ex){
+                console.error('Vincular Google:',ex);
+                showToast(ex.code==='auth/credential-already-in-use'||ex.code==='auth/email-already-in-use'?'Este Google já está vinculado a outra conta. Não é seguro juntar os perfis automaticamente; procure a produção.':'Não foi possível vincular o Google: '+(ex.message||ex.code));
+                btn.disabled=false;
+            }
+        });
         unsubsGlobal.push(db.doc('config/estado').onSnapshot(snap => {
             globalState = snap.data() || {};
             updateGlobalBanner();
@@ -3156,7 +3198,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                   <button type="button" id="fauRosterRefresh" class="rounded border border-fashion-gold text-fashion-gold px-4 py-2 text-xs">↻ ATUALIZAR INSCRIÇÕES</button>
                   <div id="fauRosterList" class="space-y-3 text-sm text-gray-300" aria-live="polite">Carregando inscrições…</div>
                 </section>
-                <section class="rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3" id="fauEnrollmentAdmin"><p class="text-[10px] tracking-[.28em] text-fashion-gold">🎬 THE PRODUCTION OFFICE · SEASON REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DOORS TO THE WORKROOM</h3><p class="text-xs text-gray-300">Abra ou feche as inscrições. Ao marcar a estreia, novas inscrições ficam bloqueadas até que você reinicie explicitamente o estado da temporada.</p><p id="fauEnrollmentAdminStatus" class="text-xs text-fashion-gold">Carregando status…</p><div class="flex flex-wrap gap-2"><button type="button" id="fauEnrollmentOpen" class="border border-fashion-gold text-fashion-gold rounded px-4 py-3 text-xs">ABRIR INSCRIÇÕES</button><button type="button" id="fauEnrollmentClose" class="border border-fashion-700 text-white rounded px-4 py-3 text-xs">FECHAR INSCRIÇÕES</button><button type="button" id="fauEnrollmentStart" class="border border-red-800 text-red-300 rounded px-4 py-3 text-xs">CONFIRMAR ESTREIA DA TEMPORADA</button></div></section>
+                <section class="rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3" id="fauEnrollmentAdmin"><p class="text-[10px] tracking-[.28em] text-fashion-gold">🎬 THE PRODUCTION OFFICE · SEASON REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DOORS TO THE WORKROOM</h3><p class="text-xs text-gray-300">Você decide se a opção de inscrição aparece na entrada. Quando desligada, o visitante vê somente o login. A alteração é salva para todos os visitantes.</p><label class="flex items-center justify-between gap-3 rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4 cursor-pointer"><span><strong class="block text-sm text-white">MOSTRAR INSCRIÇÕES NA ENTRADA</strong><span class="block text-xs text-gray-400">Ativar ou ocultar o cadastro de novos Designers</span></span><input type="checkbox" id="fauEnrollmentToggle" class="h-5 w-5 accent-amber-400" aria-label="Mostrar inscrições na entrada"></label><p id="fauEnrollmentAdminStatus" class="text-xs text-fashion-gold">Carregando status…</p><div class="flex flex-wrap gap-2"><button type="button" id="fauEnrollmentOpen" class="border border-fashion-gold text-fashion-gold rounded px-4 py-3 text-xs">ABRIR INSCRIÇÕES</button><button type="button" id="fauEnrollmentClose" class="border border-fashion-700 text-white rounded px-4 py-3 text-xs">FECHAR INSCRIÇÕES</button><button type="button" id="fauEnrollmentStart" class="border border-red-800 text-red-300 rounded px-4 py-3 text-xs">CONFIRMAR ESTREIA DA TEMPORADA</button></div></section>
                 <section id="fauProductionDesk" class="fau-production-desk rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 md:p-7 space-y-5" aria-label="The Production Desk">
                   <div class="flex flex-wrap justify-between gap-3 items-start"><div><p class="text-[10px] tracking-[.35em] text-fashion-gold">PROJECT RUNWAY · FAU / PRODUCTION HEADQUARTERS</p><h3 class="font-cinzel text-2xl text-white mt-2">THE CONTROL ROOM</h3><p class="text-sm text-gray-300 mt-1">O episódio em um olhar. Acompanhe o que precisa de atenção e acesse o controle certo.</p></div><span class="text-[10px] tracking-widest border border-fashion-gold/40 rounded px-3 py-2 text-fashion-gold">PRIVATE · ADMIN</span></div>
                   <div class="grid sm:grid-cols-3 gap-3" aria-label="Estado atual da produção"><div class="rounded-xl bg-fashion-900 border border-fashion-700 p-4"><p class="text-[10px] tracking-widest text-gray-400">EPISÓDIO</p><p class="font-cinzel text-lg text-white">${esc(globalState.rodada || 'Pré-temporada')}</p></div><div class="rounded-xl bg-fashion-900 border border-fashion-700 p-4"><p class="text-[10px] tracking-widest text-gray-400">FASE ATUAL</p><p class="font-cinzel text-sm text-fashion-gold mt-1">${esc((FLOW_STAGES.find(f=>f.id===currentFlowStage())||FLOW_STAGES[0]).title)}</p></div><div class="rounded-xl bg-fashion-900 border border-fashion-700 p-4"><p class="text-[10px] tracking-widest text-gray-400">PASSARELA</p><p class="text-sm text-white mt-1">${globalState.liberado?'Publicada':'Privada · não publicada'}</p></div></div>
@@ -4144,8 +4186,29 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#directorPreviewTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-preview-role]');if(!b)return;directorRole=b.dataset.previewRole;renderDirectorPreview();});
         ['newRoundId','newRoundSubmissions','newRoundPhase','newRoundElimType','newRoundRules'].forEach(id=>$('#'+id)?.addEventListener('input',renderDirectorPreview));
         // O fechamento é persistido no Firestore e reforçado pelas regras de criação.
-        const refreshEnrollmentAdmin=async()=>{const el=$('#fauEnrollmentAdminStatus');if(!el)return;try{const st=await fauEnrollmentState();el.textContent=st.seasonStarted?'🔒 TEMPORADA INICIADA · Inscrições encerradas':st.open?'🟢 INSCRIÇÕES ABERTAS':'🔒 INSCRIÇÕES FECHADAS';$('#fauEnrollmentOpen').disabled=st.seasonStarted;}catch(e){console.error('Falha ao ler inscrições',e);el.textContent='⚠️ Não foi possível ler config/inscricoes: '+(e.code||e.message);}};
-        const updateEnrollmentAdmin=async(action)=>{try{const st=await fauEnrollmentState();if(action==='open'&&st.seasonStarted)throw new Error('A temporada já começou. Não é possível reabrir inscrições.');if(action==='start'&&!confirm('Confirmar a estreia? Isso encerra definitivamente as inscrições desta temporada.'))return;const payload=action==='open'?{open:true,seasonStarted:false}:action==='close'?{open:false,seasonStarted:st.seasonStarted}:{open:false,seasonStarted:true};await fauEnrollmentRef.set({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});await refreshEnrollmentAdmin();showToast('Estado das inscrições atualizado.');}catch(e){console.error('Falha ao atualizar inscrições',e);const msg=e.code==='permission-denied'?'PERMISSÃO NEGADA: o Firebase não reconheceu sua conta como ADM. Confira a coleção admins e as regras publicadas.':(e.message||'Não foi possível alterar inscrições.');const el=$('#fauEnrollmentAdminStatus');if(el)el.textContent='⚠️ '+msg;showToast(msg);}};
+        const refreshEnrollmentAdmin=async()=>{
+            const el=$('#fauEnrollmentAdminStatus'),toggle=$('#fauEnrollmentToggle');if(!el)return;
+            try{const st=await fauEnrollmentState();
+                if(toggle){toggle.checked=fauCanEnroll(st);toggle.disabled=st.seasonStarted;}
+                el.textContent=st.seasonStarted?'🔒 TEMPORADA INICIADA · Inscrições bloqueadas':st.open?'🟢 OPÇÃO DE INSCRIÇÃO VISÍVEL':'🔒 OPÇÃO DE INSCRIÇÃO OCULTA';
+                $('#fauEnrollmentOpen').disabled=st.seasonStarted;
+            }catch(e){console.error('Falha ao ler inscrições',e);el.textContent='⚠️ Falha ao ler config/inscricoes: '+(e.code||e.message);if(toggle)toggle.disabled=true;}
+        };
+        const updateEnrollmentAdmin=async(action)=>{
+            const toggle=$('#fauEnrollmentToggle');if(toggle)toggle.disabled=true;
+            try{
+                const st=await fauEnrollmentState();
+                if(action==='open'&&st.seasonStarted)throw new Error('A temporada já começou. Não é possível reabrir inscrições.');
+                if(action==='start'&&!confirm('Confirmar a estreia? Isso encerra as inscrições desta temporada.'))return;
+                const payload=action==='open'?{open:true,seasonStarted:false}:action==='close'?{open:false,seasonStarted:st.seasonStarted}:{open:false,seasonStarted:true};
+                await fauEnrollmentRef.set({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+                await refreshEnrollmentAdmin();showToast(action==='open'?'Inscrições visíveis na entrada.':'Inscrições ocultas da entrada.');
+            }catch(e){console.error('Falha ao atualizar inscrições',e);
+                const msg=e.code==='permission-denied'?'O Firestore negou a alteração. Verifique se o UID da sua conta está em admins/{UID} e se as regras V104 estão publicadas.':(e.message||'Não foi possível alterar inscrições.');
+                const el=$('#fauEnrollmentAdminStatus');if(el)el.textContent='⚠️ '+msg;showToast(msg);
+            }finally{await refreshEnrollmentAdmin();}
+        };
+        $('#fauEnrollmentToggle')?.addEventListener('change',e=>updateEnrollmentAdmin(e.target.checked?'open':'close'));
         $('#fauEnrollmentOpen')?.addEventListener('click',()=>updateEnrollmentAdmin('open'));
         $('#fauEnrollmentClose')?.addEventListener('click',()=>updateEnrollmentAdmin('close'));
         $('#fauEnrollmentStart')?.addEventListener('click',()=>updateEnrollmentAdmin('start'));
