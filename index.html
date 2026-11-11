@@ -5181,5 +5181,97 @@ apply();
  schedule();
 })();
 </script>
+<script id="fau-immersion-v1">
+(() => {
+    /* ---------- Estilo ---------- */
+    const st = document.createElement('style');
+    st.textContent = `
+      :root{--acc:#d1b38b}
+      #themeAura{position:fixed;inset:0;pointer-events:none;z-index:0;transition:background 1.2s;
+        background:radial-gradient(ellipse at 50% -10%,color-mix(in srgb,var(--acc) 22%,transparent),transparent 60%),radial-gradient(ellipse at 90% 110%,color-mix(in srgb,var(--acc) 12%,transparent),transparent 55%)}
+      #challengeHero{border-bottom-color:color-mix(in srgb,var(--acc) 55%,transparent)!important}
+      #fauFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:95}
+      #fauFlash.on{animation:fauFl .35s ease-out}@keyframes fauFl{0%{opacity:.8}100%{opacity:0}}
+      #themeCard{position:fixed;inset:0;z-index:92;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center;cursor:pointer;transition:opacity 1s;
+        background:radial-gradient(ellipse at 50% 35%,color-mix(in srgb,var(--acc) 30%,#0a0a0c),#0a0a0c 72%)}
+      #themeCard:before,#themeCard:after{content:"";position:absolute;left:0;right:0;height:11vh;background:#000}
+      #themeCard:before{top:0}#themeCard:after{bottom:0}
+      #themeCard .k{font-family:Cinzel,serif;letter-spacing:.55em;font-size:.7rem;color:var(--acc)}
+      #themeCard .t{font-family:Cinzel,serif;font-size:clamp(1.7rem,7vw,3.4rem);letter-spacing:.18em;color:#fff;animation:fauUp 1.3s ease both}
+      #themeCard .s{max-width:34rem;color:#b8b0b6;font-style:italic;font-size:.85rem;animation:fauUp 2s ease both}
+      @keyframes fauUp{from{opacity:0;transform:translateY(16px);filter:blur(6px)}}
+      #liveBar{max-width:42rem;margin:8px auto;padding:0 16px;font-size:11px;color:#c9c0c7}
+      #liveBar .bar{height:4px;border-radius:99px;background:#393039;overflow:hidden;margin-top:4px}
+      #liveBar .bar i{display:block;height:100%;background:var(--acc);transition:width .8s}
+      #liveBar .ev{font-style:italic;color:var(--acc);transition:opacity .6s}
+      @media(prefers-reduced-motion:reduce){#fauFlash.on,#themeCard .t,#themeCard .s{animation:none}}`;
+    document.head.appendChild(st);
+    const aura = document.createElement('div'); aura.id = 'themeAura'; aura.setAttribute('aria-hidden', 'true'); document.body.prepend(aura);
+    const reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches);
+
+    const flash = document.createElement('div'); flash.id = 'fauFlash'; document.body.appendChild(flash);
+    document.addEventListener('click', e => {
+        if (e.target.closest && e.target.closest('#mainView img')) { if (!reduce) { flash.classList.remove('on'); void flash.offsetWidth; flash.classList.add('on'); } }
+    }, true);
+
+    /* ---------- Identidade visual por tema ---------- */
+    const PAL = { theme_traitors: '#b3263a', theme_tarantino: '#e0b012', theme_beauty_eye: '#e08aa8', theme_rest_in_style: '#8a8f98', theme_plaid_bay: '#6aa84f', theme_wedding_party: '#e8d9b5', theme_pink_controversy: '#ff4fa3', theme_nature_brutal: '#7f9a4a', theme_seven_deadly: '#c2410c', theme_climate_chaos: '#3b9ad9', theme_the_awards: '#d4af37', theme_mathematics: '#5eb1bf', theme_next_supreme: '#a855f7', theme_amoras_cut: '#9d174d' };
+    const accFor = id => !id ? '#d1b38b' : (PAL[id] || `hsl(${[...String(id)].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % 360} 55% 62%)`);
+    let lastTheme = '__';
+    const themeStep = g => {
+        if (g.themeId === lastTheme) return; lastTheme = g.themeId;
+        document.documentElement.style.setProperty('--acc', accFor(g.themeId));
+        const t = (typeof SEASON_THEMES !== 'undefined' && SEASON_THEMES[g.themeId]) || null;
+        if (!t || !t.title || !g.rodada || (g.prazo || 0) < Date.now()) return;
+        const k = `tc_${g.rodada}_${g.themeId}`;
+        try { if (localStorage.getItem(k)) return; localStorage.setItem(k, '1'); } catch (e) {}
+        const o = document.createElement('div'); o.id = 'themeCard';
+        o.innerHTML = `<div class="k">THE NEXT CHALLENGE</div><div class="t">${esc(t.title)}</div><div class="s">${esc(String(t.subtitle || '').slice(0, 180))}</div>`;
+        const close = () => { o.style.opacity = 0; setTimeout(() => o.remove(), 1000); };
+        o.onclick = close; document.body.appendChild(o); setTimeout(close, 5200);
+    };
+
+    /* ---------- Sensação de ao vivo: entregas e bastidores ---------- */
+    const live = document.createElement('div'); live.id = 'liveBar'; live.className = 'hidden';
+    const hero = document.getElementById('challengeHero'); (hero ? hero.after(live) : document.body.prepend(live));
+    let evs = [], envUnsub = null, envKey = '', envCount = {}, total = 0, first = true, prev = null, lastHtml = '';
+    const pushEv = t => { evs.unshift({ t, at: Date.now() }); evs = evs.slice(0, 3); };
+    const watchEnv = g => {
+        const key = (currentUser && g.rodada) ? String(g.rodada) : '';
+        if (key === envKey) return; envKey = key; envCount = {}; total = 0; first = true;
+        if (envUnsub) { envUnsub(); envUnsub = null; } if (!key) return;
+        db.collection('perfis').where('role', '==', 'estilista').get().then(sn => { total = sn.docs.filter(d => !d.data().out && !d.data().disabled).length; }).catch(() => {});
+        envUnsub = db.collection('envios').where('rodada', '==', key).onSnapshot(sn => {
+            envCount = {}; sn.docs.forEach(d => { const u = d.data().uid; envCount[u] = (envCount[u] || 0) + 1; });
+            if (!first) sn.docChanges().forEach(c => { if (c.type === 'added') pushEv('📸 Uma Maison acabou de entregar um look'); });
+            first = false;
+        }, () => {});
+    };
+    const stateEvents = g => {
+        const cur = { urna: !!g.urna, liberado: !!g.liberado, poder: g.poderNome || '', tema: g.proxTema ? 1 : 0, rodada: g.rodada || '' };
+        if (prev && prev.rodada === cur.rodada) {
+            if (cur.urna !== prev.urna) pushEv(cur.urna ? '🗳️ A urna foi aberta' : '🔒 A urna foi fechada');
+            if (cur.liberado && !prev.liberado) pushEv('🎞️ Os looks foram liberados na passarela');
+            if (cur.poder && cur.poder !== prev.poder && !cur.tema) pushEv(`👑 ${esc(cur.poder)} está escolhendo o próximo tema`);
+            if (cur.tema && !prev.tema) pushEv('🎭 Novo tema revelado');
+        } else if (prev && cur.rodada && cur.rodada !== prev.rodada) pushEv('🎬 Nova rodada iniciada');
+        prev = cur;
+    };
+    const drawLive = g => {
+        if (!currentUser || !g.rodada || !total) { if (!live.classList.contains('hidden')) live.classList.add('hidden'); return; }
+        const need = Math.max(1, Number(g.numSubmissoes) || 1);
+        const done = Object.values(envCount).filter(n => n >= need).length;
+        const now = Date.now(); evs = evs.filter(e => now - e.at < 90000);
+        const html = `<div class="flex justify-between"><span>📥 ${done} de ${total} Maisons entregaram</span><span>${Math.round(done / total * 100)}%</span></div><div class="bar"><i style="width:${Math.min(100, done / total * 100)}%"></i></div>${evs.map((e, i) => `<div class="ev" style="opacity:${1 - i * .3}">${e.t}</div>`).join('')}`;
+        if (html !== lastHtml) { lastHtml = html; live.innerHTML = html; }
+        live.classList.remove('hidden');
+    };
+    setInterval(() => {
+        const g = (typeof globalState !== 'undefined' && globalState) || {};
+        if (typeof currentUser === 'undefined' || !currentUser) { lastTheme = '__'; prev = null; if (envKey) watchEnv({}); return drawLive({}); }
+        themeStep(g); watchEnv(g); stateEvents(g); drawLive(g);
+    }, 1000);
+})();
+</script>
 </body>
 </html>
