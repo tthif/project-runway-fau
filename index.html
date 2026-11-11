@@ -982,6 +982,28 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         renderView(`<section class="max-w-lg mx-auto my-12 p-8 text-center rounded-3xl border border-fashion-gold/40 bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-2xl text-white">THE WORKROOM DOORS ARE CLOSED</h1><p class="text-gray-300 text-sm">As inscrições para esta temporada não estão disponíveis. Se você já é Designer, entre com sua conta para continuar sua jornada.</p><button id="fauClosedBack" class="border border-fashion-gold text-fashion-gold px-5 py-3 rounded-lg text-xs">VOLTAR À ENTRADA</button></section>`);
         $('#fauClosedBack').onclick=()=>auth.currentUser&&!auth.currentUser.isAnonymous?auth.signOut():showLogin();
     };
+    // Uma única fonte de regras para a inscrição e para a aba The Rulebook.
+    const FAU_RULEBOOK_SECTIONS = [
+            ['📖','01 · The Competition','Competição entre estilistas usando IA. Não basta uma imagem bonita: é preciso ideia, narrativa e identidade autoral.'],
+            ['🎯','02 · The Challenges','Cada rodada traz um briefing com tema, requisitos, restrições e instruções. O briefing da rodada prevalece sobre o manual.'],
+            ['📸','03 · The Runway','Entrega padrão: imagem original gerada por IA, título e conceito (máx. 500 caracteres, incluindo espaços). Não é necessário enviar prompt. Cada briefing pode exigir referências, campos extras ou múltiplos looks.'],
+            ['⚖️','04 · The Judging','5 critérios de 0 a 10: criatividade, conceito, qualidade visual, styling e interpretação do desafio. Soma das médias = até 50 pontos.'],
+            ['💬','05 · Judges\' Critiques','Críticas individuais para TOP e BOTTOM, e para o WIN da rodada anterior. Todos recebem suas notas.'],
+            ['🏆','06 · The Results','WIN · TOP · SAFE · BOTTOM · THE ELIMINATION POOL · OUT. BOTTOM é o desempenho da semana; só o Pool pode ser eliminado.'],
+            ['📈','07 · The Ranking','Ranking acumulado da temporada. Ele define quem entra no Elimination Pool: consistência também vence.'],
+            ['👑','08 · The Win','Protege o estilista na vaga do ranking acumulado, só naquela rodada (não é imunidade). Decide o desempate do voto de salvamento.'],
+            ['✨','09 · Ícone da Moda','Votação secreta, sem voto em si. O Ícone escolhe entre todos os temas ainda disponíveis, usando pistas; se não houver Ícone, o WIN escolhe. Não dá imunidade.'],
+            ['🥀','10 · Fora de Moda','Voto secreto no pior estilista. Se empatar no salvamento, perde automaticamente.'],
+            ['🗳️','11 · The Voting Room','Somente estilistas ativos votam. Todos os votos são secretos e ninguém vota em si mesmo. Plateia e jurados não participam dessas votações; apenas os resultados autorizados são anunciados.'],
+            ['🚨','12 · The Elimination Pool','Normalmente três estilistas elegíveis à eliminação: os dois piores da rodada e o pior do acumulado ainda não incluído; twists podem alterar essa formação. BOTTOM é posição no ranking da rodada.'],
+            ['🛟','13 · The Save Vote','Mais votado e 2º mais votado são salvos; o menos votado é OUT. Empate: Fora de Moda perde → Ícone tem prioridade → WIN decide.'],
+            ['🔥','14 · Top 5 — The Final Filter','Rodada somada ao acumulado: 1º vai direto à final, 5º sai. Os 3 do meio disputam 2 vagas só pela nota do Top 5.'],
+            ['🏁','15 · The Four Acts of a Legend','Três finalistas começam com placar zerado. Quatro editoriais, House Code e manifesto da Maison; cada ato vale até 50 pontos, totalizando até 200.'],
+            ['🎥','16 · The Confessional Room','Depoimentos livres publicados somente pelos estilistas e visíveis a todos. A produção pode moderar o conteúdo.'],
+            ['🎤','17 · Final Word','Respeite briefings e prazos, defenda suas ideias. THE RUNWAY IS YOURS. MAKE IT COUNT.']
+        ];
+    const fauRulebookMarkup = (compact=false) => `<div class="space-y-3">${FAU_RULEBOOK_SECTIONS.map((x,i)=>`<details class="bg-fashion-900 border border-fashion-700 rounded-xl p-4" ${i===0?'open':''}><summary class="cursor-pointer font-cinzel text-fashion-gold text-sm">${x[0]} ${x[1]}</summary><p class="text-gray-300 text-xs leading-relaxed mt-3">${x[2]}</p></details>`).join('')}</div>`;
+
     const showDesignerRegistration = async (signedUser=null) => {
         const gate=await fauEnrollmentState();
         if(!fauCanEnroll(gate)){
@@ -992,6 +1014,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const signedEmail=signedUser?.email||'';
         renderView(`<section class="max-w-xl mx-auto my-8 rounded-3xl border border-fashion-gold/50 bg-fashion-950 p-6 sm:p-10 space-y-6">
           <div class="text-center space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY · F.A.U.</p><h1 class="font-cinzel text-3xl text-white">THE DESIGNER REGISTRATION</h1><p class="italic text-fashion-gold">Every legend starts with a name.</p><p class="text-sm text-gray-300">Não é seleção: sua inscrição confirma sua participação. A produção liberará seu acesso ao Workroom antes da estreia.</p></div>
+          <div class="rounded-2xl border border-fashion-gold/30 bg-fashion-900/50 p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2"><div><p class="text-[10px] tracking-[.22em] text-fashion-gold">BEFORE THE RUNWAY</p><h2 class="font-cinzel text-lg text-white">THE RULEBOOK</h2></div><span class="text-xs text-gray-400">17 capítulos</span></div>
+            <p class="text-xs text-gray-300">Leia o manual oficial antes de confirmar sua participação. Toque em cada capítulo para conhecer as regras.</p>
+            <div class="max-h-[22rem] overflow-y-auto pr-1 space-y-2" tabindex="0" aria-label="Manual oficial do participante">${fauRulebookMarkup(true)}</div>
+            <label class="flex items-start gap-3 rounded-lg bg-fashion-950 p-3 text-xs text-gray-200 cursor-pointer"><input type="checkbox" id="fauRegAccept" required class="mt-0.5 accent-amber-400"><span>Li o manual oficial e estou ciente das regras, prazos, avaliações e eliminações da competição.</span></label>
+          </div>
           <form id="fauRegistrationForm" class="space-y-4">
             <label class="block space-y-2 text-xs text-gray-200">01 · NOME REAL <input id="fauRegReal" maxlength="90" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu nome para a produção"></label>
             <label class="block space-y-2 text-xs text-gray-200">02 · NOME DE DESIGNER <input id="fauRegDesigner" maxlength="70" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Como aparecerá na passarela"></label>
@@ -1004,6 +1032,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#fauRegistrationForm').onsubmit=async e=>{
             e.preventDefault(); const real=$('#fauRegReal').value.trim(),designer=$('#fauRegDesigner').value.trim();
             const err=$('#fauRegError'),btn=$('#fauRegSubmit');
+            if(!$('#fauRegAccept').checked){err.textContent='Leia e aceite o manual oficial antes de continuar.';return;}
             if(real.length<2||designer.length<2){err.textContent='Preencha os dois nomes (mínimo de 2 caracteres).';return;}
             if(/[<>]/.test(real+designer)){err.textContent='Os nomes não podem conter < ou >.';return;}
             btn.disabled=true;btn.textContent='REGISTRANDO…';err.textContent='';
@@ -1024,7 +1053,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 if(!existing.exists){await ref.set({real,designer,email:user.email,uid:user.uid,status:'aguardando',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}
                 sessionStorage.removeItem('fauRegistrationDraft');
                 showRegistrationReceipt(user,existing.exists);
-            }catch(ex){console.error('Designer registration:',ex);err.textContent=ex?.code==='permission-denied'?'Permissão negada. Publique também as regras V98 do Firestore.':(ex?.message||'Não foi possível registrar. Tente novamente.');btn.disabled=false;btn.textContent='CONTINUAR COM GOOGLE →';}
+            }catch(ex){console.error('Designer registration:',ex);err.textContent=ex?.code==='permission-denied'?'Permissão negada. Confira as regras de inscrições publicadas no Firestore.':(ex?.message||'Não foi possível registrar. Tente novamente.');btn.disabled=false;btn.textContent='CONTINUAR COM GOOGLE →';}
         };
     };
     const showRegistrationReceipt = (user,already=false) => {
@@ -1036,29 +1065,37 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#navContainer').innerHTML = '';
         $('#userHeaderSlot').innerHTML = '';
         renderView(`
-          <section class="fau-entrance max-w-5xl mx-auto my-5 sm:my-12" aria-label="Entrada no Project Runway FAU">
-            <div class="fau-entrance-stage rounded-3xl border border-fashion-gold/30 overflow-hidden">
-              <div class="fau-entrance-light" aria-hidden="true"></div>
-              <div class="relative z-10 grid md:grid-cols-2 gap-0">
-                <div class="p-7 sm:p-12 flex flex-col justify-center space-y-6 text-center md:text-left">
-                  <p class="text-fashion-gold text-[10px] tracking-[.38em] uppercase">Fashion · Art · Uniqueness</p>
-                  <div class="space-y-2"><p class="text-gray-300 text-[11px] tracking-[.3em] uppercase">The entrance</p><h1 class="font-cinzel text-3xl sm:text-5xl text-white leading-tight">PROJECT<br>RUNWAY <span class="text-fashion-gold">F.A.U.</span></h1></div>
-                  <p class="text-gray-300 text-sm leading-relaxed">Toda criação tem uma assinatura. Todo Designer tem uma história. A sua começa aqui.</p>
-                  <p class="font-cinzel italic text-fashion-gold text-sm">“One day you're in. The next day you're out.”</p>
-                  <div class="hidden md:flex items-center gap-3 text-[10px] uppercase tracking-widest text-gray-400"><span class="w-8 h-px bg-fashion-gold/60"></span> The show starts here</div>
+          <section class="max-w-lg mx-auto my-6 sm:my-12 px-3" aria-label="Entrada no Project Runway FAU">
+            <div class="rounded-3xl border border-fashion-gold/30 bg-fashion-950 overflow-hidden shadow-2xl">
+              <div class="text-center px-6 pt-9 pb-6 space-y-2">
+                <p class="text-fashion-gold text-[10px] uppercase tracking-[.32em]">Fashion · Art · Uniqueness</p>
+                <h1 class="font-cinzel text-3xl sm:text-4xl text-white">PROJECT RUNWAY <span class="text-fashion-gold">FAU</span></h1>
+                <p class="text-xs italic text-gray-400">One day you're in. The next day you're out.</p>
+              </div>
+              <div class="px-5 sm:px-8 pb-8 space-y-4">
+                <div id="fauRegistrationEntry" class="hidden rounded-2xl border border-fashion-gold/50 bg-fashion-900/70 p-5 space-y-3">
+                  <p class="text-[10px] tracking-[.26em] text-fashion-gold">THE NEXT DESIGNER</p>
+                  <h2 class="font-cinzel text-xl text-white">YOUR RUNWAY STARTS HERE.</h2>
+                  <p id="fauEnrollmentStatus" class="text-xs text-gray-300" role="status">Verificando inscrições…</p>
+                  <button type="button" id="fauOpenRegistration" disabled class="w-full bg-fashion-gold text-fashion-950 font-bold rounded-lg py-3.5 text-xs tracking-widest disabled:opacity-40">INSCREVER-SE COMO DESIGNER</button>
                 </div>
-                <div class="bg-fashion-950/90 backdrop-blur-sm border-t md:border-t-0 md:border-l border-fashion-gold/20 p-6 sm:p-10 flex flex-col justify-center gap-5">
-                  <div class="space-y-2"><p class="text-fashion-gold text-[10px] uppercase tracking-[.28em]">Backstage · Authorized access</p><h2 class="font-cinzel text-xl sm:text-2xl text-white">WELCOME BACK</h2><p class="text-xs text-gray-300">Designer, jurado ou produção? Entre com seu usuário e senha. Para assistir, não é necessário cadastro.</p></div>
-                  <form id="fauLoginForm" class="space-y-4" novalidate>
-                    <div class="space-y-1"><label for="loginName" class="block text-[11px] text-gray-300 uppercase tracking-wider">Usuário</label><input id="loginName" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg px-4 py-3.5 text-white focus:outline-none focus:border-fashion-gold" placeholder="Seu usuário"></div>
-                    <div class="space-y-1"><label for="loginPass" class="block text-[11px] text-gray-300 uppercase tracking-wider">Senha</label><div class="flex items-stretch"><input id="loginPass" name="password" type="password" autocomplete="current-password" required class="min-w-0 flex-1 bg-fashion-900 border border-fashion-700 rounded-l-lg px-4 py-3.5 text-white focus:outline-none focus:border-fashion-gold" placeholder="Sua senha"><button id="toggleLoginPass" type="button" aria-label="Mostrar senha" aria-pressed="false" class="border border-l-0 border-fashion-700 rounded-r-lg px-4 text-gray-300 hover:text-white focus:outline-none focus:border-fashion-gold"><i class="fa-solid fa-eye" aria-hidden="true"></i></button></div></div>
-                    <p id="loginError" role="alert" aria-live="polite" class="hidden text-xs text-red-300 rounded-lg border border-red-800/70 bg-red-950/40 p-3"></p>
-                    <button id="btnLogin" type="submit" class="w-full bg-fashion-gold hover:brightness-110 text-fashion-950 font-bold py-3.5 rounded-lg text-xs uppercase tracking-[.18em] transition disabled:opacity-60">ENTER THE RUNWAY <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i></button>
-                  </form>
-                  <div class="rounded-xl border border-fashion-gold/50 bg-fashion-900/70 p-5 space-y-3"><p class="text-[10px] tracking-[.27em] text-fashion-gold">THE NEXT SEASON · YOUR FIRST STEP</p><h3 class="font-cinzel text-xl text-white">ARE YOU IN?</h3><p id="fauEnrollmentStatus" class="text-xs text-gray-300">Verificando inscrições…</p><button type="button" id="fauOpenRegistration" disabled class="w-full bg-fashion-gold text-fashion-950 font-bold rounded-lg py-3 text-xs tracking-widest disabled:opacity-40">INSCREVER-SE COMO DESIGNER</button></div>
-                  <div class="rounded-xl border border-fashion-700 bg-fashion-950/60 p-4 space-y-2"><p class="text-[10px] tracking-[.2em] text-fashion-gold">ALREADY IN?</p><button type="button" id="fauGoogleLogin" class="w-full border border-fashion-gold text-white rounded-lg px-4 py-3 text-xs">ENTRAR COM GOOGLE</button><p class="text-[11px] text-gray-400">Já se inscreveu? Use a mesma conta Google para entrar ou consultar seu acesso.</p></div>
-<div class="rounded-xl border border-fashion-gold/30 bg-fashion-900/50 p-4 space-y-3"><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE FRONT ROW · PLATEIA</p><h3 class="font-cinzel text-white text-lg">YOUR SEAT IS WAITING.</h3><p class="text-xs text-gray-200">Quer acompanhar o reality? Entre diretamente na plateia, sem criar usuário ou senha.</p><button type="button" id="fauAudienceEntry" class="w-full border border-fashion-gold rounded-lg px-4 py-3.5 font-bold text-fashion-gold text-xs tracking-widest hover:bg-fashion-gold/10 disabled:opacity-60">ENTRAR COMO PLATEIA <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i></button><p id="fauAudienceError" class="hidden text-xs text-red-200" role="alert"></p></div><p class="text-[11px] text-gray-400 leading-relaxed">Designer ou jurado sem acesso? Solicite suas credenciais à produção.</p>
-                  <p class="text-[10px] text-gray-500 tracking-wider text-center">THE SHOW BEGINS BACKSTAGE</p>
+                <details class="group rounded-2xl border border-fashion-700 bg-fashion-900/40 p-4" id="fauExistingLogin">
+                  <summary class="cursor-pointer flex items-center justify-between gap-2 text-white font-cinzel text-sm">JÁ FAZ PARTE DO FAU? <span class="text-fashion-gold text-xs">ENTRAR ▾</span></summary>
+                  <div class="pt-4 space-y-4">
+                    <button type="button" id="fauGoogleLogin" class="w-full border border-fashion-gold text-white rounded-lg px-4 py-3 text-xs">CONTINUAR COM GOOGLE</button>
+                    <div class="flex items-center gap-3 text-gray-500 text-[10px]"><span class="h-px flex-1 bg-fashion-700"></span>OU USE SUAS CREDENCIAIS<span class="h-px flex-1 bg-fashion-700"></span></div>
+                    <form id="fauLoginForm" class="space-y-3" novalidate>
+                      <label for="loginName" class="block text-[11px] text-gray-300">USUÁRIO</label><input id="loginName" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required class="w-full bg-fashion-950 border border-fashion-700 rounded-lg px-4 py-3 text-white" placeholder="Seu usuário">
+                      <label for="loginPass" class="block text-[11px] text-gray-300">SENHA</label><div class="flex items-stretch"><input id="loginPass" name="password" type="password" autocomplete="current-password" required class="min-w-0 flex-1 bg-fashion-950 border border-fashion-700 rounded-l-lg px-4 py-3 text-white" placeholder="Sua senha"><button id="toggleLoginPass" type="button" aria-label="Mostrar senha" aria-pressed="false" class="border border-l-0 border-fashion-700 rounded-r-lg px-4 text-gray-300"><i class="fa-solid fa-eye" aria-hidden="true"></i></button></div>
+                      <p id="loginError" role="alert" aria-live="polite" class="hidden text-xs text-red-300 rounded-lg border border-red-800/70 bg-red-950/40 p-3"></p>
+                      <button id="btnLogin" type="submit" class="w-full bg-fashion-gold text-fashion-950 font-bold py-3 rounded-lg text-xs tracking-widest">ENTRAR NO WORKROOM</button>
+                    </form>
+                  </div>
+                </details>
+                <div class="text-center space-y-2 pt-1">
+                  <p class="text-gray-400 text-[10px] tracking-widest">THE FRONT ROW</p>
+                  <button type="button" id="fauAudienceEntry" class="w-full border border-fashion-700 rounded-lg px-4 py-3 text-xs tracking-widest text-gray-200 hover:border-fashion-gold disabled:opacity-60">ENTRAR COMO PLATEIA</button>
+                  <p id="fauAudienceError" class="hidden text-xs text-red-200" role="alert"></p>
                 </div>
               </div>
             </div>
@@ -1066,7 +1103,20 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         `);
         const showError = message => { const el=$('#loginError'); if(el){el.textContent=message;el.classList.remove('hidden');} else showToast(message); };
         $('#fauOpenRegistration').onclick=()=>showDesignerRegistration();
-        fauEnrollmentState().then(g=>{const b=$('#fauOpenRegistration'),status=$('#fauEnrollmentStatus');if(!b||!status)return;const open=fauCanEnroll(g);b.disabled=!open;status.textContent=open?'As inscrições estão abertas. Todo inscrito garante sua vaga na temporada.':g.seasonStarted?'A temporada já começou. Inscrições encerradas.':'As inscrições ainda não foram abertas pela produção.';if(!open)b.textContent='INSCRIÇÕES ENCERRADAS';});
+        fauEnrollmentState().then(g=>{
+            const entry=$('#fauRegistrationEntry'),button=$('#fauOpenRegistration'),status=$('#fauEnrollmentStatus'),login=$('#fauExistingLogin');
+            if(!entry||!button||!status||!login)return;
+            if(fauCanEnroll(g)){
+                entry.classList.remove('hidden');
+                button.disabled=false;
+                status.textContent='As inscrições estão abertas. Todo inscrito garante sua vaga na temporada.';
+                login.open=false;
+            }else{
+                entry.classList.add('hidden');
+                button.disabled=true;
+                login.open=true;
+            }
+        });
         $('#fauGoogleLogin').onclick=async()=>{try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(ex){showError('Não foi possível entrar com Google: '+(ex.message||'tente novamente'));}};
         $('#fauAudienceEntry').onclick=async()=>{
             const btn=$('#fauAudienceEntry'),error=$('#fauAudienceError');
@@ -1346,25 +1396,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     };
 
     VIEWS.manual = () => {
-        const S = [
-            ['📖','01 · The Competition','Competição entre estilistas usando IA. Não basta uma imagem bonita: é preciso ideia, narrativa e identidade autoral.'],
-            ['🎯','02 · The Challenges','Cada rodada traz um briefing com tema, requisitos, restrições e instruções. O briefing da rodada prevalece sobre o manual.'],
-            ['📸','03 · The Runway','Entrega padrão: imagem original gerada por IA, título e conceito (máx. 500 caracteres, incluindo espaços). Não é necessário enviar prompt. Cada briefing pode exigir referências, campos extras ou múltiplos looks.'],
-            ['⚖️','04 · The Judging','5 critérios de 0 a 10: criatividade, conceito, qualidade visual, styling e interpretação do desafio. Soma das médias = até 50 pontos.'],
-            ['💬','05 · Judges\' Critiques','Críticas individuais para TOP e BOTTOM, e para o WIN da rodada anterior. Todos recebem suas notas.'],
-            ['🏆','06 · The Results','WIN · TOP · SAFE · BOTTOM · THE ELIMINATION POOL · OUT. BOTTOM é o desempenho da semana; só o Pool pode ser eliminado.'],
-            ['📈','07 · The Ranking','Ranking acumulado da temporada. Ele define quem entra no Elimination Pool: consistência também vence.'],
-            ['👑','08 · The Win','Protege o estilista na vaga do ranking acumulado, só naquela rodada (não é imunidade). Decide o desempate do voto de salvamento.'],
-            ['✨','09 · Ícone da Moda','Votação secreta, sem voto em si. O Ícone escolhe entre todos os temas ainda disponíveis, usando pistas; se não houver Ícone, o WIN escolhe. Não dá imunidade.'],
-            ['🥀','10 · Fora de Moda','Voto secreto no pior estilista. Se empatar no salvamento, perde automaticamente.'],
-            ['🗳️','11 · The Voting Room','Somente estilistas ativos votam. Todos os votos são secretos e ninguém vota em si mesmo. Plateia e jurados não participam dessas votações; apenas os resultados autorizados são anunciados.'],
-            ['🚨','12 · The Elimination Pool','Normalmente três estilistas elegíveis à eliminação: os dois piores da rodada e o pior do acumulado ainda não incluído; twists podem alterar essa formação. BOTTOM é posição no ranking da rodada.'],
-            ['🛟','13 · The Save Vote','Mais votado e 2º mais votado são salvos; o menos votado é OUT. Empate: Fora de Moda perde → Ícone tem prioridade → WIN decide.'],
-            ['🔥','14 · Top 5 — The Final Filter','Rodada somada ao acumulado: 1º vai direto à final, 5º sai. Os 3 do meio disputam 2 vagas só pela nota do Top 5.'],
-            ['🏁','15 · The Four Acts of a Legend','Três finalistas começam com placar zerado. Quatro editoriais, House Code e manifesto da Maison; cada ato vale até 50 pontos, totalizando até 200.'],
-            ['🎥','16 · The Confessional Room','Depoimentos livres publicados somente pelos estilistas e visíveis a todos. A produção pode moderar o conteúdo.'],
-            ['🎤','17 · Final Word','Respeite briefings e prazos, defenda suas ideias. THE RUNWAY IS YOURS. MAKE IT COUNT.']
-        ];
+        const S = FAU_RULEBOOK_SECTIONS;
         renderView(`
             <div class="space-y-5">
                 <div class="text-center space-y-2 py-4">
