@@ -689,12 +689,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     const supremeRef = () => db.doc(`supreme_etapas/${globalState.rodada}`);
     const supremeState = async () => (await supremeRef().get()).data() || {phase:'submissions'};
     const supremeVotes = async () => {
-        const snap=await db.collection('supreme_votos').where('rodada','==',globalState.rodada).get();
+        const snap=await db.collection('supreme_votos').where('rodada','==',globalState.rodada || '__sem_rodada__').get();
         return snap.docs.map(d=>d.data());
     };
     const supremeResults = async () => {
         if(!isAdmin) throw new Error('Apuração restrita à produção.');
-        const [ls, ps, votes]=await Promise.all([db.collection('looks').where('rodada','==',globalState.rodada).get(),db.collection('perfis').where('role','==','estilista').get(),supremeVotes()]);
+        const [ls, ps, votes]=await Promise.all([db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__').get(),db.collection('perfis').where('role','==','estilista').get(),supremeVotes()]);
         const eligible=ps.docs.filter(d=>!d.data().out&&!d.data().disabled);
         const looks=ls.docs.map(d=>({id:d.id,...d.data()}));
         const missing=eligible.filter(p=>![1,2].every(slot=>looks.some(l=>l.uid===p.id&&l.slot===slot)));
@@ -785,7 +785,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         if (state.phase !== 'first') throw new Error('O sorteio já foi realizado.');
         const profiles = await db.collection('perfis').where('role','==','estilista').get();
         const eligible = profiles.docs.filter(d=>!d.data().out && !d.data().disabled);
-        const looksSnap = await db.collection('looks').where('rodada','==',globalState.rodada).get();
+        const looksSnap = await db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__').get();
         const originals = looksSnap.docs.filter(d=>d.data().slot===1);
         if (eligible.length < 2) throw new Error('É necessário ao menos dois estilistas.');
         const map = new Map(originals.map(d=>[d.data().uid,{...d.data(),id:d.id}]));
@@ -2953,13 +2953,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
         };
 
-        sub(db.collection('looks').where('rodada', '==', globalState.rodada), snap => {
+        sub(db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__'), snap => {
             looks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             refreshRunwayUI();
         });
         if(globalState.themeId==='theme_next_supreme') {
             sub(supremeRef(),snap=>{supremeBroadcast=snap.data()||null;refreshRunwayUI();});
-            if(currentUser.role==='estilista') sub(db.collection('supreme_votos').where('rodada','==',globalState.rodada).where('voterUid','==',currentUser.uid),snap=>{supremeMyVotes=snap.docs.map(d=>d.data());refreshRunwayUI();});
+            if(currentUser.role==='estilista') sub(db.collection('supreme_votos').where('rodada','==',globalState.rodada || '__sem_rodada__').where('voterUid','==',currentUser.uid),snap=>{supremeMyVotes=snap.docs.map(d=>d.data());refreshRunwayUI();});
         }
         if (globalState.themeId === 'theme_beauty_eye') {
             sub(beautyRef(), snap => {beautyBroadcast=snap.exists?snap.data():null;refreshRunwayUI();});
@@ -2971,12 +2971,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             });
         }
 
-        sub(db.collection('reacoes').where('rodada', '==', globalState.rodada), snap => {
+        sub(db.collection('reacoes').where('rodada','==',globalState.rodada || '__sem_rodada__'), snap => {
             reactions = snap.docs.map(d => d.data());
             refreshRunwayUI();
         });
 
-        sub(db.collection('criticas').where('rodada', '==', globalState.rodada).orderBy('t', 'desc'), snap => {
+        sub(db.collection('criticas').where('rodada','==',globalState.rodada || '__sem_rodada__').orderBy('t', 'desc'), snap => {
             critiques = snap.docs.map(d => d.data());
             refreshRunwayUI();
         });
@@ -3493,7 +3493,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         };
 
         const tallyVotes = async type => {
-            const snap = await db.collection('votos').where('rodada', '==', globalState.rodada).where('tipo', '==', type).get();
+            const snap = await db.collection('votos').where('rodada','==',globalState.rodada || '__sem_rodada__').where('tipo', '==', type).get();
             const counts = {};
             snap.docs.forEach(d => counts[d.data().alvo] = (counts[d.data().alvo] || 0) + 1);
             return counts;
@@ -3515,11 +3515,11 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 ((evaluationsByLook[data.alvo] ??= {})[data.look] ??= { r: data.rodada, scores: [] }).scores.push(data.total);
             });
 
-            const absencesSnap = globalState.themeId === 'theme_traitors' ? await db.collection('ausencias_rodada').where('rodada','==',globalState.rodada).get() : null;
+            const absencesSnap = globalState.themeId === 'theme_traitors' ? await db.collection('ausencias_rodada').where('rodada','==',globalState.rodada || '__sem_rodada__').get() : null;
             const absentUids = new Set(absencesSnap ? absencesSnap.docs.map(d=>d.data().uid) : []);
             const activeStylists = profilesSnap.docs.filter(d => !d.data().out && !d.data().disabled && !absentUids.has(d.id));
             if (globalState.themeId === 'theme_beauty_eye') {
-                const lookSnap = await db.collection('looks').where('rodada','==',globalState.rodada).get();
+                const lookSnap = await db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__').get();
                 const slotsByUid = {};
                 lookSnap.docs.forEach(d => {const l=d.data(); (slotsByUid[l.uid] ??= new Set()).add(l.slot);});
                 const missing = activeStylists.filter(d => {
@@ -3670,7 +3670,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         refreshFauStatus();
         // Atualização em tempo real sem renderizar informações identificáveis.
         ['looks','avaliacoes','votos','perfis'].forEach(name=>{
-          const query=name==='perfis'?db.collection(name):db.collection(name).where('rodada','==',globalState.rodada);
+          const query=name==='perfis'?db.collection(name):db.collection(name).where('rodada','==',globalState.rodada || '__sem_rodada__');
           sub(query,()=>refreshFauStatus());
         });
 
@@ -3874,7 +3874,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#fauArchiveSync').onclick=safeExec(async()=>{
           if(!isAdmin||!globalState.rodada)throw new Error('Configure a rodada primeiro.');
           if(!globalState.liberado)throw new Error('Libere o desfile antes de arquivar as criações.');
-          const looksSnap=await db.collection('looks').where('rodada','==',globalState.rodada).get();
+          const looksSnap=await db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__').get();
           if(looksSnap.empty)throw new Error('Nenhum look enviado nesta rodada.');
           if(!productionConfirm(`Publicar ${looksSnap.size} look(s) no acervo público da rodada ${globalState.rodada}?`))return;
           let count=0;const batches=[];let batch=db.batch(),n=0;
@@ -4300,8 +4300,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const getBanquetAttendance = async () => {
             const [profiles, looks, absences] = await Promise.all([
                 db.collection('perfis').where('role','==','estilista').get(),
-                db.collection('looks').where('rodada','==',globalState.rodada).get(),
-                db.collection('ausencias_rodada').where('rodada','==',globalState.rodada).get()
+                db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__').get(),
+                db.collection('ausencias_rodada').where('rodada','==',globalState.rodada || '__sem_rodada__').get()
             ]);
             const submitted = new Set(looks.docs.map(d=>d.data().uid));
             const absMap = new Map(absences.docs.map(d=>[d.data().uid,d.data()]));
@@ -4402,7 +4402,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(st.phase!=='submissions') throw new Error('A votação já foi iniciada.');
             const ps=await db.collection('perfis').where('role','==','estilista').get();
             const active=ps.docs.filter(d=>!d.data().out&&!d.data().disabled);
-            const ls=await db.collection('looks').where('rodada','==',globalState.rodada).get();
+            const ls=await db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__').get();
             const looks=ls.docs.map(d=>d.data());
             const missing=active.filter(p=>![1,2].every(slot=>looks.some(l=>l.uid===p.id&&l.slot===slot)));
             if(missing.length) throw new Error('Entregas incompletas: '+missing.map(p=>p.data().ate||p.id).join(', '));
@@ -4581,7 +4581,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const st=await restState();if(!['judging','closed'].includes(st.phase))throw new Error('O julgamento ainda não foi aberto.');
             const profiles=await db.collection('perfis').where('role','==','estilista').get();
             const eligible=profiles.docs.filter(d=>!d.data().out&&!d.data().disabled&&!(st.pool||[]).some(x=>x.uid===d.id));
-            const votes=await db.collection(REST_SPECIAL_VOTES_COLLECTION).where('rodada','==',globalState.rodada).get();
+            const votes=await db.collection(REST_SPECIAL_VOTES_COLLECTION).where('rodada','==',globalState.rodada || '__sem_rodada__').get();
             const all=votes.docs.map(d=>d.data());
             const rows=(st.pool||[]).map(x=>{
                 const arr=all.filter(v=>v.alvo===x.uid && (!v.tipo || v.tipo==='rest_funeral_special_jury'));
@@ -4615,7 +4615,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(st.phase!=='assigned') throw new Error('Os conceitos precisam ser sorteados antes.');
             const profiles=await db.collection('perfis').where('role','==','estilista').get();
             const eligible=profiles.docs.filter(d=>!d.data().out && !d.data().disabled);
-            const looksSnap=await db.collection('looks').where('rodada','==',globalState.rodada).get();
+            const looksSnap=await db.collection('looks').where('rodada','==',globalState.rodada || '__sem_rodada__').get();
             const completed=new Set(looksSnap.docs.filter(d=>d.data().slot===2).map(d=>d.data().uid));
             const missing=eligible.filter(d=>!completed.has(d.id));
             if(missing.length) throw new Error('Segundas entregas pendentes: '+missing.map(d=>d.data().ate||d.id).join(', '));
@@ -4993,7 +4993,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
         $('#btnWppDispatch').onclick = safeExec(async () => {
             const standings = (await computeSeasonStandings()).sort((a, b) => b.rd - a.rd);
-            const evalsSnap = await db.collection('avaliacoes').where('rodada', '==', globalState.rodada).get();
+            const evalsSnap = await db.collection('avaliacoes').where('rodada','==',globalState.rodada || '__sem_rodada__').get();
             const commentsByStylist = {};
             evalsSnap.docs.forEach(doc => {
                 const data = doc.data();
