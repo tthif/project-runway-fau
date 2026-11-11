@@ -1286,7 +1286,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         unsubsGlobal.push(db.doc('config/estado').onSnapshot(snap => {
             globalState = snap.data() || {};
             updateGlobalBanner();
-            navigate(activeTab);
+            Promise.resolve().then(()=>navigate(activeTab)).catch(err=>{console.error('Erro ao atualizar tela após estado global:',err);showToast('Falha ao atualizar tela: '+(err.message||err));});
         }));
     };
 
@@ -2397,7 +2397,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         return [...selected.values()];
     };
     // Publicação em coleção separada: os leitores nunca consultam as críticas privadas.
-    const fauPublicCritiquesRef = round => db.collection('fau_criticas_publicas').doc(String(round));
+    const fauPublicCritiquesRef = round => db.collection('fau_criticas_publicas').doc(String(round||'__sem_rodada__'));
     const fauCritiquePublicMount = () => {
         const root=document.getElementById('fauCritiquePublic');if(!root)return;
         const round=String(globalState.rodada||'');
@@ -4433,7 +4433,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const active = profiles.docs.filter(d=>!d.data().disabled && !d.data().out);
             return active.map(d=>({uid:d.id,ate:d.data().ate||d.id, submitted:submitted.has(d.id), absence:absMap.get(d.id)||null}));
         };
-        $('#btnAttendanceBanquet').onclick = safeExec(async () => {
+        if ($('#btnAttendanceBanquet')) $('#btnAttendanceBanquet').onclick = safeExec(async () => {
             if(globalState.themeId !== 'theme_traitors') throw new Error('Abra The Traitors primeiro.');
             const rows = await getBanquetAttendance();
             const activated = await db.doc(`revelacoes_traitors/${globalState.rodada}`).get();
@@ -4465,7 +4465,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 $('#btnAttendanceBanquet').click();
             });
         });
-        $('#btnRestaStart').onclick=safeExec(async()=>{
+        if ($('#btnRestaStart')) $('#btnRestaStart').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
             const existing=await restaState();
             if(existing)throw new Error('O Resta Um já foi iniciado nesta rodada.');
@@ -4479,7 +4479,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await productionLog('resta_um_started',{round:globalState.rodada,win:win.uid});
             showToast('Resta Um iniciado. O WIN já pode salvar.');
         });
-        $('#btnRestaPreview').onclick=safeExec(async()=>{
+        if ($('#btnRestaPreview')) $('#btnRestaPreview').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
             const state=await restaState();
             if(!state)throw new Error('A corrente ainda não começou.');
@@ -4498,7 +4498,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <p class="text-xs text-gray-400">Prévia privada. Nenhuma berlinda foi publicada.</p></section>`;
             return pool;
         });
-        $('#btnRestaPublish').onclick=safeExec(async()=>{
+        if ($('#btnRestaPublish')) $('#btnRestaPublish').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
             const state=await restaState();
             if(!state || state.phase!=='pending_confirmation')throw new Error('Aguarde o fim da corrente de salvamentos.');
@@ -4521,7 +4521,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             showToast('Bottom 3 confirmado. Abra a urna quando desejar.');
         });
 
-        $('#btnSupremeOpen').onclick=safeExec(async()=>{
+        if ($('#btnSupremeOpen')) $('#btnSupremeOpen').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
             if(st.phase!=='submissions') throw new Error('A votação já foi iniciada.');
@@ -4536,7 +4536,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await productionLog('supreme_vote_open',{round:globalState.rodada});
             showToast('A sucessão começou. O elenco pode votar.');
         });
-        $('#btnSupremeClose').onclick=safeExec(async()=>{
+        if ($('#btnSupremeClose')) $('#btnSupremeClose').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
             if(st.phase!=='voting') throw new Error('A votação não está aberta.');
@@ -4545,7 +4545,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await productionLog('supreme_vote_closed',{round:globalState.rodada});
             showToast('Urnas Supreme fechadas. Confira o dossiê.');
         });
-        $('#btnSupremePreview').onclick=safeExec(async()=>{
+        if ($('#btnSupremePreview')) $('#btnSupremePreview').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
             const results=await supremeResolveTies(await supremeResults());
@@ -4556,7 +4556,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
             $('#adminOutput').innerHTML=`<div class="border border-fashion-gold rounded p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold">👑 THE PEOPLE DECIDE · DOSSIÊ PRIVADO</h3><p class="text-xs">Fase: ${esc(st.phase)}. Resultado ainda não publicado.</p>${results.map(r=>`<div class="text-xs border-b border-fashion-700 pb-2"><strong>${esc(r.ate)}</strong> · OLD ${r.old} × NEXT ${r.next} ${r.slot?'· Vencedora: '+(r.slot===1?'OLD':'NEXT')+' · '+esc(r.decidedBy):'· EMPATE: a própria maison decide'}</div>`).join('')}</div>`;
         });
-        $('#btnSupremePublish').onclick=safeExec(async()=>{
+        if ($('#btnSupremePublish')) $('#btnSupremePublish').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
             if(st.phase!=='closed') throw new Error('Encerre a votação antes de confirmar vencedoras.');
@@ -4577,7 +4577,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const duel=[...standings].filter(x=>x.uid!==first.uid).sort((a,b)=>a.rd-b.rd || a.tot-b.tot || a.uid.localeCompare(b.uid)).slice(0,2);
             return {first,duel,standings};
         };
-        $('#btnTarantinoPreview').onclick=safeExec(async()=>{
+        if ($('#btnTarantinoPreview')) $('#btnTarantinoPreview').onclick = safeExec(async()=>{
             const result=await tarantinoPreview();
             await saveProductionDraft('tarantino_double_kill',{
                 first:{uid:result.first.uid,ate:result.first.ate,tot:result.first.tot},
@@ -4589,7 +4589,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <p>🔫 LAST STAND: ${result.duel.map(x=>esc(x.ate)+' · '+x.rd+' pts').join(' vs ')}</p>
                 <p class="text-amber-300 text-xs">O duelo será decidido por votação secreta de salvação dos demais estilistas. A produção confere o resultado antes da segunda eliminação.</p></div>`;
         });
-        $('#btnTarantinoFirst').onclick=safeExec(async()=>{
+        if ($('#btnTarantinoFirst')) $('#btnTarantinoFirst').onclick = safeExec(async()=>{
             const existing=await tarantinoRef().get();
             if(existing.exists && existing.data().phase) throw new Error('First Kill já confirmado.');
             const result=await tarantinoPreview();
@@ -4603,7 +4603,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await productionLog('tarantino_first_kill',{round:globalState.rodada,uid:result.first.uid,duel:result.duel.map(x=>x.uid)});
             showToast('First Kill confirmado. Bottom 2 preparado; abra a urna quando desejar.');
         });
-        $('#btnTarantinoFinal').onclick=safeExec(async()=>{
+        if ($('#btnTarantinoFinal')) $('#btnTarantinoFinal').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_tarantino') throw new Error('Apenas para Tarantino.');
             const doc=await tarantinoRef().get();
             const data=doc.data();
@@ -4665,7 +4665,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             showToast('Double Kill concluído e registrado.');
         });
 
-        $('#btnRestActivate').onclick=safeExec(async()=>{
+        if ($('#btnRestActivate')) $('#btnRestActivate').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_rest_in_style') throw new Error('Disponível somente em Rest in Style.');
             const st=await restState();if(st.phase!=='first') throw new Error('A segunda etapa já foi ativada.');
             const pool=globalState.berlinda||[];
@@ -4676,7 +4676,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await productionLog('rest_twist_activated',{round:globalState.rodada,pool:pool.map(x=>x.uid)});
             showToast('Convocação ativada. Segunda etapa liberada apenas para o Elimination Pool.');
         });
-        $('#btnRestJudge').onclick=safeExec(async()=>{
+        if ($('#btnRestJudge')) $('#btnRestJudge').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_rest_in_style')throw new Error('Esta ação pertence ao Rest in Style.');
             const st=await restState();if(st.phase!=='twist')throw new Error('Ative a convocação primeiro.');
             const looks=await Promise.all((st.pool||[]).map(x=>db.doc(`rest_looks/${restSecondLookId(x.uid)}`).get()));
@@ -4685,7 +4685,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await restRef().update({phase:'judging',judgingBy:currentUser.uid,judgingAt:firebase.firestore.FieldValue.serverTimestamp()});
             await productionLog('rest_judging_opened',{round:globalState.rodada});showToast('Julgamento aberto aos demais estilistas.');
         });
-        $('#btnRestEliminate').onclick=safeExec(async()=>{
+        if ($('#btnRestEliminate')) $('#btnRestEliminate').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_rest_in_style')throw new Error('Disponível somente em Rest in Style.');
             const st=await restState();
             if(st.phase!=='closed'||!Array.isArray(st.verdict)||st.verdict.length!==3)throw new Error('Finalize as avaliações antes da eliminação.');
@@ -4701,7 +4701,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await productionLog('rest_funeral_elimination',{round:globalState.rodada,uid:loser.uid,score:loser.score});
             showToast('Eliminação registrada. Revele o resultado quando desejar.');
         });
-        $('#btnRestVerdict').onclick=safeExec(async()=>{
+        if ($('#btnRestVerdict')) $('#btnRestVerdict').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_rest_in_style')throw new Error('Esta ação pertence ao Rest in Style.');
             const st=await restState();if(!['judging','closed'].includes(st.phase))throw new Error('O julgamento ainda não foi aberto.');
             const profiles=await db.collection('perfis').where('role','==','estilista').get();
@@ -4722,19 +4722,19 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 await productionLog('rest_funeral_closed',{round:globalState.rodada});
             }
         });
-        $('#btnBeautyAssign').onclick = safeExec(async () => {
+        if ($('#btnBeautyAssign')) $('#btnBeautyAssign').onclick = safeExec(async () => {
             if(globalState.themeId!=='theme_beauty_eye') throw new Error('Disponível somente em Beauty Is in the Eye.');
             if(!productionConfirm('Todos os primeiros looks foram conferidos? Sortear os conceitos e liberar a segunda etapa?')) return;
             const assignments=await beautyAssign();
             $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">👁️ SEALED CONCEPTS — PRODUÇÃO</h3>${assignments.map(a=>`<p class="text-xs text-white">${esc(a.uid)} ← ${esc(a.sourceUid)}: ${esc(a.title)}</p>`).join('')}</div>`;
             showToast('Conceitos sorteados. Os estilistas podem criar suas releituras.');
         });
-        $('#btnBeautyPreview').onclick = safeExec(async () => {
+        if ($('#btnBeautyPreview')) $('#btnBeautyPreview').onclick = safeExec(async () => {
             if(globalState.themeId!=='theme_beauty_eye') throw new Error('Esta não é a rodada Beauty.');
             const st=await beautyState();
             $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold">👁️ THE BEAUTY VAULT · ${esc(st.phase)}</h3>${(st.assignments||[]).map(a=>`<div class="border-b border-fashion-700 pb-2 text-xs"><strong>${esc(a.uid)} recebe conceito de ${esc(a.sourceUid)}</strong><p>${esc(a.title)} — ${esc(a.concept)}</p></div>`).join('')||'<p class="text-xs">Aguardando o sorteio.</p>'}</div>`;
         });
-        $('#btnBeautyOpen').onclick = safeExec(async () => {
+        if ($('#btnBeautyOpen')) $('#btnBeautyOpen').onclick = safeExec(async () => {
             if(globalState.themeId!=='theme_beauty_eye') throw new Error('Esta não é a rodada Beauty.');
             const st=await beautyState();
             if(st.phase!=='assigned') throw new Error('Os conceitos precisam ser sorteados antes.');
@@ -4749,7 +4749,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await productionLog('beauty_exhibition_authorized',{round:globalState.rodada});
             showToast('Exposição autorizada. Agora libere a passarela.');
         });
-        $('#btnActivateBanquet').onclick = safeExec(async () => {
+        if ($('#btnActivateBanquet')) $('#btnActivateBanquet').onclick = safeExec(async () => {
             if (globalState.themeId !== 'theme_traitors') throw new Error('Esta ação só está disponível na rodada The Traitors.');
             const attendance = await getBanquetAttendance();
             const pending = attendance.filter(x=>!x.submitted&&!x.absence);
@@ -4774,7 +4774,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             showToast('Twist ativado. Aguardando sua liberação do desfile.');
         });
 
-        $('#btnPreviewBanquet').onclick = safeExec(async () => {
+        if ($('#btnPreviewBanquet')) $('#btnPreviewBanquet').onclick = safeExec(async () => {
             if (globalState.themeId !== 'theme_traitors') throw new Error('Abra a rodada The Traitors para consultar o dossiê.');
             const standings = await computeSeasonStandings();
             const result = await computeTraitorsPool(standings);
@@ -4789,7 +4789,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               <p class="text-red-300">ELIMINATION POOL: ${result.pool.map(x=>esc(x.ate)).join(' • ')}</p>
               <p class="text-gray-400">Prévia exclusiva. Nenhuma facção foi publicada.</p></div>`;
         });
-        $('#btnRevealBanquet').onclick = safeExec(async () => {
+        if ($('#btnRevealBanquet')) $('#btnRevealBanquet').onclick = safeExec(async () => {
             if (globalState.themeId !== 'theme_traitors') throw new Error('Esta ação pertence apenas ao Black Banquet.');
             const standings = await computeSeasonStandings();
             const result = await computeTraitorsPool(standings);
