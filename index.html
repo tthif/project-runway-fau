@@ -1007,7 +1007,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     const showDesignerRegistration = async (signedUser=null) => {
         $('#navContainer').innerHTML=''; $('#userHeaderSlot').innerHTML='';
         renderView(`<section class="max-w-xl mx-auto my-8 rounded-3xl border border-fashion-gold/50 bg-fashion-950 p-6 sm:p-10 space-y-6">
-          <div class="text-center space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">THE DESIGNER REGISTRATION</h1><p class="italic text-fashion-gold">Every legend starts with a name.</p><p class="text-sm text-gray-300">Crie sua própria conta e garanta sua vaga. A produção administra o elenco e libera o acesso ao Workroom.</p></div>
+          <div class="text-center space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">THE DESIGNER REGISTRATION</h1><p class="italic text-fashion-gold">Every legend starts with a name.</p><p class="text-sm text-gray-300">Crie sua própria conta e garanta sua vaga. Seu perfil fica ativo assim que você concluir a inscrição. A produção administra o elenco.</p></div>
           <button type="button" id="fauRegGoogle" class="w-full border border-fashion-gold text-white rounded-lg px-4 py-3 text-xs">CONTINUAR INSCRIÇÃO COM GOOGLE</button>
           <p class="text-xs text-gray-400 text-center">Use o Google para preencher seu nome automaticamente ou crie usuário e senha abaixo. Para usar as duas formas na mesma conta, vincule o Google depois de entrar com usuário e senha.</p>
           <form id="fauRegistrationForm" class="space-y-4">
@@ -1043,7 +1043,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const result=await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
                 const user=result.user;
                 const existing=await db.doc('inscricoes_designers/'+user.uid).get();
-                if(existing.exists){sessionStorage.removeItem('fauGoogleRegistration');showRegistrationReceipt(user,true);return;}
+                if(existing.exists){await fauProvisionDesigner(user,existing.data());sessionStorage.removeItem('fauGoogleRegistration');showRegistrationReceipt(user,true);return;}
                 await showDesignerRegistration(user);
             }catch(ex){sessionStorage.removeItem('fauGoogleRegistration');const err=$('#fauRegError');if(err)err.textContent='Não foi possível conectar o Google: '+(ex.message||ex.code);}
         };
@@ -1061,21 +1061,31 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             try {
                 if(!googleUser)sessionStorage.setItem('fauRegistrationDraft',JSON.stringify({real,designer,username}));
                 const user=googleUser|| (await auth.createUserWithEmailAndPassword(formatEmail(username),pass)).user;
-                await db.doc(`inscricoes_designers/${user.uid}`).set({real,designer,username:googleUser?'':username,email:user.email,uid:user.uid,status:'aguardando',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+                await db.doc(`inscricoes_designers/${user.uid}`).set({real,designer,username:googleUser?'':username,email:user.email,uid:user.uid,status:'ativo',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+                await fauProvisionDesigner(user,{real,designer,username:googleUser?'':username});
                 sessionStorage.removeItem('fauRegistrationDraft');sessionStorage.removeItem('fauGoogleRegistration');
                 showRegistrationReceipt(user,false);
             }catch(ex){
                 console.error('Designer registration:',ex);
-                const messages={'auth/email-already-in-use':'Este usuário já está em uso. Escolha outro.','auth/weak-password':'Escolha uma senha mais forte.','auth/operation-not-allowed':'Habilite Email/Senha em Firebase Authentication.','permission-denied':'Não foi possível registrar no Firestore. Publique as regras V106.'};
+                const messages={'auth/email-already-in-use':'Este usuário já está em uso. Escolha outro.','auth/weak-password':'Escolha uma senha mais forte.','auth/operation-not-allowed':'Habilite Email/Senha em Firebase Authentication.','permission-denied':'Não foi possível registrar no Firestore. Publique as regras V107.'};
                 err.textContent=messages[ex.code]||ex.message||'Não foi possível criar a conta.';
                 btn.disabled=false;btn.textContent='CONFIRMAR INSCRIÇÃO';
             }
         };
     };
+    const fauProvisionDesigner = async (user, enrollment) => {
+        if(!user || !enrollment) throw new Error('Inscrição não encontrada.');
+        const uid=user.uid, ref=db.doc(`perfis/${uid}`);
+        const existing=await ref.get();
+        if(existing.exists) return existing.data();
+        const data={ate:enrollment.designer,username:enrollment.username||'',role:'estilista',disabled:false,out:false,bio:'',createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+        await ref.set(data);
+        return data;
+    };
     const showRegistrationReceipt = (user,already=false) => {
         $('#navContainer').innerHTML='';$('#userHeaderSlot').innerHTML='';
-        renderView(`<section class="max-w-lg mx-auto my-10 p-8 text-center border border-fashion-gold/50 rounded-3xl bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">${already?'YOU’RE ALREADY IN!':'YOU’RE IN!'}</h1><p class="italic text-fashion-gold">Your journey to the runway begins now.</p><p class="text-sm text-gray-200">Sua inscrição foi registrada. A produção ativará seu acesso ao Workroom. Depois, entre usando o mesmo método de acesso escolhido no cadastro.</p><button id="fauRegLogout" class="border border-fashion-gold text-fashion-gold px-5 py-3 rounded-lg text-xs">VOLTAR AO LOGIN</button></section>`);
-        $('#fauRegLogout').onclick=()=>auth.signOut();
+        renderView(`<section class="max-w-lg mx-auto my-10 p-8 text-center border border-fashion-gold/50 rounded-3xl bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">${already?'YOU’RE ALREADY IN!':'YOU’RE IN!'}</h1><p class="italic text-fashion-gold">Your journey to the runway begins now.</p><p class="text-sm text-gray-200">Sua inscrição foi registrada. Seu perfil de Designer já está ativo. Você já pode acessar o Workroom.</p><button id="fauRegLogout" class="border border-fashion-gold text-fashion-gold px-5 py-3 rounded-lg text-xs">ENTRAR NO WORKROOM</button></section>`);
+        $('#fauRegLogout').onclick=()=>initUserSession(auth.currentUser);
     };
     const showLogin = () => {
         $('#navContainer').innerHTML = '';
@@ -1169,10 +1179,10 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(!profileSnap.exists&&!isAdmin){
                 const draft=sessionStorage.getItem('fauRegistrationDraft');
                 if(draft && user.providerData?.some(p=>p.providerId==='password')){
-                    try { const d=JSON.parse(draft);const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();if(enrollment.exists){sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,true);return;}await db.doc(`inscricoes_designers/${user.uid}`).set({real:d.real,designer:d.designer,username:d.username,email:user.email,uid:user.uid,status:'aguardando',createdAt:firebase.firestore.FieldValue.serverTimestamp()});sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,false);return; }catch(ex){console.warn('Registration completion:',ex);}
+                    try { const d=JSON.parse(draft);const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();if(enrollment.exists){await fauProvisionDesigner(user,enrollment.data());sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,true);return;}await db.doc(`inscricoes_designers/${user.uid}`).set({real:d.real,designer:d.designer,username:d.username,email:user.email,uid:user.uid,status:'ativo',createdAt:firebase.firestore.FieldValue.serverTimestamp()});await fauProvisionDesigner(user,d);sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,false);return; }catch(ex){console.warn('Registration completion:',ex);}
                 }
                 const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();
-                if(enrollment.exists){showRegistrationReceipt(user,true);return;}
+                if(enrollment.exists){profileData=await fauProvisionDesigner(user,enrollment.data());}
                 if(user.providerData?.some(p=>p.providerId==='google.com')&&sessionStorage.getItem('fauGoogleRegistration')==='1'){
                     sessionStorage.removeItem('fauGoogleRegistration');
                     if(fauCanEnroll(await fauEnrollmentState())){await showDesignerRegistration(user);return;}
@@ -3177,7 +3187,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 </div>
 
                 <section id="fauDesignerRoster" class="rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4">
-                  <div><p class="text-[10px] tracking-[.3em] text-fashion-gold">SEASON 01 · REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DESIGNER ROSTER</h3><p class="text-xs text-gray-300 mt-1">Cada participante cria seu usuário e senha. Você apenas gerencia e ativa os acessos.</p></div>
+                  <div><p class="text-[10px] tracking-[.3em] text-fashion-gold">SEASON 01 · REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DESIGNER ROSTER</h3><p class="text-xs text-gray-300 mt-1">Cada participante cria a conta e recebe acesso automaticamente. Você apenas gerencia os perfis.</p></div>
                   <button type="button" id="fauRosterRefresh" class="rounded border border-fashion-gold text-fashion-gold px-4 py-2 text-xs">↻ ATUALIZAR INSCRIÇÕES</button>
                   <div id="fauRosterList" class="space-y-3 text-sm text-gray-300" aria-live="polite">Carregando inscrições…</div>
                 </section>
@@ -3340,8 +3350,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
                         <p class="text-[10px] uppercase tracking-[.25em] text-fashion-gold">CASTING DESK · ACCESS PASSES</p>
-                        <h3 class="font-cinzel text-white text-base">Criar acesso</h3>
-                        <p class="text-xs text-gray-300">Cadastre apenas Designers e Jurados. A plateia entra sozinha, sem usuário ou senha. O Designer escolhe seu nome de competição antes da estreia.</p>
+                        <h3 class="font-cinzel text-white text-base">Acessos legados</h3>
+                        <p class="text-xs text-gray-300">Ferramenta de suporte para contas antigas ou jurados. Novos Designers criam o próprio acesso na inscrição e aparecem automaticamente na auditoria.</p>
                         <div class="space-y-3 text-xs">
                             <label class="block space-y-1"><span class="text-gray-200">Tipo de acesso</span><select id="createRole" class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white w-full"><option value="estilista">Designer · Participante</option><option value="jurado">Jurado · Avaliações</option></select></label>
                             <p id="createRoleHint" class="text-gray-300" role="status">O Designer poderá definir seu nome e manifesto antes da estreia.</p>
@@ -4176,8 +4186,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             try{
                 const snap=await db.collection('inscricoes_designers').get();
                 const entries=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
-                rosterList.innerHTML=entries.length?entries.map(x=>`<article class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-2"><div class="flex justify-between gap-2"><div><p class="font-cinzel text-white">${esc(x.designer)}</p><p class="text-xs text-gray-300">${esc(x.real)} · ${esc(x.email)}</p></div><span class="text-[10px] text-fashion-gold">${esc(x.status||'aguardando')}</span></div><div class="flex flex-wrap gap-2"><button data-roster="activate" data-roster-uid="${esc(x.uid)}" class="border border-fashion-gold text-fashion-gold rounded px-3 py-2 text-xs">ATIVAR DESIGNER</button><button data-roster="edit" data-roster-uid="${esc(x.uid)}" class="border border-fashion-700 text-white rounded px-3 py-2 text-xs">EDITAR</button><button data-roster="delete" data-roster-uid="${esc(x.uid)}" class="border border-red-800 text-red-300 rounded px-3 py-2 text-xs">EXCLUIR INSCRIÇÃO</button></div></article>`).join(''):'Nenhuma inscrição registrada ainda.';
-            }catch(e){console.error(e);rosterList.textContent='Não foi possível carregar inscrições. Confira as regras V98.';}
+                rosterList.innerHTML=entries.length?entries.map(x=>`<article class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-2"><div class="flex justify-between gap-2"><div><p class="font-cinzel text-white">${esc(x.designer)}</p><p class="text-xs text-gray-300">${esc(x.real)} · ${esc(x.email)}</p></div><span class="text-[10px] text-fashion-gold">${esc(x.status||'aguardando')}</span></div><div class="flex flex-wrap gap-2"><span class="border border-fashion-gold/40 text-fashion-gold rounded px-3 py-2 text-xs">ACESSO AUTOMÁTICO</span><button data-roster="edit" data-roster-uid="${esc(x.uid)}" class="border border-fashion-700 text-white rounded px-3 py-2 text-xs">EDITAR</button><button data-roster="delete" data-roster-uid="${esc(x.uid)}" class="border border-red-800 text-red-300 rounded px-3 py-2 text-xs">EXCLUIR INSCRIÇÃO</button></div></article>`).join(''):'Nenhuma inscrição registrada ainda.';
+            }catch(e){console.error(e);rosterList.textContent='Não foi possível carregar inscrições. Confira as regras V107.';}
         };
         $('#fauRosterRefresh')?.addEventListener('click',loadDesignerRoster);
         rosterList?.addEventListener('click',async e=>{
@@ -4202,7 +4212,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     const real=prompt('Nome real:',x.real);if(real===null)return;
                     const designer=prompt('Nome de Designer:',x.designer);if(designer===null)return;
                     if(!real.trim()||!designer.trim()||real.length>90||designer.length>70||/[<>]/.test(real+designer))throw new Error('Nomes inválidos.');
-                    await ref.update({real:real.trim(),designer:designer.trim()});showToast('Inscrição atualizada.');
+                    const batch=db.batch();batch.update(ref,{real:real.trim(),designer:designer.trim()});batch.set(db.doc(`perfis/${uid}`),{ate:designer.trim()},{merge:true});const legacyRef=db.doc(`identidades/${uid}`);const legacySnap=await legacyRef.get();if(legacySnap.exists)batch.update(legacyRef,{real:real.trim(),ate:designer.trim()});await batch.commit();showToast('Inscrição e perfil atualizados.');
                 }else if(act==='delete'){
                     if(!confirm(`Excluir a inscrição de ${x.designer}? Isso não exclui a conta do Firebase Authentication nem o perfil já ativado.`))return;
                     await ref.delete();showToast('Inscrição excluída.');
@@ -5088,11 +5098,31 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
         });
 
-        sub(db.collection('identidades').orderBy('createdAt', 'desc'), snap => {
-            $('#castAuditList').innerHTML = snap.docs.map(d => {
-                const data = d.data();
-                return `<div class="p-1 border-b border-fashion-800 flex justify-between"><span>${esc(data.real)}</span> <strong class="text-fashion-gold">${esc(data.ate)}</strong></div>`;
-            }).join('') || '<span class="text-gray-500">Nenhum registro.</span>';
+        // Auditoria unificada: inscrições novas + identidades legadas + perfis ativos.
+        // A coleção identidades não é gravada pelo cadastro público (somente ADM).
+        const auditCache={inscricoes:null,identidades:null,perfis:null};
+        const auditErrors={};
+        const renderCastAudit=()=>{
+            const root=$('#castAuditList');if(!root)return;
+            const entries=new Map();
+            const ensure=uid=>{if(!entries.has(uid))entries.set(uid,{uid});return entries.get(uid);};
+            (auditCache.identidades||[]).forEach(d=>{const x=ensure(d.id);x.legacy=d.data();});
+            (auditCache.inscricoes||[]).forEach(d=>{const x=ensure(d.id);x.registration=d.data();});
+            (auditCache.perfis||[]).forEach(d=>{const x=ensure(d.id);x.profile=d.data();});
+            const rows=[...entries.values()].sort((a,b)=>String(a.registration?.real||a.legacy?.real||a.profile?.ate||'').localeCompare(String(b.registration?.real||b.legacy?.real||b.profile?.ate||''),'pt-BR'));
+            const errors=Object.entries(auditErrors).filter(([,value])=>value).map(([name,value])=>`<p class="text-red-300 p-2 border border-red-900 rounded">Erro ao consultar ${esc(name)}: ${esc(value)}. Verifique as regras do Firestore.</p>`).join('');
+            const pending=Object.values(auditCache).some(v=>v===null);
+            root.innerHTML=`<p class="text-[11px] text-gray-400 mb-2">${rows.length} conta(s) identificada(s) · Fontes: inscrições, identidades antigas e perfis.</p>${errors}${rows.map(x=>{
+                const reg=x.registration||{},legacy=x.legacy||{},profile=x.profile||{};
+                const real=reg.real||legacy.real||'Nome real não registrado';
+                const atelier=profile.ate||reg.designer||legacy.ate||'Designer não informado';
+                const username=reg.username||profile.username||legacy.username||reg.email||legacy.email||'Não informado';
+                const badges=[!x.registration&&!x.legacy?'Sem ficha de identidade':'',!x.profile?'Sem perfil de acesso':'',profile.disabled?'Desativado':'',profile.out?'Eliminado':''].filter(Boolean);
+                return `<div class="p-2 border-b border-fashion-800 space-y-1"><div class="flex justify-between gap-2"><span class="text-white">${esc(real)}</span><strong class="text-fashion-gold text-right">${esc(atelier)}</strong></div><p class="text-[10px] text-gray-400 break-all">Usuário: ${esc(username)} · ${esc(profile.role||'Sem cargo')} · UID: ${esc(x.uid)}</p>${badges.length?`<p class="text-[10px] text-amber-300">${badges.map(esc).join(' · ')}</p>`:''}</div>`;
+            }).join('')}${!rows.length&&!pending&&!errors?'<span class="text-gray-500">Nenhum cadastro encontrado nas três coleções.</span>':''}${pending?'<span class="text-gray-400">Sincronizando dados…</span>':''}`;
+        };
+        [['inscricoes','inscricoes_designers'],['identidades','identidades'],['perfis','perfis']].forEach(([key,collection])=>{
+            sub(db.collection(collection),snap=>{auditCache[key]=snap.docs;auditErrors[key]=null;renderCastAudit();},err=>{auditCache[key]=[];auditErrors[key]=err.message||String(err);renderCastAudit();});
         });
     };
 
