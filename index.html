@@ -180,32 +180,32 @@
                 id: "w01_first_garment",
                 code: "WEEK 01",
                 fixedOrder: 1,
-                title: "THE FIRST SIN — A Origem da Maison",
-                subtitle: "Estreia sem eliminação: apresente o DNA estético do seu ateliê em alta-costura gerada por IA.",
+                title: "THE FIRST GARMENT",
+                subtitle: "A primeira roupa da humanidade: imagine o nascimento do ato de vestir, sem reproduzir figurinos pré-históricos. Estreia não eliminatória.",
                 elimTipo: "none",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "✨ ESTREIA OFICIAL: Sem eliminação. A nota inaugura o Ranking Acumulado da temporada. 100% gerado por IA.",
+                mandate: "🍎 THE FIRST GARMENT: imagine que você é o primeiro estilista da humanidade. Crie um look original de moda que represente o nascimento do ato de vestir — não uma reconstrução histórica, fantasia de homem das cavernas ou roupa de peles e folhas. Envie imagem completa gerada por IA, título, conceito de até 500 caracteres e prompt. Cinco critérios de 0 a 10, até 50 pontos. NÃO HÁ ELIMINAÇÃO, mas a pontuação conta para o ranking acumulado.",
                 extraField: null
             },
             "w02_new_form": {
                 id: "w02_new_form",
                 code: "WEEK 02",
                 fixedOrder: 2,
-                title: "AFTER EDEN — A Evolução da Maison",
-                subtitle: "Primeira rodada eliminatória: reinterprete um elemento estrutural da sua estreia em uma nova silhueta.",
+                title: "A NEW FORM",
+                subtitle: "Primeira eliminação: imagine a evolução da moda e transforme um elemento visual reconhecível do seu look da Week 01 em algo novo. O futuro não precisa ser tecnológico.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "✂️ EVOLUÇÃO OBRIGATÓRIA: Conecte sua criação a um elemento da Week 01 sem repetir a mesma proposta.",
-                extraField: { key: "elementoResgatado", label: "Elemento Resgatado da Week 01", placeholder: "Ex: Corseteria escultural em metal líquido..." }
+                mandate: "🔮 A NEW FORM: crie uma visão autoral da evolução e do futuro da moda. Reinterprete pelo menos um elemento visual da SUA criação da Week 01 — cor, textura, estampa, material, silhueta, volume ou acabamento — sem simplesmente repeti-lo. Explique a conexão no conceito (até 500 caracteres). Envie look completo, título e prompt. Esta semana é eliminatória; avaliação de até 50 pontos.",
+                extraField: { key: "elementoResgatado", label: "Qual elemento visual da Week 01 você reinterpretou?", placeholder: "Ex.: o volume em espiral da primeira criação agora estrutura uma saia arquitetônica" }
             },
             "theme_climate_chaos": {
                 id: "theme_climate_chaos",
                 code: "WEEK — CLIMATE CHAOS",
                 fixedOrder: null,
-                title: "CLIMATE CHAOS — Fusão de Estações",
-                subtitle: "Sorteio interativo de clique único de um par de estações climáticas para fusão em alta-costura.",
+                title: "CLIMATE CHAOS — SEASONS COLLIDE",
+                subtitle: "Duas estações diferentes, sorteadas em um envelope individual. Um único look, duas influências visíveis e igualmente relevantes.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "climate_pairs",
@@ -217,93 +217,97 @@
                     "🌸 Spring + ☀️ Summer",
                     "🍂 Autumn + ❄️ Winter"
                 ],
-                mandate: "🌪️ FUSÃO CLIMÁTICA: As duas estações sorteadas no seu envelope único devem coexistir na construção do look.",
-                extraField: null
+                mandate: "🌪️ SEASONS COLLIDE: abra seu envelope e crie um único look que represente VISUALMENTE as duas estações sorteadas. Ambas precisam ser reconhecíveis e relevantes; não basta citá-las no conceito ou acrescentar um detalhe simbólico. Não são duas roupas separadas. Envie imagem completa, título, conceito de até 500 caracteres e prompt. Avaliação: até 50 pontos.",
+                extraField: { key: "estacoesInterpretacao", label: "Como as DUAS estações sorteadas aparecem visualmente no seu look?", placeholder: "Descreva brevemente os elementos de cada estação e como eles se integram em uma única criação" }
             },
             "theme_traitors": {
                 id: "theme_traitors",
                 code: "WEEK — THE TRAITORS",
                 fixedOrder: null,
-                title: "THE TRAITORS — Fiéis vs. Traidores na Passarela",
-                subtitle: "Escolha secreta de facção no Workroom (Faithful com escudo vs Traitor com broche amaldiçoado) + Twist no Bottom 3.",
+                title: "THE TRAITORS: THE BLACK BANQUET",
+                subtitle: "Um jantar aristocrático, um assassinato à vista de todos e uma escolha que mudará a berlinda.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "faction_choice",
-                mandate: "🗡️ CONCLAVE SECRETO: Escolha sua facção em sigilo absoluto antes de submeter seu look de alta-costura.",
-                extraField: null
+                mandate: "🏰 DRESSED TO KILL: escolha FAITHFUL (colar com pingente de escudo) ou TRAITOR (broche com joia amaldiçoada). Crie um editorial de gala, sem cosplay medieval. A facção será secreta até a revelação autorizada pela produção.",
+                extraField: null,
+                requiresPrompt: true,
+                twistRule: "Pior Faithful + pior Traitor pela nota dos jurados + pior elegível do ranking acumulado (proteção WIN apenas na vaga acumulada)."
             },
             "theme_beauty_eye": {
                 id: "theme_beauty_eye",
                 code: "WEEK — BEAUTY IS IN THE EYE",
                 fixedOrder: null,
                 title: "BEAUTY IS IN THE EYE — Criação Autoral & Releitura às Cegas",
-                subtitle: "Envio duplo: Look 1 Autoral + Sorteio de envelope de clique único com conceito anônimo de colega para criar o Look 2 (até 100 pts).",
+                subtitle: "Primeiro sua visão. Depois, um conceito anônimo de outra maison. O segundo look só começa quando a produção liberar os envelopes.",
                 elimTipo: "single",
                 numSubmissoes: 2,
                 slotLabels: ["Look 1 — Criação Autoral Original", "Look 2 — Releitura às Cegas (Conceito Sorteado)"],
                 drawType: "blind_concept_swap",
-                mandate: "👁️ DUPLA SUBMISSÃO (100 PTS): Envie o Look 1 e clique no envelope lacrado para revelar o conceito anônimo do seu Look 2.",
-                extraField: null
+                mandate: "👁️ BEAUTY PARADOX: envie primeiro sua visão autoral. Após todas as primeiras entregas, a produção sorteará conceitos sem mostrar as imagens. Só depois das releituras haverá desfile. Cada look vale até 50 pontos.",
+                extraField: null,
+                scoreMode: "soma",
+                maxPoints: 100
             },
             "theme_rest_in_style": {
                 id: "theme_rest_in_style",
                 code: "WEEK — REST IN STYLE",
                 fixedOrder: null,
                 title: "REST IN STYLE — O Funeral de Alta-Costura",
-                subtitle: "Tema fúnebre PROIBIDO PRETO (falsa não-eliminação) + Twist Pós-Júri: Bottom 3 cria o look do próprio velório (PROIBIDO BRANCO) julgado pelos colegas SAFE.",
+                subtitle: "Primeiro, um funeral sem preto. Depois do ranking, o Elimination Pool cria o próprio funeral sem branco, julgado pelos demais estilistas.",
                 elimTipo: "funeral_twist",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🕯️ DRESS CODE FÚNEBRE: PROIBIDO PRETO no desfile principal. No Twist do Velório (Bottom 3), PROIBIDO BRANCO.",
+                mandate: "🕯️ THE FINAL FAREWELL: crie um look editorial apropriado para um funeral, sem nenhum detalhe preto. A produção revelará uma segunda etapa apenas depois da avaliação inicial.",
                 extraField: null
             },
             "theme_tarantino": {
                 id: "theme_tarantino",
                 code: "WEEK — TARANTINO (DOUBLE KILL)",
                 fixedOrder: null,
-                title: "TARANTINO: DOUBLE KILL — Alta-Costura Pulp",
+                title: "TARANTINO: BLOOD, GLAMOUR & REVENGE",
                 subtitle: "Referências cinematográficas com Dupla Eliminação: 1ª morte direta pelo menor acumulado + duelo no Bottom 2.",
                 elimTipo: "double",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🩸 DOUBLE KILL: Semana de eliminação dupla! A menor média acumulada sofre corte imediato antes do duelo final.",
+                mandate: "🎬 ONCE UPON A TIME IN YOUR RUNWAY: crie um personagem autoral inspirado no cinema de Tarantino. Envie sua referência, look, título, conceito e prompt. O twist será revelado pela produção depois das avaliações.",
                 extraField: { key: "filmeReferencia", label: "Obra / Referência Cinematográfica", placeholder: "Ex: Kill Bill Vol. 1 / Pulp Fiction / Jackie Brown..." }
             },
             "theme_next_supreme": {
                 id: "theme_next_supreme",
                 code: "WEEK — THE NEXT SUPREME",
                 fixedOrder: null,
-                title: "THE NEXT SUPREME (AHS: COVEN) — A Sucessão",
-                subtitle: "Envio duplo: Old Supreme (Decadência) vs. Next Supreme (Ascensão). Votação em duelos com hierarquia de desempate (Ícone ➔ WIN ➔ Estilista).",
+                title: "THE NEXT SUPREME",
+                subtitle: "Duas Supremas por maison. Votação secreta do elenco escolhe apenas uma imagem por maison para avaliação dos jurados.",
                 elimTipo: "single",
                 numSubmissoes: 2,
-                slotLabels: ["Slot 1 — The Old Supreme (O Declínio)", "Slot 2 — The Next Supreme (A Ascensão)"],
+                slotLabels: ["Slot 1 — OLD SUPREME · The Reigning Queen", "Slot 2 — NEXT SUPREME · The Heir Apparent"],
                 drawType: "none",
-                mandate: "🔮 O COVEN EXIGE 2 LOOKS: Apresente a transição de poder entre a Antiga e a Nova Suprema gerados por IA.",
+                mandate: "👑 TWO SUPREMES, ONE THRONE: crie duas identidades igualmente poderosas. Envie Old Supreme e Next Supreme com título editorial, conceito da relação entre elas (até 500 caracteres) e prompts. A votação secreta do elenco decidirá qual será avaliada pelos jurados.",
                 extraField: null
             },
             "theme_plaid_bay": {
                 id: "theme_plaid_bay",
                 code: "WEEK — PLAID IN THE BAY",
                 fixedOrder: null,
-                title: "PLAID IN THE BAY (A FAZENDA) — All Stars & Resta Um",
-                subtitle: "Padronagem xadrez obrigatória em releitura de alta moda + Twist Pós-Júri da corrente do Resta Um iniciada pelo WIN.",
+                title: "PLAID IN THE BAY — A FAZENDA: ALL STARS",
+                subtitle: "Reinvente o uniforme xadrez da Baia para um ex-peão de A Fazenda. Após as notas, o WIN inicia o Resta Um.",
                 elimTipo: "resta_um",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🤠 XADREZ OBRIGATÓRIO: O tartan/xadrez deve ser protagonista. Após as notas, o 3º nome da berlinda será definido no Resta Um!",
-                extraField: null
+                mandate: "🤠 A FAZENDA: ALL STARS — Escolha um ex-peão e reinvente seu uniforme da Baia. Xadrez obrigatório e relevante, sem copiar o uniforme tradicional. Envie nome do ex-participante, look completo, título, conceito (até 500 caracteres) e prompt. O Resta Um começa após o ranking, sob comando da produção.",
+                extraField: { key: "exPeao", label: "Ex-participante de A Fazenda escolhido", placeholder: "Nome do ex-peão que vestirá o uniforme All Stars" }
             },
             "theme_seven_deadly": {
                 id: "theme_seven_deadly",
                 code: "WEEK — SEVEN DEADLY STYLES",
                 fixedOrder: null,
                 title: "SEVEN DEADLY STYLES — Dos Sete Anões à Alta-Costura",
-                subtitle: "Escolha livre de um dos 7 Anões para tradução psicológica em alta moda (repetição permitida, zero cosplay).",
+                subtitle: "Sete personalidades, sete inspirações. Escolha livremente um dos sete anões de Branca de Neve e transforme sua personalidade em alta-costura. Repetições permitidas.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🍎 ZERO FANTASIA OU COSPLAY: Proibida reprodução literal de figurinos ou gorrinhos. Traduza a personalidade do anão em alta-costura.",
+                mandate: "🍎 FROM FAIRY TALE TO FASHION — Traduza a personalidade do anão escolhido em um look autoral completo. Não são permitidos cosplay, fantasia nem reprodução literal de figurinos. A escolha é livre e pode se repetir entre maisons. Uma imagem de IA, título, conceito de até 500 caracteres e prompt. Avaliação de 0 a 50 pontos.",
                 extraField: {
                     key: "anaoEscolhido",
                     label: "Personagem Escolhido (7 Anões)",
@@ -324,54 +328,54 @@
                 code: "WEEK — THE BEAUTY OF MATHEMATICS",
                 fixedOrder: null,
                 title: "THE BEAUTY OF MATHEMATICS — Make Logic Look Beautiful",
-                subtitle: "Princípio matemático livre explicado no conceito + Professor de Matemática convidado somado na média regular da bancada.",
+                subtitle: "Um editorial avant-garde que transforma um princípio matemático em moda. O professor convidado integra a bancada como jurado regular, com os mesmos cinco critérios e o mesmo peso.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🔢 ZERO FÓRMULAS LITERAIS: Proibidas camisetas com números ou calculadoras. Explique o princípio matemático diretamente no Conceito (até 500 caracteres).",
-                extraField: null
+                mandate: "🔢 BEAUTY IN NUMBERS — Escolha um princípio matemático (simetria, fractais, topologia, proporção áurea, probabilidade ou outro) e traduza-o VISUALMENTE em um editorial avant-garde. Nada de fantasias, calculadoras ou camisetas com fórmulas. A relação deve ser reconhecível na criação, não apenas no texto. Uma imagem, título, conceito de até 500 caracteres e prompt. O professor de matemática convidado participa como jurado normal: avalia os mesmos cinco critérios, com o mesmo peso dos demais. A pontuação máxima permanece em 50 pontos, pela soma das médias da bancada.",
+                extraField: { key: "conceitoMatematico", label: "🧮 Qual conceito ou princípio matemático inspirou sua criação?", placeholder: "Ex.: fractais, topologia, simetria, proporção áurea, sequências, curvas..." }
             },
             "theme_pink_controversy": {
                 id: "theme_pink_controversy",
-                code: "WEEK — THE PINK CONTROVERSY",
+                code: "WEEK 03 — THE PINK CONTROVERSY",
                 fixedOrder: null,
-                title: "THE PINK CONTROVERSY — O Escândalo de 2009 Reinterpretado",
-                subtitle: "Releitura autoral de alta-costura inspirada no episódio de Geisy Arruda. O rosa é inegociável e protagonista.",
+                title: "THE PINK CONTROVERSY — THE DRESS THAT CAUSED A SCANDAL",
+                subtitle: "One color. One dress. A controversy that changed the conversation. Reinterprete em alta-costura o episódio de Geisy Arruda em 2009, questionando quem decide o que alguém pode vestir.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "💗 THE PINK MANDATE: O rosa é obrigatório e deve ter presença relevante. Proibida cópia literal do vestido de 2009: transforme julgamento em poder fashion.",
+                mandate: "💗 PINK IS NOT INNOCENT — Em 2009, o vestido rosa de Geisy Arruda se tornou alvo de hostilidade e provocou debates sobre liberdade, machismo e julgamento social. Crie UM look editorial original de alta-costura que transforme essa referência em uma declaração autoral de moda. ROSA OBRIGATÓRIO, perceptível e relevante, em qualquer tonalidade, podendo dividir espaço com outras cores. Explore provocação, exagero, poder, liberdade e ruptura de padrões, sem copiar o vestido original, fazer cosplay ou reproduzir literalmente a pessoa. Entregue imagem de look completo, título, conceito de até 500 caracteres relacionando a criação ao episódio e prompt. Cinco critérios oficiais, máximo de 50 pontos. SEMANA ELIMINATÓRIA.",
                 extraField: null
             },
             "theme_amoras_cut": {
                 id: "theme_amoras_cut",
                 code: "WEEK 04 — AMORA'S CUT",
                 fixedOrder: null,
-                title: "AMORA'S CUT — A Próxima Grande Personagem de Novela",
-                subtitle: "Figurino para uma personagem inédita de novela dirigida por Amora Mautner com a assinatura vermelha obrigatória (proibido look 100% vermelho).",
+                title: "AMORA'S CUT — THE NEXT BIG CHARACTER",
+                subtitle: "Lights, camera, drama! Crie uma personagem original para a próxima novela dirigida por Amora Mautner e revele sua história por meio do figurino.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🎬🔴 AMORA'S MARK: O vermelho deve aparecer de forma intencional (peça, acessório, calçado ou make), mas é PROIBIDO um look inteiramente vermelho.",
-                extraField: { key: "nomePersonagem", label: "Nome da Personagem da Novela", placeholder: "Ex: Valéria Albuquerque (A Vilã Implacável)..." }
+                mandate: "🎬🔴 THE RED SIGNATURE — Imagine uma personagem inédita de novela: quem ela é, o que deseja, como vive e qual é seu papel na trama? Crie UM figurino completo, original e coerente com a história dela, com qualidade de editorial, campanha ou divulgação de novela. VERMELHO OBRIGATÓRIO: deve aparecer de modo visível e intencional, mas o look NÃO PODE ser inteiramente vermelho. A cor pode estar em roupa, acessórios, calçados ou maquiagem. Não reproduza figurinos de personagens existentes. Entregue imagem gerada por IA, título, nome da personagem, descrição de até 500 caracteres incluindo espaços e prompt. Cinco critérios oficiais, máximo de 50 pontos. SEMANA ELIMINATÓRIA.",
+                extraField: { key: "nomePersonagem", label: "🎭 Personagem original da novela", placeholder: "Nome da personagem (ex.: Helena Montenegro)" }
             },
             "theme_art_seduction": {
                 id: "theme_art_seduction",
                 code: "WEEK 05 — THE ART OF SEDUCTION",
                 fixedOrder: null,
                 title: "THE ART OF SEDUCTION — Desire Is an Art",
-                subtitle: "Sorteio interativo de clique único no site de 1 dos 5 elementos obrigatórios de sedução para integrar ao editorial.",
+                subtitle: "Um editorial de moda sobre sedução, com um dos cinco códigos obrigatórios definido por envelope lacrado e revelado somente pela produção.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "seduction_elements",
                 drawPool: [
-                    "🖤 LEATHER FETISH (Couro Protagonista)",
-                    "💋 BARE SHOULDERS (Ombros à Mostra)",
-                    "⛓️ THE CORSET (Corseteria & Estrutura)",
-                    "🕸️ SHEER DESIRE (Transparência & Revelação)",
-                    "🩶 SECOND SKIN (Silhueta Segunda Pele)"
+                    "🖤 LEATHER FETISH — Couro em destaque",
+                    "💋 BARE SHOULDERS — Ombros à mostra",
+                    "⛓️ THE CORSET — Corseteria e estrutura",
+                    "🕸️ SHEER DESIRE — Transparência",
+                    "🩶 SECOND SKIN — Segunda pele"
                 ],
-                mandate: "💋 ELEMENTO SORTEADO OBRIGATÓRIO: Clique no Oráculo da Sedução para sortear seu elemento. Ele deve ser parte estrutural do look.",
+                mandate: "💋 THE SEDUCTION ELEMENTS — Escolha um envelope lacrado no Workroom e aguarde a revelação da produção. Seu elemento obrigatório será um entre LEATHER FETISH (couro relevante), BARE SHOULDERS (ombros expostos), THE CORSET (corseteria), SHEER DESIRE (transparência) ou SECOND SKIN (silhueta ajustada). Crie UM look editorial original com IA, título, conceito de até 500 caracteres e prompt. O elemento deve estar claramente presente, integrado ao look e identificável pelos jurados. A sedução deve ser interpretada como linguagem de moda, não apenas exposição do corpo. Cinco critérios oficiais, até 50 pontos. Rodada eliminatória.",
                 extraField: null
             },
             "theme_wedding_party": {
@@ -379,7 +383,7 @@
                 code: "WEEK 06 — THE WEDDING PARTY",
                 fixedOrder: null,
                 title: "THE WEDDING PARTY: THE INVITATION BOX — Dois Padrinhos",
-                subtitle: "Envio duplo (2 padrinhos do mesmo casamento) + Sorteio interativo no site da Caixinha de Convite (1 Cor + 1 Elemento + 1 Estampa de 1 a 5).",
+                subtitle: "Dois padrinhos do mesmo casamento, duas imagens e três envelopes lacrados: COR, ELEMENTO e ESTAMPA (cinco opções em cada categoria). Os elementos podem ser distribuídos entre os looks.",
                 elimTipo: "single",
                 numSubmissoes: 2,
                 slotLabels: ["Look 1 — Padrinho / Madrinha A", "Look 2 — Padrinho / Madrinha B"],
@@ -389,7 +393,7 @@
                     elements: ["1. Alfinetes de segurança", "2. Pelúcia", "3. Penas", "4. Correntes", "5. Madeira"],
                     prints: ["1. Camuflagem", "2. Op art", "3. Toile de Jouy", "4. Estampa de cobra", "5. Pied-de-poule"]
                 },
-                mandate: "💍 DOIS MODELOS, UM CASAMENTO, TRÊS SEGREDOS: Abra sua Caixinha no site (clique único) para revelar Cor, Elemento e Estampa obrigatórios na dupla.",
+                mandate: "💍 DOIS MODELOS, UM CASAMENTO, TRÊS SEGREDOS: Escolha três envelopes lacrados (01 a 05): um para COR, um para ELEMENTO e um para ESTAMPA. A produção revelará os resultados. Os três devem aparecer no conjunto dos dois looks, não necessariamente em ambos.",
                 extraField: null
             },
             "theme_the_awards": {
@@ -397,72 +401,72 @@
                 code: "WEEK 07 — THE AWARDS: WRONG PLACE?",
                 fixedOrder: null,
                 title: "THE AWARDS: AM I IN THE WRONG PLACE? — Tapete Vermelho Inesperado",
-                subtitle: "Look de grande premiação internacional (Oscar, Grammy, Emmy, BAFTA) fundido ao compromisso cotidiano sorteado por clique único.",
+                subtitle: "Look de grande premiação internacional (Oscar, Grammy, Emmy, BAFTA) fundido ao compromisso inesperado revelado após a escolha de um envelope lacrado.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "wrong_appointment",
                 drawPool: [
-                    "🏋️ Ida à Academia",
-                    "🥩 Churrasco de Família",
-                    "🏖️ Dia de Praia",
-                    "💼 Reunião de Negócios",
-                    "🛍️ Passeio no Shopping",
-                    "🌾 Casamento na Roça",
-                    "🛒 Ida ao Supermercado",
-                    "🕯️ Encontro Romântico",
-                    "🎪 Festival de Música",
-                    "✈️ Viagem de Avião"
+                    "🚴 Aula de Spinning",
+                    "🛒 Compras no Supermercado",
+                    "🎣 Pescaria",
+                    "🛌 Festa do Pijama",
+                    "👩‍🍳 Aula de Culinária",
+                    "🏕️ Acampamento",
+                    "🧽 Faxina de Domingo",
+                    "🎳 Noite de Boliche",
+                    "🦷 Consulta Odontológica",
+                    "🏊 Aula de Hidroginástica"
                 ],
-                mandate: "🏆 TAPETE VERMELHO + COMPROMISSO ERRADO: Sorteie no site o compromisso original da sua cliente e transforme-o em alta-costura digna de premiação.",
+                mandate: "🏆 TAPETE VERMELHO + COMPROMISSO ERRADO: Escolha um envelope lacrado no site. Após a revelação da produção, transforme o compromisso sorteado em alta-costura digna de premiação, mantendo a referência reconhecível sem criar uma fantasia literal.",
                 extraField: null
             },
             "theme_bia_do_bras": {
                 id: "theme_bia_do_bras",
-                code: "WEEK — BIA DO BRÁS: Ê BRASIL!",
+                code: "WEEK — BIA DO BRÁS: Ê BRASIL, ADOROOOO!",
                 fixedOrder: null,
-                title: "BIA DO BRÁS: Ê BRASIL, ADOROOOO! — Do Brás para a Alta Moda",
-                subtitle: "Crie com IA um look de alta-costura vestindo a própria Bia do Brás como modelo (Banana Dress, Saco de Lixo, Brás Couture, VT, Brasil do Brasil).",
+                title: "BIA DO BRÁS: Ê BRASIL, ADOROOOO!",
+                subtitle: "📢 ALÔ, ALÔ, CLIENTES! Vista a própria Bia do Brás com um look autoral de alta moda. Inspire-se em sua trajetória no Brás, no BBB 24, em bordões, memes e figurinos improvisados. Transforme a referência em moda, não em fantasia.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🇧🇷 CLIENTE REAL NA IMAGEM: A imagem gerada por IA deve representar a própria Bia do Brás vestindo alta moda autoral (proibido fantasia literal).",
-                extraField: { key: "referenciaBia", label: "Referência / Momento da Bia Escolhido", placeholder: "Ex: The Banana Dress / Saco de Lixo / Brás Couture / VT da Bia..." }
+                mandate: "🇧🇷 DRESSING BIA DO BRÁS: a imagem deve representar a PRÓPRIA Bia do Brás vestindo um look completo e original criado com IA, não uma modelo genérica. Escolha livremente um momento, meme, figurino, bordão ou aspecto de sua trajetória (ex.: banana, sacos de lixo, cascas de laranja, comércio do Brás, Ó o Rapa!, VT da Bia, shows, Brasil do Brasil). Reinterprete visualmente a referência com silhuetas, materiais, texturas e styling autorais — sem fantasia literal. Entregue uma imagem editorial, título, conceito de até 500 caracteres incluindo espaços e prompt. Cinco critérios oficiais de 0 a 10, máximo 50 pontos. Rodada eliminatória.",
+                extraField: null
             },
             "theme_unica_maria": {
                 id: "theme_unica_maria",
                 code: "WEEK — A ÚNICA MARIA DO MUNDO",
                 fixedOrder: null,
                 title: "A ÚNICA MARIA DO MUNDO — Who Is Your Maria?",
-                subtitle: "Escolha uma mulher chamada Maria (histórica, artística, brasileira, sagrada ou fictícia) e retrate-a na passarela em alta-costura gerada por IA.",
+                subtitle: "✨ Maria, Maria… there will never be another one. Escolha livremente uma mulher chamada Maria — histórica, artista, personagem, figura religiosa ou alguém de trajetória marcante — e transforme sua identidade, história e legado em um editorial autoral de alta moda. Não basta reproduzir um figurino: a imagem deve comunicar quem ela é.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "👑 THE MARIA RULE: A homenageada deve se chamar Maria e ser representada visualmente na imagem de IA em releitura contemporânea (sem fantasia de época).",
-                extraField: { key: "nomeMaria", label: "Nome Completo da Maria Escolhida", placeholder: "Ex: Maria Antonieta / Maria Bonita / Maria Bethânia / Maria Melilo..." }
+                mandate: "👑 THE MARIA RULE: a mulher homenageada precisa realmente se chamar Maria. A escolha é livre, sem sorteio e sem lista restrita: Maria Antonieta, Maria Bonita, Maria Callas, Maria Bethânia, Maria Madalena, Maria da Penha, Maria Melilo ou qualquer outra Maria real ou fictícia. A imagem deve representar visualmente a Maria escolhida, não apenas uma modelo genérica com uma roupa inspirada nela. Crie um look completo e original de alta moda, sem fantasia histórica nem reprodução literal de figurinos existentes. Entregue 1 imagem gerada por IA, nome completo da Maria, título, conceito de até 500 caracteres (incluindo espaços) e prompt. Os jurados avaliarão os cinco critérios oficiais, de 0 a 10 cada, até 50 pontos.",
+                extraField: { key: "nomeMaria", label: "✨ Nome completo da Maria escolhida", placeholder: "Ex.: Maria Bonita, Maria Callas, Maria Bethânia, Maria Melilo..." }
             },
             "theme_nature_brutal": {
                 id: "theme_nature_brutal",
                 code: "WEEK — NATURE IS NOT YOUR FRIEND",
                 fixedOrder: null,
                 title: "NATURE IS NOT YOUR FRIEND — Beauty Can Be Brutal",
-                subtitle: "Transforme o lado mais hostil, venenoso, predatório ou destrutivo da natureza em um editorial de alta moda avant-garde.",
+                subtitle: "🌿 BEAUTY IN THE WILD: A natureza floresce, devora, contamina e destrói. Escolha livremente uma criatura, elemento ou fenômeno natural que revele seu lado hostil, selvagem, estranho ou ameaçador e transforme essa força em alta moda autoral. Beauty can be brutal.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🌿 NATUREZA HOSTIL: Explore flora venenosa, predadores, fenômenos destrutivos ou parasitas na construção do look (zero fantasia literal).",
-                extraField: { key: "referenciaNatural", label: "Referência Natural Escolhida", placeholder: "Ex: Fungo Cordyceps / Víbora-do-Gabão / Erupção Vulcânica..." }
+                mandate: "🌿 THE CHALLENGE — BEAUTY IN THE WILD: Escolha livremente uma referência natural que explore o lado perigoso, selvagem ou perturbador da natureza. Pode ser FLORA (plantas carnívoras, flores venenosas, espinhos, fungos), FAUNA (predadores, insetos, répteis, mecanismos de defesa), ELEMENTS (tempestades, vulcões, incêndios, terremotos) ou THE UNSEEN (parasitas, decomposição, organismos abissais). A referência deve inspirar SILHUETA, VOLUMES, TEXTURAS, CORES, MATERIAIS e STYLING, não aparecer somente no cenário ou como decoração. Não faça fantasia literal de animal, planta ou fenômeno: a moda deve ser protagonista. Entregue 1 imagem editorial original gerada com IA, look completo, referência natural escolhida, título, conceito de até 500 caracteres incluindo espaços e prompt. Os cinco critérios oficiais valem de 0 a 10 cada, máximo de 50 pontos. Rodada eliminatória.",
+                extraField: { key: "referenciaNatural", label: "🌿 Referência natural escolhida", placeholder: "Ex.: Cordyceps, víbora-do-Gabão, erupção vulcânica..." }
             },
             "w_finale": {
                 id: "w_finale",
                 code: "GRANDE FINAL",
                 fixedOrder: 99,
                 title: "THE FOUR ACTS OF A LEGEND — The Final Show",
-                subtitle: "Desfile final da temporada com coleção cápsula autoral em IA disputando a coroa de Project Runway: FAU.",
+                subtitle: "🏆 FOUR ACTS. ONE MAISON. ONE LEGEND. Quatro editoriais, uma única narrativa: origem, reinvenção de um FORA DE MODA, confronto com um ÍCONE DA MODA e a consagração da Maison. Na final, as pontuações da temporada são zeradas.",
                 elimTipo: "finale",
                 numSubmissoes: 4,
-                slotLabels: ["Act I — The Origin", "Act II — Reinventing the Fallen", "Act III — Confronting an Icon", "Act IV — The Legend"],
+                slotLabels: ["ACT I — THE ORIGIN", "ACT II — THE REINVENTION", "ACT III — THE CONFRONTATION", "ACT IV — THE LEGEND"],
                 drawType: "none",
-                mandate: "👑 GRANDE FINAL: Apresente os looks definitivos da sua Maison para o veredito final.",
+                mandate: "🏆 THE FOUR ACTS OF A LEGEND — Crie quatro editoriais originais com uma narrativa e um HOUSE CODE reconhecível. ACT I — THE ORIGIN: escolha uma referência histórica, cultural ou estética e traduza sua essência em moda, sem fantasia literal. ACT II — THE REINVENTION: reinvente um look oficialmente eleito FORA DE MODA na temporada, preservando conexão reconhecível e transformando-o pela identidade da sua Maison. ACT III — THE CONFRONTATION: releia um look oficialmente eleito ÍCONE DA MODA, dialogando com a criação consagrada sem copiá-la. ACT IV — THE LEGEND: apresente o editorial definitivo da Maison e seu legado. A referência do Ato I e o House Code devem conectar os quatro capítulos. Cada ato exige imagem, título, conceito de até 500 caracteres e prompt. Informe também nome da Maison, referência de origem, cinco pilares do House Code (silhueta, materiais/texturas, paleta, detalhes, filosofia), manifesto da coleção e identificação dos looks originais dos atos II e III com autores e rodadas. Cada ato vale até 50 pontos, total de 200. O placar da temporada é zerado na final.",
                 extraField: null
             }
         };
@@ -471,50 +475,220 @@
     const themeHasDraw = t => t && t.drawType && t.drawType !== 'none' && t.drawType !== 'faction_choice' && t.drawType !== 'blind_concept_swap';
     function randomPick(items) { const bytes = new Uint32Array(1); crypto.getRandomValues(bytes); return items[bytes[0] % items.length]; }
     function themeDrawValue(t) {
-        if (t.drawType === 'invitation_box_3d') return [randomPick(t.invitationBoxMap.colors), randomPick(t.invitationBoxMap.elements), randomPick(t.invitationBoxMap.prints)].join(' • ');
+        if (t.drawType === 'invitation_box_3d') throw new Error('Escolha os três números da caixinha antes de confirmar.');
+        if (t.drawType === 'climate_pairs') {
+            const seasons = ['🌸 Spring — Primavera', '☀️ Summer — Verão', '🍂 Autumn — Outono', '❄️ Winter — Inverno'];
+            const first = randomPick(seasons);
+            const second = randomPick(seasons.filter(x => x !== first));
+            return `${first} + ${second}`;
+        }
         return randomPick(t.drawPool || ['Sem opções cadastradas']);
     }
     async function getPersonalTwist() { return (await db.doc(`sorteios/${drawKey()}`).get()).data() || null; }
+    // Sorteios: o estilista escolhe um envelope numerado sem visualizar o conteúdo.
+    // A produção libera a revelação de forma independente para cada rodada.
+    const drawGateRef = () => db.doc(`sorteios_controle/${globalState.rodada}`);
+    const getDrawGate = async () => (await drawGateRef().get()).data() || {phase:'selection'};
     async function revealPersonalTwist() {
-        const t = getTheme();
-        if (!t || !currentUser || currentUser.role !== 'estilista') throw new Error('Sorteio exclusivo dos estilistas.');
-        if (!themeHasDraw(t) && t.drawType !== 'faction_choice') throw new Error('Esta rodada não tem sorteio individual.');
-        const ref = db.doc(`sorteios/${drawKey()}`);
-        await db.runTransaction(async tx => {
-            const snap = await tx.get(ref);
-            if (snap.exists) return;
-            const value = t.drawType === 'faction_choice' ? document.getElementById('factionChoice')?.value : themeDrawValue(t);
-            if (!value) throw new Error('Escolha sua facção.');
-            tx.set(ref, {uid:currentUser.uid, rodada:globalState.rodada, themeId:t.id, value, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        const t=getTheme();
+        if(!t || !currentUser || currentUser.role!=='estilista')throw new Error('Escolha exclusiva dos estilistas.');
+        if(!themeHasDraw(t) && t.drawType!=='faction_choice')throw new Error('Esta rodada não tem sorteio.');
+        const gate=await getDrawGate();
+        if(gate.phase!=='selection')throw new Error('A produção encerrou a escolha dos envelopes.');
+        const wedding=t.drawType==='invitation_box_3d';
+        const choices=wedding?['color','element','print'].map(k=>document.getElementById('wedding_'+k)?.value):[];
+        const chosen=wedding?choices.join('-'):(t.drawType==='faction_choice'?document.getElementById('factionChoice')?.value:document.getElementById('sealedEnvelope')?.value);
+        if(wedding && (choices.length!==3 || choices.some(n=>!n || !/^[1-5]$/.test(n))))throw new Error('Escolha um envelope de 01 a 05 em cada categoria.');
+        if(!chosen)throw new Error('Escolha seu envelope antes de confirmar.');
+        const ref=db.doc(`sorteios/${drawKey()}`);
+        await db.runTransaction(async tx=>{
+            const snap=await tx.get(ref);
+            if(snap.exists)throw new Error('Você já confirmou sua escolha. Não é possível alterar.');
+            const value=wedding?[t.invitationBoxMap.colors[Number(choices[0])-1],t.invitationBoxMap.elements[Number(choices[1])-1],t.invitationBoxMap.prints[Number(choices[2])-1]].join(' • '):(t.drawType==='faction_choice'?chosen:themeDrawValue(t));
+            tx.set(ref,{uid:currentUser.uid,rodada:globalState.rodada,themeId:t.id,envelope:chosen,value,...(wedding?{weddingNumbers:{color:Number(choices[0]),element:Number(choices[1]),print:Number(choices[2])}}:{}),
+                createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         });
         await renderPersonalTwist();
+        showToast('Envelope lacrado! Aguarde a produção autorizar a revelação.');
     }
     async function renderPersonalTwist() {
-        const slot = document.getElementById('personalTwistSlot'); if (!slot) return;
-        const t = getTheme(); if (!t) {slot.innerHTML=''; return;}
-        const draw = await getPersonalTwist();
-        slot.innerHTML = `<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
+        const slot=document.getElementById('personalTwistSlot');if(!slot)return;
+        const t=getTheme();if(!t){slot.innerHTML='';return;}
+        const [draw,gate]=await Promise.all([getPersonalTwist(),getDrawGate()]);
+        const released=gate.phase==='released';
+        const isDraw=themeHasDraw(t);
+        const envelopeOptions=Array.from({length:12},(_,i)=>`<option value="${i+1}">Envelope ${String(i+1).padStart(2,'0')}</option>`).join('');
+        slot.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
           <div class="text-fashion-gold font-cinzel tracking-widest text-xs">✦ THE CHALLENGE — ${esc(t.title)}</div>
           <p class="text-xs text-gray-300">${esc(t.subtitle)}</p>
           <p class="text-xs text-white">${esc(t.mandate)}</p>
-          ${t.extraField ? `<label class="block text-xs text-gray-300">${esc(t.extraField.label)}<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder || '')}"></label>` : ''}
-          ${t.slotLabels ? `<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>` : ''}
-          ${draw ? `<div class="border border-fashion-gold/50 rounded p-4 text-center"><div class="text-[10px] uppercase text-gray-400">Seu envelope foi revelado</div><strong class="text-fashion-gold">${esc(draw.value)}</strong></div>` :
-            themeHasDraw(t) || t.drawType === 'faction_choice' ? `${t.drawType === 'faction_choice' ? '<select id="factionChoice" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select>' : ''}<button id="btnRevealTwist" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">${t.drawType === 'faction_choice' ? 'Selar facção secreta' : 'Abrir meu envelope lacrado'}</button>` : ''}
+          ${t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
+          ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
+          ${isDraw?`<p class="text-xs text-amber-200">${t.drawType==='invitation_box_3d'?'💌 Abra sua Invitation Box e escolha um dos cinco envelopes lacrados em cada categoria. O conteúdo permanece secreto até a produção liberar a revelação.':'🎁 Escolha um dos 12 envelopes sem conhecer o conteúdo. Sua escolha será definitiva. Apenas a produção decide quando os resultados serão revelados.'}</p>`:''}
+          ${draw?`<div class="border border-fashion-gold/50 rounded p-4 text-center">
+              <div class="text-[10px] uppercase text-gray-400">${released?'ENVELOPE ABERTO':'🔒 ENVELOPE LACRADO'}</div>
+              <strong class="text-fashion-gold">${released?esc(draw.value):(t.drawType==='invitation_box_3d'?`COLOR ${esc(draw.weddingNumbers?.color||'?')} · ELEMENT ${esc(draw.weddingNumbers?.element||'?')} · PRINT ${esc(draw.weddingNumbers?.print||'?')} — aguardando revelação`:`Envelope ${esc(draw.envelope||'confirmado')} — aguardando liberação da produção`)}</strong>
+            </div>`:
+            (isDraw||t.drawType==='faction_choice')?
+            `<div class="space-y-3">${t.drawType==='invitation_box_3d'?`<div class="text-center py-3 border border-fashion-gold/30 rounded-lg bg-fashion-950/60"><div class="text-3xl mb-1">💌</div><div class="font-cinzel text-fashion-gold tracking-widest text-sm">THE INVITATION BOX</div><p class="text-xs text-gray-400 mt-1">Three little secrets. Choose your sealed invitations.</p></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-3">${[['color','🎨 COLOR'],['element','🧵 ELEMENT'],['print','🪡 PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded-lg p-3 bg-fashion-950/50"><div class="text-xs text-fashion-gold font-bold mb-2">${label}</div><input type="hidden" id="wedding_${key}" value=""><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-wedding-category="${key}" data-wedding-envelope="${n}" aria-pressed="false" class="wedding-envelope border border-fashion-gold/30 rounded-md py-3 px-0.5 text-center bg-fashion-900 hover:bg-fashion-gold/20 hover:border-fashion-gold transition-colors"><span class="block text-lg">✉️</span><span class="block text-[10px] text-fashion-gold mt-1">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><div id="wedding_status_${key}" class="text-[11px] text-gray-400 mt-2">🔒 Escolha um envelope</div></div>`).join('')}</div>`:t.drawType==='faction_choice'?
+                '<select id="factionChoice" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select>':
+                `<label class="block text-xs text-gray-300">ESCOLHA SEU ENVELOPE</label><select id="sealedEnvelope" class="w-full bg-fashion-950 border border-fashion-700 rounded p-3 text-white">${envelopeOptions}</select>`}
+                <button id="btnRevealTwist" ${gate.phase!=='selection'?'disabled':''} class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold disabled:opacity-50">${t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
+          ${gate.phase==='selection'?'':gate.phase==='locked'?'<p class="text-xs text-amber-200">A produção encerrou as escolhas. Aguarde a abertura dos envelopes.</p>':'<p class="text-xs text-fashion-gold">✨ A produção liberou os resultados!</p>'}
         </div>`;
-        const btn = document.getElementById('btnRevealTwist'); if (btn) btn.onclick = safeExec(revealPersonalTwist);
+        slot.querySelectorAll('[data-wedding-envelope]').forEach(envelope=>{
+            envelope.addEventListener('click',()=>{
+                if(gate.phase!=='selection')return;
+                const category=envelope.dataset.weddingCategory;
+                const number=envelope.dataset.weddingEnvelope;
+                const field=document.getElementById('wedding_'+category);
+                if(!field)return;
+                field.value=number;
+                slot.querySelectorAll('[data-wedding-category="'+category+'"]').forEach(el=>{
+                    const active=el===envelope;
+                    el.setAttribute('aria-pressed',String(active));
+                    el.classList.toggle('border-fashion-gold',active);
+                    el.classList.toggle('bg-fashion-gold/20',active);
+                    el.classList.toggle('ring-2',active);
+                    el.classList.toggle('ring-fashion-gold',active);
+                });
+                const status=document.getElementById('wedding_status_'+category);
+                if(status)status.textContent='💌 Envelope '+String(number).padStart(2,'0')+' selecionado — conteúdo lacrado';
+            });
+        });
+        const btn=document.getElementById('btnRevealTwist');if(btn)btn.onclick=safeExec(revealPersonalTwist);
     }
 
+    // REST IN STYLE — segunda etapa isolada da nota oficial da primeira passarela.
+    const restRef = () => db.doc(`rest_dinamicas/${globalState.rodada}`);
+    const restState = async () => (await restRef().get()).data() || {phase:'first'};
+    const restSecondLookId = uid => `${globalState.rodada}_${uid}_rest_funeral`;
+    const restCriteria = ['Criatividade e originalidade','Conceito e narrativa','Qualidade visual','Styling e composição','Interpretação do desafio'];
+    const supremeRef = () => db.doc(`supreme_etapas/${globalState.rodada}`);
+    const supremeState = async () => (await supremeRef().get()).data() || {phase:'submissions'};
+    const supremeVotes = async () => {
+        const snap=await db.collection('supreme_votos').where('rodada','==',globalState.rodada).get();
+        return snap.docs.map(d=>d.data());
+    };
+    const supremeResults = async () => {
+        if(!isAdmin) throw new Error('Apuração restrita à produção.');
+        const [ls, ps, votes]=await Promise.all([db.collection('looks').where('rodada','==',globalState.rodada).get(),db.collection('perfis').where('role','==','estilista').get(),supremeVotes()]);
+        const eligible=ps.docs.filter(d=>!d.data().out&&!d.data().disabled);
+        const looks=ls.docs.map(d=>({id:d.id,...d.data()}));
+        const missing=eligible.filter(p=>![1,2].every(slot=>looks.some(l=>l.uid===p.id&&l.slot===slot)));
+        if(missing.length) throw new Error('Faltam duas imagens de: '+missing.map(p=>p.data().ate||p.id).join(', '));
+        const absent=eligible.filter(p=>eligible.some(v=>v.id!==p.id&&!votes.some(x=>x.targetUid===p.id&&x.voterUid===v.id)));
+        if(absent.length) throw new Error('Votação incompleta para: '+absent.map(p=>p.data().ate||p.id).join(', '));
+        return eligible.map(p=>{
+            const a=votes.filter(v=>v.targetUid===p.id&&v.slot===1).length;
+            const b=votes.filter(v=>v.targetUid===p.id&&v.slot===2).length;
+            return {uid:p.id,ate:p.data().ate,old:a,next:b,slot:a>b?1:b>a?2:null};
+        });
+    };
+    const supremeTieRef = (uid) => db.doc(`supreme_desempates/${globalState.rodada}_${uid}`);
+    const supremeResolveTies = async (results) => {
+        const tied=results.filter(r=>!r.slot);
+        if(!tied.length) return results.map(r=>({...r,decidedBy:'majority'}));
+        const [votes,standings,icons,winVotes]=await Promise.all([
+            supremeVotes(),computeSeasonStandings(),tallyVotes('veto'),Promise.resolve(null)
+        ]);
+        const iconEntries=Object.entries(icons).filter(([,n])=>n>0);
+        let iconUid=null;
+        if(iconEntries.length){
+            const max=Math.max(...iconEntries.map(([,n])=>n));
+            const contenders=iconEntries.filter(([,n])=>n===max).map(([uid])=>uid);
+            if(contenders.length===1) iconUid=contenders[0];
+            else {
+                const ranked=contenders.map(uid=>standings.find(x=>x.uid===uid));
+                if(ranked.every(Boolean)){
+                    ranked.sort((a,b)=>b.rd-a.rd||b.tot-a.tot);
+                    if(ranked.length===1||ranked[0].rd!==ranked[1].rd||ranked[0].tot!==ranked[1].tot) iconUid=ranked[0].uid;
+                }
+            }
+        }
+        const win=standings.length?[...standings].sort((a,b)=>b.rd-a.rd||b.tot-a.tot)[0]:null;
+        return Promise.all(results.map(async r=>{
+            if(r.slot) return {...r,decidedBy:'majority'};
+            const iconVote=votes.find(v=>v.targetUid===r.uid&&v.voterUid===iconUid);
+            if(iconVote) return {...r,slot:iconVote.slot,decidedBy:'Ícone da Moda',deciderUid:iconUid};
+            const winVote=votes.find(v=>v.targetUid===r.uid&&v.voterUid===win?.uid);
+            if(winVote) return {...r,slot:winVote.slot,decidedBy:'WIN',deciderUid:win.uid};
+            const own=await supremeTieRef(r.uid).get();
+            if(own.exists&&[1,2].includes(own.data().slot)) return {...r,slot:own.data().slot,decidedBy:'própria maison',deciderUid:r.uid};
+            return {...r,decidedBy:'pending_self'};
+        }));
+    };
+    const supremeOwnTieStatus = async () => {
+        const snap=await supremeTieRef(currentUser.uid).get();
+        const pending=await db.doc(`supreme_pendencias/${globalState.rodada}_${currentUser.uid}`).get();
+        return pending.exists&&pending.data().pending&&!snap.exists?{decidedBy:'pending_self'}:null;
+    };
+    // A FAZENDA: ALL STARS — corrente pública somente após a ativação explícita.
+    const restaRef = () => db.doc(`resta_um/${globalState.rodada}`);
+    const restaState = async () => (await restaRef().get()).data() || null;
+    const restaCandidates = async () => {
+        const standings = await computeSeasonStandings();
+        if (standings.length < 4) throw new Error('O Resta Um exige ao menos quatro estilistas ativos.');
+        return [...standings].sort((a,b)=>b.rd-a.rd || b.tot-a.tot || a.uid.localeCompare(b.uid));
+    };
+    const restaChoose = async (targetUid) => {
+        if(globalState.themeId!=='theme_plaid_bay') throw new Error('O Resta Um não está ativo nesta semana.');
+        const ref=restaRef();
+        // Transação evita dois salvamentos simultâneos ou escolhas repetidas.
+        await db.runTransaction(async tx=>{
+            const snap=await tx.get(ref), data=snap.data();
+            if(!data || data.phase!=='active') throw new Error('A corrente não está aberta.');
+            if(data.currentUid!==currentUser.uid) throw new Error('Ainda não é sua vez de salvar.');
+            if(data.saved.includes(targetUid) || data.winUid===targetUid) throw new Error('Esta maison já está salva.');
+            const eligible=data.eligible||[];
+            if(!eligible.some(x=>x.uid===targetUid)) throw new Error('Maison não elegível.');
+            const nextSaved=[...data.saved,targetUid];
+            const remaining=eligible.filter(x=>!nextSaved.includes(x.uid));
+            const finished=remaining.length===1;
+            tx.update(ref,{
+                saved:nextSaved,
+                currentUid:finished?null:targetUid,
+                phase:finished?'pending_confirmation':'active',
+                lastUid:finished?remaining[0].uid:null,
+                history:[...(data.history||[]),{from:currentUser.uid,to:targetUid,at:Date.now()}],
+                updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+    };
+    const beautyRef = () => db.doc(`beauty_dinamicas/${globalState.rodada}`);
+    const beautyState = async () => (await beautyRef().get()).data() || {phase:'first'};
+    const beautyAssign = async () => {
+        if (!isAdmin || globalState.themeId !== 'theme_beauty_eye') throw new Error('Apenas a produção pode sortear os conceitos.');
+        const state = await beautyState();
+        if (state.phase !== 'first') throw new Error('O sorteio já foi realizado.');
+        const profiles = await db.collection('perfis').where('role','==','estilista').get();
+        const eligible = profiles.docs.filter(d=>!d.data().out && !d.data().disabled);
+        const looksSnap = await db.collection('looks').where('rodada','==',globalState.rodada).get();
+        const originals = looksSnap.docs.filter(d=>d.data().slot===1);
+        if (eligible.length < 2) throw new Error('É necessário ao menos dois estilistas.');
+        const map = new Map(originals.map(d=>[d.data().uid,{...d.data(),id:d.id}]));
+        const missing = eligible.filter(d=>!map.has(d.id));
+        if (missing.length) throw new Error('Primeiras entregas pendentes: '+missing.map(d=>d.data().ate||d.id).join(', '));
+        const ids = eligible.map(d=>d.id);
+        // Permutação circular com deslocamento não nulo: ninguém recebe o próprio conceito.
+        for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}
+        const shift = 1+Math.floor(Math.random()*(ids.length-1));
+        const assignments = ids.map((uid,i)=>({uid, sourceUid:ids[(i+shift)%ids.length], title:map.get(ids[(i+shift)%ids.length]).titulo, concept:map.get(ids[(i+shift)%ids.length]).mem}));
+        const payload = {phase:'assigned', assignments, createdBy:currentUser.uid, createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+        await beautyRef().set(payload);
+        await productionLog('beauty_concepts_assigned',{round:globalState.rodada, count:assignments.length});
+        return assignments;
+    };
     const ROTULOS_ABAS = {
         work: 'The Workroom',
         runway: 'The Runway',
-        tribunal: 'The Votes',
-        berlinda: 'Elimination Pool',
-        conf: 'Confessionário',
-        historico: 'Track Record',
-        bancada: "Judges' Table",
-        direcao: 'A Produção',
-        manual: 'O Manual'
+        tribunal: 'The Voting Room',
+        berlinda: 'The Elimination Pool',
+        conf: 'The Confessional Room',
+        historico: 'The Track Record',
+        bancada: "The Judges' Panel",
+        direcao: 'The Control Room',
+        manual: 'The Rulebook'
     };
 
     const ABAS_POR_PERFIL = {
@@ -541,6 +715,26 @@
         setTimeout(() => t.classList.add('hidden'), duration);
     };
 
+    // CONTROL ROOM: ações administrativas registradas, com data e responsável.
+    const productionLog = async (action, details = {}) => {
+        if (!isAdmin || !currentUser?.uid) throw new Error('Acesso exclusivo da produção.');
+        await db.collection('auditoria_producao').add({
+            action, details, round: globalState.rodada || null,
+            actor: currentUser.uid, actorName: currentUser.ate,
+            at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    };
+    const productionConfirm = (message) => isAdmin && window.confirm(message);
+    const saveProductionDraft = async (kind, payload) => {
+        if (!isAdmin) throw new Error('Acesso restrito.');
+        const round = globalState.rodada;
+        if (!round) throw new Error('Nenhuma rodada ativa.');
+        await db.collection('rascunhos_producao').doc(`${round}_${kind}`).set({
+            kind, round, payload, updatedBy: currentUser.uid,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(), status: 'private'
+        });
+        await productionLog('draft_saved', {kind, round});
+    };
     const renderView = html => { $('#mainView').innerHTML = html; };
     const sub = (query, callback) => unsubsTab.push(query.onSnapshot(callback, err => showToast(`Erro: ${err.message}`)));
 
@@ -761,26 +955,27 @@
         const S = [
             ['📖','01 · The Competition','Competição entre estilistas usando IA. Não basta uma imagem bonita: é preciso ideia, narrativa e identidade autoral.'],
             ['🎯','02 · The Challenges','Cada rodada traz um briefing com tema, requisitos, restrições e instruções. O briefing da rodada prevalece sobre o manual.'],
-            ['📸','03 · The Runway','Entrega obrigatória: FOTO + NOME DA CRIAÇÃO + CONCEITO (máx. 500 caracteres). Os três contam na avaliação.'],
+            ['📸','03 · The Runway','Entrega padrão: imagem original gerada por IA, título, conceito (máx. 500 caracteres, incluindo espaços) e prompt. Cada briefing pode exigir referências, campos extras ou múltiplos looks.'],
             ['⚖️','04 · The Judging','5 critérios de 0 a 10: criatividade, conceito, qualidade visual, styling e interpretação do desafio. Soma das médias = até 50 pontos.'],
             ['💬','05 · Judges\' Critiques','Críticas individuais para TOP e BOTTOM, e para o WIN da rodada anterior. Todos recebem suas notas.'],
             ['🏆','06 · The Results','WIN · TOP · SAFE · BOTTOM · THE ELIMINATION POOL · OUT. BOTTOM é o desempenho da semana; só o Pool pode ser eliminado.'],
             ['📈','07 · The Ranking','Ranking acumulado da temporada. Ele define quem entra no Elimination Pool: consistência também vence.'],
             ['👑','08 · The Win','Protege o estilista na vaga do ranking acumulado, só naquela rodada (não é imunidade). Decide o desempate do voto de salvamento.'],
-            ['✨','09 · Ícone da Moda','Voto secreto no melhor estilista. O Ícone escolhe o próximo tema às cegas, só com pistas. Não dá imunidade.'],
+            ['✨','09 · Ícone da Moda','Votação secreta, sem voto em si. O Ícone escolhe entre todos os temas ainda disponíveis, usando pistas; se não houver Ícone, o WIN escolhe. Não dá imunidade.'],
             ['🥀','10 · Fora de Moda','Voto secreto no pior estilista. Se empatar no salvamento, perde automaticamente.'],
-            ['🗳️','11 · The Votes','Todos os votos são secretos. Ninguém vota em si mesmo. Só os resultados são anunciados.'],
-            ['🚨','12 · The Elimination Pool','3 estilistas: os 2 piores da rodada + o pior do ranking acumulado (se já estiver no bottom, entra o próximo elegível).'],
+            ['🗳️','11 · The Voting Room','Todos os votos são secretos. Ninguém vota em si mesmo. Só os resultados são anunciados.'],
+            ['🚨','12 · The Elimination Pool','Normalmente três estilistas elegíveis à eliminação: os dois piores da rodada e o pior do acumulado ainda não incluído; twists podem alterar essa formação. BOTTOM é posição no ranking da rodada.'],
             ['🛟','13 · The Save Vote','Mais votado e 2º mais votado são salvos; o menos votado é OUT. Empate: Fora de Moda perde → Ícone tem prioridade → WIN decide.'],
             ['🔥','14 · Top 5 — The Final Filter','Rodada somada ao acumulado: 1º vai direto à final, 5º sai. Os 3 do meio disputam 2 vagas só pela nota do Top 5.'],
-            ['🏁','15 · The Grand Finale','Três finalistas, placar ZERADO, igualdade total. Vence quem brilhar na etapa final.'],
-            ['🎤','16 · Final Word','Respeite briefings e prazos, defenda suas ideias. THE RUNWAY IS YOURS. MAKE IT COUNT.']
+            ['🏁','15 · The Four Acts of a Legend','Três finalistas começam com placar zerado. Quatro editoriais, House Code e manifesto da Maison; cada ato vale até 50 pontos, totalizando até 200.'],
+            ['🎥','16 · The Confessional Room','Depoimentos livres publicados somente pelos estilistas e visíveis a todos. A produção pode moderar o conteúdo.'],
+            ['🎤','17 · Final Word','Respeite briefings e prazos, defenda suas ideias. THE RUNWAY IS YOURS. MAKE IT COUNT.']
         ];
         renderView(`
             <div class="space-y-5">
                 <div class="text-center space-y-2 py-4">
                     <span class="text-xs uppercase tracking-[0.3em] text-fashion-gold font-cinzel">F · A · U — Fashion, Art & Uniqueness</span>
-                    <h2 class="font-cinzel text-2xl">Manual Oficial do Participante</h2>
+                    <h2 class="font-cinzel text-2xl">The Rulebook · Manual Oficial do Participante</h2>
                     <p class="text-gray-400 italic text-xs">“In fashion, one day you're in, and the next day you're out.”</p>
                 </div>
                 ${S.map((x, i) => `
@@ -796,8 +991,8 @@
             renderView(`
                 <div class="bg-fashion-900 border border-fashion-700 p-12 rounded-lg text-center space-y-4 max-w-xl mx-auto my-12">
                     <i class="fa-solid fa-lock text-fashion-gold text-3xl"></i>
-                    <h2 class="font-cinzel text-xl text-white">O Confessionário está Trancado</h2>
-                    <p class="text-xs text-gray-400 leading-relaxed font-light">O Confessionário só será aberto quando a rodada for lançada pela Direção Executiva!</p>
+                    <h2 class="font-cinzel text-xl text-white">The Confessional Room está fechado</h2>
+                    <p class="text-xs text-gray-400 leading-relaxed font-light">A sala de depoimentos será aberta quando a produção liberar a rodada.</p>
                 </div>
             `);
             return;
@@ -826,7 +1021,7 @@
                     </div>
                 ` : `
                     <div class="bg-fashion-900 border border-fashion-700/60 p-3 rounded text-center text-xs text-gray-400">
-                        <i class="fa-solid fa-lock text-fashion-gold mr-1"></i> Apenas estilistas concorrentes gravam no Confessionário.
+                        <i class="fa-solid fa-lock text-fashion-gold mr-1"></i> Só estilistas publicam depoimentos; todos podem ler.
                     </div>
                 `}
             </div>
@@ -848,7 +1043,7 @@
                         <p class="text-fashion-sand text-xs leading-relaxed">${esc(m.txt)}</p>
                     </div>
                 `;
-            }).join('') || '<p class="text-gray-500 italic text-center py-8">Nenhum depoimento no Confessionário ainda.</p>';
+            }).join('') || '<p class="text-gray-500 italic text-center py-8">Ainda não há depoimentos no The Confessional Room.</p>';
             feed.scrollTop = feed.scrollHeight;
         });
 
@@ -893,7 +1088,7 @@
                     </div>
                 </div>
 
-                <div id="personalTwistSlot" class="mb-5"></div><div id="atelierSetupModule"></div>
+                <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <div id="workroomThermometer" class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg flex items-center justify-between text-xs"></div>
                 <div id="workroomFormModule"></div>
 
@@ -908,7 +1103,33 @@
             </div>
         `);
 
-        const refreshWorkroomUI = () => {
+        if(globalState.themeId==='theme_plaid_bay'){
+            const renderResta = data => {
+                const el=$('#restaUmWorkroom');if(!el)return;
+                if(!data || data.phase==='draft'){el.innerHTML='';return;}
+                const names=new Map((data.eligible||[]).map(x=>[x.uid,x.ate]));
+                const remaining=(data.eligible||[]).filter(x=>!data.saved.includes(x.uid));
+                const myTurn=data.phase==='active' && data.currentUid===currentUser.uid;
+                el.innerHTML=`<section class="bg-fashion-900 border border-fashion-gold rounded-lg p-5 space-y-4">
+                    <h3 class="font-cinzel text-fashion-gold text-xl">🤠 THE LAST ONE STANDING — RESTA UM</h3>
+                    <p class="text-xs text-gray-300">O WIN inicia a corrente. Cada estilista salvo escolhe o próximo pelo desempenho do look na passarela. Não escolha por afinidade.</p>
+                    <p class="text-sm">🏆 WIN: ${esc(names.get(data.winUid)||'—')}</p>
+                    <p class="text-sm">🎬 ${data.phase==='active'?'Aguardando a escolha de '+esc(names.get(data.currentUid)||'—'):'Corrente encerrada. A produção está conferindo a berlinda.'}</p>
+                    <div class="text-xs text-gray-400">${(data.history||[]).map((h,i)=>`<p>${i+1}. ${esc(names.get(h.from)||'—')} salvou ${esc(names.get(h.to)||'—')}</p>`).join('')}</div>
+                    ${myTurn?`<div class="space-y-3"><label class="text-xs text-fashion-gold">SALVE A MELHOR CRIAÇÃO AINDA DISPONÍVEL</label>
+                    <select id="restaTarget" class="w-full bg-fashion-950 border border-fashion-700 rounded p-3 text-white">${remaining.map(x=>`<option value="${esc(x.uid)}">${esc(x.ate)}</option>`).join('')}</select>
+                    <button id="btnRestaChoose" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR SALVAMENTO</button></div>`:''}
+                    </section>`;
+                if(myTurn) $('#btnRestaChoose').onclick=safeExec(async()=>{
+                    const target=$('#restaTarget').value;
+                    if(!window.confirm(`Salvar ${names.get(target)} por seu desempenho na passarela? A escolha é definitiva.`))return;
+                    await restaChoose(target);
+                    showToast('Maison salva! A corrente continua.');
+                });
+            };
+            sub(restaRef(),snap=>renderResta(snap.exists?snap.data():null));
+        }
+        const refreshWorkroomUI = async () => {
             const maisonName = currentUser.ate || '';
             const stilistaFixo = currentUser.estilistaFixo || '';
             const myBio = currentUser.bio || '';
@@ -969,8 +1190,56 @@
                 <span class="text-[10px] uppercase font-mono text-gray-500">Total na disputa: ${activeStylistsCount}</span>
             `;
 
+            const beauty = globalState.themeId === 'theme_beauty_eye' ? await beautyState() : null;
+            const beautyAssignment = beauty?.assignments?.find(a=>a.uid===currentUser.uid);
+            if (globalState.themeId === 'theme_rest_in_style') {
+                const rest = await restState();
+                const nominated = (rest.pool||[]).some(x=>x.uid===currentUser.uid);
+                const restLook = await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).get();
+                const box = document.createElement('section');
+                box.className='bg-fashion-950 border border-fashion-gold/50 rounded-lg p-5 mb-5 space-y-3';
+                if(rest.phase==='first') box.innerHTML='<h3 class="font-cinzel text-fashion-gold">🕯️ REST IN STYLE · THE FINAL FAREWELL</h3><p class="text-sm text-gray-300">Primeira etapa: funeral sem preto. A segunda cerimônia permanece lacrada.</p>';
+                else if(nominated && ['twist','judging','closed'].includes(rest.phase)) box.innerHTML=`<h3 class="font-cinzel text-fashion-gold">⚰️ YOUR OWN FUNERAL — THE LAST LOOK</h3><p class="text-sm text-gray-300">Você está entre os três homenageados. Crie seu último look sem NENHUM detalhe branco. Esta entrega é separada da primeira passarela.</p>${restLook.exists?'<p class="text-green-300">Seu último look já foi entregue.</p>':rest.phase==='twist'?`<input id="restTitle" class="w-full bg-black border border-fashion-700 rounded p-2 text-white" placeholder="Título do último look"><textarea id="restConcept" maxlength="500" class="w-full bg-black border border-fashion-700 rounded p-2 text-white" placeholder="Conceito (até 500 caracteres)"></textarea><textarea id="restPrompt" class="w-full bg-black border border-fashion-700 rounded p-2 text-white" placeholder="Prompt utilizado"></textarea><input id="restFile" type="file" accept="image/*" class="text-xs text-white"><button id="restSubmit" class="bg-fashion-gold text-black px-4 py-2 rounded text-xs font-bold">Enviar meu último look</button>`:'<p class="text-amber-300">Prazo encerrado pela produção.</p>'}`;
+                else box.innerHTML='<h3 class="font-cinzel text-fashion-gold">🕯️ THE LAST FAREWELL</h3><p class="text-sm text-gray-300">A produção convocou três estilistas para seu próprio funeral. Os demais serão convidados a avaliar as novas criações após a liberação.</p>';
+                document.querySelector('#workroomFormModule').before(box);
+                const submit=box.querySelector('#restSubmit');
+                if(submit) submit.onclick=safeExec(async()=>{
+                    const title=box.querySelector('#restTitle').value.trim(), concept=box.querySelector('#restConcept').value.trim(), prompt=box.querySelector('#restPrompt').value.trim(), file=box.querySelector('#restFile').files[0];
+                    if(!title||!concept||!prompt||!file||concept.length>500) throw new Error('Preencha título, conceito, prompt e imagem (conceito até 500 caracteres).');
+                    if((await restState()).phase!=='twist') throw new Error('A segunda etapa foi encerrada.');
+                    if((await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).get()).exists) throw new Error('Seu último look já foi entregue.');
+                    const url=await compressImageToBase64(file);
+                    await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).set({uid:currentUser.uid,ate:currentUser.ate,rodada:globalState.rodada,titulo:title,mem:concept,prompt,url,t:now()});
+                    showToast('Seu último look foi entregue em sigilo.'); navigate('work');
+                });
+            }
+            if(globalState.themeId==='theme_next_supreme') {
+                const ss=await supremeState();
+                if(ss.phase==='closed') {
+                    const mine=await supremeOwnTieStatus();
+                    if(mine && mine.decidedBy==='pending_self') {
+                        const tieBox=document.createElement('section');
+                        tieBox.className='bg-fashion-950 border border-fashion-gold rounded-lg p-5 mb-5 space-y-3';
+                        tieBox.innerHTML=`<h3 class="font-cinzel text-fashion-gold">👑 THE FINAL SAY · YOUR CROWN</h3><p class="text-xs text-gray-300">A votação terminou empatada. O Ícone da Moda e o WIN não conseguiram desempatar sua disputa. Você decide qual Suprema continuará.</p><div class="flex gap-2"><button data-own-supreme="1" class="bg-fashion-gold text-black px-4 py-2 rounded">OLD SUPREME</button><button data-own-supreme="2" class="bg-fashion-gold text-black px-4 py-2 rounded">NEXT SUPREME</button></div>`;
+                        document.querySelector('#workroomFormModule').before(tieBox);
+                        tieBox.querySelectorAll('[data-own-supreme]').forEach(btn=>btn.onclick=safeExec(async()=>{
+                            if((await supremeState()).phase!=='closed') throw new Error('A decisão já foi encerrada.');
+                            const slot=Number(btn.dataset.ownSupreme);
+                            if(!productionConfirm('Confirmar sua escolha definitiva?')) return;
+                            await supremeTieRef(currentUser.uid).set({uid:currentUser.uid,rodada:globalState.rodada,slot,decidedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                            showToast('Sua decisão foi registrada em sigilo.');navigate('work');
+                        }));
+                    }
+                }
+            }
             const formSlot = $('#workroomFormModule');
-            if (currentRoundLooks.length >= requiredLooks) {
+            if (beauty && currentRoundLooks.length===1 && beauty.phase==='first') {
+                formSlot.innerHTML = `<div class="bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg text-center space-y-3">
+                    <h3 class="font-cinzel text-fashion-gold">👁️ THE EXHIBITION IS NOT OVER YET</h3>
+                    <p class="text-sm text-gray-300">Sua primeira visão está guardada. A produção está recolhendo os conceitos antes de abrir a segunda etapa.</p></div>`;
+            } else if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
+                formSlot.innerHTML = '<p class="text-amber-300">Seu envelope ainda não foi distribuído. Avise a produção.</p>';
+            } else if (currentRoundLooks.length >= requiredLooks) {
                 formSlot.innerHTML = `
                     <div class="bg-fashion-900 border border-green-800/40 p-6 rounded-lg text-center space-y-2">
                         <i class="fa-solid fa-circle-check text-green-500 text-2xl"></i>
@@ -1025,6 +1294,46 @@
                     </div>
                 `;
 
+                if (isFinalPhase) {
+                    const actIndex = currentRoundLooks.length;
+                    const actTitles = ['🌍 ACT I — THE ORIGIN','♻️ ACT II — THE REINVENTION','⚔️ ACT III — THE CONFRONTATION','👑 ACT IV — THE LEGEND'];
+                    const actHints = [
+                      'Escolha a raiz histórica, cultural ou estética da Maison. Transforme sua essência em moda, sem fantasia literal.',
+                      'Reinterprete um look que recebeu oficialmente FORA DE MODA. Preserve elementos reconhecíveis, mas transforme-o pela identidade da sua Maison.',
+                      'Reinterprete um look que recebeu oficialmente ÍCONE DA MODA. Preserve a essência e apresente uma assinatura autoral própria.',
+                      'Apresente a imagem definitiva da Maison: o legado, a assinatura e a evolução dos três atos anteriores.'
+                    ];
+                    const previousFinal = currentRoundLooks[0]?.finaleMeta || {};
+                    const shared = actIndex===0 ? `<div class="space-y-3 border-t border-fashion-700 pt-4">
+                      <h4 class="font-cinzel text-fashion-gold">🧵 THE HOUSE CODE · IDENTIDADE DA MAISON</h4>
+                      <label class="block text-xs text-gray-300">Nome da Maison<input id="finalMaison" maxlength="100" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" value="${esc(currentUser.ate||'')}" placeholder="Nome oficial da Maison"></label>
+                      <label class="block text-xs text-gray-300">Referência de origem<input id="finalOrigin" maxlength="180" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" placeholder="Movimento, cultura, período ou estética"></label>
+                      ${[['Silhueta','finalSilhouette'],['Materiais e texturas','finalMaterials'],['Paleta de cores','finalPalette'],['Detalhes de assinatura','finalSignature'],['Filosofia criativa','finalPhilosophy']].map(([label,id])=>`<label class="block text-xs text-gray-300">${label}<textarea id="${id}" maxlength="500" rows="2" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white"></textarea></label>`).join('')}
+                      <label class="block text-xs text-gray-300">Collection Manifesto — a história dos quatro atos<textarea id="finalManifesto" maxlength="3000" rows="4" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" placeholder="Explique a visão da Maison e como os quatro capítulos se conectam"></textarea></label>
+                    </div>` : `<div class="text-xs text-gray-300 border border-fashion-gold/30 rounded p-3">🧵 Maison: <strong>${esc(previousFinal.maison||currentUser.ate||'—')}</strong> · Origem: ${esc(previousFinal.origin||'—')}. Mantenha o House Code nos quatro editoriais.</div>`;
+                    const archive = actIndex===1 || actIndex===2 ? `<label class="block text-xs text-gray-300">📜 Referência oficial do arquivo (look, estilista e rodada)<textarea id="finalArchive" maxlength="600" rows="3" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" placeholder="Nome do look original, Maison/estilista responsável e rodada em que recebeu o título oficial"></textarea></label>` : '';
+                    formSlot.insertAdjacentHTML('afterbegin', `<section class="bg-fashion-950 border border-fashion-gold/50 rounded-lg p-5 mb-4 space-y-3">
+                      <h3 class="font-cinzel text-fashion-gold text-lg">${actTitles[actIndex]||'THE FINAL SHOW'}</h3>
+                      <p class="text-xs text-gray-300">${actHints[actIndex]||''}</p>
+                      <p class="text-xs text-fashion-gold">Cada ato vale até 50 pontos · Coleção completa: 200 pontos · Placar da temporada zerado</p>
+                      ${shared}${archive}
+                    </section>`);
+                }
+                if (globalState.themeId==='w02_new_form') {
+                    const original=allMyLooks.find(l=>l.themeId==='w01_first_garment');
+                    formSlot.insertAdjacentHTML('afterbegin', `<section class="bg-fashion-950 border border-fashion-gold/50 rounded-lg p-5 mb-4 space-y-3">
+                        <h3 class="font-cinzel text-fashion-gold">🔮 FROM THE FIRST GARMENT TO A NEW FORM</h3>
+                        ${original?`<div class="flex flex-col sm:flex-row gap-4"><img src="${esc(original.url)}" class="w-full sm:w-40 rounded object-cover" alt="Seu look da Week 01"><div><p class="text-sm text-white font-semibold">${esc(original.titulo)}</p><p class="text-xs text-gray-300 italic mt-2">${esc(original.mem)}</p></div></div>`:'<p class="text-xs text-amber-300">Sua criação da Week 01 não foi encontrada. Avise a produção antes de enviar.</p>'}
+                        <p class="text-xs text-gray-300">Recupere um elemento visual reconhecível da sua primeira criação, transforme-o e explique a conexão no conceito. Não é necessário criar uma estética futurista.</p>
+                    </section>`);
+                }
+                if (beauty && currentRoundLooks.length===1 && beautyAssignment) {
+                    formSlot.insertAdjacentHTML('afterbegin', `<div class="bg-fashion-950 border border-fashion-gold rounded-lg p-5 mb-4 space-y-3">
+                        <div class="text-fashion-gold font-cinzel">🎭 ANOTHER POINT OF VIEW — YOUR SEALED CONCEPT</div>
+                        <h3 class="text-white font-cinzel">${esc(beautyAssignment.title)}</h3>
+                        <p class="text-sm text-gray-300 italic">${esc(beautyAssignment.concept)}</p>
+                        <p class="text-xs text-amber-200">Você recebeu apenas título e conceito. A imagem e a identidade original continuam em segredo. Crie uma releitura com título próprio.</p></div>`);
+                }
                 $('#aiPromptText').oninput = e => {
                     $('#promptCharCounter').textContent = `${e.target.value.length} / 1000 letras`;
                 };
@@ -1034,6 +1343,7 @@
             }
 
             renderPersonalTwist().catch(console.error);
+            if(themeHasDraw(getTheme())) sub(drawGateRef(),()=>renderPersonalTwist().catch(console.error));
             $('#myLooksCount').textContent = `${allMyLooks.length} looks`;
             $('#myLooksArchiveGrid').innerHTML = allMyLooks.map(l => {
                 const lookEvals = myEvaluations.filter(e => e.look === l.id);
@@ -1103,9 +1413,39 @@
                 if (!promptTxt || !file || !lookTitle || !memorial) throw new Error('Preencha todos os campos da entrega (Prompt, Foto, Nome e Conceito).');
 
                 const theme = getTheme();
+                const beauty = theme?.id === 'theme_beauty_eye' ? await beautyState() : null;
+                const previousLooks = allMyLooks.filter(l=>l.rodada===globalState.rodada);
+                if (beauty && previousLooks.length===1 && (beauty.phase!=='assigned' || !beauty.assignments?.some(a=>a.uid===currentUser.uid))) throw new Error('Aguarde a produção liberar seu conceito.');
+                if (beauty && previousLooks.length===0 && beauty.phase!=='first') throw new Error('A primeira etapa já foi encerrada. Procure a produção.');
+                if(theme?.id==='w02_new_form' && !allMyLooks.some(l=>l.themeId==='w01_first_garment')) throw new Error('Sua criação da Week 01 não foi encontrada. Procure a produção para regularizar o histórico antes de enviar A New Form.');
                 const draw = theme ? await getPersonalTwist() : null;
+                if(themeHasDraw(theme)){
+                    const gate=await getDrawGate();
+                    if(gate.phase!=='released')throw new Error('Aguarde a produção liberar o resultado do seu envelope antes de enviar o look.');
+                }
                 if (theme && (themeHasDraw(theme) || theme.drawType === 'faction_choice') && !draw) throw new Error('Abra seu envelope antes de enviar o look.');
                 if (theme?.extraField && !document.getElementById('themeExtraInput')?.value.trim()) throw new Error('Preencha a exigência especial deste desafio.');
+                if(theme?.id==='theme_climate_chaos') {
+                    if(!draw || draw.themeId!=='theme_climate_chaos' || !draw.value || !draw.value.includes(' + ')) throw new Error('Seu sorteio das duas estações está ausente ou inválido. Procure a produção.');
+                    const interpretation=document.getElementById('themeExtraInput')?.value.trim()||'';
+                    if(interpretation.length<20) throw new Error('Explique como as duas estações estão presentes visualmente no mesmo look (pelo menos 20 caracteres).');
+                }
+                let finaleMeta = null;
+                if (isFinalPhase) {
+                    const previousFinalLooks = allMyLooks.filter(l=>l.rodada===globalState.rodada);
+                    if (previousFinalLooks.length===0) {
+                        const val=id=>document.getElementById(id)?.value.trim()||'';
+                        finaleMeta = {maison:val('finalMaison'),origin:val('finalOrigin'),silhouette:val('finalSilhouette'),materials:val('finalMaterials'),palette:val('finalPalette'),signature:val('finalSignature'),philosophy:val('finalPhilosophy'),manifesto:val('finalManifesto')};
+                        if(Object.values(finaleMeta).some(v=>!v)) throw new Error('Preencha o nome da Maison, referência de origem, os cinco códigos da Maison e o manifesto da coleção.');
+                    } else {
+                        finaleMeta = {...(previousFinalLooks[0].finaleMeta||{})};
+                    }
+                    if(previousFinalLooks.length===1 || previousFinalLooks.length===2) {
+                        const archive=document.getElementById('finalArchive')?.value.trim()||'';
+                        if(!archive) throw new Error('Identifique o look original, seu estilista e a rodada do título oficial.');
+                        finaleMeta.archiveReference=archive;
+                    }
+                }
                 const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada);
                 if (currentRoundLooks.length >= (theme?.numSubmissoes || globalState.numSubmissoes || 1)) throw new Error('Todas as entregas desta rodada já foram enviadas.');
                 showToast('Otimizando imagem da IA e enviando...');
@@ -1122,8 +1462,10 @@
                     prompt: promptTxt,
                     themeId: theme?.id || null,
                     slot: index + 1,
-                    twistValue: draw?.value || null,
+                    twistValue: ['theme_traitors','theme_beauty_eye'].includes(theme?.id) ? null : (draw?.value || null),
+                    beautySourceUid: beauty && index===1 ? beauty.assignments.find(a=>a.uid===currentUser.uid)?.sourceUid : null,
                     themeExtra: document.getElementById('themeExtraInput')?.value.trim() || '',
+                    finaleMeta: finaleMeta,
                     titulo: lookTitle,
                     url: photoBase64,
                     mem: memorial,
@@ -1165,12 +1507,22 @@
 
     // 3. HISTÓRICO DA TEMPORADA & GALERIA DE ELIMINAÇÕES
     VIEWS.historico = async () => {
+        if (globalState.themeId === 'theme_traitors') {
+            const ref = db.doc(`revelacoes_traitors/${globalState.rodada}`);
+            sub(ref, snap => {
+                const slot = document.getElementById('banquetRevealSlot');
+                if (!slot) return;
+                const data = snap.data();
+                slot.innerHTML = data?.published ? `<div class="bg-fashion-900 border border-fashion-gold rounded-xl p-5 space-y-3"><h3 class="font-cinzel text-fashion-gold text-lg">🗡️ THE BLACK BANQUET — THE REVEAL</h3><p class="text-gray-300 text-xs">Before you leave my castle forever, you must reveal to us: are you a Faithful or are you a Traitor?</p><div class="grid sm:grid-cols-2 gap-2">${(data.members||[]).map(x=>`<div class="border border-fashion-700 rounded p-3 text-xs"><b>${esc(x.ate)}</b><div class="text-fashion-gold mt-1">${esc(x.faction)}</div></div>`).join('')}</div></div>` : '';
+            });
+        }
         renderView(`
             <div class="space-y-8">
+                ${globalState.themeId === 'theme_traitors' ? '<div id="banquetRevealSlot"></div>' : ''}
                 <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
                     <div>
                         <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Desempenho Geral</span>
-                        <h2 class="font-cinzel text-xl text-white font-normal">Histórico da Temporada (Track Record)</h2>
+                        <h2 class="font-cinzel text-xl text-white font-normal">The Track Record · Histórico da Temporada</h2>
                     </div>
                 </div>
                 <div id="trackRecordTableContainer" class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg overflow-x-auto text-xs font-mono">
@@ -1297,6 +1649,7 @@
     VIEWS.bancada = () => {
         let looks = [];
         let evaluations = {};
+        let week01References = new Map();
         let currentMediaRecorder = null;
         let audioChunks = [];
 
@@ -1326,7 +1679,29 @@
             </div>
         `);
 
-        const refreshJuryUI = () => {
+        const creativeDossier = (look) => {
+        const theme=SEASON_THEMES[look.themeId] || getTheme();
+        const extra=look.themeExtra?.trim();
+        const twist=look.twistValue?.trim();
+        const fm=look.finaleMeta;
+        if(!extra && !twist && !fm)return '';
+        const finalDossier=fm ? `<div class="space-y-1 text-xs text-gray-300 border-t border-fashion-700 pt-2">
+          <p><strong class="text-fashion-gold">🏛️ Maison:</strong> ${esc(fm.maison||'—')}</p>
+          <p><strong class="text-fashion-gold">🌍 Referência de origem:</strong> ${esc(fm.origin||'—')}</p>
+          ${fm.archiveReference?`<p><strong class="text-fashion-gold">📜 Look do arquivo:</strong> ${esc(fm.archiveReference)}</p>`:''}
+          <p><strong>House Code:</strong> ${esc([fm.silhouette,fm.materials,fm.palette,fm.signature,fm.philosophy].filter(Boolean).join(' · '))}</p>
+          ${fm.manifesto?`<p><strong>Manifesto:</strong> ${esc(fm.manifesto)}</p>`:''}
+        </div>` : '';
+        const label=theme?.id==='theme_amoras_cut' ? '🎬 Personagem em cena' : (theme?.extraField?.label || 'Referência obrigatória');
+        return `<section class="bg-fashion-950 border border-fashion-gold/40 rounded p-3 space-y-2">
+          <p class="font-cinzel text-[10px] uppercase tracking-wider text-fashion-gold">✦ Creative Dossier — Especificações da Criação</p>
+          ${twist?`<p class="text-xs text-white"><span class="text-gray-400">🎁 Sorteio:</span> ${esc(twist)}</p>`:''}
+          ${extra?`<p class="text-xs text-white"><span class="text-gray-400">${esc(label)}:</span> ${esc(extra)}</p>`:''}
+          ${finalDossier}
+        </section>`;
+    };
+
+    const refreshJuryUI = () => {
             const container = $('#juryCardsContainer');
             if (!looks.length) {
                 container.innerHTML = `<div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg text-center text-gray-500 text-xs">Aguardando as maisons enviarem suas criações geradas por IA.</div>`;
@@ -1358,6 +1733,8 @@
                             <div class="md:col-span-4 space-y-3">
                                 <img src="${esc(look.url)}" class="w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
                                 <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(look.ate)} <span class="text-[10px] text-gray-400 font-sans block">Estilista Fixo: ${esc(look.estilistaFixo || 'N/D')}</span></div>
+                                ${creativeDossier(look)}
+                                ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}<p class="text-xs text-gray-300">Elemento reinterpretado: ${esc(look.themeExtra||'Não informado')}</p></div>`;})() : ''}
                                 <div class="bg-fashion-950 p-2.5 rounded border border-fashion-700 space-y-1">
                                     <span class="text-[9px] uppercase tracking-wider text-fashion-gold font-bold font-cinzel block">Prompt Enviado pelo Estilista:</span>
                                     <p class="text-[11px] text-gray-300 font-mono bg-black/40 p-2 rounded">${esc(look.prompt)}</p>
@@ -1376,7 +1753,7 @@
                                 </div>
 
                                 <div class="space-y-3">
-                                    ${CRITERIOS.map((c, i) => `
+                                    ${(globalState.themeId==='theme_beauty_eye' && look.slot===2 ? CRITERIOS.map((c,i)=>i===1?'Fidelidade à essência do conceito recebido':c) : CRITERIOS).map((c, i) => `
                                         <div class="space-y-1">
                                             <div class="flex justify-between text-gray-300">
                                                 <span>${c}</span>
@@ -1485,6 +1862,7 @@
         });
 
         const saveSingleEvaluation = async lookId => {
+            if(globalState.themeId==='theme_next_supreme' && !looks.some(l=>l.id===lookId)) throw new Error('Apenas a Suprema vencedora pode ser avaliada.');
             const targetLook = looks.find(l => l.id === lookId);
             const sliders = [...document.querySelectorAll(`.score-slider[data-look-id="${lookId}"]`)];
             const scores = sliders.map(s => Number(s.value));
@@ -1512,10 +1890,23 @@
             showToast('Todas as notas foram enviadas para a direção!');
         });
 
-        sub(db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
-            looks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        let supremeAllJuryLooks=[];
+        let supremeJuryState=null;
+        const refreshSupremeJury=()=>{
+            looks=globalState.themeId==='theme_next_supreme'
+                ? (supremeJuryState?.phase==='selected' ? supremeAllJuryLooks.filter(l=>supremeJuryState.winners?.some(w=>w.uid===l.uid&&w.slot===l.slot)) : [])
+                : supremeAllJuryLooks;
+            refreshJuryUI();
+        };
+        if(globalState.themeId==='w02_new_form') sub(db.collection('looks').where('themeId','==','w01_first_garment'),snap=>{
+            week01References=new Map(snap.docs.map(d=>[d.data().uid,{id:d.id,...d.data()}]));
             refreshJuryUI();
         });
+        sub(db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
+            supremeAllJuryLooks=snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            refreshSupremeJury();
+        });
+        if(globalState.themeId==='theme_next_supreme') sub(supremeRef(),snap=>{supremeJuryState=snap.data()||null;refreshSupremeJury();});
 
         sub(db.collection('avaliacoes').where('jurado', '==', currentUser.uid), snap => {
             evaluations = {};
@@ -1525,8 +1916,12 @@
     };
 
     // 5. THE RUNWAY (A PASSARELA)
-    VIEWS.runway = () => {
-        if (!globalState.liberado && !isAdmin) {
+    VIEWS.runway = async () => {
+        if (globalState.themeId==='theme_beauty_eye' && !isAdmin && (await beautyState()).phase!=='exhibition') {
+            renderView('<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-8 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">👁️ THE EXHIBITION IS NOT OPEN</h2><p class="text-sm text-gray-300 mt-3">As duas visões permanecem em segredo até a autorização da produção.</p></div>');
+            return;
+        }
+        if (!globalState.liberado && !isAdmin && !(globalState.themeId==='theme_next_supreme' && (await supremeState()).phase==='voting')) {
             renderView(`
                 <div class="bg-fashion-900 border border-fashion-700 p-12 rounded-lg text-center space-y-4 max-w-xl mx-auto my-12">
                     <i class="fa-solid fa-lock text-fashion-gold text-3xl"></i>
@@ -1541,6 +1936,10 @@
         let reactions = [];
         let critiques = [];
         let selectedFaceOff = [];
+        let banquetBroadcast = null;
+        let beautyBroadcast = null;
+        let supremeBroadcast = null;
+        let supremeMyVotes = [];
 
         renderView(`
             <div class="space-y-8">
@@ -1551,9 +1950,10 @@
                     </div>
                 </div>
 
+                <div id="supremeVotingBox"></div>
                 <div id="publishedRankingBox"></div>
                 <div id="faceOffComparisonBox" class="hidden bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg space-y-4"></div>
-                <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+                <div id="runwayGroups"></div><div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
             </div>
         `);
 
@@ -1584,7 +1984,43 @@
                 foBox.classList.add('hidden');
             }
 
-            $('#runwayGrid').innerHTML = looks.map(look => {
+            if(globalState.themeId==='theme_next_supreme') {
+                const box=$('#supremeVotingBox');
+                const pairs=[...new Set(looks.map(l=>l.uid))].map(uid=>({uid,items:looks.filter(l=>l.uid===uid)})).filter(p=>p.items.length===2);
+                if(supremeBroadcast?.phase==='voting' && currentUser.role==='estilista') {
+                    box.innerHTML=`<div class="border border-fashion-gold rounded-xl bg-fashion-950 p-5 space-y-5"><h3 class="font-cinzel text-fashion-gold text-xl">👑 THE SUPREME VOTE · THE PEOPLE DECIDE</h3><p class="text-xs text-gray-300">Escolha secretamente UMA Suprema por maison. Não é permitido votar na própria maison.</p>${pairs.filter(p=>p.uid!==currentUser.uid).map(p=>{
+                        const old=p.items.find(l=>l.slot===1),next=p.items.find(l=>l.slot===2);
+                        const mine=supremeMyVotes.find(v=>v.targetUid===p.uid);
+                        return `<section class="border-t border-fashion-gold/30 pt-4 space-y-3"><h4 class="font-cinzel text-white">${esc(old?.ate||next?.ate)}</h4><div class="grid grid-cols-2 gap-3">${[old,next].map((l,i)=>`<div class="space-y-2"><img src="${esc(l?.url||'')}" class="w-full img-look rounded"><p class="text-xs text-fashion-gold">${i===0?'👑 OLD SUPREME':'⚡ NEXT SUPREME'}</p><button data-supreme-vote="${esc(p.uid)}|${i+1}" class="w-full rounded px-2 py-2 text-xs ${mine?.slot===i+1?'bg-fashion-gold text-black':'bg-fashion-800 text-white border border-fashion-gold/40'}">${mine?.slot===i+1?'✓ Seu voto':'Votar para salvar'}</button></div>`).join('')}</div></section>`;
+                    }).join('')}</div>`;
+                    $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML=''; return;
+                }
+                box.innerHTML='';
+                if(supremeBroadcast?.phase==='selected') {
+                    const winners=supremeBroadcast.winners||[];
+                    $('#runwayGrid').innerHTML=looks.filter(l=>winners.some(w=>w.uid===l.uid&&w.slot===l.slot)).map(renderLook).join('');
+                    $('#runwayGroups').innerHTML='';return;
+                }
+                if(!isAdmin) {
+                    $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML='<div class="text-center text-gray-300 bg-fashion-900 border border-fashion-gold/30 rounded p-8">👑 As Supremas permanecem nos bastidores até a decisão da produção.</div>';return;
+                }
+            }
+            if (globalState.themeId==='theme_beauty_eye' && beautyBroadcast?.phase==='exhibition') {
+                const originals=looks.filter(l=>l.slot===1);
+                const assignments=beautyBroadcast.assignments||[];
+                $('#runwayGroups').innerHTML=`<div class="space-y-6">${originals.map(original=>{
+                    const recipient=assignments.find(a=>a.sourceUid===original.uid);
+                    const second=looks.find(l=>l.slot===2 && l.uid===recipient?.uid);
+                    return `<section class="bg-fashion-950 border border-fashion-gold/40 p-5 rounded-lg space-y-4"><h3 class="font-cinzel text-fashion-gold">${esc(original.titulo)}</h3><p class="text-sm text-gray-300 italic">${esc(original.mem)}</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><p class="text-xs text-fashion-gold mb-2">MY VISION · ${esc(original.ate)}</p><img class="w-full img-look rounded" src="${esc(original.url)}"></div>
+                    ${second?`<div><p class="text-xs text-fashion-gold mb-2">ANOTHER POINT OF VIEW · ${esc(second.ate)}</p><img class="w-full img-look rounded" src="${esc(second.url)}"><p class="text-xs text-gray-300 mt-2">${esc(second.titulo)}</p></div>`:'<p class="text-xs">Releitura indisponível</p>'}</div></section>`;
+                }).join('')}</div>`;
+                $('#runwayGrid').innerHTML='';
+                return;
+            }
+            const grouped = globalState.themeId === 'theme_traitors' && banquetBroadcast?.activated && (isAdmin || globalState.liberado);
+            const groupsBox = $('#runwayGroups');
+            const renderLook = look => {
                 const reactCounts = {};
                 reactions.filter(r => r.look === look.id).forEach(r => reactCounts[r.e] = (reactCounts[r.e] || 0) + 1);
                 const lookCritiques = critiques.filter(c => c.look === look.id);
@@ -1605,6 +2041,7 @@
                             <img src="${esc(look.url)}" class="w-full img-look rounded border border-fashion-700 shadow" loading="lazy">
                             <div class="font-cinzel text-fashion-gold font-bold text-xs">${esc(look.titulo || 'Look Sem Nome')}</div>
                             <p class="text-[11px] text-gray-400 italic line-clamp-3 leading-relaxed">${esc(look.mem)}</p>
+                            ${creativeDossier(look)}
                         </div>
 
                         <div class="space-y-2 pt-2 border-t border-fashion-700/60">
@@ -1632,10 +2069,37 @@
                         </div>
                     </div>
                 `;
-            }).join('');
+            };
+            if (grouped) {
+                const byUid = new Map((banquetBroadcast.members || []).map(m => [m.uid,m.faction]));
+                const makeSection = (faction, heading, symbol) => {
+                    const items = looks.filter(l => byUid.get(l.uid) === faction);
+                    return `<section class="bg-fashion-950 border border-fashion-gold/30 rounded-xl p-5 space-y-4">
+                        <div class="border-b border-fashion-gold/30 pb-3"><p class="text-fashion-gold text-[10px] tracking-[.3em] uppercase">THE BLACK BANQUET · THE RUNWAY</p>
+                        <h3 class="font-cinzel text-white text-xl mt-2">${symbol} ${heading}</h3>
+                        <p class="text-gray-400 text-xs mt-1">${items.length} criação(ões) · As facções foram autorizadas pela produção</p></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">${items.map(renderLook).join('')}</div>
+                    </section>`;
+                };
+                groupsBox.innerHTML = `<div class="space-y-6">${makeSection('Faithful','THE FAITHFUL','🕊️')}${makeSection('Traitor','THE TRAITORS','🗡️')}</div>`;
+                $('#runwayGrid').innerHTML = '';
+            } else {
+                groupsBox.innerHTML = '';
+                $('#runwayGrid').innerHTML = looks.map(renderLook).join('');
+            }
         };
 
         $('#mainView').onclick = safeExec(async e => {
+            const supremeBtn=e.target.closest('button[data-supreme-vote]');
+            if(supremeBtn) {
+                if(globalState.themeId!=='theme_next_supreme'||currentUser.role!=='estilista'||supremeBroadcast?.phase!=='voting') throw new Error('A votação Supreme não está aberta.');
+                const [targetUid,rawSlot]=supremeBtn.dataset.supremeVote.split('|');
+                if(targetUid===currentUser.uid) throw new Error('Você não pode votar na própria maison.');
+                const slot=Number(rawSlot);
+                if(![1,2].includes(slot)) throw new Error('Suprema inválida.');
+                await db.doc(`supreme_votos/${globalState.rodada}_${currentUser.uid}_${targetUid}`).set({rodada:globalState.rodada,voterUid:currentUser.uid,targetUid,slot,t:now()});
+                showToast('Voto secreto registrado.');return;
+            }
             const reactBtn = e.target.closest('button[data-react]');
             if (reactBtn) {
                 const [lookId, emoji] = reactBtn.dataset.react.split('|');
@@ -1678,6 +2142,19 @@
             looks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             refreshRunwayUI();
         });
+        if(globalState.themeId==='theme_next_supreme') {
+            sub(supremeRef(),snap=>{supremeBroadcast=snap.data()||null;refreshRunwayUI();});
+            if(currentUser.role==='estilista') sub(db.collection('supreme_votos').where('rodada','==',globalState.rodada).where('voterUid','==',currentUser.uid),snap=>{supremeMyVotes=snap.docs.map(d=>d.data());refreshRunwayUI();});
+        }
+        if (globalState.themeId === 'theme_beauty_eye') {
+            sub(beautyRef(), snap => {beautyBroadcast=snap.exists?snap.data():null;refreshRunwayUI();});
+        }
+        if (globalState.themeId === 'theme_traitors') {
+            sub(db.doc(`revelacoes_traitors/${globalState.rodada}`), snap => {
+                banquetBroadcast = snap.exists ? snap.data() : null;
+                refreshRunwayUI();
+            });
+        }
 
         sub(db.collection('reacoes').where('rodada', '==', globalState.rodada), snap => {
             reactions = snap.docs.map(d => d.data());
@@ -1692,7 +2169,7 @@
         sub(db.doc('ranking/atual'), snap => {
             const rk = snap.data();
             const box = $('#publishedRankingBox');
-            if (!rk || !rk.rows) {
+            if (!rk || !rk.rows || rk.rodada !== globalState.rodada || (!globalState.liberado && !isAdmin)) {
                 box.innerHTML = '';
                 return;
             }
@@ -1720,7 +2197,25 @@
     };
 
     // 6. VOTAÇÃO DO ELENCO (ÍCONE & FORA DE MODA)
-    VIEWS.tribunal = () => {
+    VIEWS.tribunal = async () => {
+        if(globalState.themeId==='theme_rest_in_style'){
+            const st=await restState();
+            if(st.phase==='judging'&&currentUser.role==='estilista'&&!(st.pool||[]).some(x=>x.uid===currentUser.uid)){
+                const snaps=await Promise.all(st.pool.map(x=>db.doc(`rest_looks/${restSecondLookId(x.uid)}`).get()));
+                renderView(`<div class="space-y-6"><h2 class="font-cinzel text-fashion-gold text-2xl">🕯️ THE LAST JUDGMENT</h2><p class="text-gray-300 text-sm">Você está entre os convidados. Avalie individualmente os três últimos looks (0 a 10 em cada critério). Seu voto é secreto e só a produção vê a apuração.</p>${snaps.map((d,i)=>{const l=d.data();return `<section class="bg-fashion-900 border border-fashion-gold/30 rounded-lg p-5 space-y-3"><h3 class="font-cinzel text-white">${esc(st.pool[i].ate)} — ${esc(l?.titulo||'')}</h3><img src="${esc(l?.url||'')}" class="max-w-sm w-full rounded"><p class="text-sm text-gray-300">${esc(l?.mem||'')}</p>${restCriteria.map((c,j)=>`<label class="flex items-center justify-between text-xs gap-3">${esc(c)}<input type="number" min="0" max="10" step="0.5" value="5" data-rest-uid="${esc(st.pool[i].uid)}" data-rest-criterion="${j}" class="w-20 bg-black text-white border border-fashion-700 p-2 rounded"></label>`).join('')}<button data-rest-save="${esc(st.pool[i].uid)}" class="bg-fashion-gold text-black font-bold text-xs rounded px-4 py-2">Salvar avaliação</button></section>`}).join('')}</div>`);
+                document.querySelectorAll('[data-rest-save]').forEach(b=>b.onclick=safeExec(async()=>{
+                    if((await restState()).phase!=='judging')throw new Error('Julgamento encerrado.');
+                    const uid=b.dataset.restSave;
+                    const scores=[...document.querySelectorAll(`[data-rest-uid="${uid}"]`)].map(x=>Number(x.value));
+                    if(scores.length!==5||scores.some(v=>!Number.isFinite(v)||v<0||v>10))throw new Error('As cinco notas devem estar entre 0 e 10.');
+                    await db.doc(`rest_avaliacoes/${globalState.rodada}_${uid}_${currentUser.uid}`).set({rodada:globalState.rodada,alvo:uid,jurado:currentUser.uid,nota:scores,total:scores.reduce((a,b)=>a+b,0),t:now()});
+                    showToast('Avaliação enviada em sigilo para a produção.');
+                }));return;
+            }
+            if(st.phase!=='first'){
+                renderView('<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-8 text-center"><h2 class="font-cinzel text-fashion-gold">🕯️ THE LAST JUDGMENT</h2><p class="text-gray-300 text-sm mt-3">A cerimônia está sob controle da produção. Aguarde a próxima revelação.</p></div>');return;
+            }
+        }
         if (!globalState.rodada || (globalState.prazo && now() > globalState.prazo && !isAdmin)) {
             renderView(`
                 <div class="bg-fashion-900 border border-fashion-700 p-12 rounded-lg text-center space-y-4 max-w-xl mx-auto my-12">
@@ -1812,13 +2307,16 @@
 
     // 7. A BERLINDA (BOTTOM)
     VIEWS.berlinda = () => {
+        if(globalState.themeId==='theme_rest_in_style'){
+            renderView('<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-8 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">⚰️ THE LAST JUDGMENT</h2><p class="text-gray-300 text-sm mt-3">Nesta semana não existe votação para salvar. Os estilistas fora do Elimination Pool avaliam os três últimos looks.</p></div>');return;
+        }
         const bottomList = globalState.berlinda || [];
         if (!globalState.urna || !bottomList.length) {
             renderView(`
                 <div class="bg-fashion-900 border border-fashion-700 p-12 rounded-lg text-center space-y-4 max-w-xl mx-auto my-12">
                     <i class="fa-solid fa-gavel text-fashion-gold text-3xl"></i>
                     <h2 class="font-cinzel text-xl text-white">Votação de Eliminação Fechada</h2>
-                    <p class="text-xs text-gray-400">A urna de salvação da Berlinda só abre sob comando da Direção Executiva.</p>
+                    <p class="text-xs text-gray-400">A votação para salvar abre somente quando a produção autorizar.</p>
                 </div>
             `);
             return;
@@ -1829,8 +2327,8 @@
             renderView(`
                 <div class="bg-fashion-900 border border-fashion-red/40 p-8 rounded-lg text-center space-y-3 max-w-xl mx-auto my-12">
                     <i class="fa-solid fa-triangle-exclamation text-fashion-red text-3xl"></i>
-                    <h2 class="font-cinzel text-xl text-white">Você está no BOTTOM (Berlinda)!</h2>
-                    <p class="text-xs text-gray-300">Estilistas emparedados não têm direito a voto. Os outros competidores decidem quem continua.</p>
+                    <h2 class="font-cinzel text-xl text-white">Você está no The Elimination Pool!</h2>
+                    <p class="text-xs text-gray-300">Estilistas no Elimination Pool não podem votar para salvar. Os outros competidores decidem quem continua.</p>
                 </div>
             `);
             return;
@@ -1840,8 +2338,8 @@
             <div class="max-w-md mx-auto space-y-6">
                 <div class="text-center space-y-1">
                     <span class="text-xs uppercase tracking-widest text-fashion-red font-cinzel font-bold">Voto Secreto de Eliminação</span>
-                    <h2 class="font-cinzel text-2xl text-white font-normal">A Berlinda</h2>
-                    <p class="text-xs text-gray-400">Vote para <strong>SALVAR (SAFE)</strong> um estilista da eliminação:</p>
+                    <h2 class="font-cinzel text-2xl text-white font-normal">The Elimination Pool</h2>
+                    <p class="text-xs text-gray-400">${globalState.themeId==='theme_tarantino'?'THE LAST STAND · BOTTOM 2: ':''}Vote para <strong>SALVAR (SAFE)</strong> um estilista da eliminação:</p>
                 </div>
 
                 ${globalState.fdm ? `
@@ -1898,6 +2396,26 @@
                     <span class="text-xs font-mono text-gray-400">Rodada: <strong>${esc(globalState.rodada || '-')}</strong> (${esc(globalState.fase || 'normal')})</span>
                 </div>
 
+                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4">
+                    <div class="flex flex-wrap justify-between gap-3 items-center">
+                        <div><p class="text-[10px] text-fashion-gold tracking-[.3em] uppercase">Executive Access · Confidential</p><h3 class="font-cinzel text-xl text-white">🎬 The Control Room</h3><p class="text-xs text-gray-400">Revise os bastidores antes de autorizar qualquer anúncio.</p></div>
+                        <span class="px-3 py-1 rounded border border-fashion-gold/40 text-fashion-gold text-[10px] uppercase">Somente Produção</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <button id="ctrlDraft" class="bg-fashion-950 border border-fashion-700 rounded p-3 text-xs hover:border-fashion-gold">🗃️ Rascunhos</button>
+                        <button id="ctrlDraws" class="bg-fashion-950 border border-fashion-700 rounded p-3 text-xs hover:border-fashion-gold">🎲 Sorteios</button>
+                        <button id="ctrlArchive" class="bg-fashion-950 border border-fashion-700 rounded p-3 text-xs hover:border-fashion-gold">📜 Histórico</button>
+                        <button id="ctrlAudit" class="bg-fashion-950 border border-fashion-700 rounded p-3 text-xs hover:border-fashion-gold">🔒 Auditoria</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center text-xs">
+                        <button id="btnDrawLock" class="border border-fashion-gold/50 rounded px-3 py-2 text-fashion-gold">🔒 Encerrar escolha de envelopes</button>
+                        <button id="btnDrawRelease" class="bg-fashion-gold text-black rounded px-3 py-2">🎁 Liberar resultados</button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center text-xs"><span class="text-gray-400">Prévia de perfil:</span><select id="ctrlPreviewRole" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white"><option value="estilista">Estilista</option><option value="jurado">Jurado</option><option value="plateia">Plateia</option></select><button id="ctrlPreview" class="border border-fashion-gold/50 rounded px-3 py-2 text-fashion-gold">Ver permissões e estado</button></div>
+                    <div id="ctrlOutput" class="bg-fashion-950 rounded border border-fashion-800 p-4 text-xs text-gray-300 max-h-96 overflow-auto">Selecione uma área para consultar os registros.</div>
+                    <p class="text-[10px] text-gray-500">Dados privados exigem regras de segurança no Firestore. Esta prévia mostra o estado de publicação, não substitui testes com contas reais.</p>
+                </section>
+
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg flex justify-between items-center">
                         <div>
@@ -1910,7 +2428,7 @@
                     </div>
                     <div class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg flex justify-between items-center">
                         <div>
-                            <span class="text-xs uppercase tracking-wider text-white font-bold block font-cinzel">Urna da Berlinda</span>
+                            <span class="text-xs uppercase tracking-wider text-white font-bold block font-cinzel">Urna de Salvação</span>
                             <span class="text-[10px] text-gray-400">${globalState.urna ? 'Votação Aberta' : 'Urna Trancada'}</span>
                         </div>
                         <button id="btnToggleUrn" class="px-4 py-2 rounded text-xs uppercase font-semibold ${globalState.urna ? 'bg-fashion-red text-white' : 'bg-fashion-gold text-black'}">
@@ -2014,6 +2532,27 @@
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
                     <h3 class="font-cinzel text-white text-base">Mesa de Apuração & Decisões</h3>
                     <div class="flex flex-wrap gap-2">
+                        <button id="btnPreviewBanquet" class="bg-amber-950 hover:bg-amber-900 border border-fashion-gold text-fashion-gold px-3 py-1.5 rounded text-xs">🏰 Dossiê do Black Banquet</button>
+                        <button id="btnAttendanceBanquet" class="bg-fashion-800 border border-fashion-700 text-white px-3 py-1.5 rounded text-xs">📋 Conferir ausências</button>
+                        <button id="btnRestaStart" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs">🤠 Iniciar Resta Um</button>
+                        <button id="btnRestaPreview" class="bg-fashion-800 text-fashion-gold border border-fashion-gold/40 px-3 py-1.5 rounded text-xs">📋 Dossiê Resta Um</button>
+                        <button id="btnRestaPublish" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">⚖️ Confirmar Bottom 3</button>
+                        <button id="btnSupremeOpen" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs">👑 Abrir Supreme Vote</button>
+                        <button id="btnSupremeClose" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🔒 Encerrar votação</button>
+                        <button id="btnSupremePreview" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">📋 Dossiê Supreme</button>
+                        <button id="btnSupremePublish" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs">🏆 Confirmar Supremas vencedoras</button>
+                        <button id="btnTarantinoPreview" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🎬 Dossiê Double Kill</button>
+                        <button id="btnTarantinoFirst" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">☠️ Confirmar First Kill</button>
+                        <button id="btnTarantinoFinal" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">🔫 Apurar Last Stand</button>
+                        <button id="btnRestActivate" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs font-bold">⚰️ Convocar Bottom 3</button>
+                        <button id="btnRestJudge" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🕯️ Abrir julgamento</button>
+                        <button id="btnRestEliminate" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">🪦 Confirmar último adeus</button>
+                        <button id="btnRestVerdict" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🔒 Apurar funeral</button>
+                        <button id="btnBeautyAssign" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs font-bold">👁️ Sortear conceitos (após Look 1)</button>
+                        <button id="btnBeautyPreview" class="bg-fashion-800 text-fashion-gold border border-fashion-gold/40 px-3 py-1.5 rounded text-xs">🔒 Dossiê Beauty</button>
+                        <button id="btnBeautyOpen" class="bg-fashion-800 text-white border border-fashion-gold/40 px-3 py-1.5 rounded text-xs">🎭 Autorizar desfile Beauty</button>
+                        <button id="btnActivateBanquet" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs font-bold">🗡️ Ativar twist após entregas</button>
+                        <button id="btnRevealBanquet" class="bg-fashion-800 border border-fashion-700 text-white px-3 py-1.5 rounded text-xs">🗡️ Revelar facções</button>
                         <button id="btnApurarRanking" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-white px-3 py-1.5 rounded text-xs">1. Calcular Notas</button>
                         <button id="btnPublishRunway" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-fashion-gold px-3 py-1.5 rounded text-xs">2. Publicar na Passarela</button>
                         <button id="btnApurarTribunal" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-white px-3 py-1.5 rounded text-xs">3. Votos do Elenco</button>
@@ -2029,6 +2568,83 @@
                 </div>
             </div>
         `);
+
+        const ctrl = $('#ctrlOutput');
+        const ctrlDisplay = (title, docs) => {
+            ctrl.innerHTML = `<h4 class="text-fashion-gold font-cinzel mb-3">${esc(title)}</h4>` +
+                (docs.length ? docs.map(d => `<details class="border-b border-fashion-800 py-2"><summary class="cursor-pointer text-white">${esc(d.id)}</summary><pre class="whitespace-pre-wrap break-all text-[10px] text-gray-400 mt-2">${esc(JSON.stringify(d.data(), (k,v) => k === 'image' || k === 'foto' ? '[imagem]' : v, 2))}</pre></details>`).join('') : '<p class="text-gray-500">Nenhum registro encontrado.</p>');
+        };
+        $('#ctrlDraft').onclick = safeExec(async () => {
+            const q = await db.collection('rascunhos_producao').get();
+            ctrlDisplay('Rascunhos privados — todas as rodadas', q.docs);
+        });
+        $('#btnDrawLock').onclick=safeExec(async()=>{
+            const theme=getTheme();
+            if(!themeHasDraw(theme))throw new Error('Esta rodada não possui sorteio de envelopes.');
+            const gate=await getDrawGate();
+            if(gate.phase!=='selection')throw new Error('A escolha já foi encerrada.');
+            const participants=await db.collection('perfis').where('role','==','estilista').get();
+            const eligible=participants.docs.filter(d=>!d.data().out&&!d.data().disabled);
+            const draws=await Promise.all(eligible.map(d=>db.doc(`sorteios/${globalState.rodada}_${d.id}`).get()));
+            const missing=eligible.filter((d,i)=>!draws[i].exists);
+            if(missing.length)throw new Error('Ainda faltam envelopes de: '+missing.map(d=>d.data().ate||d.id).join(', '));
+            if(!productionConfirm('ENCERRAR as escolhas? Os resultados continuarão ocultos até sua autorização.'))return;
+            await drawGateRef().set({phase:'locked',themeId:theme.id,rodada:globalState.rodada,
+                lockedBy:currentUser.uid,lockedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('draw_choices_locked',{round:globalState.rodada});
+            showToast('Escolhas encerradas. Os envelopes continuam lacrados.');
+        });
+        $('#btnDrawRelease').onclick=safeExec(async()=>{
+            const theme=getTheme();
+            if(!themeHasDraw(theme))throw new Error('Esta rodada não possui sorteio de envelopes.');
+            const gate=await getDrawGate();
+            if(gate.phase!=='locked')throw new Error('Encerre as escolhas antes de revelar os resultados.');
+            if(!productionConfirm('REVELAR os resultados? Cada estilista poderá visualizar seu próprio sorteio no Workroom.'))return;
+            await drawGateRef().update({phase:'released',releasedBy:currentUser.uid,
+                releasedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('draw_results_released',{round:globalState.rodada});
+            showToast('Envelopes abertos! Os estilistas podem consultar os resultados.');
+        });
+        $('#ctrlDraws').onclick = safeExec(async () => {
+            const collections = ['sorteios','draws','envelopes','escolhas'];
+            const results = await Promise.allSettled(collections.map(c => db.collection(c).get()));
+            ctrl.innerHTML = '<h4 class="text-fashion-gold mb-2">🎲 Resultados de sorteios e escolhas</h4>';
+            results.forEach((r,i) => {
+                const section = document.createElement('div'); section.className = 'mb-3';
+                section.innerHTML = `<b>${esc(collections[i])}</b> — ${r.status === 'fulfilled' ? r.value.size + ' registro(s)' : 'acesso indisponível'}`;
+                if (r.status === 'fulfilled') r.value.docs.forEach(d => {
+                    const el = document.createElement('details');
+                    el.innerHTML = `<summary class="cursor-pointer">${esc(d.id)}</summary><pre class="whitespace-pre-wrap break-all">${esc(JSON.stringify(d.data(),null,2))}</pre>`;
+                    section.appendChild(el);
+                });
+                ctrl.appendChild(section);
+            });
+        });
+        $('#ctrlArchive').onclick = safeExec(async () => {
+            const collections = ['votos','avaliacoes','looks','ranking_historico','auditoria_producao'];
+            const res = await Promise.allSettled(collections.map(c => db.collection(c).get()));
+            ctrl.innerHTML = '<h4 class="text-fashion-gold mb-3">📜 Arquivo da temporada</h4>';
+            res.forEach((r,i) => {
+                const section = document.createElement('details'); section.className='border-b border-fashion-800 py-2';
+                const count = r.status === 'fulfilled' ? r.value.size : 'indisponível';
+                section.innerHTML = `<summary class="cursor-pointer">${esc(collections[i])} · ${count}</summary>`;
+                if (r.status === 'fulfilled') r.value.docs.forEach(d => {
+                    const e = document.createElement('details'); e.className='ml-3 my-2';
+                    e.innerHTML=`<summary class="cursor-pointer">${esc(d.id)}</summary><pre class="whitespace-pre-wrap break-all text-[10px]">${esc(JSON.stringify(d.data(),(k,v)=> ['foto','image','imagem','base64','audio'].includes(k) ? '[mídia]' : v,2))}</pre>`;
+                    section.appendChild(e);
+                });
+                ctrl.appendChild(section);
+            });
+        });
+        $('#ctrlAudit').onclick = safeExec(async () => {
+            const q = await db.collection('auditoria_producao').get();
+            ctrlDisplay('Auditoria de ações da produção', q.docs.sort((a,b)=>(b.data().at?.seconds||0)-(a.data().at?.seconds||0)));
+        });
+        $('#ctrlPreview').onclick = () => {
+            const role = $('#ctrlPreviewRole').value;
+            const tabs = ABAS_POR_PERFIL[role] || [];
+            ctrl.innerHTML = `<h4 class="font-cinzel text-fashion-gold mb-2">Prévia de acesso · ${esc(role)}</h4><p>Abas: ${tabs.map(esc).join(' · ')}</p><p class="mt-2">Desfile: ${globalState.liberado ? 'liberado' : 'fechado'}</p><p>Urna: ${globalState.urna ? 'aberta' : 'fechada'}</p><p class="mt-2 text-yellow-300">Prévia informativa: valide o isolamento de dados usando uma conta real desse perfil.</p>`;
+        };
 
         const getAtelierNamesMap = async () => {
             const snap = await db.collection('perfis').get();
@@ -2048,13 +2664,31 @@
                 db.collection('avaliacoes').get()
             ]);
 
+            const supremeRankingState=globalState.themeId==='theme_next_supreme' ? await supremeState() : null;
+            if(supremeRankingState && supremeRankingState.phase!=='selected') throw new Error('A Supreme Vote precisa ser concluída antes de apurar o ranking.');
+            const supremeWinners=new Map((supremeRankingState?.winners||[]).map(w=>[w.uid,`${globalState.rodada}_${w.uid}_${w.slot-1}`]));
             const evaluationsByLook = {};
             evalsSnap.docs.forEach(d => {
                 const data = d.data();
+                if(supremeRankingState && data.rodada===globalState.rodada && supremeWinners.get(data.alvo)!==data.look) return;
                 ((evaluationsByLook[data.alvo] ??= {})[data.look] ??= { r: data.rodada, scores: [] }).scores.push(data.total);
             });
 
-            const activeStylists = profilesSnap.docs.filter(d => !d.data().out && !d.data().disabled);
+            const absencesSnap = globalState.themeId === 'theme_traitors' ? await db.collection('ausencias_rodada').where('rodada','==',globalState.rodada).get() : null;
+            const absentUids = new Set(absencesSnap ? absencesSnap.docs.map(d=>d.data().uid) : []);
+            const activeStylists = profilesSnap.docs.filter(d => !d.data().out && !d.data().disabled && !absentUids.has(d.id));
+            if (globalState.themeId === 'theme_beauty_eye') {
+                const lookSnap = await db.collection('looks').where('rodada','==',globalState.rodada).get();
+                const slotsByUid = {};
+                lookSnap.docs.forEach(d => {const l=d.data(); (slotsByUid[l.uid] ??= new Set()).add(l.slot);});
+                const missing = activeStylists.filter(d => {
+                    const slots=slotsByUid[d.id];
+                    if (!slots?.has(1) || !slots?.has(2)) return true;
+                    const scored=Object.values(evaluationsByLook[d.id] || {}).filter(x=>x.r===globalState.rodada && x.scores.length);
+                    return scored.length < 2;
+                });
+                if (missing.length) throw new Error('Beauty: os dois looks de cada estilista precisam estar enviados e avaliados antes da apuração: '+missing.map(d=>d.data().ate||d.id).join(', '));
+            }
             const rows = activeStylists.map(doc => {
                 let totalAccumulated = 0;
                 let currentRoundScore = 0;
@@ -2069,7 +2703,8 @@
                 }
                 for (const r in perRound) {
                     // Rodadas antigas (sem modo salvo) continuam somando, como antes.
-                    const v = globalState.modos?.[r] === 'media' ? perRound[r].sum / perRound[r].n : perRound[r].sum;
+                    const isBeautyRound = r === globalState.rodada && globalState.themeId === 'theme_beauty_eye';
+                    const v = !isBeautyRound && globalState.modos?.[r] === 'media' ? perRound[r].sum / perRound[r].n : perRound[r].sum;
                     if (r === globalState.rodada) currentRoundScore += v;
                     if (globalState.fase !== 'final' || r === globalState.rodada) totalAccumulated += v;
                 }
@@ -2078,6 +2713,44 @@
             });
 
             return rows.sort((a, b) => b.tot - a.tot || b.rd - a.rd);
+        };
+
+        // THE BLACK BANQUET: apuração privada, nunca executada no cliente dos estilistas.
+        const computeTraitorsPool = async standings => {
+            if (!isAdmin) throw new Error('Apenas a produção pode apurar as facções.');
+            const round = String(globalState.rodada);
+            const snaps = await Promise.all(standings.map(x => db.doc(`sorteios/${round}_${x.uid}`).get()));
+            const members = standings.map((x,i) => ({...x, faction: snaps[i].exists && snaps[i].data().themeId === 'theme_traitors' ? snaps[i].data().value : null}));
+            const missing = members.filter(x => !['Faithful','Traitor'].includes(x.faction));
+            if (missing.length) throw new Error('Facções pendentes: ' + missing.map(x => x.ate).join(', ') + '. A produção deve resolver antes de publicar.');
+            const byScore = (a,b) => a.rd-b.rd || a.tot-b.tot || a.uid.localeCompare(b.uid);
+            const faithful = members.filter(x => x.faction === 'Faithful').sort(byScore)[0];
+            const traitor = members.filter(x => x.faction === 'Traitor').sort(byScore)[0];
+            if (!faithful || !traitor) {
+                const win = [...members].sort((a,b) => b.rd-a.rd || b.tot-a.tot)[0];
+                const worstRound = [...members].sort(byScore).slice(0,2);
+                const accumulated = [...members].sort((a,b) => a.tot-b.tot || a.rd-b.rd).find(x => x.uid !== win.uid && !worstRound.some(w => w.uid === x.uid));
+                if (!accumulated) throw new Error('Não há terceiro participante elegível.');
+                return {pool:[...worstRound,accumulated], members, win, fallback:true, reason:'Facção única: regra normal (dois piores da rodada + pior acumulado elegível).'};
+            }
+            const win = [...members].sort((a,b) => b.rd-a.rd || b.tot-a.tot)[0];
+            const faithfulCount = members.filter(x => x.faction === 'Faithful').length;
+            const traitorCount = members.filter(x => x.faction === 'Traitor').length;
+            // Quem é o único representante da facção só escapa da vaga da facção
+            // se vencer a rodada inteira. Nesse caso, a vaga passa ao próximo
+            // pior da rodada que ainda não esteja na berlinda.
+            const selected = [];
+            const add = x => { if (x && !selected.some(y => y.uid === x.uid)) selected.push(x); };
+            if (!(faithfulCount === 1 && faithful.uid === win.uid)) add(faithful);
+            if (!(traitorCount === 1 && traitor.uid === win.uid)) add(traitor);
+            const byAccum = (a,b) => a.tot-b.tot || a.rd-b.rd || a.uid.localeCompare(b.uid);
+            add([...members].sort(byAccum).find(x => x.uid !== win.uid && !selected.some(y => y.uid === x.uid)));
+            for (const candidate of [...members].sort(byScore)) {
+                if (selected.length >= 3) break;
+                if (candidate.uid !== win.uid) add(candidate);
+            }
+            if (selected.length !== 3) throw new Error('Não há três participantes elegíveis para o Elimination Pool.');
+            return {pool:selected, members, win, fallback:false, reason:'Pior Faithful + pior Traitor (representante único só escapa se for WIN geral) + pior acumulado elegível; vagas protegidas do WIN preenchidas pela menor nota disponível.'};
         };
 
         const printTable = rows => `
@@ -2136,23 +2809,39 @@
         });
 
         $('#btnTogglePublic').onclick = safeExec(async () => {
+            if(globalState.themeId==='theme_next_supreme' && !globalState.liberado && (await supremeState()).phase!=='selected') throw new Error('Conclua a Supreme Vote e confirme as vencedoras antes de abrir a passarela oficial.');
+            if (!productionConfirm(globalState.liberado ? 'Ocultar o desfile para todos?' : 'LIBERAR todas as criações enviadas na passarela?')) return;
             await db.doc('config/estado').update({ liberado: !globalState.liberado });
+            await productionLog('runway_visibility_changed', {visible:!globalState.liberado});
             showToast('Status da passarela atualizado.');
         });
 
         $('#btnToggleUrn').onclick = safeExec(async () => {
+            if(globalState.themeId==='w01_first_garment' && !globalState.urna) throw new Error('THE FIRST GARMENT não tem votação de eliminação. As notas continuam contando para o ranking acumulado.');
+            if(globalState.themeId==='theme_plaid_bay' && !globalState.urna){
+                const state=await restaState();
+                if(!state || state.phase!=='completed')throw new Error('Conclua e confirme o Bottom 3 do Resta Um antes de abrir a urna.');
+            }
+            if(globalState.themeId==='theme_tarantino' && !globalState.urna) {
+                const state=(await db.doc(`tarantino_double_kill/${globalState.rodada}`).get()).data();
+                if(!state || state.phase!=='duel_ready') throw new Error('Primeiro confirme o First Kill e prepare o Bottom 2.');
+            }
+            if (!productionConfirm(globalState.urna ? 'Encerrar votação agora?' : 'ABRIR votação para os participantes?')) return;
             await db.doc('config/estado').update({ urna: !globalState.urna });
+            await productionLog('ballot_visibility_changed', {open:!globalState.urna});
             showToast('Status da urna atualizado.');
         });
 
         $('#btnAdd15Min').onclick = safeExec(async () => {
             const newDeadline = (globalState.prazo || now()) + (15 * 60 * 1000);
             await db.doc('config/estado').update({ prazo: newDeadline });
+            await productionLog('deadline_extended', {deadline:newDeadline});
             showToast('+15 minutos concedidos.');
         });
 
         $('#btnEndTimer').onclick = safeExec(async () => {
             await db.doc('config/estado').update({ prazo: now() });
+            await productionLog('deadline_closed');
             showToast('Tempo esgotado para as maisons.');
         });
 
@@ -2212,8 +2901,12 @@
             if (!rid || !pzVal) throw new Error('Digite o ID e a data de término da rodada.');
 
             const pzTimestamp = new Date(pzVal).getTime();
-            const numSubmissoes = Number($('#newRoundSubmissions').value);
-            const elimTipo = $('#newRoundElimType').value;
+            const selectedTheme = $('#newThemeId').value;
+            const isBeauty = selectedTheme === 'theme_beauty_eye';
+            const isFirstGarment = selectedTheme === 'w01_first_garment';
+            const numSubmissoes = isBeauty ? 2 : isFirstGarment ? 1 : Number($('#newRoundSubmissions').value);
+            const scoringMode = isBeauty ? 'soma' : isFirstGarment ? 'media' : $('#newRoundSoma').value;
+            const elimTipo = isFirstGarment ? 'none' : $('#newRoundElimType').value;
             const elimDupla = elimTipo === 'double';
             const naoEliminatoria = elimTipo === 'none';
 
@@ -2231,7 +2924,7 @@
                 berlinda: [],
                 regras: $('#newRoundRules').value.trim(),
                 proxTema: null, proxOpcoes: [], poderUid: null, poderNome: null,
-                modos: { [rid]: $('#newRoundSoma').value }
+                modos: { ...(globalState.modos || {}), [rid]: scoringMode }
             }, { merge: true });
 
             showToast(`Rodada ${rid} iniciada! (${naoEliminatoria ? 'Não Eliminatória' : elimDupla ? 'Eliminação Dupla' : 'Elimina 1'})`);
@@ -2244,9 +2937,14 @@
             if (!t) return;
             $('#newRoundId').value = t.id;
             $('#newRoundSubmissions').value = t.numSubmissoes;
+            $('#newRoundSoma').value = t.id === 'theme_beauty_eye' ? 'soma' : 'media';
+            $('#newRoundSoma').disabled = t.id === 'theme_beauty_eye' || t.id === 'w01_first_garment';
+            $('#newRoundSubmissions').disabled = t.id === 'theme_beauty_eye' || t.id === 'w01_first_garment';
             $('#newRoundElimType').value = t.elimTipo === 'finale' ? 'normal' : t.elimTipo === 'double' ? 'double' : t.elimTipo === 'none' ? 'none' : 'single';
+            $('#newRoundElimType').disabled = t.id === 'w01_first_garment';
             if (t.fixedOrder === 99) $('#newRoundPhase').value = 'final';
             $('#newRoundRules').value = t.mandate;
+            refreshRoundSummary();
         };
         $('#newThemeId').dispatchEvent(new Event('change'));
 
@@ -2275,12 +2973,398 @@
             }
         });
 
+        // Ausências são decisões explícitas da produção, registradas por rodada.
+        // Nunca considerar "não entregou" automaticamente como desistência.
+        const getBanquetAttendance = async () => {
+            const [profiles, looks, absences] = await Promise.all([
+                db.collection('perfis').where('role','==','estilista').get(),
+                db.collection('looks').where('rodada','==',globalState.rodada).get(),
+                db.collection('ausencias_rodada').where('rodada','==',globalState.rodada).get()
+            ]);
+            const submitted = new Set(looks.docs.map(d=>d.data().uid));
+            const absMap = new Map(absences.docs.map(d=>[d.data().uid,d.data()]));
+            const active = profiles.docs.filter(d=>!d.data().disabled && !d.data().out);
+            return active.map(d=>({uid:d.id,ate:d.data().ate||d.id, submitted:submitted.has(d.id), absence:absMap.get(d.id)||null}));
+        };
+        $('#btnAttendanceBanquet').onclick = safeExec(async () => {
+            if(globalState.themeId !== 'theme_traitors') throw new Error('Abra The Traitors primeiro.');
+            const rows = await getBanquetAttendance();
+            const activated = await db.doc(`revelacoes_traitors/${globalState.rodada}`).get();
+            const locked = activated.exists && activated.data().activated;
+            $('#adminOutput').innerHTML = `<div class="space-y-3"><h3 class="font-cinzel text-fashion-gold">📋 THE GUEST LIST — CONTROLE DE ENTREGAS</h3>
+              <p class="text-gray-400">A produção pode registrar ausência justificada ou desistência da rodada. Isso não elimina automaticamente o estilista da temporada. A decisão ficará no histórico.</p>
+              ${rows.map(x=>`<div class="border border-fashion-700 p-3 flex items-center justify-between gap-2"><div><b>${esc(x.ate)}</b><p class="text-xs ${x.submitted?'text-green-400':'text-amber-300'}">${x.submitted?'Entregue':x.absence?'Ausência registrada: '+esc(x.absence.reason):'Entrega pendente'}</p></div>
+              ${!locked&&!x.submitted?`<div class="flex gap-2"><button class="bg-fashion-800 border border-fashion-700 p-2" data-banquet-absent="${esc(x.uid)}">Registrar ausência</button>${x.absence?`<button class="bg-fashion-800 border border-fashion-700 p-2" data-banquet-restore="${esc(x.uid)}">Reverter</button>`:''}</div>`:''}</div>`).join('')}
+              ${locked?'<p class="text-amber-300">Lista fechada: o twist já foi ativado.</p>':''}</div>`;
+            $('#adminOutput').onclick = safeExec(async e => {
+                const absent = e.target.closest('[data-banquet-absent]');
+                const restore = e.target.closest('[data-banquet-restore]');
+                if (!absent && !restore) return;
+                const uid = absent?.dataset.banquetAbsent || restore.dataset.banquetRestore;
+                const ref = db.doc(`ausencias_rodada/${globalState.rodada}_${uid}`);
+                const check = await db.doc(`revelacoes_traitors/${globalState.rodada}`).get();
+                if(check.exists && check.data().activated) throw new Error('Lista já encerrada. Não é possível alterar ausências após a ativação.');
+                if(absent){
+                    const reason = window.prompt('Motivo da ausência (obrigatório):');
+                    if(!reason?.trim()) return;
+                    if(!productionConfirm('Confirmar ausência nesta rodada? A decisão será registrada e poderá ser revertida antes da ativação.')) return;
+                    await ref.set({uid,rodada:globalState.rodada,reason:reason.trim(),by:currentUser.uid,at:firebase.firestore.FieldValue.serverTimestamp()});
+                    await productionLog('traitors_absence_recorded',{uid,reason:reason.trim()});
+                } else {
+                    if(!productionConfirm('Reverter a ausência registrada?')) return;
+                    await ref.delete();
+                    await productionLog('traitors_absence_reverted',{uid});
+                }
+                $('#btnAttendanceBanquet').click();
+            });
+        });
+        $('#btnRestaStart').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
+            const existing=await restaState();
+            if(existing)throw new Error('O Resta Um já foi iniciado nesta rodada.');
+            const rows=await restaCandidates(),win=rows[0];
+            const ranking=await db.doc('ranking/atual').get();
+            if(!ranking.exists || ranking.data().rodada!==globalState.rodada)throw new Error('Publique primeiro o ranking e o WIN, sem revelar o Bottom 3.');
+            if(!productionConfirm(`INICIAR O RESTA UM? ${win.ate} será o primeiro a salvar. A corrente ficará visível no Workroom.`))return;
+            await restaRef().set({phase:'active',round:globalState.rodada,winUid:win.uid,currentUid:win.uid,
+                eligible:rows.map(x=>({uid:x.uid,ate:x.ate})),saved:[win.uid],history:[],
+                startedBy:currentUser.uid,startedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('resta_um_started',{round:globalState.rodada,win:win.uid});
+            showToast('Resta Um iniciado. O WIN já pode salvar.');
+        });
+        $('#btnRestaPreview').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
+            const state=await restaState();
+            if(!state)throw new Error('A corrente ainda não começou.');
+            const names=new Map(state.eligible.map(x=>[x.uid,x.ate]));
+            const rows=await restaCandidates();
+            const last=state.lastUid;
+            const worstRound=last? [...rows].sort((a,b)=>a.rd-b.rd||a.tot-b.tot).find(x=>x.uid!==last&&x.uid!==state.winUid):null;
+            const worstAccum=last&&worstRound?[...rows].sort((a,b)=>a.tot-b.tot||a.rd-b.rd).find(x=>![last,worstRound.uid,state.winUid].includes(x.uid)):null;
+            const pool=last&&worstRound&&worstAccum?[{uid:last,ate:names.get(last),reason:'RESTA UM'}, {...worstRound,reason:'LOWEST SCORE'}, {...worstAccum,reason:"SEASON'S LOWEST"}]:[];
+            $('#adminOutput').innerHTML=`<section class="border border-fashion-gold rounded p-5 space-y-3">
+                <h3 class="font-cinzel text-fashion-gold">🔒 DIRECTOR'S CUT — RESTA UM</h3>
+                <p class="text-xs">Estado: ${esc(state.phase)} · WIN: ${esc(names.get(state.winUid))}</p>
+                ${(state.history||[]).map((h,i)=>`<p class="text-xs">${i+1}. ${esc(names.get(h.from))} salvou ${esc(names.get(h.to))}</p>`).join('')}
+                ${pool.map(x=>`<p class="text-sm">⚖️ ${esc(x.reason)}: ${esc(x.ate)}</p>`).join('')}
+                ${!pool.length?'<p class="text-xs text-amber-300">A corrente ainda está em andamento.</p>':''}
+                <p class="text-xs text-gray-400">Prévia privada. Nenhuma berlinda foi publicada.</p></section>`;
+            return pool;
+        });
+        $('#btnRestaPublish').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
+            const state=await restaState();
+            if(!state || state.phase!=='pending_confirmation')throw new Error('Aguarde o fim da corrente de salvamentos.');
+            const rows=await restaCandidates();
+            const last=state.lastUid;
+            const byRound=[...rows].sort((a,b)=>a.rd-b.rd||a.tot-b.tot);
+            const byAccum=[...rows].sort((a,b)=>a.tot-b.tot||a.rd-b.rd);
+            const low=byRound.find(x=>x.uid!==last&&x.uid!==state.winUid);
+            const accum=byAccum.find(x=>![last,low?.uid,state.winUid].includes(x.uid));
+            if(!low||!accum)throw new Error('Não há três participantes elegíveis.');
+            const pool=[{uid:last,ate:state.eligible.find(x=>x.uid===last)?.ate},{uid:low.uid,ate:low.ate},{uid:accum.uid,ate:accum.ate}];
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">⚖️ BOTTOM 3 · PRÉVIA PRIVADA</h3>
+            <p>🤠 RESTA UM: ${esc(pool[0].ate)}</p><p>📉 LOWEST SCORE: ${esc(pool[1].ate)}</p><p>📊 SEASON'S LOWEST: ${esc(pool[2].ate)}</p></div>`;
+            if(!productionConfirm('CONFIRMAR o Bottom 3 do Resta Um? A berlinda será disponibilizada aos participantes quando a produção abrir a urna.'))return;
+            const batch=db.batch();
+            batch.set(db.doc('config/estado'),{berlinda:pool,urna:false},{merge:true});
+            batch.update(restaRef(),{phase:'completed',pool,confirmedBy:currentUser.uid,confirmedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await batch.commit();
+            await productionLog('resta_um_pool_confirmed',{round:globalState.rodada,pool:pool.map(x=>x.uid)});
+            showToast('Bottom 3 confirmado. Abra a urna quando desejar.');
+        });
+
+        $('#btnSupremeOpen').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
+            const st=await supremeState();
+            if(st.phase!=='submissions') throw new Error('A votação já foi iniciada.');
+            const ps=await db.collection('perfis').where('role','==','estilista').get();
+            const active=ps.docs.filter(d=>!d.data().out&&!d.data().disabled);
+            const ls=await db.collection('looks').where('rodada','==',globalState.rodada).get();
+            const looks=ls.docs.map(d=>d.data());
+            const missing=active.filter(p=>![1,2].every(slot=>looks.some(l=>l.uid===p.id&&l.slot===slot)));
+            if(missing.length) throw new Error('Entregas incompletas: '+missing.map(p=>p.data().ate||p.id).join(', '));
+            if(!productionConfirm('Abrir a votação secreta OLD vs NEXT para o elenco? Os dois looks de cada maison serão mostrados aos votantes.')) return;
+            await supremeRef().set({phase:'voting',round:globalState.rodada,openedBy:currentUser.uid,openedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('supreme_vote_open',{round:globalState.rodada});
+            showToast('A sucessão começou. O elenco pode votar.');
+        });
+        $('#btnSupremeClose').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
+            const st=await supremeState();
+            if(st.phase!=='voting') throw new Error('A votação não está aberta.');
+            if(!productionConfirm('Encerrar a votação Supreme? Nenhum novo voto será aceito.')) return;
+            await supremeRef().update({phase:'closed',closedBy:currentUser.uid,closedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('supreme_vote_closed',{round:globalState.rodada});
+            showToast('Urnas Supreme fechadas. Confira o dossiê.');
+        });
+        $('#btnSupremePreview').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
+            const st=await supremeState();
+            const results=await supremeResolveTies(await supremeResults());
+            if(st.phase==='closed') {
+                const batch=db.batch();
+                for(const r of results.filter(r=>r.decidedBy==='pending_self')) batch.set(db.doc(`supreme_pendencias/${globalState.rodada}_${r.uid}`),{pending:true,uid:r.uid,round:globalState.rodada});
+                await batch.commit();
+            }
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold rounded p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold">👑 THE PEOPLE DECIDE · DOSSIÊ PRIVADO</h3><p class="text-xs">Fase: ${esc(st.phase)}. Resultado ainda não publicado.</p>${results.map(r=>`<div class="text-xs border-b border-fashion-700 pb-2"><strong>${esc(r.ate)}</strong> · OLD ${r.old} × NEXT ${r.next} ${r.slot?'· Vencedora: '+(r.slot===1?'OLD':'NEXT')+' · '+esc(r.decidedBy):'· EMPATE: a própria maison decide'}</div>`).join('')}</div>`;
+        });
+        $('#btnSupremePublish').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
+            const st=await supremeState();
+            if(st.phase!=='closed') throw new Error('Encerre a votação antes de confirmar vencedoras.');
+            const results=await supremeResolveTies(await supremeResults());
+            if(results.some(r=>!r.slot)) throw new Error('Há empate sem voto válido do Ícone ou WIN. A própria maison empatada precisa escolher no Workroom antes da confirmação.');
+            if(!productionConfirm('CONFIRMAR as Supremas vencedoras e liberar APENAS essas imagens para os jurados? As perdedoras não receberão notas.')) return;
+            await supremeRef().update({phase:'selected',winners:results.map(r=>({uid:r.uid,slot:r.slot,ate:r.ate,old:r.old,next:r.next,decidedBy:r.decidedBy,deciderUid:r.deciderUid||null})),publishedBy:currentUser.uid,publishedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('supreme_winners_selected',{round:globalState.rodada,winners:results.map(r=>({uid:r.uid,slot:r.slot}))});
+            showToast('Supremas escolhidas. Jurados podem avaliar somente as vencedoras.');
+        });
+        const tarantinoRef = () => db.doc(`tarantino_double_kill/${globalState.rodada}`);
+        const tarantinoPreview = async () => {
+            if(globalState.themeId!=='theme_tarantino') throw new Error('Apenas para Tarantino.');
+            const standings=await computeSeasonStandings();
+            if(standings.length<4) throw new Error('A dinâmica requer pelo menos quatro estilistas ativos.');
+            const scores=[...standings].sort((a,b)=>a.tot-b.tot || a.rd-b.rd || a.uid.localeCompare(b.uid));
+            const first=scores[0];
+            const duel=[...standings].filter(x=>x.uid!==first.uid).sort((a,b)=>a.rd-b.rd || a.tot-b.tot || a.uid.localeCompare(b.uid)).slice(0,2);
+            return {first,duel,standings};
+        };
+        $('#btnTarantinoPreview').onclick=safeExec(async()=>{
+            const result=await tarantinoPreview();
+            await saveProductionDraft('tarantino_double_kill',{
+                first:{uid:result.first.uid,ate:result.first.ate,tot:result.first.tot},
+                duel:result.duel.map(x=>({uid:x.uid,ate:x.ate,rd:x.rd})), round:globalState.rodada
+            });
+            $('#adminOutput').innerHTML=`<div class="space-y-3 border border-fashion-gold rounded p-4"><h3 class="font-cinzel text-fashion-gold">🎬 DIRECTOR'S CUT · CONFIDENCIAL</h3>
+                <p class="text-xs text-gray-400">Prévia. Nenhuma eliminação foi confirmada.</p>
+                <p>☠️ FIRST KILL: ${esc(result.first.ate)} · Acumulado ${result.first.tot}</p>
+                <p>🔫 LAST STAND: ${result.duel.map(x=>esc(x.ate)+' · '+x.rd+' pts').join(' vs ')}</p>
+                <p class="text-amber-300 text-xs">O duelo será decidido por votação secreta de salvação dos demais estilistas. A produção confere o resultado antes da segunda eliminação.</p></div>`;
+        });
+        $('#btnTarantinoFirst').onclick=safeExec(async()=>{
+            const existing=await tarantinoRef().get();
+            if(existing.exists && existing.data().phase) throw new Error('First Kill já confirmado.');
+            const result=await tarantinoPreview();
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-red p-4"><h3 class="font-cinzel text-fashion-gold">☠️ THE FIRST KILL</h3><p>${esc(result.first.ate)} · menor acumulado ${result.first.tot}</p><p class="text-xs text-gray-400">BOTTOM 2: ${result.duel.map(x=>esc(x.ate)).join(' vs ')}</p></div>`;
+            if(!productionConfirm('CONFIRMAR FIRST KILL? Esta ação marca o pior acumulado como OUT e prepara o Bottom 2. Nenhum voto do duelo será aberto automaticamente.')) return;
+            const batch=db.batch();
+            batch.update(db.doc(`perfis/${result.first.uid}`),{out:true});
+            batch.set(tarantinoRef(),{phase:'duel_ready',round:globalState.rodada,first:{uid:result.first.uid,ate:result.first.ate,tot:result.first.tot},duel:result.duel.map(x=>({uid:x.uid,ate:x.ate,rd:x.rd})),confirmedBy:currentUser.uid,confirmedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            batch.set(db.doc('config/estado'),{berlinda:result.duel.map(x=>({uid:x.uid,ate:x.ate})),urna:false},{merge:true});
+            await batch.commit();
+            await productionLog('tarantino_first_kill',{round:globalState.rodada,uid:result.first.uid,duel:result.duel.map(x=>x.uid)});
+            showToast('First Kill confirmado. Bottom 2 preparado; abra a urna quando desejar.');
+        });
+        $('#btnTarantinoFinal').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_tarantino') throw new Error('Apenas para Tarantino.');
+            const doc=await tarantinoRef().get();
+            const data=doc.data();
+            if(!data || data.phase!=='duel_ready') throw new Error('Confirme o First Kill antes de apurar o duelo.');
+            if(globalState.urna) throw new Error('Feche a urna antes de apurar.');
+            const votes=await tallyVotes('ber');
+            const [a,b]=data.duel;
+            const va=votes[a.uid]||0,vb=votes[b.uid]||0;
+            let tiebreak = null;
+            let decidedWinner = null;
+            if(va===vb) {
+                const standings = await computeSeasonStandings();
+                const resolveTitle = async type => {
+                    const counts = await tallyVotes(type);
+                    const entries = Object.entries(counts).filter(([,n])=>n>0);
+                    if(!entries.length) return null;
+                    const max=Math.max(...entries.map(([,n])=>n));
+                    const tied=entries.filter(([,n])=>n===max).map(([uid])=>uid);
+                    if(tied.length===1) return tied[0];
+                    const ranked=tied.map(uid=>standings.find(x=>x.uid===uid)).filter(Boolean);
+                    if(ranked.length!==tied.length) return null;
+                    ranked.sort((x,y)=>y.rd-x.rd || y.tot-x.tot);
+                    if(ranked.length>1 && ranked[0].rd===ranked[1].rd && ranked[0].tot===ranked[1].tot) return null;
+                    return ranked[0].uid;
+                };
+                const fdmUid=await resolveTitle('fdm');
+                const iconUid=await resolveTitle('veto');
+                if(fdmUid===a.uid && fdmUid!==b.uid){decidedWinner=b;tiebreak='Fora de Moda perde o empate';}
+                else if(fdmUid===b.uid && fdmUid!==a.uid){decidedWinner=a;tiebreak='Fora de Moda perde o empate';}
+                else if(iconUid===a.uid && iconUid!==b.uid){decidedWinner=a;tiebreak='Ícone da Moda tem prioridade';}
+                else if(iconUid===b.uid && iconUid!==a.uid){decidedWinner=b;tiebreak='Ícone da Moda tem prioridade';}
+                else {
+                    const win=[...standings].sort((x,y)=>y.rd-x.rd || y.tot-x.tot)[0];
+                    const decision=(await db.doc(`tarantino_win_decisions/${globalState.rodada}`).get()).data();
+                    if(!decision || decision.winUid!==win.uid || ![a.uid,b.uid].includes(decision.savedUid)) {
+                        $('#adminOutput').innerHTML=`<div class="border border-fashion-gold rounded p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold">⚖️ THE DIRECTOR'S DECISION</h3><p class="text-xs text-amber-200">Empate de ${va} a ${vb}. Fora de Moda e Ícone da Moda não resolveram. O WIN ${esc(win.ate)} deve decidir quem salvar.</p><p class="text-xs text-gray-300">Registre a decisão comunicada pelo WIN. A escolha ficará auditada e não será publicada automaticamente.</p><select id="tarantinoWinSave" class="bg-fashion-950 text-white border border-fashion-gold p-2 w-full"><option value="">Escolha do WIN...</option><option value="${esc(a.uid)}">Salvar ${esc(a.ate)}</option><option value="${esc(b.uid)}">Salvar ${esc(b.ate)}</option></select><button id="btnRecordWinChoice" class="bg-fashion-gold text-black px-4 py-2 rounded">Registrar decisão do WIN</button></div>`;
+                        $('#btnRecordWinChoice').onclick=safeExec(async()=>{
+                            const savedUid=$('#tarantinoWinSave').value;
+                            if(![a.uid,b.uid].includes(savedUid)) throw new Error('Selecione quem o WIN decidiu salvar.');
+                            if(!productionConfirm(`Registrar que o WIN ${win.ate} decidiu salvar ${savedUid===a.uid?a.ate:b.ate}?`))return;
+                            await db.doc(`tarantino_win_decisions/${globalState.rodada}`).set({winUid:win.uid,savedUid,recordedBy:currentUser.uid,recordedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                            await productionLog('tarantino_win_tiebreak_recorded',{round:globalState.rodada,winUid:win.uid,savedUid});
+                            showToast('Decisão registrada. Clique novamente em Apurar Last Stand.');
+                        });
+                        return;
+                    }
+                    decidedWinner=decision.savedUid===a.uid?a:b;
+                    tiebreak=`WIN ${win.ate} decidiu salvar ${decidedWinner.ate}`;
+                }
+            }
+            const winner=decidedWinner || (va>vb?a:b), loser=winner.uid===a.uid?b:a;
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">🔫 THE LAST STAND · PRÉVIA</h3><p>${esc(a.ate)}: ${va} votos para salvar</p><p>${esc(b.ate)}: ${vb} votos para salvar</p>${tiebreak?`<p class="text-amber-200 text-xs">⚖️ Desempate: ${esc(tiebreak)}</p>`:""}<p class="text-green-300">SAFE: ${esc(winner.ate)}</p><p class="text-red-300">OUT: ${esc(loser.ate)}</p></div>`;
+            if(!productionConfirm(`CONFIRMAR SECOND KILL de ${loser.ate}? A decisão será registrada no histórico.`)) return;
+            const batch=db.batch();
+            batch.update(db.doc(`perfis/${loser.uid}`),{out:true});
+            batch.update(tarantinoRef(),{phase:'completed',second:{uid:loser.uid,ate:loser.ate},survivor:{uid:winner.uid,ate:winner.ate},votes:{[a.uid]:va,[b.uid]:vb},tiebreak:tiebreak||null,completedBy:currentUser.uid,completedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await batch.commit();
+            await productionLog('tarantino_second_kill',{round:globalState.rodada,uid:loser.uid,survivor:winner.uid,tiebreak:tiebreak||null});
+            showToast('Double Kill concluído e registrado.');
+        });
+
+        $('#btnRestActivate').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_rest_in_style') throw new Error('Disponível somente em Rest in Style.');
+            const st=await restState();if(st.phase!=='first') throw new Error('A segunda etapa já foi ativada.');
+            const pool=globalState.berlinda||[];
+            if(pool.length!==3) throw new Error('Primeiro publique o ranking e forme o Elimination Pool com três estilistas.');
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-5 rounded"><h3 class="font-cinzel text-fashion-gold">⚰️ THE FINAL FAREWELL · PRÉVIA</h3><p class="text-xs mt-2">${pool.map(x=>esc(x.ate)).join(' · ')}</p><p class="text-xs text-gray-400 mt-2">Os três receberão a segunda missão. Nenhum participante será eliminado nesta ativação.</p></div>`;
+            if(!productionConfirm('Convocar os três estilistas para criarem seus próprios looks funerários sem branco?'))return;
+            await restRef().set({phase:'twist',pool,activatedBy:currentUser.uid,activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('rest_twist_activated',{round:globalState.rodada,pool:pool.map(x=>x.uid)});
+            showToast('Convocação ativada. Segunda etapa liberada apenas para o Elimination Pool.');
+        });
+        $('#btnRestJudge').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_rest_in_style')throw new Error('Esta ação pertence ao Rest in Style.');
+            const st=await restState();if(st.phase!=='twist')throw new Error('Ative a convocação primeiro.');
+            const looks=await Promise.all((st.pool||[]).map(x=>db.doc(`rest_looks/${restSecondLookId(x.uid)}`).get()));
+            if(looks.some(x=>!x.exists))throw new Error('Ainda faltam looks da segunda etapa: '+st.pool.filter((x,i)=>!looks[i].exists).map(x=>x.ate).join(', '));
+            if(!productionConfirm('Abrir o julgamento dos três looks para os estilistas fora do Elimination Pool?'))return;
+            await restRef().update({phase:'judging',judgingBy:currentUser.uid,judgingAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('rest_judging_opened',{round:globalState.rodada});showToast('Julgamento aberto aos demais estilistas.');
+        });
+        $('#btnRestEliminate').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_rest_in_style')throw new Error('Disponível somente em Rest in Style.');
+            const st=await restState();
+            if(st.phase!=='closed'||!Array.isArray(st.verdict)||st.verdict.length!==3)throw new Error('Finalize as avaliações antes da eliminação.');
+            const sorted=[...st.verdict].sort((a,b)=>a.score-b.score);
+            if(sorted[0].score===sorted[1].score)throw new Error('Empate na menor nota: a produção deve definir um critério de desempate antes de eliminar.');
+            const loser=sorted[0];
+            $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-red/50 p-5 rounded space-y-2"><h3 class="font-cinzel text-fashion-gold">🪦 THE FINAL GOODBYE · PRÉVIA CONFIDENCIAL</h3>${sorted.map(x=>`<p class="text-sm text-white">${esc(x.ate)} — ${x.score}/50</p>`).join('')}<p class="text-red-300 font-bold">OUT proposto: ${esc(loser.ate)}</p></div>`;
+            if(!productionConfirm(`CONFIRMAR OUT de ${loser.ate}? A eliminação será registrada, mas a publicação da cerimônia é controlada separadamente.`))return;
+            const batch=db.batch();
+            batch.update(db.doc(`perfis/${loser.uid}`),{out:true});
+            batch.update(restRef(),{phase:'eliminated',outUid:loser.uid,outAte:loser.ate,eliminatedBy:currentUser.uid,eliminatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await batch.commit();
+            await productionLog('rest_funeral_elimination',{round:globalState.rodada,uid:loser.uid,score:loser.score});
+            showToast('Eliminação registrada. Revele o resultado quando desejar.');
+        });
+        $('#btnRestVerdict').onclick=safeExec(async()=>{
+            if(globalState.themeId!=='theme_rest_in_style')throw new Error('Esta ação pertence ao Rest in Style.');
+            const st=await restState();if(!['judging','closed'].includes(st.phase))throw new Error('O julgamento ainda não foi aberto.');
+            const profiles=await db.collection('perfis').where('role','==','estilista').get();
+            const eligible=profiles.docs.filter(d=>!d.data().out&&!d.data().disabled&&!(st.pool||[]).some(x=>x.uid===d.id));
+            const votes=await db.collection('rest_avaliacoes').where('rodada','==',globalState.rodada).get();
+            const all=votes.docs.map(d=>d.data());
+            const rows=(st.pool||[]).map(x=>{
+                const arr=all.filter(v=>v.alvo===x.uid);
+                const missing=eligible.filter(d=>!arr.some(v=>v.jurado===d.id));
+                const score=arr.length?arr.reduce((a,v)=>a+v.total,0)/arr.length:0;
+                return {...x,score:Number(score.toFixed(2)),missing:missing.map(d=>d.data().ate||d.id)};
+            });
+            await saveProductionDraft('rest_funeral_verdict',{rows,round:globalState.rodada});
+            $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold rounded p-5 space-y-3"><h3 class="font-cinzel text-fashion-gold">🔒 THE LAST JUDGMENT — PRÉVIA PRIVADA</h3>${rows.map(r=>`<p class="text-sm">${esc(r.ate)} — ${r.score}/50 ${r.missing.length?`<span class="text-amber-300">· faltam: ${r.missing.map(esc).join(', ')}</span>`:''}</p>`).join('')}<p class="text-xs text-gray-400">O menor resultado é o candidato a OUT. A produção confirma a eliminação separadamente.</p></div>`;
+            if(rows.some(r=>r.missing.length))return;
+            if(st.phase==='judging'&&productionConfirm('Encerrar as avaliações do funeral? O veredito permanecerá privado até sua confirmação.')){
+                await restRef().update({phase:'closed',verdict:rows,closedBy:currentUser.uid,closedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                await productionLog('rest_funeral_closed',{round:globalState.rodada});
+            }
+        });
+        $('#btnBeautyAssign').onclick = safeExec(async () => {
+            if(globalState.themeId!=='theme_beauty_eye') throw new Error('Disponível somente em Beauty Is in the Eye.');
+            if(!productionConfirm('Todos os primeiros looks foram conferidos? Sortear os conceitos e liberar a segunda etapa?')) return;
+            const assignments=await beautyAssign();
+            $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">👁️ SEALED CONCEPTS — PRODUÇÃO</h3>${assignments.map(a=>`<p class="text-xs text-white">${esc(a.uid)} ← ${esc(a.sourceUid)}: ${esc(a.title)}</p>`).join('')}</div>`;
+            showToast('Conceitos sorteados. Os estilistas podem criar suas releituras.');
+        });
+        $('#btnBeautyPreview').onclick = safeExec(async () => {
+            if(globalState.themeId!=='theme_beauty_eye') throw new Error('Esta não é a rodada Beauty.');
+            const st=await beautyState();
+            $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold">👁️ THE BEAUTY VAULT · ${esc(st.phase)}</h3>${(st.assignments||[]).map(a=>`<div class="border-b border-fashion-700 pb-2 text-xs"><strong>${esc(a.uid)} recebe conceito de ${esc(a.sourceUid)}</strong><p>${esc(a.title)} — ${esc(a.concept)}</p></div>`).join('')||'<p class="text-xs">Aguardando o sorteio.</p>'}</div>`;
+        });
+        $('#btnBeautyOpen').onclick = safeExec(async () => {
+            if(globalState.themeId!=='theme_beauty_eye') throw new Error('Esta não é a rodada Beauty.');
+            const st=await beautyState();
+            if(st.phase!=='assigned') throw new Error('Os conceitos precisam ser sorteados antes.');
+            const profiles=await db.collection('perfis').where('role','==','estilista').get();
+            const eligible=profiles.docs.filter(d=>!d.data().out && !d.data().disabled);
+            const looksSnap=await db.collection('looks').where('rodada','==',globalState.rodada).get();
+            const completed=new Set(looksSnap.docs.filter(d=>d.data().slot===2).map(d=>d.data().uid));
+            const missing=eligible.filter(d=>!completed.has(d.id));
+            if(missing.length) throw new Error('Segundas entregas pendentes: '+missing.map(d=>d.data().ate||d.id).join(', '));
+            if(!productionConfirm('LIBERAR A EXPOSIÇÃO? Os dois looks e a autoria de cada conceito serão revelados aos participantes quando a passarela estiver aberta.')) return;
+            await beautyRef().update({phase:'exhibition', publishedBy:currentUser.uid, publishedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await productionLog('beauty_exhibition_authorized',{round:globalState.rodada});
+            showToast('Exposição autorizada. Agora libere a passarela.');
+        });
+        $('#btnActivateBanquet').onclick = safeExec(async () => {
+            if (globalState.themeId !== 'theme_traitors') throw new Error('Esta ação só está disponível na rodada The Traitors.');
+            const attendance = await getBanquetAttendance();
+            const pending = attendance.filter(x=>!x.submitted&&!x.absence);
+            if(pending.length) throw new Error(`Entregas pendentes: ${pending.map(x=>x.ate).join(', ')}. Registre uma ausência justificada no controle de entregas ou aguarde o envio.`);
+            const participating = attendance.filter(x=>x.submitted&&!x.absence);
+            if(participating.length<3) throw new Error('São necessários pelo menos três estilistas com entrega para formar o Elimination Pool.');
+            const snaps = await Promise.all(participating.map(x=>db.doc(`sorteios/${globalState.rodada}_${x.uid}`).get()));
+            const members = participating.map((x,i)=>({uid:x.uid,ate:x.ate,faction:snaps[i].exists&&snaps[i].data().themeId==='theme_traitors'?snaps[i].data().value:null}));
+            if(members.some(x=>!['Faithful','Traitor'].includes(x.faction))) throw new Error('Há estilistas que entregaram sem escolher facção. Resolva antes de ativar.');
+            const ref = db.doc(`revelacoes_traitors/${globalState.rodada}`);
+            const existing = await ref.get();
+            if(existing.exists&&existing.data().activated) throw new Error('Twist já ativado.');
+            const oneFaction = new Set(members.map(x=>x.faction)).size===1;
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">THE BLACK BANQUET — PRÉVIA PRIVADA</h3><p>${members.length} looks · ${attendance.length-members.length} ausência(s) registrada(s)</p><p>${oneFaction?'Facção única: regra normal de eliminação.':'Duas facções: regra especial de eliminação.'}</p>${members.map(x=>`<p>${esc(x.ate)} — ${esc(x.faction)}</p>`).join('')}</div>`;
+            if(!productionConfirm('ATIVAR O TWIST? O desfile será dividido por facção quando você liberar a passarela.'))return;
+            await db.runTransaction(async tx=>{
+                const latest=await tx.get(ref);
+                if(latest.exists&&latest.data().activated)throw new Error('Twist já ativado em outra sessão.');
+                tx.set(ref,{round:globalState.rodada,themeId:'theme_traitors',activated:true,members,published:false,absent:attendance.filter(x=>!x.submitted).map(x=>({uid:x.uid,ate:x.ate,reason:x.absence?.reason})),activatedBy:currentUser.uid,activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            });
+            await productionLog('traitors_twist_activated',{members:members.length,absent:attendance.length-members.length,oneFaction});
+            showToast('Twist ativado. Aguardando sua liberação do desfile.');
+        });
+
+        $('#btnPreviewBanquet').onclick = safeExec(async () => {
+            if (globalState.themeId !== 'theme_traitors') throw new Error('Abra a rodada The Traitors para consultar o dossiê.');
+            const standings = await computeSeasonStandings();
+            const result = await computeTraitorsPool(standings);
+            await saveProductionDraft('traitors_black_banquet', {
+                faccoes:result.members.map(x=>({uid:x.uid, ate:x.ate, faction:x.faction, rd:x.rd, tot:x.tot})),
+                pool:result.pool.map(x=>({uid:x.uid, ate:x.ate, faction:x.faction})),
+                reason:result.reason, fallback:result.fallback
+            });
+            $('#adminOutput').innerHTML = `<div class="space-y-3"><h3 class="text-fashion-gold font-cinzel">🏰 THE BLACK BANQUET — DOSSIÊ CONFIDENCIAL</h3>
+              <p class="text-gray-300">${esc(result.reason)}</p>
+              <div class="grid gap-2">${result.members.map(x=>`<div class="border border-fashion-700 p-2 flex justify-between"><span>${esc(x.ate)} — <b>${esc(x.faction)}</b></span><span>Júri ${x.rd} · Acumulado ${x.tot}</span></div>`).join('')}</div>
+              <p class="text-red-300">ELIMINATION POOL: ${result.pool.map(x=>esc(x.ate)).join(' • ')}</p>
+              <p class="text-gray-400">Prévia exclusiva. Nenhuma facção foi publicada.</p></div>`;
+        });
+        $('#btnRevealBanquet').onclick = safeExec(async () => {
+            if (globalState.themeId !== 'theme_traitors') throw new Error('Esta ação pertence apenas ao Black Banquet.');
+            const standings = await computeSeasonStandings();
+            const result = await computeTraitorsPool(standings);
+            const activation = await db.doc(`revelacoes_traitors/${globalState.rodada}`).get();
+            if (!activation.exists || !activation.data().activated) throw new Error('Ative o twist após as entregas antes de revelar as facções.');
+            if (!productionConfirm('REVELAÇÃO IRREVERSÍVEL: divulgar as facções escolhidas aos participantes? Confira o dossiê primeiro.')) return;
+            await db.doc(`revelacoes_traitors/${globalState.rodada}`).set({
+                round:globalState.rodada, themeId:'theme_traitors', published:true,
+                members:result.members.map(x=>({uid:x.uid, ate:x.ate, faction:x.faction})),
+                publishedBy:currentUser.uid, publishedAt:firebase.firestore.FieldValue.serverTimestamp()
+            }, {merge:true});
+            await productionLog('traitors_factions_revealed',{round:globalState.rodada, fallback:result.fallback});
+            showToast('Facções autorizadas para revelação.');
+        });
+
         $('#btnApurarRanking').onclick = safeExec(async () => {
             const rows = await computeSeasonStandings();
             $('#adminOutput').innerHTML = printTable(rows);
         });
 
         $('#btnPublishRunway').onclick = safeExec(async () => {
+            if(globalState.themeId==='theme_plaid_bay' && await restaState()) throw new Error('Ranking já publicado: não recalcule a classificação durante ou depois do Resta Um.');
             const standings = (await computeSeasonStandings()).sort((a, b) => b.rd - a.rd);
             const count = standings.length;
             const isFinal = globalState.fase === 'final';
@@ -2301,21 +3385,51 @@
                     stateUpdate.imune = standings[0].uid;
                 } else {
                     const winUid = standings[0].uid;
-                    const worstRound = standings.slice(-2);
-                    const worstAccum = [...standings].sort((a, b) => a.tot - b.tot).find(x => x.uid !== winUid && !worstRound.some(w => w.uid === x.uid));
-                    stateUpdate.berlinda = [...worstRound, worstAccum].filter(Boolean).map(x => ({ uid: x.uid, ate: x.ate }));
+                    if (globalState.themeId === 'theme_tarantino') {
+                        const tarantino = await tarantinoPreview();
+                        stateUpdate.berlinda = [];
+                        await saveProductionDraft('tarantino_double_kill',{
+                            first:{uid:tarantino.first.uid,ate:tarantino.first.ate,tot:tarantino.first.tot},
+                            duel:tarantino.duel.map(x=>({uid:x.uid,ate:x.ate,rd:x.rd})),round:globalState.rodada
+                        });
+                    } else if (globalState.themeId === 'theme_plaid_bay') {
+                        // Publicar somente o WIN e o ranking. O Bottom 3 é definido após a corrente.
+                        stateUpdate.berlinda = [];
+                        await saveProductionDraft('resta_um_ranking',{round:globalState.rodada,winUid,rows:standings});
+                    } else if (globalState.themeId === 'theme_traitors') {
+                        const activated = await db.doc(`revelacoes_traitors/${globalState.rodada}`).get();
+                        if (!activated.exists || !activated.data().activated) throw new Error('Ative o twist The Traitors após as entregas, antes de apurar a berlinda.');
+                        const banquet = await computeTraitorsPool(standings);
+                        stateUpdate.berlinda = banquet.pool.map(x => ({uid:x.uid, ate:x.ate}));
+                        await saveProductionDraft('traitors_black_banquet', {
+                            rodada:globalState.rodada,
+                            faccoes:banquet.members.map(x => ({uid:x.uid, ate:x.ate, faction:x.faction, rd:x.rd, tot:x.tot})),
+                            pool:banquet.pool.map(x => ({uid:x.uid, ate:x.ate, faction:x.faction})),
+                            reason:banquet.reason, fallback:banquet.fallback
+                        });
+                    } else {
+                        const worstRound = standings.slice(-2);
+                        const worstAccum = [...standings].sort((a, b) => a.tot - b.tot).find(x => x.uid !== winUid && !worstRound.some(w => w.uid === x.uid));
+                        stateUpdate.berlinda = [...worstRound, worstAccum].filter(Boolean).map(x => ({ uid: x.uid, ate: x.ate }));
+                    }
                     stateUpdate.imune = standings[0].uid;
                 }
             }
 
-            await db.doc('ranking/atual').set({
+            const proposedRanking = {
                 rodada: globalState.rodada,
                 rows: standings.map((x, i) => ({ ate: x.ate, status: statuses[i] }))
-            });
+            };
+            await saveProductionDraft('ranking', {ranking: proposedRanking, stateUpdate});
+            $('#adminOutput').innerHTML = '<p class="text-fashion-gold font-bold">🔒 Ranking preparado e salvo nos bastidores. Nenhum resultado foi divulgado.</p>' + printTable(standings);
+            if (!productionConfirm('PUBLICAÇÃO OFICIAL: liberar ranking, WIN e Elimination Pool aos perfis autorizados? Revise antes de confirmar.')) return;
+            await db.doc('ranking/atual').set(proposedRanking);
+            await db.collection('ranking_historico').doc(String(globalState.rodada)).set({...proposedRanking, publishedAt: firebase.firestore.FieldValue.serverTimestamp(), publishedBy: currentUser.uid});
+            await productionLog('ranking_published', {round:globalState.rodada, count:standings.length});
 
             await db.doc('config/estado').set(stateUpdate, { merge: true });
             $('#adminOutput').innerHTML = `
-                <p class="text-green-400 font-bold mb-2 font-cinzel">Classificação publicada na The Runway!</p>
+                <p class="text-green-400 font-bold mb-2 font-cinzel">Classificação publicada no The Runway!</p>
                 ${stateUpdate.berlinda?.length ? `<p><strong>NO BOTTOM (BERLINDA):</strong> ${stateUpdate.berlinda.map(b => b.ate).join(', ')}</p>` : '<p class="text-blue-300"><strong>Rodada Não Eliminatória:</strong> Ninguém na berlinda!</p>'}
                 <p><strong>WINNER DA RODADA:</strong> ${standings[0]?.ate || 'N/A'}</p>
             `;
@@ -2337,6 +3451,9 @@
         });
 
         $('#btnApurarBerlinda').onclick = safeExec(async () => {
+            if(globalState.themeId==='w01_first_garment') { $('#adminOutput').innerHTML = '<div class="p-4 border border-fashion-gold rounded text-fashion-gold">🍎 THE FIRST GARMENT: estreia sem eliminação. Publique as notas e o ranking normalmente; ninguém vai para a berlinda.</div>'; return; }
+            if(globalState.themeId==='theme_tarantino') throw new Error('Tarantino usa o First Kill e o Last Stand. Utilize os controles próprios da produção.');
+            if(globalState.themeId==='theme_rest_in_style') throw new Error('Rest in Style usa o julgamento dos estilistas. Consulte “Apurar funeral” e confirme a eliminação somente após o fechamento.');
             if (globalState.elimTipo === 'none' || globalState.naoEliminatoria) {
                 $('#adminOutput').innerHTML = `<div class="p-4 bg-blue-900/30 border border-blue-600 rounded text-blue-300 font-cinzel">✨ RODADA NÃO ELIMINATÓRIA.</div>`;
                 return;
@@ -2357,7 +3474,7 @@
 
             $('#adminOutput').innerHTML = `
                 <div class="space-y-3">
-                    <span class="text-fashion-gold font-bold uppercase block font-cinzel">Veredito do Elimination Pool:</span>${tieNote}
+                    <span class="text-fashion-gold font-bold uppercase block font-cinzel">Veredito do The Elimination Pool:</span>${tieNote}
                     ${berlinda.map(b => `<div>${esc(b.ate)}: <strong>${votes[b.uid] || 0} voto(s)</strong> para salvar</div>`).join('')}
                     <div class="p-3 bg-fashion-red/20 border border-fashion-red/40 rounded space-y-1 text-red-300">
                         <strong>Eliminados:</strong>
@@ -2487,7 +3604,7 @@
 
                 ${globalState.berlinda?.length ? `
                     <div class="bg-fashion-red/20 border border-fashion-red/50 p-4 rounded-lg text-center space-y-1">
-                        <span class="text-xs font-bold text-fashion-red uppercase font-mono tracking-wider">No BOTTOM (Berlinda)</span>
+                        <span class="text-xs font-bold text-fashion-red uppercase font-mono tracking-wider">No The Elimination Pool</span>
                         <div class="text-lg font-cinzel text-white font-bold">${globalState.berlinda.map(b => esc(b.ate)).join('  vs  ')}</div>
                     </div>
                 ` : ''}
@@ -2643,6 +3760,7 @@
                         </div>
                     </div>
                     <p class="text-[11px] text-gray-300 italic leading-relaxed line-clamp-3">${esc(l.mem)}</p>
+                    ${creativeDossier(l)}
                 </div>
             `;
         }).join('');
@@ -2681,7 +3799,7 @@
             if (unsubRk) { unsubRk(); unsubRk = null; }
             if (!u) return;
             unsubRk = db.doc('ranking/atual').onSnapshot(snap => {
-                const rk = snap.data(); if (!rk || !rk.rows) return;
+                const rk = snap.data(); if (!rk || !rk.rows || (!globalState.liberado && !isAdmin)) return;
                 const w = rk.rows.find(r => /WIN|VENCEDOR/.test(r.status)); if (!w) return;
                 const key = `win_${rk.rodada}_${w.ate}`;
                 try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) {}
