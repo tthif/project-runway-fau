@@ -968,6 +968,70 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
     // Entrada da plateia sem cadastro ou senha. O Firebase usa uma sessão anônima
     // de leitura, que deve ser habilitada no console e limitada pelas Security Rules.
+    // INSCRIÇÃO OFICIAL — o Google autentica a identidade; a produção ativa o perfil.
+    // Não cria senhas, não concede cargo pelo cliente e não altera a temporada.
+    // A produção controla a janela de inscrições em documento público sem dados pessoais.
+    const fauEnrollmentRef = db.doc('config/inscricoes');
+    const fauEnrollmentState = async () => {
+        try {const d=await fauEnrollmentRef.get();return d.exists?{open:d.data().open===true,seasonStarted:d.data().seasonStarted===true}: {open:false,seasonStarted:false};}
+        catch(e){console.warn('Enrollment state unavailable',e);return {open:false,seasonStarted:false};}
+    };
+    const fauCanEnroll = s => s.open && !s.seasonStarted;
+    const fauEnrollmentClosed = () => {
+        $('#navContainer').innerHTML='';$('#userHeaderSlot').innerHTML='';
+        renderView(`<section class="max-w-lg mx-auto my-12 p-8 text-center rounded-3xl border border-fashion-gold/40 bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-2xl text-white">THE WORKROOM DOORS ARE CLOSED</h1><p class="text-gray-300 text-sm">As inscrições para esta temporada não estão disponíveis. Se você já é Designer, entre com sua conta para continuar sua jornada.</p><button id="fauClosedBack" class="border border-fashion-gold text-fashion-gold px-5 py-3 rounded-lg text-xs">VOLTAR À ENTRADA</button></section>`);
+        $('#fauClosedBack').onclick=()=>auth.currentUser&&!auth.currentUser.isAnonymous?auth.signOut():showLogin();
+    };
+    const showDesignerRegistration = async (signedUser=null) => {
+        const gate=await fauEnrollmentState();
+        if(!fauCanEnroll(gate)){
+            if(signedUser){const existing=await db.doc(`inscricoes_designers/${signedUser.uid}`).get().catch(()=>null);if(existing?.exists)return showRegistrationReceipt(signedUser,true);}
+            return fauEnrollmentClosed();
+        }
+        $('#navContainer').innerHTML=''; $('#userHeaderSlot').innerHTML='';
+        const signedEmail=signedUser?.email||'';
+        renderView(`<section class="max-w-xl mx-auto my-8 rounded-3xl border border-fashion-gold/50 bg-fashion-950 p-6 sm:p-10 space-y-6">
+          <div class="text-center space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY · F.A.U.</p><h1 class="font-cinzel text-3xl text-white">THE DESIGNER REGISTRATION</h1><p class="italic text-fashion-gold">Every legend starts with a name.</p><p class="text-sm text-gray-300">Não é seleção: sua inscrição confirma sua participação. A produção liberará seu acesso ao Workroom antes da estreia.</p></div>
+          <form id="fauRegistrationForm" class="space-y-4">
+            <label class="block space-y-2 text-xs text-gray-200">01 · NOME REAL <input id="fauRegReal" maxlength="90" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu nome para a produção"></label>
+            <label class="block space-y-2 text-xs text-gray-200">02 · NOME DE DESIGNER <input id="fauRegDesigner" maxlength="70" required class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Como aparecerá na passarela"></label>
+            <div class="rounded-xl border border-fashion-700 p-3 text-xs text-gray-300">03 · GOOGLE / GMAIL <p class="mt-1">${signedEmail?`Conectado como <strong>${esc(signedEmail)}</strong>`:'Confirme sua identidade com sua conta Google. Não é necessário criar senha.'}</p></div>
+            <p id="fauRegError" role="alert" class="text-red-300 text-xs" aria-live="polite"></p>
+            <button id="fauRegSubmit" type="submit" class="w-full bg-fashion-gold text-fashion-950 font-bold py-3 rounded-lg text-xs tracking-widest">${signedUser?'CONFIRMAR MINHA INSCRIÇÃO':'CONTINUAR COM GOOGLE →'}</button>
+          </form><button type="button" id="fauRegBack" class="text-xs text-gray-400 underline">Voltar à entrada</button>
+        </section>`);
+        $('#fauRegBack').onclick=async()=>{if(auth.currentUser&&!auth.currentUser.isAnonymous)await auth.signOut();else showLogin();};
+        $('#fauRegistrationForm').onsubmit=async e=>{
+            e.preventDefault(); const real=$('#fauRegReal').value.trim(),designer=$('#fauRegDesigner').value.trim();
+            const err=$('#fauRegError'),btn=$('#fauRegSubmit');
+            if(real.length<2||designer.length<2){err.textContent='Preencha os dois nomes (mínimo de 2 caracteres).';return;}
+            if(/[<>]/.test(real+designer)){err.textContent='Os nomes não podem conter < ou >.';return;}
+            btn.disabled=true;btn.textContent='REGISTRANDO…';err.textContent='';
+            try {
+                if(!fauCanEnroll(await fauEnrollmentState()))throw new Error('As inscrições foram encerradas pela produção.');
+                let user=auth.currentUser;
+                if(!user||user.isAnonymous||!user.providerData?.some(p=>p.providerId==='google.com')){
+                    // Preserve draft for popup / redirect on mobile.
+                    sessionStorage.setItem('fauRegistrationDraft',JSON.stringify({real,designer}));
+                    const provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});
+                    try{const credential=await auth.signInWithPopup(provider);user=credential.user;}
+                    catch(ex){if(['auth/popup-blocked','auth/operation-not-supported-in-this-environment','auth/popup-closed-by-user'].includes(ex.code)&&ex.code!=='auth/popup-closed-by-user'){await auth.signInWithRedirect(provider);return;}throw ex;}
+                }
+                if(!user?.email||!user.providerData?.some(p=>p.providerId==='google.com'))throw new Error('Entre com uma conta Google válida.');
+                const ref=db.doc(`inscricoes_designers/${user.uid}`);
+                const existing=await ref.get();
+                if(!existing.exists && !fauCanEnroll(await fauEnrollmentState()))throw new Error('As inscrições foram encerradas pela produção.');
+                if(!existing.exists){await ref.set({real,designer,email:user.email,uid:user.uid,status:'aguardando',createdAt:firebase.firestore.FieldValue.serverTimestamp()});}
+                sessionStorage.removeItem('fauRegistrationDraft');
+                showRegistrationReceipt(user,existing.exists);
+            }catch(ex){console.error('Designer registration:',ex);err.textContent=ex?.code==='permission-denied'?'Permissão negada. Publique também as regras V98 do Firestore.':(ex?.message||'Não foi possível registrar. Tente novamente.');btn.disabled=false;btn.textContent='CONTINUAR COM GOOGLE →';}
+        };
+    };
+    const showRegistrationReceipt = (user,already=false) => {
+        $('#navContainer').innerHTML='';$('#userHeaderSlot').innerHTML='';
+        renderView(`<section class="max-w-lg mx-auto my-10 p-8 text-center border border-fashion-gold/50 rounded-3xl bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">${already?'YOU’RE ALREADY IN!':'YOU’RE IN!'}</h1><p class="italic text-fashion-gold">Your journey to the runway begins now.</p><p class="text-sm text-gray-200">Sua inscrição está registrada. A produção ativará seu perfil antes da estreia. Você entrará usando esta mesma conta Google.</p><p class="text-xs text-gray-400">${esc(user.email||'')}</p><button id="fauRegLogout" class="border border-fashion-gold text-fashion-gold px-5 py-3 rounded-lg text-xs">SAIR</button></section>`);
+        $('#fauRegLogout').onclick=()=>auth.signOut();
+    };
     const showLogin = () => {
         $('#navContainer').innerHTML = '';
         $('#userHeaderSlot').innerHTML = '';
@@ -991,7 +1055,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     <p id="loginError" role="alert" aria-live="polite" class="hidden text-xs text-red-300 rounded-lg border border-red-800/70 bg-red-950/40 p-3"></p>
                     <button id="btnLogin" type="submit" class="w-full bg-fashion-gold hover:brightness-110 text-fashion-950 font-bold py-3.5 rounded-lg text-xs uppercase tracking-[.18em] transition disabled:opacity-60">ENTER THE RUNWAY <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i></button>
                   </form>
-                  <div class="rounded-xl border border-fashion-gold/30 bg-fashion-900/50 p-4 space-y-3"><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE FRONT ROW · PLATEIA</p><h3 class="font-cinzel text-white text-lg">YOUR SEAT IS WAITING.</h3><p class="text-xs text-gray-200">Quer acompanhar o reality? Entre diretamente na plateia, sem criar usuário ou senha.</p><button type="button" id="fauAudienceEntry" class="w-full border border-fashion-gold rounded-lg px-4 py-3.5 font-bold text-fashion-gold text-xs tracking-widest hover:bg-fashion-gold/10 disabled:opacity-60">ENTRAR COMO PLATEIA <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i></button><p id="fauAudienceError" class="hidden text-xs text-red-200" role="alert"></p></div><p class="text-[11px] text-gray-400 leading-relaxed">Designer ou jurado sem acesso? Solicite suas credenciais à produção.</p>
+                  <div class="rounded-xl border border-fashion-gold/50 bg-fashion-900/70 p-5 space-y-3"><p class="text-[10px] tracking-[.27em] text-fashion-gold">THE NEXT SEASON · YOUR FIRST STEP</p><h3 class="font-cinzel text-xl text-white">ARE YOU IN?</h3><p id="fauEnrollmentStatus" class="text-xs text-gray-300">Verificando inscrições…</p><button type="button" id="fauOpenRegistration" disabled class="w-full bg-fashion-gold text-fashion-950 font-bold rounded-lg py-3 text-xs tracking-widest disabled:opacity-40">INSCREVER-SE COMO DESIGNER</button></div>
+                  <div class="rounded-xl border border-fashion-700 bg-fashion-950/60 p-4 space-y-2"><p class="text-[10px] tracking-[.2em] text-fashion-gold">ALREADY IN?</p><button type="button" id="fauGoogleLogin" class="w-full border border-fashion-gold text-white rounded-lg px-4 py-3 text-xs">ENTRAR COM GOOGLE</button><p class="text-[11px] text-gray-400">Já se inscreveu? Use a mesma conta Google para entrar ou consultar seu acesso.</p></div>
+<div class="rounded-xl border border-fashion-gold/30 bg-fashion-900/50 p-4 space-y-3"><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE FRONT ROW · PLATEIA</p><h3 class="font-cinzel text-white text-lg">YOUR SEAT IS WAITING.</h3><p class="text-xs text-gray-200">Quer acompanhar o reality? Entre diretamente na plateia, sem criar usuário ou senha.</p><button type="button" id="fauAudienceEntry" class="w-full border border-fashion-gold rounded-lg px-4 py-3.5 font-bold text-fashion-gold text-xs tracking-widest hover:bg-fashion-gold/10 disabled:opacity-60">ENTRAR COMO PLATEIA <i class="fa-solid fa-arrow-right ml-2" aria-hidden="true"></i></button><p id="fauAudienceError" class="hidden text-xs text-red-200" role="alert"></p></div><p class="text-[11px] text-gray-400 leading-relaxed">Designer ou jurado sem acesso? Solicite suas credenciais à produção.</p>
                   <p class="text-[10px] text-gray-500 tracking-wider text-center">THE SHOW BEGINS BACKSTAGE</p>
                 </div>
               </div>
@@ -999,6 +1065,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           </section>
         `);
         const showError = message => { const el=$('#loginError'); if(el){el.textContent=message;el.classList.remove('hidden');} else showToast(message); };
+        $('#fauOpenRegistration').onclick=()=>showDesignerRegistration();
+        fauEnrollmentState().then(g=>{const b=$('#fauOpenRegistration'),status=$('#fauEnrollmentStatus');if(!b||!status)return;const open=fauCanEnroll(g);b.disabled=!open;status.textContent=open?'As inscrições estão abertas. Todo inscrito garante sua vaga na temporada.':g.seasonStarted?'A temporada já começou. Inscrições encerradas.':'As inscrições ainda não foram abertas pela produção.';if(!open)b.textContent='INSCRIÇÕES ENCERRADAS';});
+        $('#fauGoogleLogin').onclick=async()=>{try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(ex){showError('Não foi possível entrar com Google: '+(ex.message||'tente novamente'));}};
         $('#fauAudienceEntry').onclick=async()=>{
             const btn=$('#fauAudienceEntry'),error=$('#fauAudienceError');
             btn.disabled=true;btn.textContent='ABRINDO A PRIMEIRA FILA…';error.classList.add('hidden');
@@ -1040,7 +1109,15 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             isAdmin=adminCheck.exists||adminByEmail.exists;
             const profileSnap=await db.doc(`perfis/${user.uid}`).get();
             profileData=profileSnap.data()||{};
-            if(!profileSnap.exists&&!isAdmin){await auth.signOut();showToast('Acesso restrito a Designers e Jurados cadastrados.');return showLogin();}
+            if(!profileSnap.exists&&!isAdmin){
+                const draft=sessionStorage.getItem('fauRegistrationDraft');
+                if(draft && user.providerData?.some(p=>p.providerId==='google.com')){
+                    try { const d=JSON.parse(draft);showDesignerRegistration(user);$('#fauRegReal').value=d.real||'';$('#fauRegDesigner').value=d.designer||'';return; }catch(_){}
+                }
+                const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();
+                if(enrollment.exists){showRegistrationReceipt(user,true);return;}
+                await auth.signOut();showToast('Acesso restrito a Designers e Jurados cadastrados.');return showLogin();
+            }
         }
 
         if (profileData.disabled && !isAdmin) {
@@ -1187,9 +1264,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               if(!mine)return;
               const status=String(mine.status||'').toUpperCase();
               const out=!!currentUser.out || /\bOUT\b|ELIMINAD/.test(status);
-              let key=out?'out':/VENCEDOR DA TEMPORADA/.test(status)?'champion':/\bWIN\b/.test(status)?'win':/\bHIGH\b|\bTOP\b/.test(status)?'high':/\bLOW\b|\bBOTTOM\b/.test(status)?'low':'safe';
+              let key=out?'out':/(?:WINNER|VENCEDOR DA TEMPORADA)/.test(status)?'champion':/\bWIN\b/.test(status)?'win':/\bHIGH\b|\bTOP\b/.test(status)?'high':/\bLOW\b|\bBOTTOM\b/.test(status)?'low':'safe';
               const messages={
-                champion:['THE LEGEND IS BORN','Seu Designer conquistou a temporada. A passarela agora faz parte do seu legado.','🏆'],
+                champion:['THE WINNER · THE LEGEND IS BORN','Seu Designer conquistou a temporada. A passarela agora faz parte do seu legado.','🏆'],
                 win:['THE WINNING LOOK','Esta foi a sua passarela. Sua criação venceu o desafio e conquistou o destaque máximo da rodada.','🏆'],
                 high:['THE STANDOUTS','Seu look chamou a atenção dos jurados e colocou seu Designer entre os destaques da semana.','✨'],
                 safe:['YOU ARE SAFE','Seu Designer continua na competição. A próxima passarela será uma nova oportunidade de surpreender.','🕊️'],
@@ -2166,8 +2243,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           </article>`;
         }).join('');
         body.innerHTML=`
-          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">The Winners & The Icons</h3>
-          <p class="text-gray-400 text-sm">WIN é a vitória dos jurados. Ícone da Moda é uma distinção separada, decidida pelos participantes. Ambas entram no Hall.</p>
+          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">The WINs & The Icons</h3>
+          <p class="text-gray-400 text-sm">WIN é a vitória de uma rodada, decidida pelos jurados. WINNER é o título exclusivo de quem vence a temporada. Ícone da Moda é uma distinção separada, decidida pelos participantes. Todos ficam registrados no Hall.</p>
           ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm">Nenhuma conquista oficial disponível ainda.</p>'}</section>
           <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">The Designers' Dossiers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
           <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
@@ -3041,6 +3118,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     <span class="text-xs font-mono text-gray-400">Rodada: <strong>${esc(globalState.rodada || '-')}</strong> (${esc(globalState.fase || 'normal')})</span>
                 </div>
 
+                <section id="fauDesignerRoster" class="rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4">
+                  <div><p class="text-[10px] tracking-[.3em] text-fashion-gold">SEASON 01 · REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DESIGNER ROSTER</h3><p class="text-xs text-gray-300 mt-1">Inscritos confirmados via Google. Ative a conta existente para dar acesso ao Workroom — sem gerar outra senha.</p></div>
+                  <button type="button" id="fauRosterRefresh" class="rounded border border-fashion-gold text-fashion-gold px-4 py-2 text-xs">↻ ATUALIZAR INSCRIÇÕES</button>
+                  <div id="fauRosterList" class="space-y-3 text-sm text-gray-300" aria-live="polite">Carregando inscrições…</div>
+                </section>
+                <section class="rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3" id="fauEnrollmentAdmin"><p class="text-[10px] tracking-[.28em] text-fashion-gold">🎬 THE PRODUCTION OFFICE · SEASON REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DOORS TO THE WORKROOM</h3><p class="text-xs text-gray-300">Abra ou feche as inscrições. Ao marcar a estreia, novas inscrições ficam bloqueadas até que você reinicie explicitamente o estado da temporada.</p><p id="fauEnrollmentAdminStatus" class="text-xs text-fashion-gold">Carregando status…</p><div class="flex flex-wrap gap-2"><button type="button" id="fauEnrollmentOpen" class="border border-fashion-gold text-fashion-gold rounded px-4 py-3 text-xs">ABRIR INSCRIÇÕES</button><button type="button" id="fauEnrollmentClose" class="border border-fashion-700 text-white rounded px-4 py-3 text-xs">FECHAR INSCRIÇÕES</button><button type="button" id="fauEnrollmentStart" class="border border-red-800 text-red-300 rounded px-4 py-3 text-xs">CONFIRMAR ESTREIA DA TEMPORADA</button></div></section>
                 <section id="fauProductionDesk" class="fau-production-desk rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 md:p-7 space-y-5" aria-label="The Production Desk">
                   <div class="flex flex-wrap justify-between gap-3 items-start"><div><p class="text-[10px] tracking-[.35em] text-fashion-gold">PROJECT RUNWAY · FAU / PRODUCTION HEADQUARTERS</p><h3 class="font-cinzel text-2xl text-white mt-2">THE CONTROL ROOM</h3><p class="text-sm text-gray-300 mt-1">O episódio em um olhar. Acompanhe o que precisa de atenção e acesse o controle certo.</p></div><span class="text-[10px] tracking-widest border border-fashion-gold/40 rounded px-3 py-2 text-fashion-gold">PRIVATE · ADMIN</span></div>
                   <div class="grid sm:grid-cols-3 gap-3" aria-label="Estado atual da produção"><div class="rounded-xl bg-fashion-900 border border-fashion-700 p-4"><p class="text-[10px] tracking-widest text-gray-400">EPISÓDIO</p><p class="font-cinzel text-lg text-white">${esc(globalState.rodada || 'Pré-temporada')}</p></div><div class="rounded-xl bg-fashion-900 border border-fashion-700 p-4"><p class="text-[10px] tracking-widest text-gray-400">FASE ATUAL</p><p class="font-cinzel text-sm text-fashion-gold mt-1">${esc((FLOW_STAGES.find(f=>f.id===currentFlowStage())||FLOW_STAGES[0]).title)}</p></div><div class="rounded-xl bg-fashion-900 border border-fashion-700 p-4"><p class="text-[10px] tracking-widest text-gray-400">PASSARELA</p><p class="text-sm text-white mt-1">${globalState.liberado?'Publicada':'Privada · não publicada'}</p></div></div>
@@ -3062,7 +3145,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
                 <section class="bg-fashion-900 border border-fashion-700 rounded-xl p-4 space-y-2" aria-label="Episode Checklist"><p class="text-[10px] text-fashion-gold tracking-widest">🎬 EPISODE CHECKLIST · PRÓXIMA AÇÃO</p><div class="grid sm:grid-cols-2 gap-2 text-xs"><p>${globalState.themeId?'✓':'○'} Desafio configurado</p><p>${globalState.liberado?'✓':'○'} Passarela liberada</p><p>${globalState.urna?'✓':'○'} Votações abertas</p><p>${globalState.berlinda?.length?'✓':'○'} Elimination Pool definido</p></div><p class="text-[11px] text-gray-400">Acompanhe os envios acima; apure as notas e só depois convoque as críticas. As revelações continuam sob seu controle.</p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Critique Call"><div><p class="text-[10px] tracking-[.25em] text-fashion-gold">🎤 THE CRITIQUE CALL · PRODUCTION</p><h3 class="font-cinzel text-lg">Críticas pendentes</h3><p class="text-xs text-gray-400">Após publicar o ranking, convoque os jurados. Textos chegam automaticamente pelo site; áudios do WhatsApp são confirmados aqui com um toque. Nenhuma crítica é publicada automaticamente.</p></div><div id="fauCritiqueAdmin" class="space-y-3"><p class="text-xs text-gray-400">Carregando...</p></div><div class="flex flex-wrap gap-2"><button id="fauCritiquePublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Publicar críticas com texto</button><button id="fauCritiqueHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar críticas</button></div><p id="fauCritiquePublishStatus" class="text-xs text-gray-400">Áudios do WhatsApp só aparecem publicamente se você registrar uma transcrição.</p></section>
-                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Results Show Director"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS SHOW · REVEAL DIRECTOR</p><h3 class="font-cinzel text-xl">Revelações ao vivo</h3><p class="text-xs text-gray-400">Prepare uma cena sem publicar notas, votos ou classificações privadas. Só o conteúdo aprovado abaixo será mostrado à plateia. Cada avanço exige confirmação.</p></div><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs">Momento<select id="fauRevealMoment" class="block w-full bg-fashion-950 border border-fashion-700 p-2 rounded mt-1"><option value="opening">🎬 Abertura</option><option value="winner">🏆 WIN · The Winning Look</option><option value="high">✨ HIGH · The Standouts</option><option value="safe">🕊️ SAFE · You May Leave the Runway</option><option value="low">⚠️ LOW · Under Scrutiny</option><option value="pool">🚨 The Elimination Pool</option><option value="icon">👑 Ícone da Moda</option><option value="fora">🥀 Fora de Moda</option><option value="elimination">💔 OUT · Auf Wiedersehen</option><option value="next">🔐 Next Challenge</option></select></label><label class="text-xs">Título exibido<input id="fauRevealTitle" maxlength="100" class="block w-full bg-fashion-950 border border-fashion-700 p-2 rounded mt-1" placeholder="Ex.: And the winner is..."></label></div><p class="text-[11px] text-gray-400">Referência do reality: normalmente 3 destaques (WIN + 2 HIGH) e 3 piores (LOW/BOTTOM). No FAU, o Elimination Pool é separado e tem regras próprias. A produção confirma os nomes antes de revelar.</p><textarea id="fauRevealMessage" maxlength="450" rows="2" class="w-full bg-fashion-950 border border-fashion-700 p-3 rounded text-sm" placeholder="Escreva exatamente o que a plateia poderá ler. Não inclua notas ou informações secretas."></textarea><div class="flex flex-wrap gap-2"><button id="fauRevealPublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Revelar cena</button><button id="fauRevealHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar cerimônia</button><button id="fauRevealPreview" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Prévia</button></div><div id="fauRevealStatus" class="text-xs text-gray-300" role="status"></div></section><section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👑 THE PEOPLE'S VERDICT · OFFICIAL TITLES</p><h3 class="font-cinzel text-xl text-white">The Crown & The Fall</h3><p class="text-xs text-gray-300">Depois de anunciar no WhatsApp, registre aqui os títulos oficiais em um só passo. Não há nova votação nem revelação automática. Confira os desempates antes de confirmar.</p><div class="grid sm:grid-cols-3 gap-3"><label class="text-xs text-gray-300">Ícone da Moda<select id="fauOfficialIcon" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"><option value="">Sem título / não apurado</option></select></label><label class="text-xs text-gray-300">Fora de Moda<select id="fauOfficialFora" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"><option value="">Sem título / não apurado</option></select></label><label class="text-xs text-gray-300">Saved by the Atelier (até 2)<select id="fauOfficialSaved" multiple size="4" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"></select></label></div><div class="flex flex-wrap gap-2"><button id="fauOfficialLoad" type="button" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Carregar Maisons</button><button id="fauOfficialPublish" type="button" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Confirmar títulos já anunciados</button><button id="fauOfficialCopy" type="button" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar anúncio para WhatsApp</button></div><p id="fauOfficialStatus" class="text-xs text-gray-400" role="status"></p></section>
+                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Results Show Director"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS SHOW · REVEAL DIRECTOR</p><h3 class="font-cinzel text-xl">Revelações ao vivo</h3><p class="text-xs text-gray-400">Prepare uma cena sem publicar notas, votos ou classificações privadas. Só o conteúdo aprovado abaixo será mostrado à plateia. Cada avanço exige confirmação.</p></div><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs">Momento<select id="fauRevealMoment" class="block w-full bg-fashion-950 border border-fashion-700 p-2 rounded mt-1"><option value="opening">🎬 Abertura</option><option value="winner">🏆 WIN · The Winning Look</option><option value="high">✨ HIGH · The Standouts</option><option value="safe">🕊️ SAFE · You May Leave the Runway</option><option value="low">⚠️ LOW · Under Scrutiny</option><option value="pool">🚨 The Elimination Pool</option><option value="icon">👑 Ícone da Moda</option><option value="fora">🥀 Fora de Moda</option><option value="elimination">💔 OUT · Auf Wiedersehen</option><option value="next">🔐 Next Challenge</option></select></label><label class="text-xs">Título exibido<input id="fauRevealTitle" maxlength="100" class="block w-full bg-fashion-950 border border-fashion-700 p-2 rounded mt-1" placeholder="Ex.: And the WIN goes to..."></label></div><p class="text-[11px] text-gray-400">Referência do reality: normalmente 3 destaques (WIN + 2 HIGH) e 3 piores (LOW/BOTTOM). No FAU, o Elimination Pool é separado e tem regras próprias. A produção confirma os nomes antes de revelar.</p><textarea id="fauRevealMessage" maxlength="450" rows="2" class="w-full bg-fashion-950 border border-fashion-700 p-3 rounded text-sm" placeholder="Escreva exatamente o que a plateia poderá ler. Não inclua notas ou informações secretas."></textarea><div class="flex flex-wrap gap-2"><button id="fauRevealPublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Revelar cena</button><button id="fauRevealHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar cerimônia</button><button id="fauRevealPreview" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Prévia</button></div><div id="fauRevealStatus" class="text-xs text-gray-300" role="status"></div></section><section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👑 THE PEOPLE'S VERDICT · OFFICIAL TITLES</p><h3 class="font-cinzel text-xl text-white">The Crown & The Fall</h3><p class="text-xs text-gray-300">Depois de anunciar no WhatsApp, registre aqui os títulos oficiais em um só passo. Não há nova votação nem revelação automática. Confira os desempates antes de confirmar.</p><div class="grid sm:grid-cols-3 gap-3"><label class="text-xs text-gray-300">Ícone da Moda<select id="fauOfficialIcon" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"><option value="">Sem título / não apurado</option></select></label><label class="text-xs text-gray-300">Fora de Moda<select id="fauOfficialFora" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"><option value="">Sem título / não apurado</option></select></label><label class="text-xs text-gray-300">Saved by the Atelier (até 2)<select id="fauOfficialSaved" multiple size="4" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"></select></label></div><div class="flex flex-wrap gap-2"><button id="fauOfficialLoad" type="button" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Carregar Maisons</button><button id="fauOfficialPublish" type="button" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Confirmar títulos já anunciados</button><button id="fauOfficialCopy" type="button" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar anúncio para WhatsApp</button></div><p id="fauOfficialStatus" class="text-xs text-gray-400" role="status"></p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Official Reveal Assistant"><p class="text-[10px] tracking-[.3em] text-fashion-gold">🎭 OFFICIAL REVEAL ASSISTANT</p><h3 class="font-cinzel text-lg">Preparar cenas a partir dos resultados oficiais</h3><p class="text-xs text-gray-400">Carrega WIN, SAFE e Elimination Pool do ranking já publicado. A eliminação só pode ser preenchida após confirmação oficial. Nada é publicado automaticamente.</p><button id="fauRevealSuggest" class="border border-fashion-gold text-fashion-gold rounded px-4 py-2 text-xs">🎬 Carregar anúncio oficial</button><p id="fauRevealSuggestStatus" class="text-xs text-gray-400" role="status"></p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Twist Director"><p class="text-[10px] tracking-[.3em] text-fashion-gold">🎲 THE TWIST DIRECTOR</p><h3 class="font-cinzel text-lg">Dinâmica especial desta rodada</h3><div id="fauTwistDirector" class="text-xs text-gray-300 space-y-2"></div></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Auto Fashion Archive"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👗 THE FASHION ARCHIVE · ONE-CLICK CURATION</p><h3 class="font-cinzel text-lg">Publicar os looks da rodada</h3><p class="text-xs text-gray-400">Depois de liberar o desfile, copie as criações da rodada para o acervo público. Evita cadastro manual e não inclui notas, votos ou prompts. Operação idempotente: repetir não duplica os looks.</p><button id="fauArchiveSync" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold">📸 Arquivar looks liberados</button><p id="fauArchiveSyncStatus" class="text-xs text-gray-400" role="status"></p></section>
@@ -3568,7 +3651,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const liveScenes=[
           ['🎬','Opening Sequence','Abertura e briefing'],['✂️','The Workroom','Bastidores e entregas'],
           ['👠','The Runway','Apresentação das Maisons'],['⚖️','Judges’ Verdict','Avaliação da bancada'],
-          ['👑','The Winner','Anúncio do WIN'],['🗳️','The Voting Room','Votação dos estilistas'],
+          ['🏆','The Weekly WIN','Anúncio do WIN da rodada'],['🗳️','The Voting Room','Votação dos estilistas'],
           ['🚨','The Elimination Pool','Revelação dos elegíveis'],['🏆','The Final Decision','Resultado oficial']
         ];
         let liveSceneIndex=Math.max(0,Math.min(liveScenes.length-1,Number(globalState.liveSceneIndex)||0));
@@ -3613,7 +3696,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           const rows=Array.isArray(doc.data().rows)?doc.data().rows:[];
           const moment=$('#fauRevealMoment').value;
           let selected=[];let title='';
-          if(moment==='winner'){selected=rows.filter(x=>/WIN|VENCEDOR DA TEMPORADA/i.test(x.status||''));title='And the winner is...';}
+          if(moment==='winner'){selected=rows.filter(x=>/WIN|VENCEDOR DA TEMPORADA/i.test(x.status||''));title='And the WIN goes to...';}
           else if(moment==='high'){selected=rows.filter(x=>/HIGH|^TOP/i.test(x.status||''));title='Your designs stood out.';}
           else if(moment==='safe'){selected=rows.filter(x=>/^SAFE|^IN$/i.test(x.status||''));title='You are safe. You may leave the runway.';}
           else if(moment==='low'){selected=rows.filter(x=>/^LOW|^BOTTOM/i.test(x.status||''));title='Your looks failed to impress.';}
@@ -4027,6 +4110,57 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         };
         $('#directorPreviewTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-preview-role]');if(!b)return;directorRole=b.dataset.previewRole;renderDirectorPreview();});
         ['newRoundId','newRoundSubmissions','newRoundPhase','newRoundElimType','newRoundRules'].forEach(id=>$('#'+id)?.addEventListener('input',renderDirectorPreview));
+        // O fechamento é persistido no Firestore e reforçado pelas regras de criação.
+        const refreshEnrollmentAdmin=async()=>{const el=$('#fauEnrollmentAdminStatus');if(!el)return;const st=await fauEnrollmentState();el.textContent=st.seasonStarted?'🔒 TEMPORADA INICIADA · Inscrições encerradas':st.open?'🟢 INSCRIÇÕES ABERTAS':'🔒 INSCRIÇÕES FECHADAS';$('#fauEnrollmentOpen').disabled=st.seasonStarted;};
+        const updateEnrollmentAdmin=async(action)=>{try{const st=await fauEnrollmentState();if(action==='open'&&st.seasonStarted)throw new Error('A temporada já começou. Não é possível reabrir inscrições.');if(action==='start'&&!confirm('Confirmar a estreia? Isso encerra definitivamente as inscrições desta temporada.'))return;const payload=action==='open'?{open:true,seasonStarted:false}:action==='close'?{open:false,seasonStarted:st.seasonStarted}:{open:false,seasonStarted:true};await fauEnrollmentRef.set({...payload,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});await refreshEnrollmentAdmin();showToast('Estado das inscrições atualizado.');}catch(e){console.error(e);showToast(e.message||'Não foi possível alterar inscrições.');}};
+        $('#fauEnrollmentOpen')?.addEventListener('click',()=>updateEnrollmentAdmin('open'));
+        $('#fauEnrollmentClose')?.addEventListener('click',()=>updateEnrollmentAdmin('close'));
+        $('#fauEnrollmentStart')?.addEventListener('click',()=>updateEnrollmentAdmin('start'));
+        refreshEnrollmentAdmin();
+        // The Designer Roster — dados privados, operações somente pela produção.
+        const rosterList=$('#fauRosterList');
+        const loadDesignerRoster=async()=>{
+            if(!rosterList||!rosterList.isConnected||!isAdmin)return;
+            rosterList.textContent='Carregando inscrições…';
+            try{
+                const snap=await db.collection('inscricoes_designers').get();
+                const entries=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+                rosterList.innerHTML=entries.length?entries.map(x=>`<article class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-2"><div class="flex justify-between gap-2"><div><p class="font-cinzel text-white">${esc(x.designer)}</p><p class="text-xs text-gray-300">${esc(x.real)} · ${esc(x.email)}</p></div><span class="text-[10px] text-fashion-gold">${esc(x.status||'aguardando')}</span></div><div class="flex flex-wrap gap-2"><button data-roster="activate" data-roster-uid="${esc(x.uid)}" class="border border-fashion-gold text-fashion-gold rounded px-3 py-2 text-xs">ATIVAR DESIGNER</button><button data-roster="edit" data-roster-uid="${esc(x.uid)}" class="border border-fashion-700 text-white rounded px-3 py-2 text-xs">EDITAR</button><button data-roster="delete" data-roster-uid="${esc(x.uid)}" class="border border-red-800 text-red-300 rounded px-3 py-2 text-xs">EXCLUIR INSCRIÇÃO</button></div></article>`).join(''):'Nenhuma inscrição registrada ainda.';
+            }catch(e){console.error(e);rosterList.textContent='Não foi possível carregar inscrições. Confira as regras V98.';}
+        };
+        $('#fauRosterRefresh')?.addEventListener('click',loadDesignerRoster);
+        rosterList?.addEventListener('click',async e=>{
+            const btn=e.target.closest('[data-roster]');if(!btn||!isAdmin)return;
+            const uid=btn.dataset.rosterUid,act=btn.dataset.roster;
+            if(!uid||uid===auth.currentUser?.uid)return;
+            btn.disabled=true;
+            try{
+                const ref=db.doc(`inscricoes_designers/${uid}`),snap=await ref.get();
+                if(!snap.exists)throw new Error('Inscrição não encontrada.');
+                const x=snap.data();
+                if(act==='activate'){
+                    if(!confirm(`Ativar ${x.designer} como Designer usando a conta Google ${x.email}?`))return;
+                    const profile=db.doc(`perfis/${uid}`),existing=await profile.get();
+                    if(existing.exists && existing.data().role!=='estilista')throw new Error('Esta conta já tem outro tipo de perfil. Use User Management.');
+                    const batch=db.batch();
+                    batch.set(profile,{ate:x.designer,username:'google_'+uid.slice(0,12),role:'estilista',disabled:false,out:false,bio:'',createdAt:now()},{merge:true});
+                    batch.set(db.doc(`identidades/${uid}`),{real:x.real,username:x.email,ate:x.designer,email:x.email,createdAt:now()},{merge:true});
+                    batch.update(ref,{status:'ativo',activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                    await batch.commit();showToast('Designer ativado. Ele já pode entrar com Google.');
+                }else if(act==='edit'){
+                    const real=prompt('Nome real:',x.real);if(real===null)return;
+                    const designer=prompt('Nome de Designer:',x.designer);if(designer===null)return;
+                    if(!real.trim()||!designer.trim()||real.length>90||designer.length>70||/[<>]/.test(real+designer))throw new Error('Nomes inválidos.');
+                    await ref.update({real:real.trim(),designer:designer.trim()});showToast('Inscrição atualizada.');
+                }else if(act==='delete'){
+                    if(!confirm(`Excluir a inscrição de ${x.designer}? Isso não exclui a conta Google nem o perfil já ativado.`))return;
+                    await ref.delete();showToast('Inscrição excluída.');
+                }
+                await loadDesignerRoster();
+            }catch(ex){console.error(ex);showToast(ex.message||'Falha ao alterar inscrição.');}
+            finally{btn.disabled=false;}
+        });
+        loadDesignerRoster();
         $('#newThemeId').value = globalState.themeId || '';
         $('#newThemeId').onchange = () => {
             const t = SEASON_THEMES[$('#newThemeId').value];
@@ -4489,7 +4623,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const isNonElim = globalState.elimTipo === 'none' || globalState.naoEliminatoria;
 
             const statuses = standings.map((item, idx) => {
-                if (isFinal) return ['VENCEDOR DA TEMPORADA', '2º LUGAR', '3º LUGAR'][idx] || '';
+                if (isFinal) return ['WINNER · VENCEDOR DA TEMPORADA', '2º LUGAR', '3º LUGAR'][idx] || '';
                 if (idx === 0) return 'WIN (PROTEGIDO)';
                 // HIGH/TOP e LOW/BOTTOM são classificações da rodada, não o Elimination Pool.
                 // Em elencos pequenos, não atribuir HIGH e LOW à mesma Maison.
@@ -4553,7 +4687,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             $('#adminOutput').innerHTML = `
                 <p class="text-green-400 font-bold mb-2 font-cinzel">Classificação publicada no The Runway!</p>
                 ${stateUpdate.berlinda?.length ? `<p><strong>THE ELIMINATION POOL:</strong> ${stateUpdate.berlinda.map(b => esc(b.ate)).join(', ')}</p>` : '<p class="text-blue-300"><strong>Rodada Não Eliminatória:</strong> Ninguém na berlinda!</p>'}
-                <p><strong>WINNER DA RODADA:</strong> ${esc(standings[0]?.ate || 'N/A')}</p>
+                <p><strong>WIN DA RODADA:</strong> ${esc(standings[0]?.ate || 'N/A')}</p>
             `;
         });
 
@@ -5152,7 +5286,7 @@ button:disabled,[aria-disabled="true"]{cursor:not-allowed;opacity:.65}
 (()=>{
 'use strict';
 const main=document.getElementById('mainView');if(!main)return;
-const labels={WIN:'WIN · Vencedor da rodada',HIGH:'HIGH · Destaque',SAFE:'SAFE · Continua na competição',LOW:'LOW · Entre os piores',OUT:'OUT · Eliminado'};
+const labels={WIN:'WIN · Melhor look da rodada',HIGH:'HIGH · Destaque',SAFE:'SAFE · Continua na competição',LOW:'LOW · Entre os piores',OUT:'OUT · Eliminado'};
 let busy=false;
 const apply=()=>{
  if(busy)return;busy=true;
@@ -5160,7 +5294,7 @@ const apply=()=>{
   // Do not infer status from CSS color: explicit visible words are authoritative.
   main.querySelectorAll('[data-maison-status]').forEach(el=>{
    const key=(el.dataset.maisonStatus||'').toUpperCase();
-   const label=labels[key]||(key==='CHAMPION'?'CAMPEÃO · Vencedor da temporada':'');
+   const label=labels[key]||((key==='CHAMPION'||key==='WINNER')?'WINNER · Campeão da temporada':'');
    if(label && el.dataset.fauStatusExplained!==key){
     el.dataset.fauStatusExplained=key;
     let note=el.querySelector('[data-fau-status-label]');
@@ -5445,7 +5579,7 @@ function calcPoints(r){let looks=current().key==='supreme'?[chosenLook(r)]:r.loo
 function publish(){const ep=current();if(!ep)return;fillJudging();ep.rows.forEach(r=>{r.points=calcPoints(r);r.award='SAFE'});const sorted=[...ep.rows].sort((a,b)=>b.points-a.points||a.id-b.id);if(sorted.length){sorted[0].award='WIN';getPerson(sorted[0].id).wins++}
  const icon=sorted.length?sorted[Math.floor(rnd()*sorted.length)]:null;if(icon){icon.icon=true;getPerson(icon.id).icons++}
  if((ep.official?ep.official.elimTipo!=='none':themes[sim.index].eliminate)){ep.bottom=sorted.slice(-Math.min(3,sorted.length)).map(r=>r.id);let eliminated=sorted[sorted.length-1];if(ep.key==='rest'){ep.bottom.forEach(id=>{let r=ep.rows.find(x=>x.id===id);r.restLook={title:'THE FINAL FAREWELL',sent:true};r.restVotes=Array.from({length:Math.max(1,ep.rows.length-3)},()=>number())});eliminated=[...sorted.filter(r=>ep.bottom.includes(r.id))].sort((a,b)=>average(a.restVotes)-average(b.restVotes))[0]}if(eliminated){eliminated.award='OUT';eliminated.eliminated=true;ep.eliminated=eliminated.id;getPerson(eliminated.id).out=true}}
- if(ep.key==='finale'&&sorted.length){sorted[0].award='CHAMPION';ep.champion=sorted[0].id}
+ if(ep.key==='finale'&&sorted.length){sorted[0].award='WINNER';ep.champion=sorted[0].id}
  if(ep.key!=='finale')ep.rows.forEach(r=>getPerson(r.id).total+=r.points);
  ep.published=true;sim.stage='results';tab='results';draw();}
 const average=a=>a.reduce((x,y)=>x+y,0)/(a.length||1);
@@ -5454,7 +5588,7 @@ const garment=(p,look,idx=0)=>`<div class="fau92-garment" style="--fabric:${p.co
 const lookCard=(r,l,idx=0,opts={})=>{let p=getPerson(r.id);return `<article class="fau92-lookcard">${garment(p,l,idx)}<div class="fau92-lookinfo"><small>${escape(p.name)}</small><strong>${escape(l.title)}</strong><div class="fau92-meta">${l.sent?pill('ENTREGUE','good'):pill('RASCUNHO','warn')} ${r.selected===idx+1?pill('ESCOLHIDA','good'):''}</div>${opts.score&&l.judges.some(n=>n!=null)?`<p>Notas: ${l.judges.map(n=>n==null?'—':n.toFixed(1)).join(' · ')}</p>`:''}</div></article>`};
 const roleLabel={admin:'PRODUÇÃO / ADM',designer:'DESIGNER',juror:'JURADO',audience:'PLATEIA'};
 const tabs=[['overview','CONTROL ROOM'],['workroom','WORKROOM'],['runway','RUNWAY'],['jury','JURY ROOM'],['results','RESULTADOS'],['archive','FASHION ARCHIVE'],['vault','THEME VAULT']];
-function header(){const ep=current();return `<header class="fau92-head"><div><div class="fau92-kicker">PROJECT RUNWAY: FAU · PRODUCTION LAB</div><h2>THE TEST RUN <span>✦</span></h2><p>Prévia interativa de uma temporada fictícia. Não grava nem lê dados do Firebase.</p></div><button class="fau92-close" data-action="close" aria-label="Fechar">✕</button></header>
+function header(){const ep=current();return `<header class="fau92-head"><div><div class="fau92-kicker">PROJECT RUNWAY: FAU · PRODUCTION LAB</div><h2>THE TEST RUN <span>✦</span></h2><p>Prévia interativa de uma temporada fictícia. WIN = vencedor de uma rodada; WINNER = campeão da temporada. Não grava nem lê dados do Firebase.</p></div><button class="fau92-close" data-action="close" aria-label="Fechar">✕</button></header>
  <div class="fau92-bar"><div><span class="fau92-small">VISUALIZAR COMO</span><select id="fau92Role" aria-label="Perfil de visualização">${Object.entries(roleLabel).map(([k,v])=>`<option value="${k}" ${role===k?'selected':''}>${v}</option>`).join('')}</select>${role==='designer'?`<select id="fau92Person" aria-label="Designer">${sim.people.map(p=>`<option value="${p.id}" ${person===p.id?'selected':''}>${escape(p.name)}</option>`).join('')}</select>`:''}${role==='juror'?`<select id="fau92Judge" aria-label="Jurado">${judgeNames.map((j,i)=>`<option value="${i}" ${judge===i?'selected':''}>${j}</option>`).join('')}</select>`:''}</div><div class="fau92-barstate">${ep?`WEEK ${String(sim.index+1).padStart(2,'0')} · ${escape(ep.theme)} · ${stageName[sim.stage]}`:'TEMPORADA ENCERRADA'}</div></div>
  <nav class="fau92-tabs" aria-label="Áreas da simulação">${tabs.filter(([k])=>role==='admin'||(role==='designer'?k!=='jury':role==='juror'?k!=='workroom':!['workroom','jury','overview','vault'].includes(k))).map(([k,v])=>`<button data-tab="${k}" class="${tab===k?'active':''}">${v}</button>`).join('')}</nav>`}
 function overview(){const ep=current();return `<div class="fau92-hero"><div class="fau92-kicker">${ep?'NEXT ON THE RUNWAY':'SEASON COMPLETE'}</div><h3>${escape(ep?.theme||'THE FINAL CUT')}</h3><p>${escape(ep?.subtitle||'The next fashion legend has been crowned.')}</p></div><div class="fau92-stats"><div><strong>${sim.people.length}</strong><span>DESIGNERS</span></div><div><strong>${live().length}</strong><span>ATIVOS</span></div><div><strong>${sim.index}/${themes.length}</strong><span>EPISÓDIOS</span></div><div><strong>${sim.history.length}</strong><span>ARQUIVADOS</span></div></div>
