@@ -352,7 +352,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 mandate: "🏰 DRESSED TO KILL: escolha FAITHFUL (colar com pingente de escudo) ou TRAITOR (broche com joia amaldiçoada). Crie um editorial de gala, sem cosplay medieval. A facção será secreta até a revelação autorizada pela produção.",
                 extraField: null,
                 requiresPrompt: true,
-                twistRule: "Pior Faithful + pior Traitor pela nota dos jurados + pior elegível do ranking acumulado (proteção WIN apenas na vaga acumulada)."
+                twistRule: "Pior Faithful + pior Traitor + pior elegível do acumulado. Se uma facção tiver apenas um integrante, ele só será imune se tiver a maior nota geral; nesse caso, o Pool terá excepcionalmente duas vagas."
             },
             "theme_beauty_eye": {
                 id: "theme_beauty_eye",
@@ -3602,42 +3602,50 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             return rows.sort((a, b) => b.tot - a.tot || b.rd - a.rd);
         };
 
-        // THE BLACK BANQUET: apuração privada, nunca executada no cliente dos estilistas.
+        // THE BLACK BANQUET: duas lideranças imunizadas, um WIN oficial geral.
         const computeTraitorsPool = async standings => {
             if (!isAdmin) throw new Error('Apenas a produção pode apurar as facções.');
-            const round = String(globalState.rodada);
+            const round = String(globalState.rodada || '');
+            if (!round) throw new Error('Selecione uma rodada antes de apurar The Traitors.');
             const snaps = await Promise.all(standings.map(x => db.doc(`sorteios/${round}_${x.uid}`).get()));
             const members = standings.map((x,i) => ({...x, faction: snaps[i].exists && snaps[i].data().themeId === 'theme_traitors' ? snaps[i].data().value : null}));
             const missing = members.filter(x => !['Faithful','Traitor'].includes(x.faction));
-            if (missing.length) throw new Error('Facções pendentes: ' + missing.map(x => x.ate).join(', ') + '. A produção deve resolver antes de publicar.');
-            const byScore = (a,b) => a.rd-b.rd || a.tot-b.tot || a.uid.localeCompare(b.uid);
-            const faithful = members.filter(x => x.faction === 'Faithful').sort(byScore)[0];
-            const traitor = members.filter(x => x.faction === 'Traitor').sort(byScore)[0];
-            if (!faithful || !traitor) {
-                const win = [...members].sort((a,b) => b.rd-a.rd || b.tot-a.tot)[0];
-                const worstRound = [...members].sort(byScore).slice(0,2);
-                const accumulated = [...members].sort((a,b) => a.tot-b.tot || a.rd-b.rd).find(x => x.uid !== win.uid && !worstRound.some(w => w.uid === x.uid));
-                if (!accumulated) throw new Error('Não há terceiro participante elegível.');
-                return {pool:[...worstRound,accumulated], members, win, fallback:true, reason:'Facção única: regra normal (dois piores da rodada + pior acumulado elegível).'};
+            if (missing.length) throw new Error('Facções pendentes: '+missing.map(x=>x.ate).join(', '));
+            const byBest=(a,b)=>b.rd-a.rd || b.tot-a.tot || a.uid.localeCompare(b.uid);
+            const byWorst=(a,b)=>a.rd-b.rd || a.tot-b.tot || a.uid.localeCompare(b.uid);
+            const byAccum=(a,b)=>a.tot-b.tot || a.rd-b.rd || a.uid.localeCompare(b.uid);
+            const faithfuls=members.filter(x=>x.faction==='Faithful').sort(byBest);
+            const traitors=members.filter(x=>x.faction==='Traitor').sort(byBest);
+            if (!faithfuls.length || !traitors.length) throw new Error('The Traitors exige pelo menos um Faithful e um Traitor para a apuração por facções.');
+            const bestFaithful=faithfuls[0], bestTraitor=traitors[0];
+            const win=[bestFaithful,bestTraitor].sort(byBest)[0];
+            // Facção com apenas um integrante: ele só é imune se for o WIN geral.
+            // A outra facção conserva a imunidade de seu líder quando possui 2+ integrantes.
+            const immuneUids=[bestFaithful,bestTraitor]
+                .filter(x=>(x.faction==='Faithful'?faithfuls.length:traitors.length)>1 || x.uid===win.uid)
+                .map(x=>x.uid);
+            const protectedSet=new Set(immuneUids);
+            const selected=[];
+            const add=x=>{if(x&&!protectedSet.has(x.uid)&&!selected.some(y=>y.uid===x.uid))selected.push(x);};
+            // As duas primeiras vagas pertencem às facções. Se uma facção não tiver
+            // ninguém elegível, sua vaga passa ao próximo pior da facção oposta.
+            const worstFaithful=[...faithfuls].sort(byWorst).filter(x=>!protectedSet.has(x.uid));
+            const worstTraitor=[...traitors].sort(byWorst).filter(x=>!protectedSet.has(x.uid));
+            add(worstFaithful[0]);
+            add(worstTraitor[0]);
+            let fallback=false;
+            if (selected.length<2) {
+                const replacementPool = worstFaithful.length===0 ? worstTraitor
+                    : worstTraitor.length===0 ? worstFaithful
+                    : [...members].filter(x=>!protectedSet.has(x.uid)).sort(byWorst);
+                const replacement=replacementPool.find(x=>!selected.some(y=>y.uid===x.uid));
+                if(replacement){add(replacement);fallback=true;}
             }
-            const win = [...members].sort((a,b) => b.rd-a.rd || b.tot-a.tot)[0];
-            const faithfulCount = members.filter(x => x.faction === 'Faithful').length;
-            const traitorCount = members.filter(x => x.faction === 'Traitor').length;
-            // Quem é o único representante da facção só escapa da vaga da facção
-            // se vencer a rodada inteira. Nesse caso, a vaga passa ao próximo
-            // pior da rodada que ainda não esteja na berlinda.
-            const selected = [];
-            const add = x => { if (x && !selected.some(y => y.uid === x.uid)) selected.push(x); };
-            if (!(faithfulCount === 1 && faithful.uid === win.uid)) add(faithful);
-            if (!(traitorCount === 1 && traitor.uid === win.uid)) add(traitor);
-            const byAccum = (a,b) => a.tot-b.tot || a.rd-b.rd || a.uid.localeCompare(b.uid);
-            add([...members].sort(byAccum).find(x => x.uid !== win.uid && !selected.some(y => y.uid === x.uid)));
-            for (const candidate of [...members].sort(byScore)) {
-                if (selected.length >= 3) break;
-                if (candidate.uid !== win.uid) add(candidate);
-            }
-            if (selected.length !== 3) throw new Error('Não há três participantes elegíveis para o Elimination Pool.');
-            return {pool:selected, members, win, fallback:false, reason:'Pior Faithful + pior Traitor (representante único só escapa se for WIN geral) + pior acumulado elegível; vagas protegidas do WIN preenchidas pela menor nota disponível.'};
+            // Terceira vaga: pior acumulado elegível que ainda não esteja no Pool.
+            add([...members].sort(byAccum).find(x=>!protectedSet.has(x.uid)&&!selected.some(y=>y.uid===x.uid)));
+            if (selected.length!==3) throw new Error(`Não foi possível formar o Elimination Pool com três pessoas: há apenas ${selected.length} elegíveis. Confira os participantes, as notas e as imunidades.`);
+            return {pool:selected,members,win,bestFaithful,bestTraitor,immuneUids,fallback,
+                reason:fallback?'Uma facção não tinha participante elegível: as duas vagas de facção foram preenchidas pelos dois piores elegíveis da outra facção. Terceira vaga: pior acumulado elegível. Imunidades preservadas; um único WIN oficial.':'Pior Faithful + pior Traitor + pior acumulado elegível. Líder de facção única só é imune se for o WIN geral. Um único WIN oficial exerce desempates.'};
         };
 
         const printTable = rows => `
@@ -4781,12 +4789,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await saveProductionDraft('traitors_black_banquet', {
                 faccoes:result.members.map(x=>({uid:x.uid, ate:x.ate, faction:x.faction, rd:x.rd, tot:x.tot})),
                 pool:result.pool.map(x=>({uid:x.uid, ate:x.ate, faction:x.faction})),
-                reason:result.reason, fallback:result.fallback
+                reason:result.reason, fallback:result.fallback, winUid:result.win.uid, immuneUids:result.immuneUids, bestFaithfulUid:result.bestFaithful.uid, bestTraitorUid:result.bestTraitor.uid
             });
             $('#adminOutput').innerHTML = `<div class="space-y-3"><h3 class="text-fashion-gold font-cinzel">🏰 THE BLACK BANQUET — DOSSIÊ CONFIDENCIAL</h3>
               <p class="text-gray-300">${esc(result.reason)}</p>
               <div class="grid gap-2">${result.members.map(x=>`<div class="border border-fashion-700 p-2 flex justify-between"><span>${esc(x.ate)} — <b>${esc(x.faction)}</b></span><span>Júri ${x.rd} · Acumulado ${x.tot}</span></div>`).join('')}</div>
-              <p class="text-red-300">ELIMINATION POOL: ${result.pool.map(x=>esc(x.ate)).join(' • ')}</p>
+              <p class="text-green-300">WIN OF THE WEEK: ${esc(result.win.ate)} (${result.win.rd}) · único poder de desempate</p><p class="text-amber-300">IMUNIZADOS: ${result.members.filter(x=>result.immuneUids.includes(x.uid)).map(x=>esc(x.ate)+' ('+esc(x.faction)+')').join(' e ')}</p><p class="text-red-300">ELIMINATION POOL: ${result.pool.map(x=>esc(x.ate)).join(' • ')}</p>
               <p class="text-gray-400">Prévia exclusiva. Nenhuma facção foi publicada.</p></div>`;
         });
         if ($('#btnRevealBanquet')) $('#btnRevealBanquet').onclick = safeExec(async () => {
@@ -4831,10 +4839,15 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             });
 
             const stateUpdate = {};
+            if (globalState.themeId !== 'theme_traitors') stateUpdate.traitorsImmunities = null;
             if (globalState.fase === 'normal') {
                 if (isNonElim) {
                     stateUpdate.berlinda = [];
-                    stateUpdate.winUid = standings[0].uid; // WIN da rodada: protegido do Pool só nesta rodada
+                    if (globalState.themeId === 'theme_traitors') {
+                        const banquet = await computeTraitorsPool(standings);
+                        stateUpdate.winUid = banquet.win.uid;
+                        stateUpdate.traitorsImmunities = {round:String(globalState.rodada),uids:banquet.immuneUids};
+                    } else stateUpdate.winUid = standings[0].uid;
                 } else {
                     const winUid = standings[0].uid;
                     if (globalState.themeId === 'theme_tarantino') {
@@ -4853,18 +4866,20 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         if (!activated.exists || !activated.data().activated) throw new Error('Ative o twist The Traitors após as entregas, antes de apurar a berlinda.');
                         const banquet = await computeTraitorsPool(standings);
                         stateUpdate.berlinda = banquet.pool.map(x => ({uid:x.uid, ate:x.ate}));
+                        stateUpdate.winUid = banquet.win.uid;
+                        stateUpdate.traitorsImmunities = {round:String(globalState.rodada),uids:banquet.immuneUids};
                         await saveProductionDraft('traitors_black_banquet', {
                             rodada:globalState.rodada,
                             faccoes:banquet.members.map(x => ({uid:x.uid, ate:x.ate, faction:x.faction, rd:x.rd, tot:x.tot})),
                             pool:banquet.pool.map(x => ({uid:x.uid, ate:x.ate, faction:x.faction})),
-                            reason:banquet.reason, fallback:banquet.fallback
+                            reason:banquet.reason, fallback:banquet.fallback, winUid:banquet.win.uid, immuneUids:banquet.immuneUids, bestFaithfulUid:banquet.bestFaithful.uid, bestTraitorUid:banquet.bestTraitor.uid
                         });
                     } else {
                         const worstRound = standings.slice(-2);
                         const worstAccum = [...standings].sort((a, b) => a.tot - b.tot).find(x => x.uid !== winUid && !worstRound.some(w => w.uid === x.uid));
                         stateUpdate.berlinda = [...worstRound, worstAccum].filter(Boolean).map(x => ({ uid: x.uid, ate: x.ate }));
                     }
-                    stateUpdate.winUid = standings[0].uid; // WIN da rodada: protegido do Pool só nesta rodada
+                    if (globalState.themeId !== 'theme_traitors') stateUpdate.winUid = standings[0].uid;
                 }
             }
 
@@ -4883,7 +4898,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             $('#adminOutput').innerHTML = `
                 <p class="text-green-400 font-bold mb-2 font-cinzel">Classificação publicada no The Runway!</p>
                 ${stateUpdate.berlinda?.length ? `<p><strong>THE ELIMINATION POOL:</strong> ${stateUpdate.berlinda.map(b => esc(b.ate)).join(', ')}</p>` : '<p class="text-blue-300"><strong>Rodada Não Eliminatória:</strong> Ninguém na berlinda!</p>'}
-                <p><strong>WIN DA RODADA:</strong> ${esc(standings[0]?.ate || 'N/A')}</p>
+                <p><strong>WIN DA RODADA:</strong> ${esc(standings.find(x=>x.uid===stateUpdate.winUid)?.ate || 'N/A')}</p>
             `;
         });
 
