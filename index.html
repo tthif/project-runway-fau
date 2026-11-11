@@ -811,6 +811,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         legado: 'The Fashion Archive',
         bancada: "The Judges' Panel",
         direcao: 'The Control Room',
+        pistas: 'The Theme Vault',
         manual: 'The Rulebook'
     };
 
@@ -821,7 +822,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         admin: ['direcao', 'bancada', 'runway', 'tribunal', 'conf']
     };
 
-    Object.values(ABAS_POR_PERFIL).forEach(a => { a.push('legado'); a.push('manual'); });
+    Object.values(ABAS_POR_PERFIL).forEach(a => { a.push('legado'); a.push('pistas'); a.push('manual'); });
     let currentUser = null;
     let isAdmin = false;
     let globalState = {};
@@ -1122,8 +1123,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const flow=getSeasonFlow();
         let tabs=[...(ABAS_POR_PERFIL[role] || ['runway','conf','manual'])];
         if(role==='estilista') {
-            if(currentUser.out) return ['runway','conf','legado','manual'];
-            if(!hasMaisonIdentity() || !flow.configured) return ['work','legado','manual'];
+            if(currentUser.out) return ['runway','conf','legado','pistas','manual'];
+            if(!hasMaisonIdentity() || !flow.configured) return ['work','legado','pistas','manual'];
             if(!flow.runwayOpen) tabs=tabs.filter(t=>t!=='runway');
             if(!flow.ballotOpen) tabs=tabs.filter(t=>t!=='tribunal');
             if(!flow.rankingVisible && !flow.ballotOpen) tabs=tabs.filter(t=>t!=='berlinda');
@@ -1248,6 +1249,24 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     const VIEWS = {};
 
     // 1. CONFESSIONÁRIO
+
+    // THE THEME VAULT: acesso permanente para todos os perfis autenticados.
+    // Apenas os campos explicitamente publicados são exibidos; não consultar theme_vault_private.
+    VIEWS.pistas = () => {
+        const host=$('#mainView');
+        host.innerHTML=`<section class="space-y-5"><div class="text-center space-y-2"><div class="text-fashion-gold text-[10px] uppercase tracking-[.35em]">The Season's Secrets</div><h2 class="font-cinzel text-2xl text-white">🔐 THE THEME VAULT</h2><p class="text-sm text-gray-300 max-w-xl mx-auto">Cada fotografia esconde um desafio da temporada. Observe as fotografias e tente descobrir os desafios. As pistas escritas são exclusivas do Ícone da Moda (ou do WIN autorizado).</p></div><div id="publicThemeClues" class="grid grid-cols-2 md:grid-cols-3 gap-3"><p class="text-gray-400 text-sm col-span-full text-center">Abrindo o arquivo de pistas…</p></div></section>`;
+        const list=$('#publicThemeClues');
+        const unsub=db.collection('theme_vault_public').onSnapshot(snap=>{
+            if(!list.isConnected)return;
+            const docs=snap.docs.sort((a,b)=>a.id.localeCompare(b.id));
+            list.innerHTML=docs.map((d,i)=>{
+                const v=d.data()||{};
+                const revealed=!!v.revealedName;
+                return `<article class="bg-fashion-900 border border-fashion-700 rounded-lg overflow-hidden"><div class="aspect-[4/5] bg-fashion-950">${v.photo?`<img src="${esc(v.photo)}" alt="Fotografia da pista ${i+1}" class="w-full h-full object-cover" loading="lazy">`:'<div class="h-full flex items-center justify-center text-gray-400 text-xs p-4">Fotografia ainda não cadastrada</div>'}</div><div class="p-3 space-y-2"><div class="font-cinzel text-fashion-gold text-xs">${revealed?esc(v.revealedName):`MYSTERY ${String(i+1).padStart(2,'0')}`}</div><span class="text-[10px] uppercase tracking-widest ${v.used?'text-gray-400':'text-fashion-gold'}">${v.used?'DESAFIO UTILIZADO':'MISTÉRIO DISPONÍVEL'}</span></div></article>`;
+            }).join('')||'<p class="text-gray-400 text-sm col-span-full text-center">As primeiras pistas ainda serão disponibilizadas pela produção.</p>';
+        },err=>{if(list.isConnected)list.textContent='Não foi possível carregar as pistas: '+err.message;});
+        unsubsTab.push(unsub);
+    };
 
     VIEWS.manual = () => {
         const S = [
@@ -3109,8 +3128,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <label class="text-xs text-gray-300">Tema oficial<select id="vaultTheme" class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-white"><option value="">Selecione o tema</option>${Object.values(SEASON_THEMES).map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('')}</select></label>
                         <label class="text-xs text-gray-300">Fotografia da pista (arquivo)<input id="vaultPhoto" type="file" accept="image/*" class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-white"><small id="vaultPhotoSaved" class="text-gray-400">Selecione uma imagem do dispositivo</small></label>
                     </div>
-                    <label class="text-xs text-gray-300">Texto secreto da pista<textarea id="vaultClue" rows="2" placeholder="Uma pista enigmática, sem revelar o desafio..." class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-white"></textarea></label>
-                    <button id="btnVaultSave" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">Guardar tema no Vault</button>
+                    <label class="text-xs text-gray-300">Texto da pista (somente Ícone da Moda ou WIN autorizado)<textarea id="vaultClue" rows="2" placeholder="Uma pista enigmática, sem revelar o desafio..." class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-white"></textarea></label>
+                    <div class="flex flex-wrap gap-2"><button id="btnVaultSave" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">Guardar tema no Vault</button><button id="btnVaultRemovePublicClues" class="border border-fashion-gold text-fashion-gold rounded px-4 py-2 text-xs font-bold">Remover textos públicos antigos</button></div><p class="text-[11px] text-gray-400">Somente as fotografias são públicas. As pistas escritas ficam na coleção privada, acessível ao ADM e ao participante autorizado para escolher.</p>
                     <div id="vaultList" class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs"></div>
                     <h3 class="font-cinzel text-white text-base pt-3">👑 THE ICON'S CHOICE</h3>
                     <p class="text-xs text-gray-300">Ao abrir, TODOS os temas disponíveis do Vault serão oferecidos ao Ícone da Moda (ou ao WIN, na ausência de Ícone). Não existe limite de 2 a 4 opções. A escolha fica lacrada até a revelação da produção.</p>
@@ -3500,7 +3519,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
             container.innerHTML = `
-                <table class="w-full text-left font-mono">
+                <p class="text-xs text-gray-400 mb-3">Gerencie nomes, biografias, funções e acesso. Excluir perfil não apaga a conta do Firebase Authentication nem o histórico da temporada. A função ADM é definida pela coleção protegida admins, não pelo seletor de cargos.</p>
+                <div class="overflow-x-auto"><table class="w-full text-left font-mono">
                     <thead>
                         <tr class="border-b border-fashion-700 text-fashion-gold text-[11px]">
                             <th class="p-2">Nome / Maison</th>
@@ -3525,20 +3545,21 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                                             <option value="estilista" ${p.role === 'estilista' ? 'selected' : ''}>Estilista</option>
                                             <option value="jurado" ${p.role === 'jurado' ? 'selected' : ''}>Jurado</option>
                                             <option value="plateia" ${p.role === 'plateia' ? 'selected' : ''}>Público</option>
-                                            <option value="admin" ${p.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                            
                                         </select>
                                     </td>
                                     <td class="p-2 text-center"><span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${isDisabled ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-green-950 text-green-400 border border-green-800'}">${isDisabled ? 'Desativado' : 'Ativo'}</span></td>
                                     <td class="p-2 text-right space-x-2">
+                                        <button data-act="edit-profile" data-uid="${p.id}" class="bg-fashion-800 hover:bg-fashion-700 text-white px-2.5 py-1 rounded border border-fashion-600 text-[10px] uppercase font-semibold">Editar</button>
                                         <button data-act="save-role" data-uid="${p.id}" ${isSelf ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="bg-fashion-800 hover:bg-fashion-700 text-fashion-gold px-2.5 py-1 rounded border border-fashion-600 text-[10px] uppercase font-semibold"'}>Salvar</button>
                                         <button data-act="toggle-status" data-uid="${p.id}" data-current="${isDisabled ? 'true' : 'false'}" ${isSelf ? 'disabled class="opacity-40 cursor-not-allowed"' : `class="${isDisabled ? 'bg-green-900/60 text-green-300' : 'bg-yellow-900/60 text-yellow-300'} border px-2.5 py-1 rounded text-[10px] uppercase font-semibold"`}>${isDisabled ? 'Ativar' : 'Desativar'}</button>
-                                        <button data-act="delete-profile" data-uid="${p.id}" data-name="${esc(p.ate)}" ${isSelf ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="bg-fashion-red text-white px-2.5 py-1 rounded text-[10px] uppercase font-semibold"'}>Excluir</button>
+                                        <button data-act="delete-profile" data-uid="${p.id}" data-name="${esc(p.ate)}" ${isSelf ? 'disabled class="opacity-40 cursor-not-allowed"' : 'class="bg-fashion-red text-white px-2.5 py-1 rounded text-[10px] uppercase font-semibold"'}>Excluir perfil</button>
                                     </td>
                                 </tr>
                             `;
                         }).join('')}
                     </tbody>
-                </table>
+                </table></div>
             `;
         });
 
@@ -3844,8 +3865,21 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(photo.length>850000)throw new Error('Fotografia muito grande após compressão. Escolha um arquivo menor.');
             if(!SEASON_THEMES[id]||!photo||!clue)throw new Error('Selecione o tema, informe a fotografia e o texto da pista.');
             await vaultPrivate.doc(id).set({clue,themeId:id,officialName:SEASON_THEMES[id].title},{merge:true});
-            await vaultPublic.doc(id).set({photo,used:false},{merge:true});
+            await vaultPublic.doc(id).set({photo,used:old?.data()?.used===true,publicClue:firebase.firestore.FieldValue.delete()},{merge:true});
             showToast('Tema guardado no Vault.'); await vaultRefresh();
+        });
+        $('#btnVaultRemovePublicClues').onclick=safeExec(async()=>{
+            if(!productionConfirm('Remover dos documentos públicos os textos das pistas publicados anteriormente? As pistas privadas serão preservadas.'))return;
+            const pub=await vaultPublic.get();
+            let count=0;
+            for(const doc of pub.docs){
+                if(Object.prototype.hasOwnProperty.call(doc.data()||{},'publicClue')){
+                    await doc.ref.update({publicClue:firebase.firestore.FieldValue.delete()});
+                    count++;
+                }
+            }
+            showToast(`${count} textos públicos antigos removidos.`);
+            await vaultRefresh();
         });
         vaultRefresh().catch(e=>{$('#vaultList').textContent='Não foi possível abrir o Vault: '+e.message});
         $('#btnPoderAbrir').onclick = safeExec(async () => {
@@ -3859,7 +3893,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const icone = cand[0] && !igual(cand[0], cand[1]) ? cand[0] : null;
             const dono = icone || standings[0];
             if (!dono) throw new Error('Não há estilistas ativos.');
-            if(!productionConfirm(`Abrir ${opcoes.length} pistas para ${dono.ate}? Todas as fotografias ficarão públicas; os textos são exclusivos do escolhido.`))return;
+            if(!productionConfirm(`Abrir ${opcoes.length} pistas para ${dono.ate}? As fotografias são públicas, mas as pistas escritas e a escolha ficam restritas ao Ícone ou WIN autorizado.`))return;
             await db.doc('config/estado').set({proxOpcoes:opcoes,poderUid:dono.uid,poderNome:dono.ate,poderTipo:icone?'icone':'win',proxTema:null},{merge:true});
             $('#poderStatus').textContent=`${opcoes.length} temas disponíveis. Escolha aberta para ${dono.ate}.`;
         });
@@ -4803,28 +4837,54 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const uid = btn.dataset.uid;
             const atelierMap = await getAtelierNamesMap();
 
+            if (!isAdmin || !currentUser || currentUser.role !== 'admin') throw new Error('Apenas a produção pode gerenciar usuários.');
+            if (['save-role','toggle-status','delete-profile','edit-profile'].includes(act) && (!uid || uid === currentUser.uid)) throw new Error('Não é permitido alterar sua própria conta neste painel.');
+
+            if (act === 'edit-profile') {
+                const ref = db.doc(`perfis/${uid}`);
+                const snap = await ref.get();
+                if (!snap.exists) throw new Error('Perfil não encontrado.');
+                const p = snap.data();
+                const newName = prompt('Nome público / nome do ateliê (até 70 caracteres):', p.ate || '');
+                if (newName === null) return;
+                const ate = newName.trim();
+                if (!ate || ate.length > 70 || /[<>]/.test(ate)) throw new Error('Informe um nome válido de até 70 caracteres, sem < ou >.');
+                const newBio = prompt('Manifesto / biografia (até 300 caracteres):', p.bio || '');
+                if (newBio === null) return;
+                const bio = newBio.trim();
+                if (bio.length > 300) throw new Error('A biografia deve ter até 300 caracteres.');
+                await ref.update({ate, bio});
+                // Identidades reais são documentos separados e não são alteradas automaticamente.
+                showToast('Perfil atualizado.');
+            }
+
             if (act === 'save-role') {
                 const sel = document.querySelector(`select[data-role-select="${uid}"]`);
                 if (!sel) return;
                 const newRole = sel.value;
+                if (!['estilista','jurado','plateia'].includes(newRole)) throw new Error('Função inválida. O acesso ADM é controlado separadamente.');
+                const oldSnap = await db.doc(`perfis/${uid}`).get();
+                if (!oldSnap.exists) throw new Error('Perfil não encontrado.');
+                if (oldSnap.data().role !== newRole && !confirm(`Alterar o tipo de ${oldSnap.data().ate || 'usuário'} para ${newRole}? Isso pode afetar acesso a rodadas e avaliações.`)) return;
                 await db.doc(`perfis/${uid}`).update({ role: newRole });
-                showToast(`Cargo atualizado.`);
+                showToast('Função atualizada.');
             }
 
             if (act === 'toggle-status') {
                 const currentDisabled = btn.dataset.current === 'true';
+                if (!confirm(`${currentDisabled ? 'Reativar' : 'Desativar'} este usuário? ${currentDisabled ? 'Ele voltará a acessar o site.' : 'Ele perderá o acesso às áreas protegidas, mas seu histórico será preservado.'}`)) return;
                 await db.doc(`perfis/${uid}`).update({ disabled: !currentDisabled });
-                showToast(`Status atualizado.`);
+                showToast('Status atualizado.');
             }
 
             if (act === 'delete-profile') {
                 const name = btn.dataset.name || 'este perfil';
-                if (!confirm(`Deseja excluir "${name}"?`)) return;
+                if (!confirm(`Excluir o PERFIL de "${name}"?\n\nIsso remove o cadastro e a identidade administrativa, mas NÃO apaga a conta do Firebase Authentication nem os looks, notas e votos históricos. Para bloquear o acesso sem excluir, prefira Desativar.`)) return;
                 const batch = db.batch();
                 batch.delete(db.doc(`perfis/${uid}`));
                 batch.delete(db.doc(`identidades/${uid}`));
                 await batch.commit();
-                showToast('Excluído.');
+                showToast('Perfil removido do Firestore. A conta do Authentication não foi excluída.');
             }
 
             if (btn.dataset.exec) {
