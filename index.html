@@ -4197,12 +4197,53 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         };
         $('#directorPreviewTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-preview-role]');if(!b)return;directorRole=b.dataset.previewRole;renderDirectorPreview();});
         ['newRoundId','newRoundSubmissions','newRoundPhase','newRoundElimType','newRoundRules'].forEach(id=>$('#'+id)?.addEventListener('input',renderDirectorPreview));
+        // Lista rápida independente da auditoria: atualiza imediatamente após cadastro.
+        // Não depende de carregamento de identidades legadas ou de outros painéis.
+        const quickCastState={registrations:null,profiles:null,legacy:null,errors:{}};
+        const drawQuickCast=()=>{
+            const root=$('#castQuickList');
+            if(!root||!root.isConnected)return;
+            if(quickCastState.registrations===null||quickCastState.profiles===null){
+                root.innerHTML='<tr><td colspan="4" class="p-3 text-gray-400">Sincronizando participantes…</td></tr>';
+                return;
+            }
+            const joined=new Map();
+            const ensure=id=>{if(!joined.has(id))joined.set(id,{uid:id});return joined.get(id);};
+            quickCastState.registrations.forEach(d=>ensure(d.id).registration=d.data());
+            quickCastState.profiles.forEach(d=>ensure(d.id).profile=d.data());
+            (quickCastState.legacy||[]).forEach(d=>ensure(d.id).legacy=d.data());
+            const all=[...joined.values()].filter(x=>x.profile?.role==='estilista'||(!x.profile&&x.registration))
+              .sort((a,b)=>String(a.registration?.real||a.legacy?.real||a.profile?.ate||'').localeCompare(String(b.registration?.real||b.legacy?.real||b.profile?.ate||''),'pt-BR'));
+            const errors=Object.entries(quickCastState.errors).filter(([,v])=>v);
+            root.innerHTML=(errors.length?`<tr><td colspan="4" class="p-3 text-red-300">${errors.map(([k,v])=>esc(k+': '+v)).join(' · ')}</td></tr>`:'')+
+              (all.map(x=>{
+                const r=x.registration||{},l=x.legacy||{},p=x.profile||{};
+                const real=r.real||l.real||'Nome real não informado';
+                const designer=p.ate||r.designer||l.ate||'Designer não informado';
+                const status=!x.profile?'Perfil pendente':p.disabled?'Desativado':p.out?'OUT':'Ativo';
+                return `<tr class="hover:bg-fashion-950/60"><td class="p-3 text-white font-semibold">${esc(real)}</td><td class="p-3 text-fashion-gold">${esc(designer)}</td><td class="p-3 text-gray-300">${esc(status)}</td><td class="p-3"><button data-cast-action="edit" data-cast-uid="${esc(x.uid)}" class="border border-fashion-gold/50 rounded px-3 py-1.5 text-fashion-gold" ${x.uid===auth.currentUser?.uid?'disabled':''}>EDITAR</button></td></tr>`;
+              }).join('')||'<tr><td colspan="4" class="p-3 text-gray-400">Nenhum Designer cadastrado.</td></tr>');
+        };
+        [['registrations','inscricoes_designers'],['profiles','perfis'],['legacy','identidades']].forEach(([key,collection])=>{
+            const unsubscribe=db.collection(collection).onSnapshot(snap=>{
+                quickCastState[key]=snap.docs;
+                delete quickCastState.errors[key];
+                drawQuickCast();
+            },error=>{
+                quickCastState[key]=[];
+                quickCastState.errors[key]=error.code||error.message||'Falha ao carregar';
+                console.error('Lista de Designers:',collection,error);
+                drawQuickCast();
+            });
+            unsubsTab.push(unsubscribe);
+        });
         // The Doors to the Workroom — chave única de visibilidade e permissão de cadastro.
         const enrollmentPanel=document.createElement('section');
         enrollmentPanel.className='rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 my-4 space-y-3';
         enrollmentPanel.innerHTML=`<p class="text-[10px] tracking-widest text-fashion-gold">THE DOORS TO THE WORKROOM</p><h3 class="font-cinzel text-white">Inscrições de Designers</h3><label class="flex items-center gap-3 text-sm text-gray-200"><input type="checkbox" id="fauEnrollToggle" class="accent-amber-400 h-5 w-5" disabled> Mostrar inscrição na página de login</label><p id="fauEnrollFeedback" class="text-xs text-gray-400">Carregando configuração…</p>`;
         const rosterAnchor=$('#fauRosterList');
-        if(rosterAnchor)rosterAnchor.before(enrollmentPanel);
+        const adminRoot=$('#mainView');
+        if(adminRoot)adminRoot.append(enrollmentPanel); // Controle de inscrições sempre ao final do Control Room.
         const toggle=$('#fauEnrollToggle'),feedback=$('#fauEnrollFeedback');
         const refreshEnrollment=async()=>{
             try{const st=await fauEnrollmentState();toggle.checked=fauCanEnroll(st);toggle.disabled=st.seasonStarted;feedback.textContent=st.seasonStarted?'Temporada iniciada: inscrições encerradas.':st.open?'Inscrições visíveis e liberadas.':'Inscrições ocultas. A entrada mostra apenas login.';}
@@ -5256,17 +5297,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 if(filter==='missing')return !x.profile||(!x.registration&&!x.legacy);
                 return true;
             });
-            const quick=$('#castQuickList');
-            if(quick){
-                const designers=castRows.filter(x=>x.profile?.role==='estilista'||(!x.profile&&!!x.registration));
-                quick.innerHTML=designers.map(x=>{
-                    const r=x.registration||{},l=x.legacy||{},p=x.profile||{};
-                    const real=r.real||l.real||'Não informado';
-                    const designer=p.ate||r.designer||l.ate||'Não informado';
-                    const status=!x.profile?'Sem perfil':p.disabled?'Desativado':p.out?'OUT':'Ativo';
-                    return `<tr class="hover:bg-fashion-950/60"><td class="p-3 text-white font-semibold">${esc(real)}</td><td class="p-3 text-fashion-gold">${esc(designer)}</td><td class="p-3 text-gray-300">${esc(status)}</td><td class="p-3"><button data-cast-action="edit" data-cast-uid="${esc(x.uid)}" class="border border-fashion-gold/50 rounded px-3 py-1.5 text-fashion-gold" ${x.uid===auth.currentUser?.uid?'disabled':''}>EDITAR</button></td></tr>`;
-                }).join('')||'<tr><td colspan="4" class="p-3 text-gray-400">Nenhum Designer cadastrado.</td></tr>';
-            }
             const errors=Object.entries(auditErrors).filter(([,value])=>value).map(([name,value])=>`<p class="text-red-300 p-2 border border-red-900 rounded">Erro ao consultar ${esc(name)}: ${esc(value)}. Verifique as regras do Firestore.</p>`).join('');
             const pending=Object.values(auditCache).some(v=>v===null);
             root.innerHTML=`<p class="text-[11px] text-gray-400 mb-2">${rows.length} exibido(s) de ${castRows.length} conta(s) · Inscrições + identidades antigas + perfis.</p>${errors}${rows.map(x=>{
