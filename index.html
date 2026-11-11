@@ -4304,7 +4304,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(pool.length!==3) throw new Error('Primeiro publique o ranking e forme o Elimination Pool com três estilistas.');
             $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-5 rounded"><h3 class="font-cinzel text-fashion-gold">⚰️ THE FINAL FAREWELL · PRÉVIA</h3><p class="text-xs mt-2">${pool.map(x=>esc(x.ate)).join(' · ')}</p><p class="text-xs text-fashion-gold mt-2">O júri dos Designers decide somente a eliminação especial. Suas notas não somam pontos no acumulado geral.</p><p class="text-xs text-gray-400 mt-2">Os três receberão a segunda missão. Nenhum participante será eliminado nesta ativação.</p></div>`;
             if(!productionConfirm('Convocar os três estilistas para criarem seus próprios looks funerários sem branco?'))return;
-            await restRef().set({phase:'twist',pool,activatedBy:currentUser.uid,activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await restRef().set({phase:'twist',pool,poolUids:pool.map(x=>x.uid),activatedBy:currentUser.uid,activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
             await productionLog('rest_twist_activated',{round:globalState.rodada,pool:pool.map(x=>x.uid)});
             showToast('Convocação ativada. Segunda etapa liberada apenas para o Elimination Pool.');
         });
