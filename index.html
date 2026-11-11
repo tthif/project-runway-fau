@@ -3380,7 +3380,10 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     </div>
 
                     <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-3">
-                        <h3 class="font-cinzel text-white text-base">Auditoria do "Off" (Identidades Reais)</h3>
+                        <h3 class="font-cinzel text-white text-base">Elenco · Nomes reais e Designers</h3>
+                        <p class="text-xs text-gray-400">Lista rápida dos participantes cadastrados, atualizada automaticamente. Clique em Editar para gerenciar o cadastro.</p>
+                        <div class="overflow-x-auto rounded-lg border border-fashion-700"><table class="w-full text-left text-xs"><thead class="bg-fashion-950 text-fashion-gold"><tr><th class="p-3">NOME REAL</th><th class="p-3">NOME DE DESIGNER</th><th class="p-3">STATUS</th><th class="p-3">AÇÃO</th></tr></thead><tbody id="castQuickList" class="divide-y divide-fashion-700"><tr><td colspan="4" class="p-3 text-gray-400">Carregando elenco…</td></tr></tbody></table></div>
+                        <h3 class="font-cinzel text-white text-base pt-3">Auditoria do "Off" (Identidades Reais)</h3>
                         <div id="castAuditList" class="max-h-52 overflow-y-auto space-y-1 text-xs font-mono text-gray-300"></div>
                     </div>
                 </div>
@@ -5190,7 +5193,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#castAdd')?.addEventListener('click',()=>safeExec(castAdd)());
         $('#castSearch')?.addEventListener('input',()=>renderCastAudit());
         $('#castFilter')?.addEventListener('change',()=>renderCastAudit());
-        $('#castAuditList')?.addEventListener('click',e=>{
+        const castHandleClick=e=>{
             const btn=e.target.closest('[data-cast-action]');if(!btn)return;
             const uid=btn.dataset.castUid,action=btn.dataset.castAction;
             safeExec(async()=>{
@@ -5227,7 +5230,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     await batch.commit();showToast('Registros de cadastro removidos do Firestore.');
                 }
             })();
-        });
+        };
+        $('#castAuditList')?.addEventListener('click',castHandleClick);
+        $('#castQuickList')?.addEventListener('click',castHandleClick);
         // Auditoria unificada: inscrições novas + identidades legadas + perfis ativos.
         // A coleção identidades não é gravada pelo cadastro público (somente ADM).
         const auditCache={inscricoes:null,identidades:null,perfis:null};
@@ -5251,6 +5256,17 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 if(filter==='missing')return !x.profile||(!x.registration&&!x.legacy);
                 return true;
             });
+            const quick=$('#castQuickList');
+            if(quick){
+                const designers=castRows.filter(x=>x.profile?.role==='estilista'||(!x.profile&&!!x.registration));
+                quick.innerHTML=designers.map(x=>{
+                    const r=x.registration||{},l=x.legacy||{},p=x.profile||{};
+                    const real=r.real||l.real||'Não informado';
+                    const designer=p.ate||r.designer||l.ate||'Não informado';
+                    const status=!x.profile?'Sem perfil':p.disabled?'Desativado':p.out?'OUT':'Ativo';
+                    return `<tr class="hover:bg-fashion-950/60"><td class="p-3 text-white font-semibold">${esc(real)}</td><td class="p-3 text-fashion-gold">${esc(designer)}</td><td class="p-3 text-gray-300">${esc(status)}</td><td class="p-3"><button data-cast-action="edit" data-cast-uid="${esc(x.uid)}" class="border border-fashion-gold/50 rounded px-3 py-1.5 text-fashion-gold" ${x.uid===auth.currentUser?.uid?'disabled':''}>EDITAR</button></td></tr>`;
+                }).join('')||'<tr><td colspan="4" class="p-3 text-gray-400">Nenhum Designer cadastrado.</td></tr>';
+            }
             const errors=Object.entries(auditErrors).filter(([,value])=>value).map(([name,value])=>`<p class="text-red-300 p-2 border border-red-900 rounded">Erro ao consultar ${esc(name)}: ${esc(value)}. Verifique as regras do Firestore.</p>`).join('');
             const pending=Object.values(auditCache).some(v=>v===null);
             root.innerHTML=`<p class="text-[11px] text-gray-400 mb-2">${rows.length} exibido(s) de ${castRows.length} conta(s) · Inscrições + identidades antigas + perfis.</p>${errors}${rows.map(x=>{
