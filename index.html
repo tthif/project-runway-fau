@@ -60,10 +60,6 @@
         @keyframes shine { to { background-position: 200% center; } }
         details > summary { list-style: none; } details > summary::-webkit-details-marker { display: none; }
         details[open] { border-color: #d4af37; }
-        #splash { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; text-align: center; background: radial-gradient(ellipse at 50% 30%, #2a2210, #0a0a0c 70%); transition: opacity 1s; cursor: pointer; }
-        #splash .t { font-family: Cinzel, serif; font-size: clamp(1.8rem, 8vw, 3.6rem); letter-spacing: .25em; color: #fff; animation: rise 1.2s ease both; }
-        #splash .k { color: #d4af37; letter-spacing: .6em; font-size: .7rem; font-family: Cinzel, serif; }
-        #splash .q { color: #9ca3af; font-style: italic; font-size: .8rem; animation: rise 2s ease both; }
         #quoteStrip { transition: opacity .6s; }
 
         #winReveal { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; background: radial-gradient(ellipse at 50% 40%, rgba(42,34,16,.97), rgba(10,10,12,.98)); cursor: pointer; animation: rise .8s ease both; }
@@ -186,9 +182,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 .fau-entrance-stage h1{font-size:clamp(2.6rem,5vw,4.8rem)!important}
 .fau-entrance-stage input{background:#201b22!important;border-color:#635460!important}
 .fau-entrance-stage button[type=submit]{background:#f0eae1!important;color:#141215!important}
-#splash{background:radial-gradient(ellipse at 50% 35%,#35232d,#141215 72%)!important}
-#splash .t{font-family:'Cinzel',serif}
-#splash .k{color:#d1b38b!important}
 #quoteStrip{color:#d1b38b!important;font-family:'Cormorant Garamond',serif!important;font-size:1rem!important}
 .img-look{background:#29242a;object-fit:cover}
 #runwayGrid img.img-look,#runwayGroups img.img-look{border-radius:3px!important}
@@ -200,7 +193,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
-<div id="splash" onclick="this.remove()"><div class="k">F · A · U</div><div class="t">PROJECT RUNWAY</div><div class="q">“In fashion, one day you're in, and the next day you're out.”</div><div class="q" style="font-size:.6rem;letter-spacing:.3em">TOQUE PARA ENTRAR</div></div>
 
 <!-- CABEÇALHO -->
 <header class="border-b border-fashion-700 bg-fashion-900/90 backdrop-blur-md sticky top-0 z-40">
@@ -823,10 +815,10 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     };
 
     const ABAS_POR_PERFIL = {
-        estilista: ['work', 'runway', 'tribunal', 'berlinda', 'conf', 'historico'],
-        jurado: ['bancada', 'runway', 'conf', 'historico'],
-        plateia: ['runway', 'conf', 'historico'],
-        admin: ['direcao', 'bancada', 'runway', 'tribunal', 'conf', 'historico']
+        estilista: ['work', 'runway', 'tribunal', 'berlinda', 'conf'],
+        jurado: ['bancada', 'runway', 'conf'],
+        plateia: ['runway', 'conf'],
+        admin: ['direcao', 'bancada', 'runway', 'tribunal', 'conf']
     };
 
     Object.values(ABAS_POR_PERFIL).forEach(a => { a.push('legado'); a.push('manual'); });
@@ -1130,7 +1122,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const flow=getSeasonFlow();
         let tabs=[...(ABAS_POR_PERFIL[role] || ['runway','conf','manual'])];
         if(role==='estilista') {
-            if(currentUser.out) return ['runway','conf','historico','legado','manual'];
+            if(currentUser.out) return ['runway','conf','legado','manual'];
             if(!hasMaisonIdentity() || !flow.configured) return ['work','legado','manual'];
             if(!flow.runwayOpen) tabs=tabs.filter(t=>t!=='runway');
             if(!flow.ballotOpen) tabs=tabs.filter(t=>t!=='tribunal');
@@ -1178,7 +1170,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           const inter=document.createElement('section');
           inter.className='max-w-6xl mx-auto mb-6 rounded-2xl border border-fashion-gold/40 bg-gradient-to-br from-fashion-900 via-fashion-950 to-black p-6 md:p-9 fau-editorial-transition';
           inter.setAttribute('aria-label','Intervalo entre desafios');
-          inter.innerHTML=`<div class="flex flex-col md:flex-row md:items-center justify-between gap-6"><div class="space-y-3"><p class="text-[10px] tracking-[.35em] text-fashion-gold">✦ THE AFTER SHOW ✦</p><h2 class="font-cinzel text-2xl md:text-3xl text-white">${role==='estilista'&&currentUser.out?'YOUR LAST WALK. YOUR LEGACY.':'ONE RUNWAY ENDS. ANOTHER AWAITS.'}</h2><p class="text-sm text-gray-300 max-w-xl">${role==='estilista'&&currentUser.out?'Sua jornada competitiva terminou, mas suas criações permanecem no arquivo da temporada.':'As decisões desta rodada já foram anunciadas. Reveja os looks, acompanhe seu histórico e os comentários publicados. O próximo briefing continua sob sigilo da produção.'}</p><p class="text-[11px] text-fashion-gold/80">🔒 NEXT CHALLENGE · NOT YET REVEALED</p></div><div class="flex flex-wrap gap-2"><button type="button" data-after-go="historico" class="border border-fashion-gold/50 rounded px-4 py-3 text-xs text-fashion-gold">THE TRACK RECORD</button><button type="button" data-after-go="runway" class="bg-fashion-gold text-black rounded px-4 py-3 text-xs font-bold">REVISIT THE RUNWAY</button></div></div>`;
+          inter.innerHTML=`<div class="flex flex-col md:flex-row md:items-center justify-between gap-6"><div class="space-y-3"><p class="text-[10px] tracking-[.35em] text-fashion-gold">✦ THE AFTER SHOW ✦</p><h2 class="font-cinzel text-2xl md:text-3xl text-white">${role==='estilista'&&currentUser.out?'YOUR LAST WALK. YOUR LEGACY.':'ONE RUNWAY ENDS. ANOTHER AWAITS.'}</h2><p class="text-sm text-gray-300 max-w-xl">${role==='estilista'&&currentUser.out?'Sua jornada competitiva terminou, mas suas criações permanecem no arquivo da temporada.':'As decisões desta rodada já foram anunciadas. Reveja os looks, acompanhe seu histórico e os comentários publicados. O próximo briefing continua sob sigilo da produção.'}</p><p class="text-[11px] text-fashion-gold/80">🔒 NEXT CHALLENGE · NOT YET REVEALED</p></div><div class="flex flex-wrap gap-2"><button type="button" data-after-go="legado" class="border border-fashion-gold/50 rounded px-4 py-3 text-xs text-fashion-gold">THE FASHION ARCHIVE</button><button type="button" data-after-go="runway" class="bg-fashion-gold text-black rounded px-4 py-3 text-xs font-bold">REVISIT THE RUNWAY</button></div></div>`;
           inter.querySelectorAll('[data-after-go]').forEach(b=>{if(getAvailableTabs().includes(b.dataset.afterGo))b.addEventListener('click',()=>navigate(b.dataset.afterGo));else b.remove();});
           main.parentNode.insertBefore(inter, main);
           // Personalizar apenas depois da autorização oficial. O documento público
@@ -1878,7 +1870,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     };
 
     // 3. HISTÓRICO DA TEMPORADA & GALERIA DE ELIMINAÇÕES
-    VIEWS.historico = async () => {
+    VIEWS.historico = async (insideArchive=false) => {
         if (globalState.themeId === 'theme_traitors') {
             const ref = db.doc(`revelacoes_traitors/${globalState.rodada}`);
             sub(ref, snap => {
@@ -1889,6 +1881,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             });
         }
         renderView(`
+            ${insideArchive ? `<section class="fau-archive-head rounded-xl p-5 border border-fashion-gold/40 mb-6"><p class="text-fashion-gold text-[10px] tracking-[.3em]">PROJECT RUNWAY: FAU · THE OFFICIAL ARCHIVE</p><h2 class="font-cinzel text-2xl text-white mt-2">THE FASHION ARCHIVE</h2><button type="button" id="backToFashionArchive" class="mt-4 border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">← Voltar ao arquivo</button></section>` : ''}
             <div class="space-y-8">
                 ${globalState.themeId === 'theme_traitors' ? '<div id="banquetRevealSlot"></div>' : ''}
                 <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
@@ -1912,6 +1905,11 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 </div>
             </div>
         `);
+
+        if (insideArchive) {
+            const back = document.getElementById('backToFashionArchive');
+            if (back) back.onclick = () => navigate('legado');
+        }
 
         // The full season score matrix is production-only. Other profiles never query
         // the full evaluations collection through this view.
@@ -2059,9 +2057,15 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           <h2 class="font-cinzel text-3xl text-white mt-3">THE FASHION ARCHIVE</h2>
           <p class="text-gray-300 text-sm mt-3">The Hall of Fashion · Designer Legacy · The Season Story</p>
         </header>
+        <nav class="flex flex-wrap gap-2" aria-label="Seções do Fashion Archive">
+          <button type="button" id="archiveShowOverview" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">THE ARCHIVE</button>
+          <button type="button" id="archiveShowTrackRecord" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">THE TRACK RECORD</button>
+        </nav>
         <div id="fauArchiveLoading" class="text-gray-400 text-sm" role="status">Abrindo os arquivos publicados…</div>
         <div id="fauArchiveBody" class="space-y-8"></div>
       </section>`);
+      const trackButton=document.getElementById('archiveShowTrackRecord');
+      if(trackButton)trackButton.onclick=()=>VIEWS.historico(true);
       const body=$('#fauArchiveBody'),loading=$('#fauArchiveLoading');
       const roundKey=x=>String(x??'');
       try{
@@ -4908,10 +4912,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
 <script>
     (() => {
-        const sp = document.getElementById('splash');
-        let seen = false; try { seen = sessionStorage.getItem('splash'); sessionStorage.setItem('splash', '1'); } catch (e) {}
-        if (sp && seen) sp.remove();
-        else if (sp) setTimeout(() => { sp.style.opacity = 0; setTimeout(() => sp.remove(), 1000); }, 2800);
         const Q = ['“Make it work. And make it unforgettable.”', '“Designers, you have a challenge!”', '“I don\'t want to see safe. I want to see fashion.”', '“You have to take risks to stand out.”', '“One challenge can change everything.”', '“Auf Wiedersehen!”', '“This is the final countdown. Make it count.”'];
         const el = document.getElementById('quoteStrip'); let i = 0;
         const show = () => { el.style.opacity = 0; setTimeout(() => { el.textContent = Q[i++ % Q.length]; el.style.opacity = 1; }, 600); };
