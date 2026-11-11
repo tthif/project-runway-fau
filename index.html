@@ -284,6 +284,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
     const auth = firebase.auth();
     const db = firebase.firestore();
+    try { db.settings({ cacheSizeBytes: 150 * 1024 * 1024 }); db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn('[cache]', e.code)); } catch (e) { console.warn('[cache]', e); }
 
     const $ = s => document.querySelector(s);
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -838,7 +839,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     let unsubsGlobal = [];
     let unsubsTab = [];
     let isAuthProcessing = false;
-    let audioDrafts = {};
 
     const showToast = (msg, duration = 3000) => {
         const t = $('#toast');
@@ -907,41 +907,37 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
     const compressImageToBase64 = file => new Promise((resolve, reject) => {
         if (!file || !['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('Escolha uma imagem JPG, PNG ou WebP do dispositivo.'));
-        if (file.size > 15 * 1024 * 1024) return reject(new Error('A imagem excede 15 MB. Reduza o arquivo antes de enviar.'));
+        if (file.size > 40 * 1024 * 1024) return reject(new Error('A imagem excede 40 MB.'));
+        // O Firestore guarda no máximo 1 MiB por documento. Se a foto couber, vai EXATAMENTE como foi enviada;
+        // se não couber, mantém a maior resolução e qualidade que couberem.
+        const MAX_B64 = 950000;
         const reader = new FileReader();
         reader.onload = e => {
+            const original = e.target.result;
+            if (original.length <= MAX_B64) return resolve(original);
             const img = new Image();
             img.onload = () => {
-                const maxDim = 1000;
-                const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width * scale;
-                canvas.height = img.height * scale;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // Firestore limita documentos a 1 MiB. Reduzir progressivamente a imagem
-                // evita a confirmação enganosa de um envio que o servidor recusaria.
-                let result = '';
-                for (const quality of [0.78, 0.65, 0.52, 0.40]) {
-                    result = canvas.toDataURL('image/jpeg', quality);
-                    if (result.length < 680000) break;
+                for (const scale of [1, 0.85, 0.7, 0.6, 0.5, 0.42, 0.35, 0.3]) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(img.width * scale));
+                    canvas.height = Math.max(1, Math.round(img.height * scale));
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    for (const q of [0.92, 0.85, 0.78]) {
+                        const result = canvas.toDataURL('image/jpeg', q);
+                        if (result.length <= MAX_B64) return resolve(result);
+                    }
                 }
-                if (result.length >= 680000) return reject(new Error('A imagem continua muito grande após otimização. Reduza a resolução e tente novamente.'));
-                resolve(result);
+                reject(new Error('Não foi possível ajustar esta imagem. Tente outra foto.'));
             };
             img.onerror = reject;
-            img.src = e.target.result;
+            img.src = original;
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
     });
 
-    const blobToBase64 = blob => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
 
     // Workroom Clock: countdown based on the production's persisted deadline.
     // It is informational; the submission handler independently enforces the cutoff.
@@ -1704,8 +1700,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     if(preview?.dataset.url){URL.revokeObjectURL(preview.dataset.url);delete preview.dataset.url;}
                     if(wrap)wrap.classList.add('hidden');
                     if(!file)return;
-                    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>15*1024*1024){
-                        e.target.value='';showToast('Use JPG, PNG ou WebP de até 15 MB.');return;
+                    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>40*1024*1024){
+                        e.target.value='';showToast('Use JPG, PNG ou WebP de até 40 MB.');return;
                     }
                     const url=URL.createObjectURL(file);preview.src=url;preview.dataset.url=url;
                     info.textContent=`${file.name} · ${(file.size/1048576).toFixed(2)} MB · Ainda não enviado`;
@@ -1945,15 +1941,19 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             return;
         }
 
-        const [perfisSnap, looksSnap, evalsSnap] = await Promise.all([
+        let [perfisSnap, evalsSnap] = await Promise.all([
             db.collection('perfis').where('role', '==', 'estilista').get(),
-            db.collection('looks').get(),
-            db.collection('avaliacoes').get()
+            db.collection('avaliacoes_resumo').get()
         ]);
+        // Plano B até a otimização das notas ser feita (mais pesado).
+        if (evalsSnap.empty) evalsSnap = await db.collection('avaliacoes').get();
 
         const stylists = perfisSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        const looks = looksSnap.docs.map(d => ({ id: d.id, ...d.data() }));
         const evals = evalsSnap.docs.map(d => d.data());
+        // Sem fotos: os looks vêm das próprias avaliações (identificação do designer e rodada).
+        const looksMap = new Map();
+        evals.forEach(e => { if (e.look && !looksMap.has(e.look)) looksMap.set(e.look, { id: e.look, uid: e.alvo, ate: e.ate || e.alvoAte || '', rodada: e.rodada }); });
+        const looks = [...looksMap.values()];
 
         const rodadasSet = new Set();
         looks.forEach(l => { if (l.rodada) rodadasSet.add(l.rodada); });
@@ -2263,8 +2263,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         let looks = [];
         let evaluations = {};
         let week01References = new Map();
-        let currentMediaRecorder = null;
-        let audioChunks = [];
 
         renderView(`
             <div class="space-y-6">
@@ -2338,8 +2336,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const ev = evaluations[look.id] || {};
                 const scores = ev.nota || [5.0, 5.0, 5.0, 5.0, 5.0];
                 const commentAdmin = ev.comentAdmin || '';
-                const audioUrl = ev.audio || '';
-                const draftAudio = audioDrafts[look.id];
 
                 return `
                     <div class="bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
@@ -2412,37 +2408,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const act = btn.dataset.action;
             const lookId = btn.dataset.look;
 
-            if (act === 'record-audio') {
-                if (currentMediaRecorder && currentMediaRecorder.state === 'recording') {
-                    currentMediaRecorder.stop();
-                    return;
-                }
-
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                audioChunks = [];
-                currentMediaRecorder = new MediaRecorder(stream);
-                currentMediaRecorder.ondataavailable = ev => audioChunks.push(ev.data);
-
-                currentMediaRecorder.onstop = safeExec(async () => {
-                    stream.getTracks().forEach(t => t.stop());
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioBase64 = await blobToBase64(blob);
-                    audioDrafts[lookId] = audioBase64;
-                    showToast('Áudio gravado! Ouça antes de salvar.');
-                    $(`#recStatus-${lookId}`).textContent = 'Gravar Novo';
-                    refreshJuryUI();
-                });
-
-                currentMediaRecorder.start();
-                $(`#recStatus-${lookId}`).textContent = 'Parar Gravação';
-            }
-
-            if (act === 'discard-audio') {
-                delete audioDrafts[lookId];
-                showToast('Áudio apagado.');
-                refreshJuryUI();
-            }
-
             if (act === 'save-evaluation') {
                 await saveSingleEvaluation(lookId);
                 showToast('Avaliação salva com sucesso.');
@@ -2456,7 +2421,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const scores = sliders.map(s => Number(s.value));
             const totalSum = Number(scores.reduce((a, b) => a + b, 0).toFixed(1));
             const commentAdmin = $(`#commAdmin-${lookId}`) ? $(`#commAdmin-${lookId}`).value.trim() : '';
-            const audioFinal = audioDrafts[lookId] || evaluations[lookId]?.audio || '';
 
             await db.doc(`avaliacoes/${lookId}_${currentUser.uid}`).set({
                 look: lookId,
@@ -2469,6 +2433,10 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 total: totalSum,
                 t: now()
             }, { merge: true });
+            try {
+                const sn = await db.doc(`avaliacoes/${lookId}_${currentUser.uid}`).get(), dv = sn.data() || {};
+                await db.doc(`avaliacoes_resumo/${sn.id}`).set({ look: dv.look ?? lookId, alvo: dv.alvo || null, ate: dv.alvoAte || '', rodada: dv.rodada || null, jurado: currentUser.uid, total: dv.total });
+            } catch (e) { console.warn('[resumo]', e); }
         };
 
         $('#btnSubmitAllEvaluations').onclick = safeExec(async () => {
@@ -5343,6 +5311,32 @@ body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gra
  const main=$('#mainView');if(main)observer.observe(main,{childList:true,subtree:true});
  const nav=$('#navContainer');if(nav)observer.observe(nav,{childList:true,subtree:true});
  update();
+})();
+</script>
+<script id="fau-optimize-v1">
+(() => {
+    const b = document.createElement('button');
+    b.id = 'fauOptimizeBtn'; b.type = 'button'; b.textContent = '📊 Otimizar notas';
+    b.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:60;display:none;padding:8px 12px;border-radius:999px;background:#1d191e;border:1px solid #d1b38b;color:#fff;font-size:11px;cursor:pointer';
+    document.body.appendChild(b);
+    setInterval(() => { b.style.display = (typeof isAdmin !== 'undefined' && isAdmin && currentUser) ? 'block' : 'none'; }, 1500);
+    let busy = false;
+    b.onclick = async () => {
+        if (busy) return;
+        if (!confirm('Gerar o resumo das avaliações já existentes para o Track Record? Faça uma vez só.')) return;
+        busy = true;
+        try {
+            const [as, rs] = await Promise.all([db.collection('avaliacoes').get(), db.collection('avaliacoes_resumo').get()]);
+            const has = new Set(rs.docs.map(d => d.id)), todo = as.docs.filter(d => !has.has(d.id)); let n = 0;
+            for (const d of todo) {
+                const x = d.data();
+                await db.doc(`avaliacoes_resumo/${d.id}`).set({ look: x.look ?? null, alvo: x.alvo || null, ate: x.alvoAte || '', rodada: x.rodada || null, jurado: x.jurado || null, total: x.total ?? null });
+                showToast(`Otimizando… ${++n}/${todo.length}`, 1500);
+            }
+            showToast(todo.length ? `Pronto! ${todo.length} avaliação(ões) resumida(s).` : 'Tudo já está em dia.', 4000);
+        } catch (e) { showToast('Falha na otimização: ' + e.message, 5000); }
+        busy = false;
+    };
 })();
 </script>
 </body>
