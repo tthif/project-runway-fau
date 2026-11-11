@@ -3202,11 +3202,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     <span class="text-xs font-mono text-gray-400">Rodada: <strong>${esc(globalState.rodada || '-')}</strong> (${esc(globalState.fase || 'normal')})</span>
                 </div>
 
-                <section id="fauDesignerRoster" class="rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4">
-                  <div><p class="text-[10px] tracking-[.3em] text-fashion-gold">SEASON 01 · REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DESIGNER ROSTER</h3><p class="text-xs text-gray-300 mt-1">Cada participante cria a conta e recebe acesso automaticamente. Você apenas gerencia os perfis.</p></div>
-                  <button type="button" id="fauRosterRefresh" class="rounded border border-fashion-gold text-fashion-gold px-4 py-2 text-xs">↻ ATUALIZAR INSCRIÇÕES</button>
-                  <div id="fauRosterList" class="space-y-3 text-sm text-gray-300" aria-live="polite">Carregando inscrições…</div>
-                </section>
+
 
                 <section id="fauProductionDesk" class="fau-production-desk rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 md:p-7 space-y-5" aria-label="The Production Desk">
                   <div class="flex flex-wrap justify-between gap-3 items-start"><div><p class="text-[10px] tracking-[.35em] text-fashion-gold">PROJECT RUNWAY · FAU / PRODUCTION HEADQUARTERS</p><h3 class="font-cinzel text-2xl text-white mt-2">THE CONTROL ROOM</h3><p class="text-sm text-gray-300 mt-1">O episódio em um olhar. Acompanhe o que precisa de atenção e acesse o controle certo.</p></div><span class="text-[10px] tracking-widest border border-fashion-gold/40 rounded px-3 py-2 text-fashion-gold">PRIVATE · ADMIN</span></div>
@@ -3400,6 +3396,11 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     <div class="space-y-4"><section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><div><h4 class="font-cinzel text-fashion-gold">⚖️ Apuração oficial</h4><p class="text-xs text-gray-400">O fluxo principal da rodada, na ordem em que a produção normalmente utiliza.</p></div><div class="flex flex-wrap gap-2"><button id="btnApurarRanking" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-white px-3 py-1.5 rounded text-xs">1. Calcular Notas</button><button id="btnPublishRunway" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-fashion-gold px-3 py-1.5 rounded text-xs">2. Publicar na Passarela</button><button id="btnApurarTribunal" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-white px-3 py-1.5 rounded text-xs">3. Votos do Elenco</button><button id="btnApurarBerlinda" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-white px-3 py-1.5 rounded text-xs">4. Apurar Eliminação</button></div></section><section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><div><h4 class="font-cinzel text-fashion-gold">🎭 Twist da rodada</h4><p class="text-xs text-gray-400">Somente os controles da dinâmica ativa são exibidos. Outras semanas ficam fora da mesa.</p></div><div id="fauActiveTwistControls" class="flex flex-wrap gap-2">${/traitor|banquet/i.test(globalState.themeId||'') ? `<button id="btnPreviewBanquet" class="bg-amber-950 hover:bg-amber-900 border border-fashion-gold text-fashion-gold px-3 py-1.5 rounded text-xs">🏰 Dossiê do Black Banquet</button><button id="btnAttendanceBanquet" class="bg-fashion-800 border border-fashion-700 text-white px-3 py-1.5 rounded text-xs">📋 Conferir ausências</button><button id="btnActivateBanquet" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs font-bold">🗡️ Ativar twist após entregas</button><button id="btnRevealBanquet" class="bg-fashion-800 border border-fashion-700 text-white px-3 py-1.5 rounded text-xs">🗡️ Revelar facções</button>` : ''}${/plaid|fazenda/i.test(globalState.themeId||'') ? `<button id="btnRestaStart" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs">🤠 Iniciar Resta Um</button><button id="btnRestaPreview" class="bg-fashion-800 text-fashion-gold border border-fashion-gold/40 px-3 py-1.5 rounded text-xs">📋 Dossiê Resta Um</button><button id="btnRestaPublish" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">⚖️ Confirmar Bottom 3</button>` : ''}${/supreme/i.test(globalState.themeId||'') ? `<button id="btnSupremeOpen" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs">👑 Abrir Supreme Vote</button><button id="btnSupremeClose" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🔒 Encerrar votação</button><button id="btnSupremePreview" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">📋 Dossiê Supreme</button><button id="btnSupremePublish" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs">🏆 Confirmar Supremas vencedoras</button>` : ''}${/tarantino/i.test(globalState.themeId||'') ? `<button id="btnTarantinoPreview" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🎬 Dossiê Double Kill</button><button id="btnTarantinoFirst" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">☠️ Confirmar First Kill</button><button id="btnTarantinoFinal" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">🔫 Apurar Last Stand</button>` : ''}${/rest_in_style|funeral/i.test(globalState.themeId||'') ? `<button id="btnRestActivate" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs font-bold">⚰️ Convocar Bottom 3</button><button id="btnRestJudge" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🕯️ Abrir julgamento</button><button id="btnRestVerdict" class="bg-fashion-800 border border-fashion-gold/40 text-fashion-gold px-3 py-1.5 rounded text-xs">🔒 Apurar funeral</button><button id="btnRestEliminate" class="bg-fashion-red text-white px-3 py-1.5 rounded text-xs">🪦 Confirmar último adeus</button>` : ''}${/beauty_is_in|beauty_eye/i.test(globalState.themeId||'') ? `<button id="btnBeautyAssign" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs font-bold">👁️ Sortear conceitos (após Look 1)</button><button id="btnBeautyPreview" class="bg-fashion-800 text-fashion-gold border border-fashion-gold/40 px-3 py-1.5 rounded text-xs">🔒 Dossiê Beauty</button><button id="btnBeautyOpen" class="bg-fashion-800 text-white border border-fashion-gold/40 px-3 py-1.5 rounded text-xs">🎭 Autorizar desfile Beauty</button>` : ''}</div><p id="fauTwistEmpty" class="text-xs text-gray-400">Apenas a dinâmica desta rodada aparece aqui. Se não houver twist especial, siga a apuração oficial.</p></section><section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><div><h4 class="font-cinzel text-fashion-gold">🏁 Semifinal e encerramento</h4><p class="text-xs text-gray-400">Disponível quando a temporada chega às decisões finais.</p></div><div class="flex flex-wrap gap-2"><button id="btnCalcTop5" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-gold text-fashion-gold px-3 py-1.5 rounded text-xs">5. Top 5 ➔ Top 3</button></div></section><section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><div><h4 class="font-cinzel text-fashion-gold">📚 Arquivos e ferramentas</h4><p class="text-xs text-gray-400">Consultas confidenciais, backup e comunicados.</p></div><div class="flex flex-wrap gap-2"><button id="btnJuryArchives" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-gold/60 text-fashion-gold px-3 py-1.5 rounded text-xs">⚖️ Judges’ Archives & Season Secrets</button><button id="btnAuditLogs" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-white px-3 py-1.5 rounded text-xs">🗃️ Voting Archives</button><button id="btnHallOfFame" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-gold text-fashion-gold px-3 py-1.5 rounded text-xs font-bold"><i class="fa-solid fa-trophy"></i> Hall da Fama</button><button id="btnExportJSON" class="bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-white px-3 py-1.5 rounded text-xs">Backup (JSON)</button><button id="btnLiveBroadcast" class="bg-fashion-gold text-black px-3 py-1.5 rounded text-xs font-bold uppercase"><i class="fa-solid fa-tv"></i> Tela de Anúncio</button><button id="btnWppDispatch" class="bg-green-800 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-bold"><i class="fa-brands fa-whatsapp"></i> Comunicado WhatsApp</button></div></section></div>
                     <div id="adminOutput" class="bg-fashion-950 p-4 rounded border border-fashion-700 text-xs font-mono min-h-24"></div>
                 </div>
+                            <section id="fauDesignerRoster" class="rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4">
+                  <div><p class="text-[10px] tracking-[.3em] text-fashion-gold">SEASON 01 · REGISTRATION</p><h3 class="font-cinzel text-xl text-white">THE DESIGNER ROSTER</h3><p class="text-xs text-gray-300 mt-1">Cada participante cria a conta e recebe acesso automaticamente. Você apenas gerencia os perfis.</p></div>
+                  <button type="button" id="fauRosterRefresh" class="rounded border border-fashion-gold text-fashion-gold px-4 py-2 text-xs">↻ ATUALIZAR INSCRIÇÕES</button>
+                  <div id="fauRosterList" class="space-y-3 text-sm text-gray-300" aria-live="polite">Carregando inscrições…</div>
+                </section>
             </div>
         `);
 
@@ -4243,7 +4244,11 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         enrollmentPanel.innerHTML=`<p class="text-[10px] tracking-widest text-fashion-gold">THE DOORS TO THE WORKROOM</p><h3 class="font-cinzel text-white">Inscrições de Designers</h3><label class="flex items-center gap-3 text-sm text-gray-200"><input type="checkbox" id="fauEnrollToggle" class="accent-amber-400 h-5 w-5" disabled> Mostrar inscrição na página de login</label><p id="fauEnrollFeedback" class="text-xs text-gray-400">Carregando configuração…</p>`;
         const rosterAnchor=$('#fauRosterList');
         const adminRoot=$('#mainView');
-        if(adminRoot)adminRoot.append(enrollmentPanel); // Controle de inscrições sempre ao final do Control Room.
+        if(adminRoot){
+            adminRoot.append(enrollmentPanel);
+            const rosterSection=$('#fauDesignerRoster');
+            if(rosterSection)adminRoot.append(rosterSection);
+        } // Inscrições e Designer Roster são as últimas seções do Control Room.
         const toggle=$('#fauEnrollToggle'),feedback=$('#fauEnrollFeedback');
         const refreshEnrollment=async()=>{
             try{const st=await fauEnrollmentState();toggle.checked=fauCanEnroll(st);toggle.disabled=st.seasonStarted;feedback.textContent=st.seasonStarted?'Temporada iniciada: inscrições encerradas.':st.open?'Inscrições visíveis e liberadas.':'Inscrições ocultas. A entrada mostra apenas login.';}
@@ -4328,12 +4333,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
         const fauCreateRoleHints={estilista:'O Designer escolhe seu nome de competição e manifesto antes da estreia.',jurado:'O jurado entra direto na bancada quando as avaliações forem liberadas.',plateia:'A plateia entra sem cadastro e vê somente conteúdos públicos.'};
         $('#createRole').addEventListener('change',e=>{$('#createRoleHint').textContent=fauCreateRoleHints[e.target.value]||'';});
-        $('#generateAccountPassword').onclick=()=>{
+        $('#generateAccountPassword')?.addEventListener('click',()=>{
             const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#';
             const bytes=new Uint8Array(14);
             crypto.getRandomValues(bytes);
             $('#createPassword').value=Array.from(bytes,b=>alphabet[b%alphabet.length]).join('');
-        };
+        });
         let lastCreatedCredentials='';
         $('#copyCreatedCredentials').onclick=async()=>{
             if(!lastCreatedCredentials)return;
@@ -4350,23 +4355,34 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if (pass.length < 8) {$('#createPassword').focus();throw new Error('A senha precisa ter pelo menos 8 caracteres.');}
             const button=$('#btnCreateAccount');button.disabled=true;button.textContent='CRIANDO ACESSO…';
             const ate = role === 'estilista' ? username : username;
-            const tempAppName = `app_${Date.now()}`;
+            const tempAppName = `fau_admin_create_${Date.now()}_${Math.floor(Math.random()*1e6)}`;
             const secondaryApp = firebase.initializeApp(firebaseConfig, tempAppName);
+            let createdUser=null, saved=false;
             try {
                 const cred = await secondaryApp.auth().createUserWithEmailAndPassword(formatEmail(username), pass);
-                await db.doc(`perfis/${cred.user.uid}`).set({ ate, username, role, disabled: false, bio: '', createdAt: now() });
-                await db.doc(`identidades/${cred.user.uid}`).set({ real, username, ate, createdAt: now() });
-                lastCreatedCredentials=`PROJECT RUNWAY: FAU\\nPerfil: ${role==='estilista'?'Designer':role==='jurado'?'Jurado':'Plateia'}\\nUsuário: ${username}\\nSenha: ${pass}`;
+                createdUser=cred.user;
+                // Grava com a sessão do ADM, nunca com a sessão do usuário recém-criado.
+                const batch=db.batch();
+                batch.set(db.doc(`perfis/${createdUser.uid}`),{ate,username,role,disabled:false,out:false,bio:'',createdAt:now()});
+                batch.set(db.doc(`identidades/${createdUser.uid}`),{real,username,ate,createdAt:now()});
+                await batch.commit();
+                saved=true;
+                lastCreatedCredentials=`PROJECT RUNWAY: FAU\nPerfil: ${role==='estilista'?'Designer':role==='jurado'?'Jurado':'Plateia'}\nUsuário: ${username}\nSenha: ${pass}`;
                 $('#createdAccountReceipt').classList.remove('hidden');
-                showToast(`Acesso de ${username} criado.`);
-                $('#createRealName').value = '';
-                $('#createUsername').value = '';
-                $('#createPassword').value = '';
+                showToast(`Acesso de ${username} criado e perfil salvo.`);
+                $('#createRealName').value='';$('#createUsername').value='';$('#createPassword').value='';
+            } catch(err) {
+                if(createdUser&&!saved){
+                    try{await createdUser.delete();}catch(cleanupErr){
+                        console.error('Conta Authentication criada, mas não foi possível desfazer:',createdUser.uid,cleanupErr);
+                        throw new Error(`Conta Auth criada (UID ${createdUser.uid}), mas perfil não salvo. Verifique Firestore antes de tentar novamente. ${err.message}`);
+                    }
+                }
+                throw err;
             } finally {
                 button.disabled=false;button.textContent='Criar acesso';
-                await secondaryApp.delete();
-            }
-        });
+                try{await secondaryApp.delete();}catch(e){console.warn('Falha ao encerrar sessão secundária:',e);}
+            }        });
 
         // Ausências são decisões explícitas da produção, registradas por rodada.
         // Nunca considerar "não entregou" automaticamente como desistência.
@@ -5113,10 +5129,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if (!btn) return;
             const act = btn.dataset.act || btn.dataset.exec?.split('|')[0];
             const uid = btn.dataset.uid;
-            const atelierMap = await getAtelierNamesMap();
-
-            if (!isAdmin || !currentUser || currentUser.role !== 'admin') throw new Error('Apenas a produção pode gerenciar usuários.');
-            if (['save-role','toggle-status','delete-profile','edit-profile'].includes(act) && (!uid || uid === currentUser.uid)) throw new Error('Não é permitido alterar sua própria conta neste painel.');
+            if (!isAdmin || !auth.currentUser) throw new Error('Apenas a produção pode gerenciar usuários.');
+            if (['save-role','toggle-status','delete-profile','edit-profile'].includes(act) && (!uid || uid === auth.currentUser.uid)) throw new Error('Não é permitido alterar sua própria conta neste painel.');
 
             if (act === 'edit-profile') {
                 const ref = db.doc(`perfis/${uid}`);
@@ -5202,7 +5216,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const r=row.registration||{},l=row.legacy||{},p=row.profile||{};
             const real=prompt('Nome real:',r.real||l.real||'');if(real===null)return;
             const designer=prompt('Nome de Designer / Maison:',p.ate||r.designer||l.ate||'');if(designer===null)return;
-            const username=prompt('Usuário (somente identificação; não altera credencial do Firebase):',r.username||p.username||l.username||'');if(username===null)return;
+            const username=r.username||p.username||l.username||''; // O login real não pode ser alterado editando o Firestore.
             const bio=prompt('Manifesto / biografia:',p.bio||'');if(bio===null)return;
             if(real.trim().length<2||real.length>90||designer.trim().length<2||designer.length>70||username.length>100||bio.length>300||/[<>]/.test(real+designer+username+bio))throw new Error('Confira os campos e limites de caracteres.');
             const batch=db.batch();
