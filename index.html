@@ -1694,8 +1694,7 @@ Olá, *${targetName}*! Consta como pendente no nosso radar em tempo real o seu r
 🎲 *Faltam realizar o Sorteio de Clique Único:* ${missingDraws.join(", ")}` : `🎲 *Sorteios:* 100% concluídos!`,
                 missingSubs.length ? `👗 *Faltam entregar Look no Workroom:* ${missingSubs.join(", ")}` : `👗 *Entregas do Workroom:* 100% concluídas!`,
                 missingJudges.length ? `⚖️ *Jurados com fichas pendentes:* ${missingJudges.join(", ")}` : `⚖️ *Bancada de Jurados:* 100% avaliada!`
-            ].join("
-");
+            ].join("\n");
 
             navigator.clipboard?.writeText(msg);
             showToast("Relatório geral de pendências copiado para o WhatsApp!");
