@@ -1182,12 +1182,22 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     try { const d=JSON.parse(draft);const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();if(enrollment.exists){await fauProvisionDesigner(user,enrollment.data());sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,true);return;}await db.doc(`inscricoes_designers/${user.uid}`).set({real:d.real,designer:d.designer,username:d.username,email:user.email,uid:user.uid,status:'ativo',createdAt:firebase.firestore.FieldValue.serverTimestamp()});await fauProvisionDesigner(user,d);sessionStorage.removeItem('fauRegistrationDraft');showRegistrationReceipt(user,false);return; }catch(ex){console.warn('Registration completion:',ex);}
                 }
                 const enrollment=await db.doc(`inscricoes_designers/${user.uid}`).get();
-                if(enrollment.exists){profileData=await fauProvisionDesigner(user,enrollment.data());}
-                if(user.providerData?.some(p=>p.providerId==='google.com')&&sessionStorage.getItem('fauGoogleRegistration')==='1'){
+                if(enrollment.exists){
+                    try {
+                        profileData=await fauProvisionDesigner(user,enrollment.data());
+                        // Perfil recuperado: segue o login normalmente como Designer.
+                    } catch(ex) {
+                        console.error('Falha ao ativar perfil Designer:',ex);
+                        showToast('Sua inscrição existe, mas o perfil não pôde ser criado. Confira as regras do Firestore.');
+                        await auth.signOut();return showLogin();
+                    }
+                } else if(user.providerData?.some(p=>p.providerId==='google.com')&&sessionStorage.getItem('fauGoogleRegistration')==='1'){
                     sessionStorage.removeItem('fauGoogleRegistration');
                     if(fauCanEnroll(await fauEnrollmentState())){await showDesignerRegistration(user);return;}
                 }
-                await auth.signOut();showToast('Acesso restrito a Designers e Jurados cadastrados.');return showLogin();
+                if(!enrollment.exists){
+                    await auth.signOut();showToast('Acesso restrito a Designers e Jurados cadastrados.');return showLogin();
+                }
             }
         }
 
@@ -5098,6 +5108,97 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
         });
 
+        // Casting Desk: gerenciamento unificado dos cadastros, sem criar contas Auth fictícias.
+        const castSection=$('#castAuditList')?.closest('.bg-fashion-900');
+        if(castSection){
+            const toolbar=document.createElement('div');
+            toolbar.className='flex flex-wrap items-center gap-2 mb-4';
+            toolbar.innerHTML=`<input id="castSearch" aria-label="Buscar participantes" placeholder="Buscar nome, usuário, UID…" class="flex-1 min-w-[170px] bg-fashion-950 border border-fashion-700 rounded p-2 text-xs text-white">
+              <select id="castFilter" aria-label="Filtrar perfis" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-xs text-white"><option value="all">Todos</option><option value="active">Ativos</option><option value="disabled">Desativados</option><option value="out">Eliminados</option><option value="missing">Incompletos</option></select>
+              <button id="castAdd" class="rounded bg-fashion-gold text-black px-3 py-2 text-xs font-bold">+ ADICIONAR PERFIL</button>`;
+            $('#castAuditList').before(toolbar);
+            const note=document.createElement('p');
+            note.className='text-[11px] text-gray-400 mb-3';
+            note.textContent='Gerencie nomes, função e status. Adicionar perfil exige um UID de uma conta já criada no Firebase Authentication; não cria login nem senha. Excluir não remove a conta Authentication.';
+            toolbar.after(note);
+        }
+        let castRows=[];
+        const castEdit=async(uid)=>{
+            if(uid===auth.currentUser?.uid)throw new Error('Não é permitido alterar sua própria conta.');
+            const row=castRows.find(x=>x.uid===uid);if(!row)throw new Error('Conta não encontrada.');
+            const r=row.registration||{},l=row.legacy||{},p=row.profile||{};
+            const real=prompt('Nome real:',r.real||l.real||'');if(real===null)return;
+            const designer=prompt('Nome de Designer / Maison:',p.ate||r.designer||l.ate||'');if(designer===null)return;
+            const username=prompt('Usuário (somente identificação; não altera credencial do Firebase):',r.username||p.username||l.username||'');if(username===null)return;
+            const bio=prompt('Manifesto / biografia:',p.bio||'');if(bio===null)return;
+            if(real.trim().length<2||real.length>90||designer.trim().length<2||designer.length>70||username.length>100||bio.length>300||/[<>]/.test(real+designer+username+bio))throw new Error('Confira os campos e limites de caracteres.');
+            const batch=db.batch();
+            if(row.registration)batch.update(db.doc(`inscricoes_designers/${uid}`),{real:real.trim(),designer:designer.trim()});
+            if(row.profile)batch.update(db.doc(`perfis/${uid}`),{ate:designer.trim(),bio:bio.trim()});
+            if(row.legacy)batch.update(db.doc(`identidades/${uid}`),{real:real.trim(),ate:designer.trim(),username:username.trim()});
+            else batch.set(db.doc(`identidades/${uid}`),{real:real.trim(),ate:designer.trim(),username:username.trim(),email:r.email||'',updatedAt:now()},{merge:true});
+            await batch.commit();showToast('Dados do participante atualizados.');
+        };
+        const castAdd=async()=>{
+            const uid=prompt('UID da conta existente no Firebase Authentication (não é possível criar senha por este painel):');
+            if(uid===null)return;
+            if(!/^[A-Za-z0-9_-]{10,128}$/.test(uid.trim()))throw new Error('UID inválido.');
+            if(uid.trim()===auth.currentUser?.uid)throw new Error('Não altere seu próprio acesso.');
+            const ref=db.doc(`perfis/${uid.trim()}`);
+            if((await ref.get()).exists)throw new Error('Esse UID já possui perfil. Use Editar.');
+            const ate=prompt('Nome público / Designer:');if(ate===null)return;
+            if(!ate.trim()||ate.length>70||/[<>]/.test(ate))throw new Error('Nome inválido.');
+            const real=prompt('Nome real (opcional):','');if(real===null)return;
+            if(real.length>90||/[<>]/.test(real))throw new Error('Nome real inválido.');
+            const role=prompt('Função: estilista, jurado ou plateia','estilista');if(role===null)return;
+            if(!['estilista','jurado','plateia'].includes(role))throw new Error('Função inválida.');
+            if(!confirm(`Criar perfil ${role} para UID ${uid.trim()}? Confirme que esse UID pertence a uma conta Authentication existente.`))return;
+            const batch=db.batch();
+            batch.set(ref,{ate:ate.trim(),role,disabled:false,out:false,bio:'',createdAt:now()});
+            if(real.trim())batch.set(db.doc(`identidades/${uid.trim()}`),{real:real.trim(),ate:ate.trim(),createdAt:now()},{merge:true});
+            await batch.commit();showToast('Perfil criado. A conta Authentication deve existir para permitir login.');
+        };
+        $('#castAdd')?.addEventListener('click',()=>safeExec(castAdd)());
+        $('#castSearch')?.addEventListener('input',()=>renderCastAudit());
+        $('#castFilter')?.addEventListener('change',()=>renderCastAudit());
+        $('#castAuditList')?.addEventListener('click',e=>{
+            const btn=e.target.closest('[data-cast-action]');if(!btn)return;
+            const uid=btn.dataset.castUid,action=btn.dataset.castAction;
+            safeExec(async()=>{
+                if(!isAdmin||uid===auth.currentUser?.uid)throw new Error('Operação não permitida.');
+                const row=castRows.find(x=>x.uid===uid);if(!row)throw new Error('Usuário não encontrado.');
+                const profileRef=db.doc(`perfis/${uid}`);
+                if(action==='edit')return castEdit(uid);
+                if(action==='role'){
+                    if(!row.profile)throw new Error('Adicione o perfil antes de alterar a função.');
+                    const role=$('#castAuditList').querySelector(`[data-cast-role="${uid}"]`)?.value;
+                    if(!['estilista','jurado','plateia'].includes(role))throw new Error('Função inválida.');
+                    if(!confirm(`Alterar função para ${role}?`))return;
+                    await profileRef.update({role});showToast('Função atualizada.');
+                }
+                if(action==='status'){
+                    if(!row.profile)throw new Error('Perfil não encontrado.');
+                    const disabled=!!row.profile.disabled;
+                    if(!confirm(`${disabled?'Reativar':'Desativar'} este usuário?`))return;
+                    await profileRef.update({disabled:!disabled});showToast('Status atualizado.');
+                }
+                if(action==='out'){
+                    if(!row.profile)throw new Error('Perfil não encontrado.');
+                    const out=!!row.profile.out;
+                    if(!confirm(`${out?'Reintegrar':'Marcar como OUT'} este participante?`))return;
+                    await profileRef.update({out:!out});showToast('Situação na competição atualizada.');
+                }
+                if(action==='delete'){
+                    if(!confirm('EXCLUIR cadastro e perfil do Firestore? Esta ação não exclui a conta do Firebase Authentication nem o histórico de looks, votos e notas. Prefira desativar se deseja apenas bloquear o acesso.'))return;
+                    if(prompt('Digite EXCLUIR para confirmar:')!=='EXCLUIR')return;
+                    const batch=db.batch();
+                    if(row.profile)batch.delete(profileRef);
+                    if(row.registration)batch.delete(db.doc(`inscricoes_designers/${uid}`));
+                    if(row.legacy)batch.delete(db.doc(`identidades/${uid}`));
+                    await batch.commit();showToast('Registros de cadastro removidos do Firestore.');
+                }
+            })();
+        });
         // Auditoria unificada: inscrições novas + identidades legadas + perfis ativos.
         // A coleção identidades não é gravada pelo cadastro público (somente ADM).
         const auditCache={inscricoes:null,identidades:null,perfis:null};
@@ -5109,17 +5210,39 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             (auditCache.identidades||[]).forEach(d=>{const x=ensure(d.id);x.legacy=d.data();});
             (auditCache.inscricoes||[]).forEach(d=>{const x=ensure(d.id);x.registration=d.data();});
             (auditCache.perfis||[]).forEach(d=>{const x=ensure(d.id);x.profile=d.data();});
-            const rows=[...entries.values()].sort((a,b)=>String(a.registration?.real||a.legacy?.real||a.profile?.ate||'').localeCompare(String(b.registration?.real||b.legacy?.real||b.profile?.ate||''),'pt-BR'));
+            castRows=[...entries.values()].sort((a,b)=>String(a.registration?.real||a.legacy?.real||a.profile?.ate||'').localeCompare(String(b.registration?.real||b.legacy?.real||b.profile?.ate||''),'pt-BR'));
+            const search=($('#castSearch')?.value||'').toLocaleLowerCase('pt-BR'),filter=$('#castFilter')?.value||'all';
+            const rows=castRows.filter(x=>{
+                const r=x.registration||{},l=x.legacy||{},p=x.profile||{};
+                const hay=[x.uid,r.real,r.designer,r.username,r.email,l.real,l.username,p.ate,p.username].join(' ').toLocaleLowerCase('pt-BR');
+                if(search&&!hay.includes(search))return false;
+                if(filter==='active')return !!x.profile&&!p.disabled&&!p.out;
+                if(filter==='disabled')return !!p.disabled;
+                if(filter==='out')return !!p.out;
+                if(filter==='missing')return !x.profile||(!x.registration&&!x.legacy);
+                return true;
+            });
             const errors=Object.entries(auditErrors).filter(([,value])=>value).map(([name,value])=>`<p class="text-red-300 p-2 border border-red-900 rounded">Erro ao consultar ${esc(name)}: ${esc(value)}. Verifique as regras do Firestore.</p>`).join('');
             const pending=Object.values(auditCache).some(v=>v===null);
-            root.innerHTML=`<p class="text-[11px] text-gray-400 mb-2">${rows.length} conta(s) identificada(s) · Fontes: inscrições, identidades antigas e perfis.</p>${errors}${rows.map(x=>{
+            root.innerHTML=`<p class="text-[11px] text-gray-400 mb-2">${rows.length} exibido(s) de ${castRows.length} conta(s) · Inscrições + identidades antigas + perfis.</p>${errors}${rows.map(x=>{
                 const reg=x.registration||{},legacy=x.legacy||{},profile=x.profile||{};
                 const real=reg.real||legacy.real||'Nome real não registrado';
                 const atelier=profile.ate||reg.designer||legacy.ate||'Designer não informado';
                 const username=reg.username||profile.username||legacy.username||reg.email||legacy.email||'Não informado';
                 const badges=[!x.registration&&!x.legacy?'Sem ficha de identidade':'',!x.profile?'Sem perfil de acesso':'',profile.disabled?'Desativado':'',profile.out?'Eliminado':''].filter(Boolean);
-                return `<div class="p-2 border-b border-fashion-800 space-y-1"><div class="flex justify-between gap-2"><span class="text-white">${esc(real)}</span><strong class="text-fashion-gold text-right">${esc(atelier)}</strong></div><p class="text-[10px] text-gray-400 break-all">Usuário: ${esc(username)} · ${esc(profile.role||'Sem cargo')} · UID: ${esc(x.uid)}</p>${badges.length?`<p class="text-[10px] text-amber-300">${badges.map(esc).join(' · ')}</p>`:''}</div>`;
-            }).join('')}${!rows.length&&!pending&&!errors?'<span class="text-gray-500">Nenhum cadastro encontrado nas três coleções.</span>':''}${pending?'<span class="text-gray-400">Sincronizando dados…</span>':''}`;
+                const own=x.uid===auth.currentUser?.uid;
+                return `<article class="p-3 border border-fashion-700 bg-fashion-950 rounded-xl space-y-3 mb-2">
+                    <div class="flex flex-wrap justify-between gap-2"><div><p class="text-white font-semibold">${esc(real)}</p><p class="text-fashion-gold font-cinzel">${esc(atelier)}</p><p class="text-[10px] text-gray-400 break-all">${esc(username)} · UID: ${esc(x.uid)}</p></div><span class="text-xs ${profile.disabled?'text-red-300':'text-green-300'}">${profile.disabled?'DESATIVADO':x.profile?'ATIVO':'SEM PERFIL'}</span></div>
+                    ${badges.length?`<p class="text-[10px] text-amber-300">${badges.map(esc).join(' · ')}</p>`:''}
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button data-cast-action="edit" data-cast-uid="${esc(x.uid)}" ${own?'disabled':''} class="rounded border border-fashion-gold text-fashion-gold px-3 py-2 text-xs disabled:opacity-40">EDITAR</button>
+                        <select data-cast-role="${esc(x.uid)}" ${own||!x.profile?'disabled':''} class="bg-fashion-900 border border-fashion-700 rounded p-2 text-xs text-white">${[['estilista','Designer'],['jurado','Jurado'],['plateia','Plateia']].map(([v,t])=>`<option value="${v}" ${profile.role===v?'selected':''}>${t}</option>`).join('')}</select>
+                        <button data-cast-action="role" data-cast-uid="${esc(x.uid)}" ${own||!x.profile?'disabled':''} class="rounded border border-fashion-700 text-white px-3 py-2 text-xs disabled:opacity-40">SALVAR FUNÇÃO</button>
+                        <button data-cast-action="status" data-cast-uid="${esc(x.uid)}" ${own||!x.profile?'disabled':''} class="rounded border border-fashion-700 text-white px-3 py-2 text-xs disabled:opacity-40">${profile.disabled?'REATIVAR':'DESATIVAR'}</button>
+                        <button data-cast-action="out" data-cast-uid="${esc(x.uid)}" ${own||!x.profile?'disabled':''} class="rounded border border-fashion-700 text-white px-3 py-2 text-xs disabled:opacity-40">${profile.out?'REINTEGRAR':'MARCAR OUT'}</button>
+                        <button data-cast-action="delete" data-cast-uid="${esc(x.uid)}" ${own?'disabled':''} class="rounded border border-red-800 text-red-300 px-3 py-2 text-xs disabled:opacity-40">EXCLUIR</button>
+                    </div></article>`;
+            }).join('')}${!rows.length&&!pending&&!errors?'<span class="text-gray-500">Nenhum usuário encontrado para este filtro.</span>':''}${pending?'<span class="text-gray-400">Sincronizando dados…</span>':''}`;
         };
         [['inscricoes','inscricoes_designers'],['identidades','identidades'],['perfis','perfis']].forEach(([key,collection])=>{
             sub(db.collection(collection),snap=>{auditCache[key]=snap.docs;auditErrors[key]=null;renderCastAudit();},err=>{auditCache[key]=[];auditErrors[key]=err.message||String(err);renderCastAudit();});
