@@ -247,6 +247,14 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 .fau-reg-step{display:flex;align-items:center;justify-content:center;gap:.55rem;border:1px solid #44403c;border-radius:.7rem;padding:.8rem .3rem;color:#a3a3a3;font-size:.68rem;letter-spacing:.08em}
 .fau-reg-step span{font-family:serif;font-size:1.15rem}.fau-reg-step.is-active{border-color:#d1b38b;color:#e5c99b;background:rgba(209,179,139,.08)}
 .fau-reg-input:focus{outline:2px solid #d1b38b;outline-offset:1px}.fau-reg-reveal{position:absolute;right:.6rem;top:50%;transform:translateY(-50%);font-size:.65rem;color:#e5c99b;padding:.4rem}
+</style><style id="fau-vault-styles">
+.fau-vault-hero{background:radial-gradient(ellipse at top,rgba(194,153,92,.11),transparent 65%)}
+.fau-vault-filter{font-size:10px;letter-spacing:.08em;padding:.6rem .7rem;border:1px solid #49433a;border-radius:.5rem;color:#d1d5db}
+.fau-vault-filter.is-active{border-color:#d1b38b;background:rgba(209,179,139,.13);color:#e5c99b}
+.fau-vault-photo{aspect-ratio:4/4.5;max-height:210px}
+.fau-vault-card{transition:border-color .2s,transform .2s}
+.fau-vault-card:hover{border-color:#d1b38b;transform:translateY(-2px)}
+@media(max-width:480px){.fau-vault-photo{max-height:175px}.fau-vault-filter{padding:.5rem .55rem}}
 </style></head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -1592,16 +1600,66 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     // Apenas os campos explicitamente publicados são exibidos; não consultar theme_vault_private.
     VIEWS.pistas = () => {
         const host=$('#mainView');
-        host.innerHTML=`<section class="space-y-5"><div class="text-center space-y-2"><div class="text-fashion-gold text-[10px] uppercase tracking-[.35em]">The Season's Secrets</div><h2 class="font-cinzel text-2xl text-white">🔐 THE THEME VAULT</h2><p class="text-sm text-gray-300 max-w-xl mx-auto">Cada fotografia esconde um desafio da temporada. Observe as fotografias e tente descobrir os desafios. As pistas escritas são exclusivas do Ícone da Moda (ou do WIN autorizado).</p></div><div id="publicThemeClues" class="grid grid-cols-2 md:grid-cols-3 gap-3"><p class="text-gray-400 text-sm col-span-full text-center">Abrindo o arquivo de pistas…</p></div></section>`;
-        const list=$('#publicThemeClues');
+        host.innerHTML=`<section class="fau-vault space-y-6 max-w-6xl mx-auto">
+          <header class="fau-vault-hero text-center space-y-3 py-5 px-4">
+            <p class="text-fashion-gold text-[10px] tracking-[.32em] uppercase">PROJECT RUNWAY: FAU · CLASSIFIED ARCHIVE</p>
+            <h2 class="font-cinzel text-2xl sm:text-3xl text-white">THE THEME VAULT</h2>
+            <p class="text-gray-300 text-sm max-w-lg mx-auto">Cada imagem é uma pista. Qual será o próximo desafio?</p>
+            <p class="text-gray-500 text-xs">Os nomes permanecem secretos até a revelação oficial.</p>
+          </header>
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-fashion-700 pb-4">
+            <div class="flex gap-2" role="group" aria-label="Filtrar temas">
+              <button type="button" class="fau-vault-filter is-active" data-vault-filter="all" aria-pressed="true">TODOS</button>
+              <button type="button" class="fau-vault-filter" data-vault-filter="available" aria-pressed="false">DISPONÍVEIS</button>
+              <button type="button" class="fau-vault-filter" data-vault-filter="used" aria-pressed="false">UTILIZADOS</button>
+            </div>
+            <span id="fauVaultCount" class="text-xs text-gray-400" aria-live="polite">Abrindo arquivo…</span>
+          </div>
+          <div id="publicThemeClues" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4"><p class="text-gray-400 text-sm col-span-full text-center py-10">Abrindo o arquivo de pistas…</p></div>
+          <div id="fauVaultModal" class="hidden fixed inset-0 z-[110] bg-black/90 p-4 sm:p-8 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Ampliar pista" tabindex="-1">
+            <button type="button" id="fauVaultClose" class="absolute top-4 right-4 text-white border border-white/30 rounded-full w-10 h-10 text-xl" aria-label="Fechar fotografia">×</button>
+            <div class="max-w-3xl w-full text-center space-y-3"><img id="fauVaultModalImg" class="max-h-[75vh] w-auto max-w-full object-contain mx-auto rounded-lg" alt=""><p id="fauVaultModalTitle" class="font-cinzel text-fashion-gold text-sm"></p></div>
+          </div>
+        </section>`;
+        const list=$('#publicThemeClues'), count=$('#fauVaultCount'), modal=$('#fauVaultModal');
+        let entries=[], filter='all',previousFocus=null;
+        const paint=()=>{
+            if(!list?.isConnected)return;
+            const shown=entries.filter(e=>filter==='all'||(filter==='used'?e.data.used:!e.data.used));
+            count.textContent=`${shown.length} de ${entries.length} pistas`;
+            list.innerHTML=shown.map((e)=>{
+                const v=e.data, revealed=!!v.revealedName;
+                const title=revealed?v.revealedName:`MYSTERY ${String(e.number).padStart(2,'0')}`;
+                return `<button type="button" data-vault-id="${esc(e.id)}" class="fau-vault-card text-left bg-fashion-900 border border-fashion-700 rounded-xl overflow-hidden group focus:outline-none focus:ring-2 focus:ring-fashion-gold" aria-label="Ampliar pista ${e.number}: ${esc(title)}">
+                  <div class="fau-vault-photo bg-fashion-950 relative overflow-hidden">${v.photo?`<img src="${esc(v.photo)}" alt="Pista visual ${e.number}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">`:'<div class="h-full flex items-center justify-center text-gray-500 text-xs p-3 text-center">Aguardando fotografia</div>'}<span class="absolute top-2 left-2 bg-black/75 text-fashion-gold text-[10px] px-2 py-1 rounded">${String(e.number).padStart(2,'0')}</span></div>
+                  <div class="p-3 space-y-1"><h3 class="font-cinzel text-fashion-gold text-xs leading-snug break-words">${esc(title)}</h3><p class="text-[10px] tracking-wide ${v.used?'text-gray-400':'text-gray-300'}">${v.used?'ARQUIVADO':'AINDA EM JOGO'}</p></div>
+                </button>`;
+            }).join('')||'<p class="text-gray-400 text-sm col-span-full text-center py-10">Nenhuma pista nesta categoria.</p>';
+        };
+        host.querySelectorAll('[data-vault-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+            filter=btn.dataset.vaultFilter;
+            host.querySelectorAll('[data-vault-filter]').forEach(b=>{const active=b===btn;b.classList.toggle('is-active',active);b.setAttribute('aria-pressed',String(active));});
+            paint();
+        }));
+        const closeModal=()=>{modal.classList.add('hidden');document.body.style.overflow='';previousFocus?.focus?.();};
+        $('#fauVaultClose').onclick=closeModal;
+        modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
+        const onKey=e=>{if(e.key==='Escape'&&!modal.classList.contains('hidden'))closeModal();};
+        document.addEventListener('keydown',onKey);
+        unsubsTab.push(()=>{document.removeEventListener('keydown',onKey);document.body.style.overflow='';});
+        list.addEventListener('click',e=>{
+            const btn=e.target.closest('[data-vault-id]');if(!btn)return;
+            const item=entries.find(x=>x.id===btn.dataset.vaultId);if(!item)return;
+            if(!item.data.photo){showToast('Fotografia ainda não cadastrada.');return;}
+            previousFocus=btn;
+            const img=$('#fauVaultModalImg');img.src=item.data.photo;img.alt=`Pista visual ${item.number}`;
+            $('#fauVaultModalTitle').textContent=item.data.revealedName||`MYSTERY ${String(item.number).padStart(2,'0')}`;
+            modal.classList.remove('hidden');document.body.style.overflow='hidden';$('#fauVaultClose').focus();
+        });
         const unsub=db.collection('theme_vault_public').onSnapshot(snap=>{
             if(!list.isConnected)return;
-            const docs=snap.docs.sort((a,b)=>a.id.localeCompare(b.id));
-            list.innerHTML=docs.map((d,i)=>{
-                const v=d.data()||{};
-                const revealed=!!v.revealedName;
-                return `<article class="bg-fashion-900 border border-fashion-700 rounded-lg overflow-hidden"><div class="aspect-[4/5] bg-fashion-950">${v.photo?`<img src="${esc(v.photo)}" alt="Fotografia da pista ${i+1}" class="w-full h-full object-cover" loading="lazy">`:'<div class="h-full flex items-center justify-center text-gray-400 text-xs p-4">Fotografia ainda não cadastrada</div>'}</div><div class="p-3 space-y-2"><div class="font-cinzel text-fashion-gold text-xs">${revealed?esc(v.revealedName):`MYSTERY ${String(i+1).padStart(2,'0')}`}</div><span class="text-[10px] uppercase tracking-widest ${v.used?'text-gray-400':'text-fashion-gold'}">${v.used?'DESAFIO UTILIZADO':'MISTÉRIO DISPONÍVEL'}</span></div></article>`;
-            }).join('')||'<p class="text-gray-400 text-sm col-span-full text-center">As primeiras pistas ainda serão disponibilizadas pela produção.</p>';
+            entries=snap.docs.sort((a,b)=>a.id.localeCompare(b.id)).map((d,i)=>({id:d.id,number:i+1,data:d.data()||{}}));
+            paint();
         },err=>{if(list.isConnected)list.textContent='Não foi possível carregar as pistas: '+err.message;});
         unsubsTab.push(unsub);
     };
@@ -1628,12 +1686,30 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             renderView(`<div class="bg-fashion-900 border border-fashion-700 p-8 rounded-xl text-center space-y-4 max-w-xl mx-auto my-12"><span class="text-fashion-gold text-xs tracking-[.3em]">BEHIND THE SEAMS</span><h2 class="font-cinzel text-2xl text-white">The Confessional Room</h2><p class="text-sm text-gray-300">As câmeras ainda estão desligadas. O confessionário abre com a estreia da temporada.</p></div>`);
             return;
         }
-        const canPost=currentUser.role==='estilista';
-        renderView(`<div class="conf-experience space-y-5 max-w-4xl mx-auto">
-            <header class="conf-hero rounded-2xl p-6 md:p-8 space-y-2"><span class="text-fashion-gold tracking-[.3em] text-[10px]">BEHIND THE SEAMS · PROJECT RUNWAY: FAU</span><h2 class="font-cinzel text-3xl text-white">The Confessional Room</h2><p class="text-gray-300 text-sm">Fora da passarela, cada Designer tem sua própria versão da história.</p><div class="flex items-center gap-2 text-xs text-gray-400 pt-2"><span class="inline-block w-2 h-2 rounded-full bg-red-500"></span> CONFESSIONAL CAM · SEASON ${esc(globalState.rodada||'FAU')}</div></header>
-            ${canPost?`<section class="conf-booth bg-fashion-950 border border-fashion-gold/40 rounded-xl p-5 space-y-3" aria-label="Gravar depoimento"><div class="flex items-center justify-between gap-2"><h3 class="font-cinzel text-fashion-gold text-lg">Your camera. Your story.</h3><span class="text-red-400 text-xs tracking-widest">● REC</span></div><p class="text-xs text-gray-300">O que aconteceu nos bastidores? Qual foi sua maior surpresa? A palavra é sua. Seu depoimento será público e aparecerá com seu nome de Designer.</p><label for="chatInput" class="text-xs text-fashion-gold block">SEU DEPOIMENTO</label><textarea id="chatInput" maxlength="1000" rows="5" class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-4 text-sm text-white focus:outline-none focus:border-fashion-gold resize-y" placeholder="A câmera está ligada. O que você tem a dizer?"></textarea><div class="flex justify-between items-center gap-2 flex-wrap"><span id="confCounter" aria-live="polite" class="text-xs text-gray-400">0 / 1000 caracteres</span><span class="text-[11px] text-gray-400">Publicado para todos · Sem anonimato</span></div><div id="confPreview" class="hidden rounded-lg bg-fashion-900 border border-fashion-gold/30 p-4 space-y-2"><span class="text-[10px] text-fashion-gold tracking-widest">PREVIEW · ${esc(currentUser.ate||'DESIGNER')}</span><p id="confPreviewText" class="text-sm text-gray-200 whitespace-pre-wrap break-words"></p></div><div class="flex flex-wrap gap-2 justify-end"><button type="button" id="confPreviewButton" class="border border-fashion-gold/40 text-fashion-gold px-4 py-3 rounded-lg text-xs">VISUALIZAR</button><button type="button" id="btnSendChat" disabled class="bg-fashion-gold hover:bg-fashion-gold-hover disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold px-5 py-3 rounded-lg text-xs uppercase">PUBLICAR DEPOIMENTO</button></div><p id="confStatus" role="status" class="text-xs text-gray-400" aria-live="polite"></p></section>`:`<div class="bg-fashion-900 border border-fashion-700 rounded-lg p-4 text-xs text-gray-300">Você está nos bastidores. Apenas Designers publicam depoimentos, mas todos podem acompanhar o que acontece por trás das câmeras.</div>`}
+        const canPost=isAdmin || currentUser.role==='estilista';
+        renderView(`<div class="conf-experience space-y-4 max-w-4xl mx-auto">
+            <header class="conf-hero rounded-2xl px-5 py-4 md:px-6 md:py-5 flex flex-wrap items-center justify-between gap-3">
+              <div><span class="text-fashion-gold tracking-[.22em] text-[10px]">BEHIND THE SEAMS</span><h2 class="font-cinzel text-2xl text-white">The Confessional Room</h2></div>
+              ${canPost?'<button type="button" id="confOpenComposer" aria-expanded="false" aria-controls="confComposerArea" class="bg-fashion-gold text-black font-bold rounded-lg px-4 py-3 text-xs">● GRAVAR DEPOIMENTO</button>':''}
+            </header>
+            <div id="confLatestNotice" class="hidden rounded-xl border border-fashion-gold/40 bg-fashion-gold/10 px-4 py-3 text-xs text-fashion-gold" role="status" aria-live="polite"></div>
             <section class="space-y-3" aria-label="Depoimentos publicados"><div class="flex flex-wrap items-center justify-between gap-3"><div><span class="text-fashion-gold text-[10px] tracking-[.2em]">ON THE RECORD</span><h3 class="font-cinzel text-xl text-white">Behind the Seams</h3><p id="confFeedCount" class="text-xs text-gray-400">Carregando depoimentos...</p></div><div class="flex gap-2 items-center"><label for="confFilter" class="text-xs text-gray-300">Mostrar</label><select id="confFilter" class="bg-fashion-900 text-white border border-fashion-700 rounded-lg px-3 py-2 text-xs"><option value="all">Toda a temporada</option><option value="round">Rodada atual</option>${canPost?'<option value="mine">Meus depoimentos</option>':''}</select></div></div><div id="chatFeed" class="conf-feed space-y-3" aria-live="polite"><p class="text-gray-400 text-sm text-center py-8">Abrindo os bastidores…</p></div><button type="button" id="confShowMore" class="hidden w-full rounded-lg border border-fashion-700 text-fashion-gold py-3 text-xs">VER MAIS DEPOIMENTOS</button></section>
+
+            <div id="confComposerArea" class="hidden">
+            ${canPost?`<section class="conf-booth bg-fashion-950 border border-fashion-gold/40 rounded-xl p-5 space-y-3" aria-label="Gravar depoimento"><div class="flex items-center justify-between gap-2"><h3 class="font-cinzel text-fashion-gold text-lg">Your camera. Your story.</h3><span class="text-red-400 text-xs tracking-widest">● REC</span></div><p class="text-xs text-gray-300">${isAdmin?'Publicado como PRODUÇÃO.':'Publicado com seu nome de Designer.'}</p><label for="chatInput" class="text-xs text-fashion-gold block">SEU DEPOIMENTO</label><textarea id="chatInput" maxlength="1000" rows="3" class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-4 text-sm text-white focus:outline-none focus:border-fashion-gold resize-y" placeholder="A câmera está ligada. O que você tem a dizer?"></textarea><div class="flex justify-between items-center gap-2 flex-wrap"><span id="confCounter" aria-live="polite" class="text-xs text-gray-400">0 / 1000 caracteres</span><span class="text-[11px] text-gray-400">Publicado para todos · Sem anonimato</span></div><div id="confPreview" class="hidden rounded-lg bg-fashion-900 border border-fashion-gold/30 p-4 space-y-2"><span class="text-[10px] text-fashion-gold tracking-widest">PREVIEW · ${isAdmin?'PRODUÇÃO':esc(currentUser.ate||'DESIGNER')}</span><p id="confPreviewText" class="text-sm text-gray-200 whitespace-pre-wrap break-words"></p></div><div class="flex flex-wrap gap-2 justify-end"><button type="button" id="confPreviewButton" class="border border-fashion-gold/40 text-fashion-gold px-4 py-3 rounded-lg text-xs">PRÉVIA</button><button type="button" id="btnSendChat" disabled class="bg-fashion-gold hover:bg-fashion-gold-hover disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold px-5 py-3 rounded-lg text-xs uppercase">PUBLICAR DEPOIMENTO</button></div><p id="confStatus" role="status" class="text-xs text-gray-400" aria-live="polite"></p></section>`:``}
+
+            </div>
         </div>`);
+        if(canPost){
+          const toggle=$('#confOpenComposer'),area=$('#confComposerArea');
+          toggle.addEventListener('click',()=>{
+            const opening=area.classList.contains('hidden');
+            area.classList.toggle('hidden',!opening);
+            toggle.setAttribute('aria-expanded',String(opening));
+            toggle.textContent=opening?'FECHAR CÂMERA':'● GRAVAR DEPOIMENTO';
+            if(opening)$('#chatInput')?.focus();
+          });
+        }
         let messages=[],visibleCount=8;
         const feed=$('#chatFeed'),filter=$('#confFilter');
         const paint=()=>{
@@ -1645,7 +1721,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const isSelf=m.uid===currentUser.uid;
                 const stamp=Number(m.t)||0;
                 const date=stamp?new Date(stamp).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Data não informada';
-                return `<article class="conf-entry rounded-xl border ${isSelf?'border-fashion-gold/40 bg-fashion-900':'border-fashion-700 bg-fashion-950'} p-4 space-y-3"><div class="flex items-start justify-between gap-3"><div><span class="text-[10px] text-fashion-gold tracking-widest">${isSelf?'YOUR CONFESSIONAL':'DESIGNER CONFESSIONAL'}</span><h4 class="font-cinzel text-fashion-gold text-base break-words">${esc(m.ate||'Designer')}</h4></div><div class="flex flex-col items-end gap-2"><time class="text-[11px] text-gray-400">${esc(date)}</time>${isAdmin?`<button type="button" data-conf-delete="${esc(m.id)}" aria-label="Excluir depoimento de ${esc(m.ate||'Designer')}" class="text-red-300 border border-red-500/40 rounded px-3 py-2 text-xs">Excluir</button>`:''}</div></div><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap break-words">${esc(m.txt||'')}</p><span class="text-[10px] text-gray-500 uppercase tracking-wider">${esc(m.rodada||'Temporada')}</span></article>`;
+                return `<article class="conf-entry rounded-xl border ${isSelf?'border-fashion-gold/40 bg-fashion-900':'border-fashion-700 bg-fashion-950'} p-4 space-y-3"><div class="flex items-start justify-between gap-3"><div><span class="text-[10px] text-fashion-gold tracking-widest">${isSelf?'YOUR CONFESSIONAL':m.role==='admin'?'PRODUCTION CONFESSIONAL':'DESIGNER CONFESSIONAL'}</span><h4 class="font-cinzel text-fashion-gold text-base break-words">${esc(m.ate||'Designer')}</h4></div><div class="flex flex-col items-end gap-2"><time class="text-[11px] text-gray-400">${esc(date)}</time>${isAdmin?`<button type="button" data-conf-delete="${esc(m.id)}" aria-label="Excluir depoimento de ${esc(m.ate||'Designer')}" class="text-red-300 border border-red-500/40 rounded px-3 py-2 text-xs">Excluir</button>`:''}</div></div><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap break-words">${esc(m.txt||'')}</p><span class="text-[10px] text-gray-500 uppercase tracking-wider">${esc(m.rodada||'Temporada')}</span></article>`;
             }).join('')||'<div class="rounded-xl border border-fashion-700 bg-fashion-900 p-8 text-center"><p class="font-cinzel text-fashion-gold">The cameras are waiting.</p><p class="text-xs text-gray-400 mt-2">Nenhum depoimento encontrado neste filtro.</p></div>';
             const more=$('#confShowMore');more.classList.toggle('hidden',selected.length<=visibleCount);
         };
@@ -1653,6 +1729,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#confShowMore').addEventListener('click',()=>{visibleCount+=8;paint();});
         sub(db.collection('confessionarios').orderBy('t'),snap=>{
             messages=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(Number(b.t)||0)-(Number(a.t)||0));paint();
+            const notice=$('#confLatestNotice');
+            if(notice&&messages.length){
+              const latest=messages[0],stamp=Number(latest.t)||0;
+              const fresh=stamp>0&&(Date.now()-stamp)<24*60*60*1000;
+              notice.classList.toggle('hidden',!fresh);
+              if(fresh)notice.textContent=`● NOVO DEPOIMENTO · ${latest.ate||'Designer'} · publicado nas últimas 24 horas`;
+            }
         });
         if(isAdmin){feed.addEventListener('click',safeExec(async event=>{
             const button=event.target.closest('[data-conf-delete]');if(!button||!feed.contains(button))return;
@@ -1671,7 +1754,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const text=input.value.trim();if(!text||text.length>1000)return;
                 if(!confirm('Publicar este depoimento para todos os usuários?'))return;
                 send.disabled=true;status.textContent='Publicando seu depoimento…';
-                try{await db.collection('confessionarios').add({ate:currentUser.ate,uid:currentUser.uid,role:'estilista',rodada:globalState.rodada,txt:text,t:now()});input.value='';update();status.textContent='Seu depoimento está no ar.';showToast('Depoimento publicado!');}
+                try{await db.collection('confessionarios').add({ate:isAdmin?'PRODUÇÃO':currentUser.ate,uid:currentUser.uid,role:isAdmin?'admin':'estilista',rodada:globalState.rodada,txt:text,t:now()});input.value='';update();status.textContent='Seu depoimento está no ar.';showToast('Depoimento publicado!');}
                 catch(err){status.textContent='Não foi possível publicar. Seu texto continua aqui para tentar novamente.';throw err;}
                 finally{send.disabled=!input.value.trim();}
             }));
