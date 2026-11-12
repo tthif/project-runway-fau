@@ -1069,42 +1069,37 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         $('#navContainer').innerHTML=''; $('#userHeaderSlot').innerHTML='';
         renderView(`<section class="max-w-2xl mx-auto my-6 sm:my-10 rounded-3xl border border-fashion-gold/50 bg-fashion-950 p-5 sm:p-9 space-y-6" aria-label="Inscrição de Designer">
           <header class="text-center space-y-3">
-            <p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY · FAU · THE CASTING</p>
-            <h1 class="font-cinzel text-2xl sm:text-3xl text-white">CREATE YOUR DESIGNER IDENTITY</h1>
-            <p class="italic text-fashion-gold">Seu personagem. Sua identidade na competição.</p>
-            <p class="text-sm text-gray-300 max-w-lg mx-auto">Escolha um nome fictício de Designer para competir sem revelar seu nome real aos outros participantes.</p>
+            <p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY: FAU · INSCRIÇÕES</p>
+            <h1 class="font-cinzel text-2xl sm:text-3xl text-white">BECOME A DESIGNER</h1>
+            <p class="text-sm text-gray-300 max-w-lg mx-auto">Crie seu Designer e entre na competição.</p>
           </header>
           <div class="grid grid-cols-2 gap-2" aria-label="Etapas da inscrição">
             <div id="fauRegStepIndicator1" class="fau-reg-step is-active"><span>01</span><strong>IDENTIDADE</strong></div>
-            <div id="fauRegStepIndicator2" class="fau-reg-step"><span>02</span><strong>CONTRATO</strong></div>
+            <div id="fauRegStepIndicator2" class="fau-reg-step"><span>02</span><strong>REGRAS</strong></div>
           </div>
           <form id="fauRegistrationForm" class="space-y-5" novalidate>
             <div id="fauRegStage1" class="space-y-4">
-              <div><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE DESIGNER IDENTITY</p><h2 class="font-cinzel text-xl text-white mt-1">Quem entra na passarela?</h2><p class="text-xs text-gray-400 mt-2">Seu nome de Designer é um personagem criado para o reality. Ele será sua identidade pública para os participantes, jurados e plateia. Seu nome real fica reservado à produção.</p></div>
-              <label class="block space-y-2 text-xs text-gray-200">SEU NOME REAL <input id="fauRegReal" maxlength="90" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" autocomplete="name" placeholder="Como a produção pode chamar você?"></label>
-              <label class="block space-y-2 text-xs text-gray-200">NOME DE DESIGNER <input id="fauRegDesigner" maxlength="70" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu nome na competição"><span class="block text-[11px] text-gray-400">Escolha um nome fictício. Evite seu nome real, apelidos conhecidos ou referências que possam identificar você. É esse nome que aparecerá nos looks, rankings e votações.</span></label>
-              <div class="rounded-xl border border-fashion-gold/30 bg-fashion-900/60 p-4 space-y-2" aria-live="polite"><p class="text-[10px] tracking-[.2em] text-fashion-gold">SEU NOME NA PASSARELA</p><p id="fauRegMaisonPreview" class="font-cinzel text-xl text-white break-words">SEU DESIGNER</p><p class="text-xs text-gray-400">PROJECT RUNWAY: FAU · DESIGNER</p></div>
+                <div class="relative"><button type="button" id="fauRegGoogle" class="w-full border border-fashion-gold/60 text-white rounded-lg px-4 py-3 text-xs hover:bg-fashion-gold/10">CONTINUAR COM GOOGLE</button><p class="text-[11px] text-gray-400 text-center my-3">OU PREENCHA SEUS DADOS</p></div>
+
+              <p class="text-xs text-gray-300">Seu Designer é um personagem fictício. Os outros participantes verão apenas esse nome.</p>
+              <label class="block space-y-2 text-xs text-gray-200">SEU NOME REAL <input id="fauRegReal" maxlength="90" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" autocomplete="name" placeholder="Apenas para a produção"></label>
+              <label class="block space-y-2 text-xs text-gray-200">NOME DE DESIGNER <input id="fauRegDesigner" maxlength="70" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Nome fictício na competição"><span class="block text-[11px] text-gray-400">Evite nomes ou apelidos que identifiquem você.</span></label>
+              <p class="text-xs text-fashion-gold" aria-live="polite">Na passarela: <strong id="fauRegMaisonPreview">SEU DESIGNER</strong></p>
               <div id="fauRegCredentials" class="space-y-4">
-                <div class="relative"><p class="text-xs text-gray-300 mb-2">ACESSO À SUA CONTA</p><button type="button" id="fauRegGoogle" class="w-full border border-fashion-gold/60 text-white rounded-lg px-4 py-3 text-xs hover:bg-fashion-gold/10">CONTINUAR COM GOOGLE</button><p class="text-[11px] text-gray-400 text-center my-3">OU CRIE SEU ACESSO ABAIXO</p></div>
                 <label class="block space-y-2 text-xs text-gray-200">USUÁRIO <input id="fauRegUsername" minlength="3" maxlength="24" required pattern="[a-zA-Z0-9_]{3,24}" class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" autocomplete="username" placeholder="Ex.: meu_usuario"><span class="block text-[11px] text-gray-400">3 a 24 caracteres. Letras, números e _</span></label>
                 <label class="block space-y-2 text-xs text-gray-200">SENHA <span class="relative block"><input id="fauRegPassword" type="password" minlength="8" maxlength="128" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 pr-16 text-white" autocomplete="new-password" placeholder="Pelo menos 8 caracteres"><button type="button" class="fau-reg-reveal" data-reveal="fauRegPassword" aria-label="Mostrar senha">VER</button></span></label>
                 <label class="block space-y-2 text-xs text-gray-200">CONFIRMAR SENHA <span class="relative block"><input id="fauRegPasswordConfirm" type="password" minlength="8" maxlength="128" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 pr-16 text-white" autocomplete="new-password" placeholder="Repita sua senha"><button type="button" class="fau-reg-reveal" data-reveal="fauRegPasswordConfirm" aria-label="Mostrar confirmação">VER</button></span></label>
               </div>
               <p id="fauRegStage1Error" class="text-red-300 text-xs" role="alert" aria-live="polite"></p>
-              <button id="fauRegNext" type="button" class="w-full bg-fashion-gold text-fashion-950 font-bold py-3.5 rounded-lg text-xs tracking-widest">CONTINUAR · CONHECER AS REGRAS →</button>
+              <button id="fauRegNext" type="button" class="w-full bg-fashion-gold text-fashion-950 font-bold py-3.5 rounded-lg text-xs tracking-widest">CONTINUAR →</button>
             </div>
             <div id="fauRegStage2" class="space-y-4 hidden">
-              <div><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE DESIGNER CONTRACT</p><h2 class="font-cinzel text-xl text-white mt-1">Antes de entrar no Workroom</h2><p class="text-xs text-gray-300 mt-2">Você vai criar editoriais de moda com IA, interpretar desafios e enfrentar avaliações e votações. Leia o essencial e consulte o manual completo antes de confirmar.</p></div>
-              <div class="grid sm:grid-cols-2 gap-3">
-                <div class="rounded-xl border border-fashion-700 bg-fashion-900 p-3"><p class="text-fashion-gold text-xs font-bold">THE CHALLENGE</p><p class="text-xs text-gray-300 mt-1">Cada rodada tem um briefing próprio e requisitos obrigatórios.</p></div>
-                <div class="rounded-xl border border-fashion-700 bg-fashion-900 p-3"><p class="text-fashion-gold text-xs font-bold">THE DELIVERY</p><p class="text-xs text-gray-300 mt-1">Em geral: imagem criada com IA, título e conceito de até 500 caracteres.</p></div>
-                <div class="rounded-xl border border-fashion-700 bg-fashion-900 p-3"><p class="text-fashion-gold text-xs font-bold">THE JUDGING</p><p class="text-xs text-gray-300 mt-1">Jurados avaliam os looks e as rodadas formam um ranking.</p></div>
-                <div class="rounded-xl border border-fashion-700 bg-fashion-900 p-3"><p class="text-fashion-gold text-xs font-bold">THE GAME</p><p class="text-xs text-gray-300 mt-1">Votações secretas, desafios especiais e eliminações.</p></div>
-              </div>
-              <details id="fauRegRulebook" class="rounded-2xl border border-fashion-gold/30 bg-fashion-900/50 p-4"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold">ABRIR O MANUAL OFICIAL COMPLETO · 17 CAPÍTULOS</summary><div class="mt-4 max-h-[22rem] overflow-y-auto pr-1 space-y-2" tabindex="0" aria-label="Manual oficial do participante">${fauRulebookMarkup(true)}</div></details>
-              <label class="flex items-start gap-3 rounded-xl border border-fashion-700 bg-fashion-900 p-4 text-xs text-gray-200 cursor-pointer"><input type="checkbox" id="fauRegAccept" required class="mt-0.5 accent-amber-400 w-4 h-4"><span>Li e aceito o <strong>manual oficial</strong>, incluindo prazos, avaliações, votações e eliminações.</span></label>
+              <h2 class="font-cinzel text-xl text-white">REGRAS DA COMPETIÇÃO</h2>
+              <p class="text-sm text-gray-300">Crie looks com IA, siga os desafios e entregue no prazo. Jurados avaliam e os participantes votam. A cada rodada, alguém pode ser eliminado.</p>
+              <details id="fauRegRulebook" class="rounded-2xl border border-fashion-gold/30 bg-fashion-900/50 p-4"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold">LER REGRAS COMPLETAS</summary><div class="mt-4 max-h-[22rem] overflow-y-auto pr-1 space-y-2" tabindex="0" aria-label="Manual oficial do participante">${fauRulebookMarkup(true)}</div></details>
+              <label class="flex items-start gap-3 rounded-xl border border-fashion-700 bg-fashion-900 p-4 text-xs text-gray-200 cursor-pointer"><input type="checkbox" id="fauRegAccept" required class="mt-0.5 accent-amber-400 w-4 h-4"><span>Li e aceito as regras da competição.</span></label>
               <p id="fauRegError" role="alert" class="text-red-300 text-xs" aria-live="polite"></p>
-              <div class="flex gap-3"><button type="button" id="fauRegPrev" class="border border-fashion-700 rounded-lg px-4 py-3 text-xs text-gray-200">← VOLTAR</button><button id="fauRegSubmit" type="submit" class="flex-1 bg-fashion-gold text-fashion-950 font-bold py-3 rounded-lg text-xs tracking-widest">CONFIRMAR INSCRIÇÃO</button></div>
+              <div class="flex gap-3"><button type="button" id="fauRegPrev" class="border border-fashion-700 rounded-lg px-4 py-3 text-xs text-gray-200">← VOLTAR</button><button id="fauRegSubmit" type="submit" class="flex-1 bg-fashion-gold text-fashion-950 font-bold py-3 rounded-lg text-xs tracking-widest">FINALIZAR INSCRIÇÃO</button></div>
             </div>
           </form>
           <button type="button" id="fauRegBack" class="block mx-auto text-xs text-gray-400 underline underline-offset-4">Já tem uma conta? Entrar</button>
@@ -1144,7 +1139,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             $('#fauRegPassword').required=false;
             $('#fauRegPasswordConfirm').required=false;
             ['fauRegUsername','fauRegPassword','fauRegPasswordConfirm'].forEach(id=>$('#'+id).closest('label').classList.add('hidden'));
-            $('#fauRegSubmit').textContent='CONFIRMAR INSCRIÇÃO COM GOOGLE';
+            $('#fauRegSubmit').textContent='FINALIZAR INSCRIÇÃO';
         }
         $('#fauRegGoogle').onclick=async()=>{
             try{
@@ -1161,7 +1156,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const real=$('#fauRegReal').value.trim(),designer=$('#fauRegDesigner').value.trim();
             const username=$('#fauRegUsername').value.trim().toLowerCase(),pass=$('#fauRegPassword').value,confirmPass=$('#fauRegPasswordConfirm').value;
             const err=$('#fauRegError'),btn=$('#fauRegSubmit');
-            if(!$('#fauRegAccept').checked){err.textContent='Leia e aceite o manual oficial.';return;}
+            if(!$('#fauRegAccept').checked){err.textContent='Aceite as regras para continuar.';return;}
             if(real.length<2||designer.length<2||/[<>]/.test(real+designer)){err.textContent='Confira os nomes informados.';return;}
             if(!auth.currentUser?.providerData?.some(p=>p.providerId==='google.com')&&!/^[a-z0-9_]{3,24}$/.test(username)){err.textContent='O usuário deve ter de 3 a 24 letras, números ou _.';return;}
             const googleUser=auth.currentUser?.providerData?.some(p=>p.providerId==='google.com')?auth.currentUser:null;
@@ -1178,7 +1173,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 console.error('Designer registration:',ex);
                 const messages={'auth/email-already-in-use':'Este usuário já está em uso. Escolha outro.','auth/weak-password':'Escolha uma senha mais forte.','auth/operation-not-allowed':'Habilite Email/Senha em Firebase Authentication.','permission-denied':'Não foi possível registrar no Firestore. Publique as regras V116.'};
                 err.textContent=messages[ex.code]||ex.message||'Não foi possível criar a conta.';
-                btn.disabled=false;btn.textContent=googleUser?'CONFIRMAR INSCRIÇÃO COM GOOGLE':'CONFIRMAR INSCRIÇÃO';
+                btn.disabled=false;btn.textContent=googleUser?'FINALIZAR INSCRIÇÃO':'FINALIZAR INSCRIÇÃO';
             }
         };
     };
