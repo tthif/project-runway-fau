@@ -229,7 +229,21 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 .conf-booth{box-shadow:0 10px 35px rgba(0,0,0,.16)}
 .conf-feed{min-height:120px}.conf-entry{transition:border-color .2s}.conf-entry:hover{border-color:rgba(209,179,139,.55)}
 .conf-experience button:focus-visible,.conf-experience select:focus-visible{outline:2px solid #d1b38b;outline-offset:3px}
-</style><style id="fau-season-hub-styles">.fau-hub-hero{background:radial-gradient(ellipse at 90% 0%,rgba(209,179,139,.16),transparent 60%),linear-gradient(125deg,#261e26,#0d0b0e)}.fau-nav-more-menu{max-height:70vh;overflow:auto}.fau-season-hub button:focus-visible,.fau-nav-more summary:focus-visible{outline:2px solid #d1b38b;outline-offset:3px}</style></head>
+</style><style id="fau-season-hub-styles">.fau-hub-hero{background:radial-gradient(ellipse at 90% 0%,rgba(209,179,139,.16),transparent 60%),linear-gradient(125deg,#261e26,#0d0b0e)}.fau-season-hub button:focus-visible{outline:2px solid #d1b38b;outline-offset:3px}</style><style id="fau-voting-room-ux">
+.fau-ballot-selected{border-color:#d1b38b!important;background:rgba(209,179,139,.13)!important;box-shadow:inset 0 0 0 1px rgba(209,179,139,.2)}
+#voteFavChoices label:focus-within,#voteWorstChoices label:focus-within,.fau-save-option:focus-within{outline:2px solid #d1b38b;outline-offset:2px}
+#voteFavChoices label,#voteWorstChoices label,.fau-save-option{transition:background .2s,border-color .2s}
+</style>
+<style id="fau-elimination-ceremony-ux">
+.fau-ceremony-guide{padding:16px;border:1px solid rgba(209,179,139,.3);border-radius:14px;background:linear-gradient(125deg,rgba(209,179,139,.08),transparent)}
+.fau-ceremony-cues{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.fau-ceremony-cues button{border:1px solid #5e525a;border-radius:8px;padding:10px 12px;color:#e7e1e6;font-size:11px}
+.fau-ceremony-cues button[aria-pressed="true"]{border-color:#d1b38b;color:#d1b38b;background:rgba(209,179,139,.12)}
+.fau-ceremony-cues button:focus-visible{outline:2px solid #d1b38b;outline-offset:2px}
+.fau-ceremony-stage-preview{text-align:center;padding:32px 20px;border:1px solid #635348;border-radius:14px;background:radial-gradient(ellipse at center,rgba(209,179,139,.12),transparent 70%),#151015}
+.fau-ceremony-stage-preview[data-moment="elimination"]{background:radial-gradient(ellipse at center,rgba(141,26,45,.19),transparent 70%),#151015;border-color:#803342}
+@media(prefers-reduced-motion:reduce){.fau-ceremony-stage-preview{scroll-behavior:auto}}
+</style></head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -1403,10 +1417,11 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         unsubsTab.forEach(u => u());
         unsubsTab = [];
 
-        const primary = allowedTabs.filter(t => ['home','work','direcao','bancada','runway','tribunal','berlinda'].includes(t));
-        const secondary = allowedTabs.filter(t => !primary.includes(t));
-        const navButton = t => `<button type="button" onclick="navigate('${t}')" ${t===activeTab?'aria-current="page"':''} class="px-3 py-2 rounded-lg text-xs md:text-sm transition ${t===activeTab?'bg-fashion-gold text-black font-bold':'text-gray-300 hover:text-white hover:bg-fashion-800'}">${esc(ROTULOS_ABAS[t])}</button>`;
-        $('#navContainer').innerHTML = `<div class="flex flex-wrap items-center gap-1.5">${primary.map(navButton).join('')}${secondary.length?`<details class="fau-nav-more relative"><summary class="cursor-pointer list-none px-3 py-2 text-xs md:text-sm rounded-lg border border-fashion-700 text-gray-300 ${secondary.includes(activeTab)?'text-fashion-gold border-fashion-gold':''}">MORE · ${secondary.length} ▾</summary><div class="fau-nav-more-menu absolute right-0 top-full mt-2 z-40 bg-fashion-950 border border-fashion-700 rounded-xl p-2 shadow-xl min-w-[190px] flex flex-col gap-1">${secondary.map(navButton).join('')}</div></details>`:''}</div>`;
+        $('#navContainer').innerHTML = allowedTabs.map(t => `
+            <button type="button" onclick="navigate('${t}')" ${t===activeTab?'aria-current="page"':''} class="px-3 py-2 border-b-2 transition ${t === activeTab ? 'border-fashion-gold text-fashion-gold font-bold' : 'border-transparent text-gray-300 hover:text-white'}">
+                ${ROTULOS_ABAS[t]}
+            </button>
+        `).join('');
 
         VIEWS[activeTab]();
         renderAfterShow();
@@ -3278,7 +3293,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               <div class="relative text-fashion-gold text-xs tracking-[.35em] uppercase">PROJECT RUNWAY: FAU · THE VOTING ROOM</div>
               <div class="relative text-4xl">👑 <span class="text-fashion-gold">✦</span> 🥀</div>
               <h2 class="relative font-cinzel text-white text-2xl md:text-4xl">THE CAST HAS THE POWER</h2>
-              <p class="relative text-sm text-gray-300 max-w-xl mx-auto">Duas escolhas independentes. Vote uma única vez em cada categoria. Após confirmar, seu voto é definitivo.</p>
+              <p class="relative text-sm text-gray-300 max-w-xl mx-auto">Duas escolhas independentes, dois envelopes secretos. Compare os editoriais, escolha uma Maison e confirme apenas quando tiver certeza.</p><div class="relative flex justify-center flex-wrap gap-2"><button type="button" id="ballotSeeRunway" class="border border-fashion-gold/50 rounded-lg px-4 py-2 text-xs text-fashion-gold">VER LOOKS NO DESFILE</button><button type="button" id="ballotSeeRules" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs text-gray-300">CONSULTAR REGRAS</button></div>
               <div class="relative text-xs text-gray-400">RODADA ${esc(String(roundAtOpen))} · Não é permitido votar na própria Maison</div>
             </header>
             <div id="castVoteProgress" class="rounded-xl border border-fashion-700 bg-fashion-900 px-5 py-4 text-sm text-gray-300" aria-live="polite">Preparando a cabine de votação...</div>
@@ -3295,6 +3310,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             <div class="text-center text-xs text-gray-400 border-t border-fashion-700 pt-5">🔒 Votos individuais não são exibidos ao elenco. Os títulos só serão anunciados na revelação oficial.</div>
           </div>
         `);
+        $('#ballotSeeRunway')?.addEventListener('click',()=>navigate('runway'));
+        $('#ballotSeeRules')?.addEventListener('click',()=>navigate('manual'));
         const ballot = {
           veto: { box: 'voteFavChoices', button: 'btnVoteFav', status: 'voteFavStatus', label: 'Ícone da Moda' },
           fdm: { box: 'voteWorstChoices', button: 'btnVoteWorst', status: 'voteWorstStatus', label: 'Fora de Moda' }
@@ -3307,9 +3324,10 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         };
         const refreshStatus = (type) => {
           const conf=ballot[type];
-          $(`#${conf.status}`).textContent=saved[type]?'🔒 ENVELOPE LACRADO · Seu voto foi recebido. O resultado permanece secreto até a revelação oficial do ADM.':'Selecione uma Maison para confirmar.';
+          const chosenName=candidates?.find(d=>d.id===selectedBefore[type])?.data()?.ate;
+          $(`#${conf.status}`).textContent=saved[type]?`🔒 ENVELOPE LACRADO · ${chosenName?'Sua escolha: '+chosenName+'. ':''}Voto recebido em sigilo. O resultado permanece secreto até a revelação oficial.`:'Selecione uma Maison para confirmar.';
           $(`#${conf.button}`).textContent=saved[type]?'VOTO REGISTRADO ✓':`CONFIRMAR ${conf.label.toUpperCase()}`;
-          $(`#${conf.button}`).disabled=!canVote||saved[type];
+          $(`#${conf.button}`).disabled=!canVote||saved[type]||!document.querySelector(`input[name="ballot_${type}"]:checked`);
           document.querySelectorAll(`input[name="ballot_${type}"]`).forEach(r=>{r.disabled=!canVote||saved[type];if(saved[type])r.checked=false;});
           updateProgress();
         };
@@ -3321,6 +3339,18 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           refreshStatus(type);
         };
         for(const type of ['veto','fdm'])renderCandidates(type);
+        for(const type of ['veto','fdm']){
+          document.getElementById(ballot[type].box)?.addEventListener('change',event=>{
+            if(!event.target.matches(`input[name="ballot_${type}"]`))return;
+            const selected=candidates.find(d=>d.id===event.target.value);
+            document.getElementById(ballot[type].status).textContent=selected?`Sua escolha: ${selected.data().ate||'Maison'}. Confira antes de lacrar o envelope.`:'Selecione uma Maison.';
+            document.getElementById(ballot[type].button).disabled=!canVote||saved[type]||!selected;
+            document.querySelectorAll(`input[name="ballot_${type}"]`).forEach(input=>{
+              input.closest('label')?.classList.toggle('fau-ballot-selected',input.checked);
+            });
+          });
+        }
+
         if(!canVote){$('#castVoteProgress').textContent='🎬 Visualização da cabine: somente estilistas ativos podem votar.';return;}
         await Promise.all(['veto','fdm'].map(async type=>{
           const doc=await db.doc(`votos/${type}_${roundAtOpen}_${currentUser.uid}`).get();
@@ -3378,12 +3408,20 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const ref=db.doc(`votos/ber_${round}_${currentUser.uid}`), previous=await ref.get();
         renderView(`<div class="max-w-2xl mx-auto space-y-6 pb-12">
           <header class="rounded-2xl bg-fashion-900 border border-fashion-red/40 p-8 text-center space-y-3"><div class="text-4xl">⚖️</div><p class="text-fashion-red text-xs tracking-[.25em]">THE FINAL SAY · SECRET BALLOT</p><h2 class="font-cinzel text-3xl text-white">THE ELIMINATION POOL</h2><p class="text-gray-300 text-sm">${globalState.themeId==='theme_tarantino'?'THE LAST STAND · ':''}Uma decisão pode mudar o destino de uma Maison. Escolha quem merece continuar.</p><p class="text-xs text-gray-400">Seu voto é secreto e definitivo. Confira sua escolha antes de confirmar.</p></header>
-          <section class="bg-fashion-900 border border-fashion-700 rounded-2xl p-5 md:p-7 space-y-4"><p class="text-xs uppercase tracking-widest text-fashion-gold">SELECT ONE MAISON TO SAVE</p>
+          <section class="bg-fashion-900 border border-fashion-700 rounded-2xl p-5 md:p-7 space-y-4"><p class="text-xs uppercase tracking-widest text-fashion-gold">SELECT ONE MAISON TO SAVE</p><button type="button" id="saveVoteRunway" class="text-xs text-fashion-gold underline underline-offset-4">Rever os editoriais no desfile</button>
           <div class="space-y-3">${pool.map((b,i)=>`<label class="fau-save-option flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-5 cursor-pointer hover:border-fashion-gold transition"><input type="radio" name="salvationVote" value="${esc(b.uid)}" ${previous.exists?'disabled':''} class="accent-yellow-500 w-5 h-5"><div class="flex-1"><div class="text-[10px] text-gray-500 tracking-[.2em]">NOMINEE ${String(i+1).padStart(2,'0')}</div><div class="font-cinzel text-white text-lg">${esc(b.ate)}</div><p class="text-[11px] text-gray-400 mt-1">I want this Maison to stay.</p></div><span class="text-fashion-gold text-xl" aria-hidden="true">✦</span></label>`).join('')}</div>
-          <p id="saveBallotStatus" class="text-xs text-gray-300" aria-live="polite">${previous.exists?'🔒 ENVELOPE LACRADO · Voto recebido. Resultado oculto até o anúncio oficial da produção.':'Nenhum voto registrado ainda.'}</p>
+          <p id="saveBallotStatus" class="text-xs text-gray-300" aria-live="polite">${previous.exists?`🔒 ENVELOPE LACRADO · Sua escolha: ${esc(pool.find(b=>b.uid===previous.data()?.alvo)?.ate||'Maison')}. Resultado oculto até o anúncio oficial.`:'Selecione a Maison que deseja salvar. Seu voto só será registrado após a confirmação.'}</p>
           <button id="btnSaveAtelier" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-bold py-4 rounded-lg uppercase tracking-widest text-xs">${previous.exists?'VOTO REGISTRADO ✓':'CONFIRMAR VOTO PARA SALVAR'}</button></section>
           <div class="rounded-xl border border-fashion-700/70 p-5 text-center space-y-2"><p class="font-cinzel text-fashion-gold">One choice. One chance to save.</p><p class="text-xs text-gray-400">Você está votando para <strong>salvar</strong>, não para eliminar. As duas Maisons mais salvas continuam; a menos votada corre o risco de deixar a competição, respeitando os desempates oficiais.</p></div><p class="text-center text-xs text-gray-400">🔒 O voto fica lacrado. Nem a escolha registrada nem a contagem ou o resultado são exibidos antes da revelação oficial.</p></div>`);
-        $('#btnSaveAtelier').disabled=previous.exists;
+        $('#saveVoteRunway')?.addEventListener('click',()=>navigate('runway'));
+        document.querySelectorAll('input[name="salvationVote"]').forEach(input=>input.addEventListener('change',()=>{
+          const name=pool.find(b=>b.uid===input.value)?.ate||'Maison';
+          const status=$('#saveBallotStatus');if(status)status.textContent=`Você está escolhendo SALVAR ${name}. Confira antes de confirmar.`;
+          document.querySelectorAll('input[name="salvationVote"]').forEach(r=>r.closest('label')?.classList.toggle('fau-ballot-selected',r.checked));
+          $('#btnSaveAtelier').disabled=false;
+        }));
+        $('#btnSaveAtelier').disabled=previous.exists || true;
+        if(previous.exists)$('#btnSaveAtelier').disabled=true;
         $('#btnSaveAtelier').onclick=safeExec(async()=>{
           if(previous.exists)throw new Error('Este voto já foi registrado e não pode ser alterado.');
           const chosen=document.querySelector('input[name="salvationVote"]:checked');if(!chosen)throw new Error('Escolha uma Maison para salvar.');
@@ -3433,9 +3471,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
                 <section class="bg-fashion-900 border border-fashion-700 rounded-xl p-4 space-y-2" aria-label="Episode Checklist"><p class="text-[10px] text-fashion-gold tracking-widest">🎬 EPISODE CHECKLIST · PRÓXIMA AÇÃO</p><div class="grid sm:grid-cols-2 gap-2 text-xs"><p>${globalState.themeId?'✓':'○'} Desafio configurado</p><p>${globalState.liberado?'✓':'○'} Passarela liberada</p><p>${globalState.urna?'✓':'○'} Votações abertas</p><p>${globalState.berlinda?.length?'✓':'○'} Elimination Pool definido</p></div><p class="text-[11px] text-gray-400">Acompanhe os envios acima; apure as notas e só depois convoque as críticas. As revelações continuam sob seu controle.</p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Critique Call"><div><p class="text-[10px] tracking-[.25em] text-fashion-gold">🎤 THE CRITIQUE CALL · PRODUCTION</p><h3 class="font-cinzel text-lg">Críticas pendentes</h3><p class="text-xs text-gray-400">Após publicar o ranking, convoque os jurados. Textos chegam automaticamente pelo site; áudios do WhatsApp são confirmados aqui com um toque. Nenhuma crítica é publicada automaticamente.</p></div><div class="grid sm:grid-cols-2 gap-3"><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das notas</p><p class="text-xs text-gray-400">${globalState.notasEncerradas?'Encerrado':'Aberto'} · controlar edição das avaliações</p><button type="button" id="fauToggleScoreWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.notasEncerradas?'Reabrir notas':'Encerrar notas'}</button></div><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das críticas</p><p class="text-xs text-gray-400">${globalState.criticasEncerradas?'Encerrado':'Aberto'} · controlar edição dos textos</p><button type="button" id="fauToggleCritiqueWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.criticasEncerradas?'Reabrir críticas':'Encerrar críticas'}</button></div></div><div id="fauCritiqueAdmin" class="space-y-3"><p class="text-xs text-gray-400">Carregando...</p></div><div class="flex flex-wrap gap-2"><button id="fauCritiquePublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Publicar críticas com texto</button><button id="fauCritiqueHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar críticas</button></div><p id="fauCritiquePublishStatus" class="text-xs text-gray-400">Áudios do WhatsApp só aparecem publicamente se você registrar uma transcrição.</p></section>
-                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Results Show Director"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS SHOW · REVEAL DIRECTOR</p><h3 class="font-cinzel text-xl">Revelações ao vivo</h3><p class="text-xs text-gray-400">Prepare uma cena sem publicar notas, votos ou classificações privadas. Só o conteúdo aprovado abaixo será mostrado à plateia. Cada avanço exige confirmação.</p></div><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs">Momento<select id="fauRevealMoment" class="block w-full bg-fashion-950 border border-fashion-700 p-2 rounded mt-1"><option value="opening">🎬 Abertura</option><option value="winner">🏆 WIN · The Winning Look</option><option value="high">✨ HIGH · The Standouts</option><option value="safe">🕊️ SAFE · You May Leave the Runway</option><option value="low">⚠️ LOW · Under Scrutiny</option><option value="pool">🚨 The Elimination Pool</option><option value="icon">👑 Ícone da Moda</option><option value="fora">🥀 Fora de Moda</option><option value="elimination">💔 OUT · Auf Wiedersehen</option><option value="next">🔐 Next Challenge</option></select></label><label class="text-xs">Título exibido<input id="fauRevealTitle" maxlength="100" class="block w-full bg-fashion-950 border border-fashion-700 p-2 rounded mt-1" placeholder="Ex.: And the WIN goes to..."></label></div><p class="text-[11px] text-gray-400">Referência do reality: normalmente 3 destaques (WIN + 2 HIGH) e 3 piores (LOW/BOTTOM). No FAU, o Elimination Pool é separado e tem regras próprias. A produção confirma os nomes antes de revelar.</p><textarea id="fauRevealMessage" maxlength="450" rows="2" class="w-full bg-fashion-950 border border-fashion-700 p-3 rounded text-sm" placeholder="Escreva exatamente o que a plateia poderá ler. Não inclua notas ou informações secretas."></textarea><div class="flex flex-wrap gap-2"><button id="fauRevealPublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Revelar cena</button><button id="fauRevealHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar cerimônia</button><button id="fauRevealPreview" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Prévia</button></div><div id="fauRevealStatus" class="text-xs text-gray-300" role="status"></div></section><section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👑 THE PEOPLE'S VERDICT · OFFICIAL TITLES</p><h3 class="font-cinzel text-xl text-white">The Crown & The Fall</h3><p class="text-xs text-gray-300">Depois de anunciar no WhatsApp, registre aqui os títulos oficiais em um só passo. Não há nova votação nem revelação automática. Confira os desempates antes de confirmar.</p><div class="grid sm:grid-cols-3 gap-3"><label class="text-xs text-gray-300">Ícone da Moda<select id="fauOfficialIcon" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"><option value="">Sem título / não apurado</option></select></label><label class="text-xs text-gray-300">Fora de Moda<select id="fauOfficialFora" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"><option value="">Sem título / não apurado</option></select></label><label class="text-xs text-gray-300">Saved by the Atelier (até 2)<select id="fauOfficialSaved" multiple size="4" class="mt-1 w-full bg-fashion-900 border border-fashion-700 rounded p-2"></select></label></div><div class="flex flex-wrap gap-2"><button id="fauOfficialLoad" type="button" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Carregar Maisons</button><button id="fauOfficialPublish" type="button" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Confirmar títulos já anunciados</button><button id="fauOfficialCopy" type="button" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar anúncio para WhatsApp</button></div><p id="fauOfficialStatus" class="text-xs text-gray-400" role="status"></p></section>
-                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Official Reveal Assistant"><p class="text-[10px] tracking-[.3em] text-fashion-gold">🎭 OFFICIAL REVEAL ASSISTANT</p><h3 class="font-cinzel text-lg">Preparar cenas a partir dos resultados oficiais</h3><p class="text-xs text-gray-400">Carrega WIN, SAFE e Elimination Pool do ranking já publicado. A eliminação só pode ser preenchida após confirmação oficial. Nada é publicado automaticamente.</p><button id="fauRevealSuggest" class="border border-fashion-gold text-fashion-gold rounded px-4 py-2 text-xs">🎬 Carregar anúncio oficial</button><p id="fauRevealSuggestStatus" class="text-xs text-gray-400" role="status"></p></section>
-                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Twist Director"><p class="text-[10px] tracking-[.3em] text-fashion-gold">🎲 THE TWIST DIRECTOR</p><h3 class="font-cinzel text-lg">Dinâmica especial desta rodada</h3><div id="fauTwistDirector" class="text-xs text-gray-300 space-y-2"></div></section>
+                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="The Results Desk" id="fauResultsDesk"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS DESK · PRODUCTION ONLY</p><h3 class="font-cinzel text-xl">Apuração & WhatsApp</h3><p class="text-xs text-gray-300">Confira o ranking oficial, prepare o anúncio e copie para o WhatsApp. Nenhum resultado será revelado no site antes de você confirmar a publicação.</p></div><div class="flex flex-wrap gap-2"><button type="button" id="fauDeskLoad" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Carregar resultados da rodada</button><button type="button" id="fauDeskCopy" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar para WhatsApp</button></div><div id="fauDeskPrivateSummary" class="text-xs text-gray-300 bg-fashion-950 border border-fashion-700 rounded-lg p-4" aria-live="polite">Carregue os resultados para conferir os dados da rodada.</div><label class="block text-xs text-gray-300">Texto do anúncio — editável antes de copiar<textarea id="fauDeskWhatsApp" rows="10" class="mt-2 w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-sm text-gray-100" placeholder="Carregue os resultados para gerar um rascunho. Revise o texto antes de publicar no WhatsApp."></textarea></label><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-4 space-y-3"><p class="text-xs text-fashion-gold font-semibold">PUBLICAÇÃO OFICIAL NO SITE</p><p class="text-xs text-gray-300">Depois de anunciar no WhatsApp, confirme que o resultado oficial pode aparecer no site. Este botão não altera notas nem apura votos.</p><label class="flex gap-2 text-xs text-gray-200 items-start"><input type="checkbox" id="fauDeskAnnounced" class="mt-0.5"> <span>Já anunciei os resultados no WhatsApp e conferi os nomes, desempates e dinâmica especial.</span></label><button type="button" id="fauDeskPublish" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Confirmar publicação no site</button></div><p id="fauDeskStatus" class="text-xs text-gray-300" role="status"></p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Auto Fashion Archive"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👗 THE FASHION ARCHIVE · ONE-CLICK CURATION</p><h3 class="font-cinzel text-lg">Publicar os looks da rodada</h3><p class="text-xs text-gray-400">Depois de liberar o desfile, copie as criações da rodada para o acervo público. Evita cadastro manual e não inclui notas, votos ou prompts. Operação idempotente: repetir não duplica os looks.</p><button id="fauArchiveSync" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold">📸 Arquivar looks liberados</button><p id="fauArchiveSyncStatus" class="text-xs text-gray-400" role="status"></p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Broadcast Studio"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">📺 BROADCAST STUDIO · ADMIN ONLY</p><h3 class="font-cinzel text-xl">The Fashion Press & The Fashion Archive</h3><p class="text-xs text-gray-400">Publique somente conteúdos já liberados para a plateia. O arquivo público não consulta notas nem votos secretos.</p></div><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs text-gray-300">Tipo<select id="fauBroadcastKind" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2"><option value="press">Fashion Press · Manchete</option><option value="archive">Fashion Archive · Look</option></select></label><label class="text-xs text-gray-300">Rodada / edição<input id="fauBroadcastRound" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2" placeholder="Ex.: WEEK 06"></label></div><input id="fauBroadcastTitle" maxlength="120" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Título do anúncio ou nome do look"><textarea id="fauBroadcastDescription" maxlength="700" rows="2" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Texto editorial público"></textarea><label class="block text-xs text-gray-300">Fotografia do acervo (arquivo, opcional)<input id="fauBroadcastImage" type="file" accept="image/*" class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"></label><button id="fauBroadcastPublish" class="rounded bg-fashion-gold text-black font-bold px-4 py-2 text-xs">Publicar no site</button><p id="fauBroadcastStatus" class="text-xs text-gray-400"></p><details id="fauReunionAdmin" class="border-t border-fashion-700 pt-4 space-y-2"><summary class="cursor-pointer font-cinzel text-fashion-gold">🏆 The Reunion · Season Finale (abrir somente no encerramento)</summary><p class="text-xs text-gray-400">Cole uma curiosidade por linha, no formato Título | Revelação. Revise os números no Season Secrets antes de publicar. Nenhum dado privado é publicado automaticamente.</p><textarea id="fauReunionInput" rows="4" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Mais votos para Ícone | Maison Exemplo — 12 votos"></textarea><div class="flex flex-wrap gap-2"><button id="fauReunionGenerate" class="rounded border border-fashion-700 px-3 py-2 text-xs">✨ Preparar curiosidades reais</button><button id="fauReunionPublish" class="rounded border border-fashion-gold text-fashion-gold px-3 py-2 text-xs">Revelar Reunion</button><button id="fauReunionHide" class="rounded border border-fashion-700 px-3 py-2 text-xs">Ocultar Reunion</button></div></details></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Season Flow da produção">
@@ -4049,30 +4085,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           twistBox.innerHTML=twist?`<p class="text-fashion-gold font-cinzel">${esc(twist[0])}</p><p>${esc(twist[1])}</p><div class="flex flex-wrap gap-2">${twist[2].map(id=>`<button type="button" data-twist-jump="${esc(id)}" class="border border-fashion-700 rounded px-3 py-2 hover:border-fashion-gold">${esc(document.getElementById(id)?.textContent?.trim()||id)}</button>`).join('')}</div>`:'<p>Esta rodada segue o fluxo padrão. Consulte o briefing e os sorteios obrigatórios antes de liberar o desfile.</p>';
           twistBox.addEventListener('click',e=>{const b=e.target.closest('[data-twist-jump]');if(!b)return;const target=document.getElementById(b.dataset.twistJump);if(target){target.scrollIntoView({behavior:'smooth',block:'center'});target.focus();}else showToast('Controle específico indisponível nesta etapa.');});
         }
-        $('#fauRevealSuggest').onclick=safeExec(async()=>{
-          const round=String(globalState.rodada||'');if(!round)throw new Error('Configure uma rodada.');
-          const doc=await db.collection('ranking_historico').doc(round).get();
-          if(!doc.exists)throw new Error('Publique primeiro o ranking oficial. Nenhuma classificação será deduzida de notas privadas.');
-          const rows=Array.isArray(doc.data().rows)?doc.data().rows:[];
-          const moment=$('#fauRevealMoment').value;
-          let selected=[];let title='';
-          if(moment==='winner'){selected=rows.filter(x=>/WIN|VENCEDOR DA TEMPORADA/i.test(x.status||''));title='And the WIN goes to...';}
-          else if(moment==='high'){selected=rows.filter(x=>/HIGH|^TOP/i.test(x.status||''));title='Your designs stood out.';}
-          else if(moment==='safe'){selected=rows.filter(x=>/^SAFE|^IN$/i.test(x.status||''));title='You are safe. You may leave the runway.';}
-          else if(moment==='low'){selected=rows.filter(x=>/^LOW|^BOTTOM/i.test(x.status||''));title='Your looks failed to impress.';}
-          else if(moment==='pool'){selected=rows.filter(x=>/BOTTOM|ELIMINATION POOL/i.test(x.status||''));title='The Elimination Pool';}
-          else if(moment==='icon'||moment==='fora'){
-            throw new Error('Ícone da Moda e Fora de Moda são decididos por voto secreto, não pelo ranking dos jurados. Preencha o anúncio após a apuração oficial.');
-          }
-          else if(moment==='opening'){title='Welcome to the Runway';$('#fauRevealMessage').value=`A rodada ${round} chegou à sua decisão. Preparem-se para as revelações oficiais.`;}
-          else throw new Error('A eliminação e o próximo tema precisam de confirmação específica da produção. Não serão inferidos do ranking.');
-          if(moment!=='opening'){
-            if(!selected.length)throw new Error('Não há participantes com esse status no ranking oficial. Revise o twist ou selecione outra cena.');
-            $('#fauRevealMessage').value=selected.map(x=>x.ate).filter(Boolean).join(' · ').slice(0,450);
-          }
-          $('#fauRevealTitle').value=title;
-          $('#fauRevealSuggestStatus').textContent=`Rascunho baseado no ranking publicado da rodada ${round}. Revise e use “Revelar cena” para publicar.`;
-        });
         $('#fauReunionGenerate').onclick=safeExec(async()=>{
           if(!isAdmin)throw new Error('Acesso exclusivo da produção.');
           const [jurySnap,voteSnap,names]=await Promise.all([db.collection('avaliacoes').get(),db.collection('votos').get(),getAtelierNamesMap()]);
@@ -4099,6 +4111,44 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           showToast('Curiosidades preparadas. Confira os dados antes de revelar.');
         });
 
+        // RESULTS DESK: only draft a WhatsApp announcement from already published official round data.
+        let fauDeskReady=false;
+        $('#fauDeskLoad').onclick=safeExec(async()=>{
+          if(!isAdmin)throw new Error('Acesso exclusivo da produção.');
+          const round=String(globalState.rodada||'');
+          if(!round)throw new Error('Configure a rodada primeiro.');
+          const snap=await db.collection('ranking_historico').doc(round).get();
+          if(!snap.exists)throw new Error('Apure e salve primeiro o ranking oficial da rodada.');
+          const rows=Array.isArray(snap.data().rows)?snap.data().rows:[];
+          if(!rows.length)throw new Error('Ranking oficial ainda não possui participantes.');
+          const ranked=rows.slice().sort((a,b)=>Number(a.pos||a.posicao||999)-Number(b.pos||b.posicao||999));
+          const safeName=x=>String(x.ate||x.nome||'Maison').replace(/[\r\n*~_`]/g,' ').trim();
+          const win=ranked.filter(x=>/WIN|VENCEDOR DA TEMPORADA/i.test(String(x.status||'')));
+          const pool=ranked.filter(x=>/ELIMINATION POOL/i.test(String(x.status||'')));
+          const summary=ranked.map((x,i)=>`${i+1}º · ${safeName(x)}${x.status?' — '+String(x.status):''}`).join('\n');
+          $('#fauDeskPrivateSummary').textContent=`RODADA ${round} · CONFERÊNCIA DO ADM\n${summary}\n\nVerifique manualmente os títulos, a salvação e a eliminação. O ranking, sozinho, não determina essas decisões.`;
+          const text=[`*PROJECT RUNWAY: FAU*`,`*RESULTADOS · RODADA ${round}*`,'',win.length?`*WIN*\n${win.map(safeName).join(' / ')}`:'*WIN*\n[A confirmar]','',`*RANKING DA RODADA*`,...ranked.map((x,i)=>`${i+1}º — ${safeName(x)}${x.status?' ('+String(x.status)+')':''}`),'',`*ELIMINATION POOL*`,pool.length?pool.map(safeName).join('\n'):'[Conferir participantes elegíveis]','',`*Ícone da Moda:* [conferir votação]`,`*Fora de Moda:* [conferir votação]`,`*Salvação:* [conferir votação]`,`*OUT:* [confirmar eliminação]`,'',`*Make it work.*`].join('\n');
+          $('#fauDeskWhatsApp').value=text;
+          fauDeskReady=true;
+          $('#fauDeskAnnounced').checked=false;
+          $('#fauDeskStatus').textContent='Rascunho preparado. Revise o Elimination Pool, os títulos e a eliminação antes de enviar.';
+        });
+        $('#fauDeskCopy').onclick=safeExec(async()=>{
+          const content=$('#fauDeskWhatsApp').value.trim();
+          if(!content)throw new Error('Carregue ou escreva o anúncio primeiro.');
+          await navigator.clipboard.writeText(content);
+          $('#fauDeskStatus').textContent='Texto copiado. Envie no WhatsApp e só depois confirme a publicação no site.';
+        });
+        $('#fauDeskPublish').onclick=safeExec(async()=>{
+          if(!isAdmin||!globalState.rodada)throw new Error('Acesso exclusivo da produção.');
+          if(!fauDeskReady)throw new Error('Carregue e confira os resultados antes de publicar.');
+          if(!$('#fauDeskAnnounced').checked)throw new Error('Confirme primeiro que o anúncio foi feito no WhatsApp.');
+          if(!productionConfirm('Você anunciou os resultados no WhatsApp e conferiu a apuração? Confirmar a visibilidade do ranking oficial no site?'))return;
+          const round=String(globalState.rodada);
+          await db.collection('ranking_historico').doc(round).update({published:true,announcedWhatsApp:true,announcedAt:now(),announcedBy:currentUser.uid});
+          await productionLog('round_results_announced_whatsapp',{round});
+          $('#fauDeskStatus').textContent='Anúncio confirmado no registro da rodada. Confira se a visibilidade do ranking está liberada no controle de publicação existente.';
+        });
         // Títulos oficiais: registro explícito pós-WhatsApp; nunca apurar votos pela interface pública.
         const fauOfficialIds=['fauOfficialIcon','fauOfficialFora','fauOfficialSaved'];
         const fauOfficialGet=()=>({icon:$('#fauOfficialIcon').value,fora:$('#fauOfficialFora').value,saved:Array.from($('#fauOfficialSaved').selectedOptions).map(o=>o.value)});
@@ -4131,27 +4181,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           await db.collection('fau_titulos_publicos').doc(round).set({...d,round,published:true,updatedAt:now(),updatedBy:currentUser.uid});
           await productionLog('official_titles_published',{round,icon:!!d.icon,fora:!!d.fora,saved:d.saved.length});
           $('#fauOfficialStatus').textContent='Títulos registrados. Cada Maison verá sua distinção no After Show.';
-        });
-        // Reveal Director: divulgação deliberada, sem conexão automática com o ranking confidencial.
-        $('#fauRevealPreview').onclick=()=>{
-          $('#fauRevealStatus').textContent=`PRÉVIA · ${$('#fauRevealTitle').value.trim()||$('#fauRevealMoment').selectedOptions[0].textContent}: ${$('#fauRevealMessage').value.trim()||'(sem mensagem)'}`;
-        };
-        $('#fauRevealPublish').onclick=safeExec(async()=>{
-          if(!isAdmin||!globalState.rodada)throw new Error('Configure uma rodada antes da revelação.');
-          const title=$('#fauRevealTitle').value.trim()||$('#fauRevealMoment').selectedOptions[0].textContent;
-          const message=$('#fauRevealMessage').value.trim();
-          if(!message)throw new Error('Escreva o texto que será revelado.');
-          if(!productionConfirm(`Publicar esta cena para TODOS os espectadores?\n${title}\n${message}`))return;
-          const ref=db.doc('fau_public/results_show');const old=(await ref.get()).data()||{};
-          const step=String(old.round)===String(globalState.rodada)?(Number(old.step)||0)+1:1;
-          await ref.set({round:String(globalState.rodada),moment:$('#fauRevealMoment').value,title,message,step,published:true,updatedAt:now(),updatedBy:currentUser.uid});
-          await productionLog('results_scene_revealed',{round:globalState.rodada,moment:$('#fauRevealMoment').value,step});
-          $('#fauRevealStatus').textContent=`Cena ${step} revelada para a plateia.`;
-        });
-        $('#fauRevealHide').onclick=safeExec(async()=>{
-          if(!productionConfirm('Ocultar a cerimônia pública?'))return;
-          await db.doc('fau_public/results_show').set({published:false,updatedAt:now(),updatedBy:currentUser.uid},{merge:true});
-          await productionLog('results_scene_hidden',{round:globalState.rodada});$('#fauRevealStatus').textContent='Cerimônia ocultada.';
         });
         $('#fauArchiveSync').onclick=safeExec(async()=>{
           if(!isAdmin||!globalState.rodada)throw new Error('Configure a rodada primeiro.');
