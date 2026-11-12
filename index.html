@@ -902,7 +902,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
     const compressImageToBase64 = file => new Promise((resolve, reject) => {
         if (!file || !['image/jpeg','image/png','image/webp'].includes(file.type)) return reject(new Error('Escolha uma imagem JPG, PNG ou WebP do dispositivo.'));
-        if (file.size > 40 * 1024 * 1024) return reject(new Error('A imagem excede 40 MB.'));
+        if (file.size > 5 * 1024 * 1024) return reject(new Error('A imagem excede 5 MB.'));
         // O Firestore guarda no máximo 1 MiB por documento. Se a foto couber, vai EXATAMENTE como foi enviada;
         // se não couber, mantém a maior resolução e qualidade que couberem.
         const MAX_B64 = 950000;
@@ -1708,10 +1708,17 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <div class="rounded-lg border border-fashion-700 p-3"><span class="block text-fashion-gold text-lg mb-1">02</span>Create the Looks</div>
                         <div class="rounded-lg border border-fashion-700 p-3"><span class="block text-fashion-gold text-lg mb-1">03</span>Submit to Runway</div>
                     </div>
-                    <p class="text-[11px] text-gray-400">O envio continua em um único formulário, editável até o encerramento do prazo. Nenhuma etapa extra é obrigatória.</p>
+                    <p class="text-[11px] text-gray-400">Você pode corrigir imagem, título e conceito dos looks enviados enquanto a rodada estiver aberta. Depois do prazo, a entrega fica bloqueada.</p>
                 </section>
                 <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <div id="workroomThermometer" class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg flex items-center justify-between text-xs"></div>
+                <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-3" aria-label="Briefing da rodada">
+                    <div class="flex items-center justify-between gap-2"><span class="text-[10px] tracking-[.25em] text-fashion-gold">01 · THE BRIEF</span><span class="text-[10px] text-gray-400">YOUR NEXT CHALLENGE</span></div>
+                    <h3 class="font-cinzel text-xl text-white">${esc(getTheme()?.title || 'Aguardando o desafio')}</h3>
+                    <p class="text-sm text-gray-300">${esc(getTheme()?.subtitle || 'A produção anunciará o briefing em breve.')}</p>
+                    <div class="flex flex-wrap gap-2 text-[11px] text-fashion-gold"><span class="border border-fashion-700 rounded px-3 py-1">${requiredLooks} look(s)</span><span class="border border-fashion-700 rounded px-3 py-1">JPG, PNG ou WebP · até 5 MB</span><span class="border border-fashion-700 rounded px-3 py-1">Conceito · até 500 caracteres</span></div>
+                    <details class="border-t border-fashion-700 pt-3"><summary class="cursor-pointer text-xs text-fashion-gold">Ler briefing e regras completas</summary><p class="text-xs text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
+                </section>
                 <div id="workroomFormModule"></div>
 
                 <!-- PORTFÓLIO DE CRIAÇÕES ANTERIORES -->
@@ -1857,17 +1864,18 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             } else if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
                 formSlot.innerHTML = '<p class="text-amber-300">Seu envelope ainda não foi distribuído. Avise a produção.</p>';
             } else if (currentRoundLooks.length >= requiredLooks) {
-                formSlot.innerHTML = `
-                    <div class="bg-fashion-900 border border-green-800/40 p-6 rounded-lg text-center space-y-2">
-                        <i class="fa-solid fa-circle-check text-green-500 text-2xl"></i>
-                        <h3 class="font-cinzel text-base text-white">Look(s) Enviado(s) para a Passarela! (${currentRoundLooks.length}/${requiredLooks})</h3>
-                        <p class="text-xs text-gray-400">Sua criação gerada por IA está no aguardo do veredito da bancada de jurados.</p>
-                    </div>
-                `;
+                const editable = Number(globalState.prazo)>now();
+                formSlot.innerHTML = `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-5 space-y-4">
+                    <p class="text-[10px] tracking-[.3em] text-fashion-gold">02 · THE ATELIER / 03 · THE DELIVERY</p>
+                    <h3 class="font-cinzel text-2xl text-white">${editable?'Your runway look':'Your submitted looks'}</h3>
+                    <p class="text-xs text-gray-300">${editable?'Sua última entrega já está salva. Os campos abaixo vêm preenchidos e você pode atualizar a imagem, o título e o conceito até o prazo terminar.':'As entregas estão encerradas. Confira seus looks no arquivo da Maison.'}</p>
+                    ${editable?`<div class="flex flex-wrap gap-2" id="fauInlineLookTabs" role="group" aria-label="Escolher look para editar">${currentRoundLooks.slice().sort((a,b)=>(a.slot||0)-(b.slot||0)).map((l,i)=>`<button type="button" data-edit-look="${esc(l.id)}" class="rounded border border-fashion-gold/50 px-4 py-2 text-xs text-fashion-gold">${esc(getTheme()?.slotLabels?.[l.slot-1]||'LOOK '+(l.slot||i+1))}</button>`).join('')}</div><div id="fauInlineEditHost"></div>`:'<p class="text-green-300 text-xs">✓ Entregas recebidas pela produção.</p>'}
+                </section>`;
+                if(editable)queueMicrotask(()=>document.querySelector('#fauInlineLookTabs [data-edit-look]')?.click());
             } else {
                 formSlot.innerHTML = `
                     <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6">
-                        <div class="fau-runway-marquee rounded-2xl border border-fashion-gold/30 bg-gradient-to-r from-black via-fashion-900 to-black p-6 md:p-10 text-center space-y-3"><p class="text-[10px] tracking-[.45em] text-fashion-gold">FAU · THE OFFICIAL FASHION SHOW</p><h2 class="font-cinzel text-3xl md:text-5xl text-white">LIGHTS. CAMERA. RUNWAY.</h2><p class="text-xs text-gray-300">Cada look é uma visão. Cada detalhe conta uma história.</p><p class="text-[10px] text-fashion-gold/70 tracking-[.25em]">THE FRONT ROW IS WATCHING</p></div>
+                        <div class="space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">02 · THE ATELIER / 03 · THE DELIVERY</p><h3 class="font-cinzel text-2xl text-white">Create your runway look</h3><p class="text-xs text-gray-300">Escolha sua imagem, dê um nome à criação e conte sua história. Revise tudo antes de enviar.</p></div>
                 <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
                             <h3 class="font-cinzel text-lg text-white font-normal">Envio para a Passarela · Look ${currentRoundLooks.length + 1} de ${requiredLooks}</h3>
                             <span class="text-xs text-fashion-gold font-mono">Fashion, Art & Uniqueness</span>
@@ -1875,21 +1883,21 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
                         <div class="space-y-4 text-xs">
                             <div>
-                                <label class="block text-gray-300 mb-1 uppercase tracking-wider font-semibold">2. Fotografia do look (envie um arquivo do dispositivo)</label>
+                                <label class="block text-gray-300 mb-1 uppercase tracking-wider font-semibold">Fotografia do look</label>
                                 <input type="file" id="lookFileInput" accept="image/jpeg,image/png,image/webp" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white">
                             </div>
 
                             <div id="fauUploadPreviewWrap" class="hidden rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 space-y-2"><p class="text-[10px] uppercase tracking-widest text-fashion-gold">YOUR LOOK · FILE READY</p><img id="fauUploadPreview" class="max-h-64 w-full object-contain rounded" alt="Prévia da imagem selecionada para entrega"><p id="fauUploadFileInfo" class="text-xs text-gray-300" role="status"></p></div>
                             <div>
                                 <div class="flex justify-between items-center mb-1">
-                                    <label class="uppercase tracking-wider font-semibold text-gray-300">3. Nome da Criação</label>
+                                    <label class="uppercase tracking-wider font-semibold text-gray-300">Nome da Criação</label>
                                 </div>
                                 <input id="lookTitleInput" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white font-cinzel" placeholder="Ex: Sombra Abissal, Veludo Tóxico...">
                             </div>
 
                             <div>
                                 <div class="flex justify-between items-center mb-1">
-                                    <label class="uppercase tracking-wider font-semibold text-gray-300">4. Conceito (Até 500 caracteres)</label>
+                                    <label class="uppercase tracking-wider font-semibold text-gray-300">Conceito (até 500 caracteres)</label>
                                     <span id="charCounter" class="text-gray-500 font-mono text-[10px]">0 / 500 letras</span>
                                 </div>
                                 <textarea id="lookMemorialText" maxlength="500" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white focus:outline-none focus:border-fashion-gold" placeholder="Explique a inspiração, a narrativa e a conexão com a assinatura da sua maison..."></textarea>
@@ -1900,6 +1908,23 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     </div>
                 `;
 
+                // Interface progressiva: preserva os campos especiais e a lógica de envio existentes.
+                const fileInput=$('#lookFileInput');
+                fileInput.setAttribute('aria-describedby','fauFileHint');
+                fileInput.insertAdjacentHTML('afterend', '<p id="fauFileHint" class="text-[11px] text-gray-400 mt-2">Selecione uma imagem JPG, PNG ou WebP com até 5 MB. Você poderá conferir a prévia antes de entregar.</p>');
+                const submit=$('#btnSubmitLook');
+                submit.insertAdjacentHTML('beforebegin', '<div id="fauDeliveryReview" class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-2" aria-live="polite"><p class="text-[10px] tracking-widest text-fashion-gold">03 · FINAL CHECK</p><p class="text-xs text-gray-300">Adicione sua fotografia, título e conceito para preparar a entrega.</p></div>');
+                const updateReview=()=>{
+                    const file=$('#lookFileInput')?.files?.[0],title=$('#lookTitleInput')?.value.trim(),concept=$('#lookMemorialText')?.value.trim();
+                    const validFile=file&&['image/jpeg','image/png','image/webp'].includes(file.type)&&file.size<=5*1024*1024;
+                    const review=$('#fauDeliveryReview');if(!review)return;
+                    review.innerHTML='<p class="text-[10px] tracking-widest text-fashion-gold">03 · FINAL CHECK</p>'+[
+                        [validFile,'Fotografia selecionada (até 5 MB)'],[!!title,'Título da criação'],[!!concept,'Conceito da criação']
+                    ].map(([ok,label])=>'<p class="text-xs '+(ok?'text-green-300':'text-gray-400')+'">'+(ok?'✓ ':'○ ')+label+'</p>').join('')+'<p class="text-[11px] text-gray-400">A entrega só será oficial após a confirmação do servidor.</p>';
+                };
+                ['lookFileInput','lookTitleInput','lookMemorialText'].forEach(id=>document.getElementById(id)?.addEventListener('input',updateReview));
+                fileInput.addEventListener('change',updateReview);
+                updateReview();
                 if (isFinalPhase) {
                     const actIndex = currentRoundLooks.length;
                     const actTitles = ['🌍 ACT I — THE ORIGIN','♻️ ACT II — THE REINVENTION','⚔️ ACT III — THE CONFRONTATION','👑 ACT IV — THE LEGEND'];
@@ -1946,8 +1971,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     if(preview?.dataset.url){URL.revokeObjectURL(preview.dataset.url);delete preview.dataset.url;}
                     if(wrap)wrap.classList.add('hidden');
                     if(!file)return;
-                    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>40*1024*1024){
-                        e.target.value='';showToast('Use JPG, PNG ou WebP de até 40 MB.');return;
+                    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){
+                        e.target.value='';showToast('Use JPG, PNG ou WebP de até 5 MB.');return;
                     }
                     const url=URL.createObjectURL(file);preview.src=url;preview.dataset.url=url;
                     info.textContent=`${file.name} · ${(file.size/1048576).toFixed(2)} MB · Ainda não enviado`;
@@ -1990,6 +2015,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                             ` : ''}
                         </div>
                         <p class="text-[10px] text-gray-400 line-clamp-2 italic">${esc(l.mem)}</p>
+                        ${l.rodada===globalState.rodada && Number(globalState.prazo)>now() ? `<button type="button" data-edit-look="${esc(l.id)}" class="w-full border border-fashion-gold/60 text-fashion-gold rounded p-2 font-semibold">✎ Editar entrega</button>` : ''}
                     </div>
                 `;
             }).join('') || '<div class="col-span-full text-center text-gray-500 py-4">Seu Designer ainda não enviou looks.</div>';
@@ -1997,6 +2023,53 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
         $('#mainView').onclick = safeExec(async e => {
             const target = e.target;
+
+            const editButton=target.closest?.('[data-edit-look]');
+            if(editButton){
+                if(!(Number(globalState.prazo)>now()))throw new Error('O prazo de edição desta rodada já terminou.');
+                const look=allMyLooks.find(l=>l.id===editButton.dataset.editLook && l.uid===currentUser.uid && l.rodada===globalState.rodada);
+                if(!look)throw new Error('Esta entrega não foi encontrada no seu ateliê.');
+                const host=document.getElementById('fauLookEditPanel');
+                if(host)host.remove();
+                const panel=document.createElement('section');panel.id='fauLookEditPanel';
+                panel.className='rounded-xl border border-fashion-gold bg-fashion-900 p-5 space-y-4';
+                panel.innerHTML=`<p class="text-[10px] text-fashion-gold tracking-widest">THE ALTERATION ROOM · LOOK ${esc(look.slot||1)}</p><h3 class="font-cinzel text-xl text-white">Editar entrega</h3><p class="text-xs text-gray-300">Suas alterações substituem a versão anterior. A imagem só muda se você escolher outra. Disponível até o encerramento da rodada.</p><img src="${esc(look.url)}" alt="Imagem atual do look" class="max-h-60 w-full object-contain rounded bg-black"><label class="block text-xs text-gray-300">Substituir imagem (opcional · JPG, PNG ou WebP · até 5 MB)<input id="fauEditFile" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full mt-2"></label><img id="fauEditPreview" alt="Prévia da nova imagem" class="hidden max-h-60 w-full object-contain rounded bg-black"><label class="block text-xs text-gray-300">Título<input id="fauEditTitle" maxlength="100" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded text-white" value="${esc(look.titulo||'')}"></label><label class="block text-xs text-gray-300">Conceito <span id="fauEditCount"></span><textarea id="fauEditConcept" maxlength="500" rows="4" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded text-white">${esc(look.mem||'')}</textarea></label><div class="flex flex-wrap gap-2"><button type="button" id="fauEditSave" class="bg-fashion-gold text-black rounded px-4 py-3 font-bold text-xs">Salvar alterações</button><button type="button" id="fauEditCancel" class="border border-fashion-700 rounded px-4 py-3 text-xs">Cancelar</button></div><p id="fauEditStatus" class="text-xs text-gray-300" role="status"></p>`;
+                const inlineHost=document.getElementById('fauInlineEditHost');
+                if(inlineHost){inlineHost.replaceChildren(panel);document.querySelectorAll('#fauInlineLookTabs [data-edit-look]').forEach(b=>{const active=b.dataset.editLook===look.id;b.classList.toggle('bg-fashion-gold',active);b.classList.toggle('text-black',active);});}
+                else {document.getElementById('workroomFormModule').after(panel);panel.scrollIntoView({behavior:'smooth',block:'start'});}
+                const count=()=>panel.querySelector('#fauEditCount').textContent=`${panel.querySelector('#fauEditConcept').value.length}/500`;
+                panel.querySelector('#fauEditConcept').addEventListener('input',count);count();
+                panel.querySelector('#fauEditCancel').onclick=()=>{if(inlineHost){navigate('work');}else panel.remove();};
+                panel.querySelector('#fauEditFile').addEventListener('change',ev=>{
+                    const file=ev.target.files?.[0],preview=panel.querySelector('#fauEditPreview');
+                    if(!file){preview.classList.add('hidden');return;}
+                    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){ev.target.value='';preview.classList.add('hidden');panel.querySelector('#fauEditStatus').textContent='Use JPG, PNG ou WebP de até 5 MB.';return;}
+                    const reader=new FileReader();reader.onload=()=>{preview.src=reader.result;preview.classList.remove('hidden');};reader.readAsDataURL(file);
+                });
+                panel.querySelector('#fauEditSave').onclick=safeExec(async()=>{
+                    const button=panel.querySelector('#fauEditSave');if(button.disabled)return;
+                    if(!(Number(globalState.prazo)>now()))throw new Error('O prazo de edição acabou.');
+                    const title=panel.querySelector('#fauEditTitle').value.trim(),mem=panel.querySelector('#fauEditConcept').value.trim(),file=panel.querySelector('#fauEditFile').files?.[0];
+                    if(!title||!mem||title.length>100||mem.length>500)throw new Error('Informe título (até 100 caracteres) e conceito (até 500 caracteres).');
+                    if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024))throw new Error('A nova imagem precisa ser JPG, PNG ou WebP de até 5 MB.');
+                    button.disabled=true;button.textContent='SALVANDO...';
+                    try{
+                        const updates={titulo:title,mem,editedAt:firebase.firestore.FieldValue.serverTimestamp()};
+                        if(file)updates.url=await compressImageToBase64(file);
+                        if(!(Number(globalState.prazo)>now()))throw new Error('O prazo terminou durante a edição. Nada foi salvo.');
+                        const ref=db.doc(`looks/${look.id}`);
+                        await db.runTransaction(async tx=>{
+                            const snap=await tx.get(ref);
+                            if(!snap.exists||snap.data().uid!==currentUser.uid||snap.data().rodada!==globalState.rodada)throw new Error('Entrega não encontrada ou sem permissão.');
+                            if(!(Number(globalState.prazo)>now()))throw new Error('O prazo terminou.');
+                            tx.update(ref,updates);
+                        });
+                        panel.remove();showToast('Alterações salvas! Sua entrega foi atualizada.');navigate('work');
+                    }catch(err){panel.querySelector('#fauEditStatus').textContent=err.message||'Não foi possível salvar.';throw err;}
+                    finally{button.disabled=false;button.textContent='Salvar alterações';}
+                });
+                return;
+            }
 
             if (target.id === 'btnLockAtelierIdentity') {
                 if (globalState.rodada || globalState.themeId) throw new Error('A identidade da Maison fica bloqueada após o início da competição. Solicite mudanças à produção.');
@@ -2025,6 +2098,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const memorial = $('#lookMemorialText').value.trim();
 
                 if (!file || !lookTitle || !memorial) throw new Error('Preencha imagem, título e conceito da criação.');
+                if(file.size>5*1024*1024) throw new Error('A fotografia deve ter no máximo 5 MB. Escolha uma imagem menor.');
 
                 const theme = getTheme();
                 const beauty = theme?.id === 'theme_beauty_eye' ? await beautyState() : null;
@@ -3417,7 +3491,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <textarea id="newRoundRules" rows="3" placeholder="Opcional. Ex: O look precisa ter a cor vermelha." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
                     <section class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-4 space-y-3" aria-label="Prévia privada da rodada">
                         <div class="flex flex-wrap items-center justify-between gap-2"><div><p class="text-[10px] uppercase tracking-[.25em] text-fashion-gold">THE DIRECTOR'S MONITOR · ADM ONLY</p><h4 class="font-cinzel text-white text-lg">Preview da Rodada</h4></div><span class="text-[10px] border border-fashion-gold/40 rounded px-2 py-1 text-fashion-gold">NÃO PUBLICADO</span></div>
-                        <p class="text-xs text-gray-300">Confira como o tema afeta cada perfil antes de iniciar. A prévia é ilustrativa, não salva, publica ou altera a rodada ativa.</p>
+                        <p class="text-xs text-gray-300">Escolha o tema acima para inspecionar seus campos e regras. Esta é uma simulação, não uma visualização 100% fiel do participante autenticado: sorteios, dados pessoais, permissões e estados do Firebase só podem ser verificados com uma conta de teste de designer.</p>
                         <div class="flex flex-wrap gap-2" id="directorPreviewTabs" role="group" aria-label="Perfil a visualizar">
                             ${[['designer','Designer'],['judge','Jurado'],['audience','Plateia'],['admin','Produção']].map(([id,label])=>`<button type="button" data-preview-role="${id}" aria-pressed="${id==='designer'}" class="px-3 py-2 rounded border border-fashion-700 bg-fashion-900 text-white text-xs">${label}</button>`).join('')}
                         </div>
@@ -4317,7 +4391,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               if(preview.dataset.objectUrl){URL.revokeObjectURL(preview.dataset.objectUrl);delete preview.dataset.objectUrl;}
               preview.removeAttribute('src');preview.classList.add('hidden');
               if(!file){msg.textContent='Selecione um arquivo de imagem.';return;}
-              if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024){demoInput.value='';msg.textContent='Use JPG, PNG ou WebP de até 10 MB.';return;}
+              if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){demoInput.value='';msg.textContent='Use JPG, PNG ou WebP de até 5 MB.';return;}
               const url=URL.createObjectURL(file);preview.src=url;preview.dataset.objectUrl=url;preview.classList.remove('hidden');msg.textContent=`Arquivo selecionado: ${file.name}. Ainda não enviado.`;
             });
             $('#fauDemoSubmit')?.addEventListener('click',()=>{const msg=$('#fauDemoMessage');if(!msg)return;msg.textContent=demoInput?.files?.length&&$('#fauDemoTitle')?.value.trim()?'✓ Simulação concluída. Nenhuma entrega real foi criada.':'Selecione uma imagem e informe o título antes de simular.';});
