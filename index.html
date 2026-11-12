@@ -267,7 +267,21 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 .fau-vault-viewer-arrow:disabled{opacity:.2;cursor:default}
 .fau-vault-viewer-footer p{font-size:13px}
 @media(max-width:600px){.fau-vault-viewer{gap:8px}.fau-vault-viewer-stage{gap:5px}.fau-vault-viewer-arrow{flex-basis:32px;height:40px;font-size:26px}.fau-vault-viewer-stage img{max-width:calc(100% - 74px);max-height:calc(100dvh - 145px)}.fau-vault-viewer-kicker{font-size:9px}.fau-vault-viewer-close span{display:none}}
-</style></head>
+</style><style id="fau-rulebook-experience">
+.fau-rulebook .rule-hero{background:radial-gradient(ellipse at 50% 0%,rgba(186,145,83,.17),transparent 65%),linear-gradient(140deg,#16120f,#0a0a0a)}
+.fau-rulebook .rule-stat{font-size:10px;letter-spacing:.13em;border:1px solid rgba(186,145,83,.4);border-radius:100px;padding:7px 12px;color:#d4bb8d}
+.fau-rulebook .rule-shortcut{border:1px solid #4d4438;border-radius:14px;background:#191713;padding:17px;display:flex;flex-direction:column;gap:7px;transition:border-color .2s,transform .2s}
+.fau-rulebook .rule-shortcut:hover{border-color:#c9a66d;transform:translateY(-2px)}
+.fau-rulebook .rule-shortcut span{color:#c9a66d;font-size:10px;letter-spacing:.12em}.fau-rulebook .rule-shortcut strong{color:#fff;font-size:14px}.fau-rulebook .rule-shortcut small{color:#b7b1a8;font-size:12px}
+.fau-rulebook .rule-action,.fau-rulebook .rule-filter{border:1px solid #655746;border-radius:8px;padding:9px 12px;font-size:10px;letter-spacing:.05em;color:#d5c4a9;min-height:38px}
+.fau-rulebook .rule-filter.is-selected{background:#c9a66d;color:#17120b;border-color:#c9a66d;font-weight:700}
+.fau-rulebook .rule-chapter-icon{display:grid;place-items:center;width:44px;height:44px;flex:none;border:1px solid #7a6648;border-radius:12px;color:#d5b780;font-size:21px}
+.fau-rulebook .rule-entry[open]{border-color:#a98c60;background:#1b1814}.fau-rulebook .rule-entry summary{list-style:none}.fau-rulebook .rule-entry summary::-webkit-details-marker{display:none}
+.fau-rulebook .rule-number{font-size:11px;color:#a99b86;min-width:25px}.fau-rulebook .rule-chevron{font-size:22px;color:#bfa67d;transition:transform .2s}.fau-rulebook .rule-entry[open] .rule-chevron{transform:rotate(180deg)}
+.fau-rulebook [hidden]{display:none!important}.fau-rulebook button:focus-visible,.fau-rulebook summary:focus-visible{outline:2px solid #e6c28d;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.fau-rulebook *{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -1728,19 +1742,75 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
     VIEWS.manual = () => {
         const S = FAU_RULEBOOK_SECTIONS;
-        renderView(`
-            <div class="space-y-5">
-                <div class="text-center space-y-2 py-4">
-                    <span class="text-xs uppercase tracking-[0.3em] text-fashion-gold font-cinzel">F · A · U — Fashion, Art & Uniqueness</span>
-                    <h2 class="font-cinzel text-2xl">The Rulebook · Manual Oficial do Participante</h2>
-                    <p class="text-gray-400 italic text-xs">“In fashion, one day you're in, and the next day you're out.”</p>
-                </div>
-                ${S.map((x, i) => `
-                    <details class="bg-fashion-900 border border-fashion-700 rounded-lg p-4 group" ${i === 0 ? 'open' : ''}>
-                        <summary class="cursor-pointer font-cinzel text-fashion-gold text-sm tracking-wider">${x[0]} ${x[1]}</summary>
-                        <p class="text-gray-300 text-xs leading-relaxed mt-3">${x[2]}</p>
-                    </details>`).join('')}
-            </div>`);
+        const chapters = [
+            {name:'THE FOUNDATION',subtitle:'A competição e as entregas',range:[0,1,2],icon:'✦'},
+            {name:'THE JUDGING',subtitle:'Notas, críticas e resultados',range:[3,4,5,6,7],icon:'⚖'},
+            {name:'THE SOCIAL GAME',subtitle:'Votações, estratégias e eliminação',range:[8,9,10,11,12],icon:'♛'},
+            {name:'THE FINALE',subtitle:'Reta final e legado',range:[13,14,15,16],icon:'★'}
+        ];
+        const chapterFor = i => chapters.findIndex(c=>c.range.includes(i));
+        renderView(`<div class="fau-rulebook max-w-5xl mx-auto space-y-5 pb-10">
+          <header class="rule-hero rounded-2xl border border-fashion-gold/30 p-6 sm:p-9 text-center space-y-3">
+            <span class="text-[10px] tracking-[.34em] text-fashion-gold">PROJECT RUNWAY: FAU · THE OFFICIAL GUIDE</span>
+            <h1 class="font-cinzel text-3xl sm:text-4xl text-white">THE RULEBOOK</h1>
+            <p class="text-gray-300 text-sm max-w-xl mx-auto">Every runway has its rules. Conheça os desafios, entenda o jogo e descubra o que separa um look de uma lenda.</p>
+            <p class="text-fashion-gold/80 italic text-xs">“In fashion, one day you're in, and the next day you're out.”</p>
+            <div class="flex flex-wrap justify-center gap-2 pt-2"><span class="rule-stat">17 ARTIGOS</span><span class="rule-stat">4 CAPÍTULOS</span><span class="rule-stat">1 RUNWAY</span></div>
+          </header>
+          <section class="grid sm:grid-cols-3 gap-3" aria-label="Acesso rápido às regras">
+            <button type="button" data-rule-jump="2" class="rule-shortcut text-left"><span>01 · BEFORE THE RUNWAY</span><strong>Como entregar meu look?</strong><small>Imagem, título e conceito</small></button>
+            <button type="button" data-rule-jump="3" class="rule-shortcut text-left"><span>02 · THE SCORE</span><strong>Como funcionam as notas?</strong><small>Critérios e avaliações</small></button>
+            <button type="button" data-rule-jump="11" class="rule-shortcut text-left"><span>03 · SURVIVE THE CUT</span><strong>Quem pode ser eliminado?</strong><small>Elimination Pool</small></button>
+          </section>
+          <section class="rounded-2xl border border-fashion-700 bg-fashion-950/70 p-4 sm:p-5 space-y-4" aria-label="Explorar o manual">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE CHAPTER INDEX</p><h2 class="font-cinzel text-xl text-white">Explore the rules</h2></div>
+              <div class="flex gap-2"><button type="button" id="ruleExpand" class="rule-action">ABRIR TODOS</button><button type="button" id="ruleCollapse" class="rule-action">FECHAR TODOS</button></div>
+            </div>
+            <label class="block"><span class="sr-only">Buscar nas regras</span><input id="ruleSearch" type="search" autocomplete="off" placeholder="Buscar por nota, votação, eliminação..." class="w-full rounded-xl border border-fashion-700 bg-fashion-900 text-white px-4 py-3 text-sm focus:outline-none focus:border-fashion-gold" /></label>
+            <div class="flex flex-wrap gap-2" id="ruleCategories" aria-label="Filtrar capítulos">
+              <button type="button" data-rule-cat="all" class="rule-filter is-selected" aria-pressed="true">TODOS</button>
+              ${chapters.map((c,i)=>`<button type="button" data-rule-cat="${i}" class="rule-filter" aria-pressed="false">${c.name}</button>`).join('')}
+            </div>
+            <p id="ruleCount" class="text-xs text-gray-400" aria-live="polite">17 regras disponíveis</p>
+          </section>
+          <div id="ruleEmpty" class="hidden rounded-xl border border-fashion-700 p-8 text-center text-gray-300 text-sm">Nenhuma regra encontrada. Tente outro termo ou escolha todos os capítulos.</div>
+          <div id="ruleChapters" class="space-y-6">
+            ${chapters.map((c,ci)=>`<section class="rule-chapter space-y-3" data-rule-chapter="${ci}">
+              <div class="flex items-center gap-3"><span class="rule-chapter-icon" aria-hidden="true">${c.icon}</span><div><p class="text-[10px] text-fashion-gold tracking-[.2em]">CHAPTER ${String(ci+1).padStart(2,'0')}</p><h3 class="font-cinzel text-lg sm:text-xl text-white">${c.name}</h3><p class="text-xs text-gray-400">${c.subtitle}</p></div></div>
+              <div class="space-y-2">${c.range.map(i=>`<details id="rule-${i}" data-rule-index="${i}" class="rule-entry rounded-xl border border-fashion-700 bg-fashion-900/70 overflow-hidden" ${i===0?'open':''}>
+                <summary class="flex items-center gap-3 p-4 cursor-pointer"><span class="rule-number">${String(i+1).padStart(2,'0')}</span><span class="flex-1 font-cinzel text-sm text-fashion-gold">${esc(S[i][1].replace(/^\d+\s*·\s*/,''))}</span><span class="rule-chevron" aria-hidden="true">⌄</span></summary>
+                <div class="px-4 pb-5 pl-14 text-sm text-gray-200 leading-relaxed">${esc(S[i][2])}</div>
+              </details>`).join('')}</div>
+            </section>`).join('')}
+          </div>
+          <footer class="text-center border-t border-fashion-700 pt-6 space-y-2"><p class="font-cinzel text-fashion-gold">MAKE IT WORK. MAKE IT COUNT.</p><p class="text-xs text-gray-400 max-w-xl mx-auto">Este manual reúne as regras gerais. Cada briefing pode estabelecer exigências e dinâmicas específicas para sua rodada.</p><button type="button" id="ruleBackTop" class="rule-action mt-2">↑ VOLTAR AO INÍCIO</button></footer>
+        </div>`);
+        const root=document.querySelector('.fau-rulebook');if(!root)return;
+        const search=root.querySelector('#ruleSearch');let active='all';
+        const apply=()=>{
+            const q=search.value.trim().toLocaleLowerCase('pt-BR');let visible=0;
+            root.querySelectorAll('[data-rule-index]').forEach(el=>{
+                const i=Number(el.dataset.ruleIndex),match=(active==='all'||chapterFor(i)===Number(active))&&(!q||(`${S[i][1]} ${S[i][2]} ${chapters[chapterFor(i)].name}`).toLocaleLowerCase('pt-BR').includes(q));
+                el.hidden=!match;if(match)visible++;
+                if(q&&match)el.open=true;
+            });
+            root.querySelectorAll('[data-rule-chapter]').forEach(el=>{el.hidden=![...el.querySelectorAll('[data-rule-index]')].some(item=>!item.hidden);});
+            root.querySelector('#ruleCount').textContent=`${visible} ${visible===1?'regra encontrada':'regras encontradas'}`;
+            root.querySelector('#ruleEmpty').classList.toggle('hidden',visible!==0);
+        };
+        search.addEventListener('input',apply);
+        root.querySelectorAll('[data-rule-cat]').forEach(btn=>btn.addEventListener('click',()=>{
+            active=btn.dataset.ruleCat;
+            root.querySelectorAll('[data-rule-cat]').forEach(b=>{const on=b===btn;b.classList.toggle('is-selected',on);b.setAttribute('aria-pressed',String(on));});apply();
+        }));
+        root.querySelector('#ruleExpand').addEventListener('click',()=>root.querySelectorAll('[data-rule-index]:not([hidden])').forEach(d=>d.open=true));
+        root.querySelector('#ruleCollapse').addEventListener('click',()=>root.querySelectorAll('[data-rule-index]').forEach(d=>d.open=false));
+        root.querySelectorAll('[data-rule-jump]').forEach(btn=>btn.addEventListener('click',()=>{
+            const i=Number(btn.dataset.ruleJump);search.value='';active='all';root.querySelector('[data-rule-cat="all"]').click();
+            const target=root.querySelector(`#rule-${i}`);if(target){target.open=true;target.scrollIntoView({behavior:'smooth',block:'center'});}
+        }));
+        root.querySelector('#ruleBackTop').addEventListener('click',()=>root.scrollIntoView({behavior:'smooth',block:'start'}));
     };
 
     VIEWS.conf = () => {
