@@ -1040,6 +1040,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         if(shell){shell.dataset.phase=phase;}
         if(status)status.textContent=label;
         if(direction)direction.textContent=cue;
+        const closed=phase==='closed'||phase==='unset';
+        const submit=document.getElementById('btnSubmitLook');
+        if(submit){submit.disabled=closed||submit.dataset.saving==='true';if(closed)submit.textContent=phase==='closed'?'PRAZO ENCERRADO · ENVIO BLOQUEADO':'AGUARDANDO ABERTURA';}
+        document.querySelectorAll('#fauInlineEditHost button[type="submit"],#fauInlineEditHost [data-save-edit]').forEach(b=>{b.disabled=closed;});
+        const form=document.getElementById('workroomFormModule');
+        if(form&&closed){form.querySelectorAll('input[type="file"],#lookTitleInput,#lookMemorialText').forEach(el=>{el.disabled=true;});}
+
         if(fill){const elapsed = !deadline ? 0 : remaining<=0 ? 100 : remaining<=600 ? 97 : remaining<=3600 ? 90 : remaining<=86400 ? 75 : 30;fill.style.width=elapsed+'%';}
         // No repeated alarms or modal interruptions; changing the stage is visual only.
     };
@@ -1747,7 +1754,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               <div><span class="text-fashion-gold tracking-[.22em] text-[10px]">BEHIND THE SEAMS</span><h2 class="font-cinzel text-2xl text-white">The Confessional Room</h2></div>
               ${canPost?'<button type="button" id="confOpenComposer" aria-expanded="false" aria-controls="confComposerArea" class="bg-fashion-gold text-black font-bold rounded-lg px-4 py-3 text-xs">+ NOVO DEPOIMENTO</button>':''}
             </header>
-            <section class="space-y-3" aria-label="Depoimentos publicados"><div class="flex flex-wrap items-center justify-between gap-3"><div><span class="text-fashion-gold text-[10px] tracking-[.2em]">ON THE RECORD</span><h3 class="font-cinzel text-xl text-white">Behind the Seams</h3><p id="confFeedCount" class="text-xs text-gray-400">Carregando depoimentos...</p></div><div class="flex gap-2 items-center"><label for="confFilter" class="text-xs text-gray-300">Mostrar</label><select id="confFilter" class="bg-fashion-900 text-white border border-fashion-700 rounded-lg px-3 py-2 text-xs"><option value="all">Toda a temporada</option><option value="round">Rodada atual</option>${canPost?'<option value="mine">Meus depoimentos</option>':''}</select></div></div><div id="chatFeed" class="conf-feed space-y-3" aria-live="polite"><p class="text-gray-400 text-sm text-center py-8">Abrindo os bastidores…</p></div><button type="button" id="confShowMore" class="hidden w-full rounded-lg border border-fashion-700 text-fashion-gold py-3 text-xs">VER MAIS DEPOIMENTOS</button></section>
+            <section class="space-y-3" aria-label="Depoimentos publicados"><div class="flex flex-wrap items-center justify-between gap-3"><div><span class="text-fashion-gold text-[10px] tracking-[.2em]">DEPOIMENTOS</span><p id="confFeedCount" class="text-xs text-gray-400">Carregando depoimentos...</p></div><div class="flex gap-2 items-center"><label for="confFilter" class="text-xs text-gray-300">Mostrar</label><select id="confFilter" class="bg-fashion-900 text-white border border-fashion-700 rounded-lg px-3 py-2 text-xs"><option value="all">Toda a temporada</option><option value="round">Rodada atual</option>${canPost?'<option value="mine">Meus depoimentos</option>':''}</select></div></div><div id="chatFeed" class="conf-feed space-y-3" aria-live="polite"><p class="text-gray-400 text-sm text-center py-8">Abrindo os bastidores…</p></div><button type="button" id="confShowMore" class="hidden w-full rounded-lg border border-fashion-700 text-fashion-gold py-3 text-xs">VER MAIS DEPOIMENTOS</button></section>
 
             <div id="confComposerArea" class="hidden">
             ${canPost?`<section class="conf-booth bg-fashion-950 border border-fashion-gold/40 rounded-xl p-5 space-y-3" aria-label="Gravar depoimento"><div class="flex items-center justify-between gap-2"><h3 class="font-cinzel text-fashion-gold text-lg">Your camera. Your story.</h3><span class="text-red-400 text-xs tracking-widest">● REC</span></div><p class="text-xs text-gray-300">${isAdmin?'Publicado como PRODUÇÃO.':'Publicado com seu nome de Designer.'}</p><label for="chatInput" class="text-xs text-fashion-gold block">SEU DEPOIMENTO</label><textarea id="chatInput" maxlength="1000" rows="3" class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-4 text-sm text-white focus:outline-none focus:border-fashion-gold resize-y" placeholder="A câmera está ligada. O que você tem a dizer?"></textarea><div class="flex justify-between items-center gap-2 flex-wrap"><span id="confCounter" aria-live="polite" class="text-xs text-gray-400">0 / 1000 caracteres</span><span class="text-[11px] text-gray-400">Publicado para todos · Sem anonimato</span></div><div class="flex flex-wrap gap-2 justify-end"><button type="button" id="btnSendChat" disabled class="bg-fashion-gold hover:bg-fashion-gold-hover disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold px-5 py-3 rounded-lg text-xs uppercase">PUBLICAR DEPOIMENTO</button></div><p id="confStatus" role="status" class="text-xs text-gray-400" aria-live="polite"></p></section>`:``}
@@ -1803,9 +1810,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             input.addEventListener('input',update);
             send.addEventListener('click',safeExec(async()=>{
                 const text=input.value.trim();if(!text||text.length>1000)return;
-                if(!confirm('Publicar este depoimento para todos os usuários?'))return;
                 send.disabled=true;status.textContent='Publicando seu depoimento…';
-                try{await db.collection('confessionarios').add({ate:isAdmin?'PRODUÇÃO':currentUser.ate,uid:currentUser.uid,role:isAdmin?'admin':'estilista',rodada:globalState.rodada,txt:text,t:now()});input.value='';update();status.textContent='';$('#confComposerArea').classList.add('hidden');$('#confOpenComposer').setAttribute('aria-expanded','false');$('#confOpenComposer').textContent='+ NOVO DEPOIMENTO';filter.value='all';visibleCount=8;showToast('Depoimento publicado!');}
+                try{await db.collection('confessionarios').add({ate:isAdmin?'PRODUÇÃO':currentUser.ate,uid:currentUser.uid,role:isAdmin?'admin':'estilista',rodada:globalState.rodada,txt:text,t:now()});input.value='';update();status.textContent='';$('#confComposerArea').classList.add('hidden');$('#confOpenComposer').setAttribute('aria-expanded','false');$('#confOpenComposer').textContent='+ NOVO DEPOIMENTO';filter.value='all';visibleCount=8;paint();showToast('Depoimento publicado!');}
                 catch(err){status.textContent='Não foi possível publicar. Seu texto continua aqui para tentar novamente.';throw err;}
                 finally{send.disabled=!input.value.trim();}
             }));
@@ -1815,7 +1821,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     // 2. THE WORKROOM (DESIGNER & PROMPT MASTER)
     VIEWS.work = () => {
         let allMyLooks = [];
-        let roundSubmissions = [];
+        let submissionPulse = null;
         let activeStylistsCount = 0;
         if (!hasMaisonIdentity()) { navigate('meu_perfil'); return; }
         if (!globalState.rodada) {
@@ -1843,7 +1849,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             <div class="space-y-6">
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div class="space-y-1">
-                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">THE ATELIER · O espaço de criação da seu Designer</span>
+                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">THE ATELIER · Seu espaço de criação</span>
                         <h2 class="font-cinzel text-2xl text-white font-normal">The Workroom · Rodada ${esc(globalState.rodada || 'Pendente')}</h2>
                         <p class="text-xs text-gray-400">Meta do desafio: <strong class="text-fashion-gold">${requiredLooks} look(s) gerados por IA</strong> para a passarela.</p>
                     </div>
@@ -1867,7 +1873,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     <p class="text-[11px] text-gray-400">Você pode corrigir imagem, título e conceito dos looks enviados enquanto a rodada estiver aberta. Depois do prazo, a entrega fica bloqueada.</p>
                 </section>
                 <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
-                <div id="workroomThermometer" class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg flex items-center justify-between text-xs"></div>
+                <section id="workroomThermometer" class="bg-fashion-900 border border-fashion-gold/30 p-4 rounded-xl text-xs" aria-label="Progresso das entregas" aria-live="polite"></section>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-3" aria-label="Briefing da rodada">
                     <div class="flex items-center justify-between gap-2"><span class="text-[10px] tracking-[.25em] text-fashion-gold">01 · THE BRIEF</span><span class="text-[10px] text-gray-400">YOUR NEXT CHALLENGE</span></div>
                     <h3 class="font-cinzel text-xl text-white">${esc(getTheme()?.title || 'Aguardando o desafio')}</h3>
@@ -1939,15 +1945,16 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
 
             const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada);
-            const distinctSenders = new Set(roundSubmissions.map(e => e.uid)).size;
-
-            $('#workroomThermometer').innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles text-fashion-gold"></i>
-                    <span><strong>Status dos Ateliês:</strong> ${distinctSenders} enviados | ${Math.max(activeStylistsCount - distinctSenders, 0)} ainda criando seus looks</span>
-                </div>
-                <span class="text-[10px] uppercase font-mono text-gray-500">Total na disputa: ${activeStylistsCount}</span>
-            `;
+            // Public aggregate only: never query or reveal other designers' individual submissions.
+            const pulseReady = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
+            const sent = pulseReady ? Math.max(0, Number(submissionPulse.enviados)) : null;
+            const total = pulseReady && Number.isFinite(Number(submissionPulse.total)) ? Math.max(sent, Number(submissionPulse.total)) : activeStylistsCount;
+            const pending = sent===null ? null : Math.max(0,total-sent);
+            const percent = sent===null || total<=0 ? 0 : Math.min(100,Math.round(sent/total*100));
+            $('#workroomThermometer').innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><p class="text-[10px] tracking-[.22em] text-fashion-gold">BACKSTAGE · DELIVERY PULSE</p><h3 class="font-cinzel text-white text-base mt-1">The Submission Board</h3></div><span class="text-[10px] text-gray-400">CONTAGEM ANÔNIMA</span></div>
+              <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent===null?'—':sent}</strong><span class="text-gray-300 text-xs">JÁ ENVIARAM</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending===null?'—':pending}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
+              <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
+              <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a contagem oficial da produção.':`${percent}% dos Designers já entregaram. Nenhuma identidade é revelada.`}</p>`;
 
             const beauty = globalState.themeId === 'theme_beauty_eye' ? await beautyState() : null;
             const beautyAssignment = beauty?.assignments?.find(a=>a.uid===currentUser.uid);
@@ -2118,6 +2125,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 };
             }
 
+            fauUpdateClock();
             renderPersonalTwist().catch(console.error);
             if(themeHasDraw(getTheme())) sub(drawGateRef(),()=>renderPersonalTwist().catch(console.error));
             $('#myLooksCount').textContent = `${allMyLooks.length} looks`;
@@ -2227,7 +2235,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
 
             if (target.id === 'btnSubmitLook') {
-                if (now() > globalState.prazo) throw new Error('O tempo acabou! A rodada está encerrada.');
+                if (!Number(globalState.prazo) || now() >= Number(globalState.prazo)) throw new Error('O prazo de entrega está encerrado.');
                 const file = $('#lookFileInput').files[0];
                 const lookTitle = $('#lookTitleInput').value.trim();
                 const memorial = $('#lookMemorialText').value.trim();
@@ -2279,7 +2287,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 if(submitButton){submitButton.disabled=true;submitButton.textContent='ENVIANDO · AGUARDE...';}
                 let photoBase64;
                 try {photoBase64 = await compressImageToBase64(file);}
-                catch(error){if(submitButton){submitButton.disabled=false;submitButton.textContent='Enviar Look Oficial para a Passarela';}throw error;}
+                catch(error){if(submitButton){submitButton.disabled=now()>=Number(globalState.prazo);submitButton.textContent=submitButton.disabled?'PRAZO ENCERRADO':'Enviar Look Oficial para a Passarela';}throw error;}
 
                 const batch = db.batch();
                 batch.set(db.doc(`looks/${lookDocId}`), {
@@ -2323,8 +2331,11 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
         // Notas individuais são privadas; o designer consulta apenas o acumulado no perfil.
 
-        sub(db.collection('envios').where('rodada', '==', globalState.rodada || '-'), snap => {
-            roundSubmissions = snap.docs.map(d => d.data());
+        // This document must be written by trusted production backend (not by designers).
+        // Schema: config/entregas_publicas -> {rodada, enviados, total}.
+        sub(db.doc('config/entregas_publicas'), doc => {
+            const data = doc.exists ? doc.data() : null;
+            submissionPulse = data && String(data.rodada)===String(globalState.rodada) ? data : null;
             refreshWorkroomUI();
         });
     };
@@ -2763,14 +2774,18 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         let looks = [];
         let evaluations = {};
         let week01References = new Map();
-        const scoresClosed = () => !!globalState.notasEncerradas;
+        const juryStageOpen = () => !!globalState.rodada && !!globalState.themeId && stageAtLeast('judging');
+        const scoresClosed = () => !juryStageOpen() || !!globalState.notasEncerradas;
+        const juryStatus = () => !globalState.rodada || !globalState.themeId ? 'Aguardando a abertura da rodada' : !juryStageOpen() ? 'Aguardando a liberação das avaliações' : globalState.notasEncerradas ? 'Notas encerradas · somente consulta' : 'Notas abertas · você pode editar as avaliações salvas';
+        const draftScores = new Map();
+        let savingAll=false;
 
         renderView(`
             <div class="space-y-6">
                 <div class="border-b border-fashion-700 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Avaliação Técnica (Fashion, Art & Uniqueness)</span>
-                        <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel · Rodada ${esc(globalState.rodada || '')}</h2><p class="text-xs mt-2 ${scoresClosed()?'text-red-300':'text-green-300'}">${scoresClosed()?'🔒 Notas encerradas · suas avaliações estão disponíveis para consulta':'● Notas abertas · suas avaliações salvas podem ser editadas'}</p>
+                        <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel · Rodada ${esc(globalState.rodada || '')}</h2><p class="text-xs mt-2 ${scoresClosed()?'text-red-300':'text-green-300'}">${scoresClosed()?'🔒 '+juryStatus():'● '+juryStatus()}</p>
                     </div>
                     <div class="flex gap-2">
                         <button id="btnOpenMatrix" class="bg-fashion-800 hover:bg-fashion-700 text-fashion-sand px-3 py-1.5 rounded border border-fashion-600 text-xs">
@@ -2820,26 +2835,29 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const progressText=$('#fauJuryProgressText'),progressBar=$('#fauJuryProgressBar');
             if(progressText)progressText.textContent=`${completed} de ${looks.length} avaliações salvas`;
             if(progressBar)progressBar.style.width=(looks.length?Math.round(completed/looks.length*100):0)+'%';
+            const allButton=$('#btnSubmitAllEvaluations');
+            if(allButton)allButton.disabled=scoresClosed()||savingAll||!looks.length;
             if (!looks.length) {
+                $('#juryMatrixGrid').innerHTML='<p class="text-xs text-gray-400 col-span-full">Nenhuma avaliação disponível para comparar.</p>';
                 container.innerHTML = `<div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg text-center text-gray-500 text-xs">Aguardando as designers enviarem suas criações geradas por IA.</div>`;
                 return;
             }
 
             $('#juryMatrixGrid').innerHTML = looks.map(l => {
                 const ev = evaluations[l.id] || {};
-                const tot = ev.total || (ev.nota ? ev.nota.reduce((a, b) => a + b, 0).toFixed(1) : '0.0');
+                const values=draftScores.get(l.id)||ev.nota; const tot=values?.length===5 ? values.reduce((a,b)=>a+Number(b),0).toFixed(1) : '—';
                 return `
                     <div class="bg-fashion-950 p-2 rounded border border-fashion-700 text-center space-y-1">
                         <img src="${esc(l.url)}" class="w-full aspect-[3/4] object-cover rounded">
                         <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(l.ate)}</div>
-                        <div class="text-fashion-gold font-mono font-bold text-xs">${tot} pts</div>
+                        <div class="text-fashion-gold font-mono font-bold text-xs">${tot}${tot==='—'?'':' / 50'}</div><div class="text-[10px] ${draftScores.has(l.id)?'text-amber-300':ev.nota?'text-green-300':'text-gray-400'}">${draftScores.has(l.id)?'Não salvo':ev.nota?'Salvo':'Pendente'}</div>
                     </div>
                 `;
             }).join('');
 
             container.innerHTML = looks.map(look => {
                 const ev = evaluations[look.id] || {};
-                const scores = ev.nota || [5.0, 5.0, 5.0, 5.0, 5.0];
+                const scores = draftScores.get(look.id) || ev.nota || [5.0, 5.0, 5.0, 5.0, 5.0];
                 const commentAdmin = ev.comentAdmin || '';
 
                 return `
@@ -2847,7 +2865,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
                                 <img src="${esc(look.url)}" class="w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
-                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(look.ate)}</div><p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${ev.nota?'✓ Avaliação salva · você pode revisar':'○ Avaliação pendente'}</p>
+                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(look.ate)}</div><p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
                                 ${creativeDossier(look)}
                                 ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}<p class="text-xs text-gray-300">Elemento reinterpretado: ${esc(look.themeExtra||'Não informado')}</p></div>`;})() : ''}
                                 <div class="bg-fashion-950 p-2.5 rounded border border-fashion-700 space-y-1">
@@ -2884,7 +2902,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                                 <p class="text-[11px] text-gray-400 border-t border-fashion-700 pt-3">📝 Aqui você envia apenas as notas. Se a produção solicitar uma crítica após a apuração, ela aparecerá abaixo da bancada, uma única vez por Designer.</p>
 
                                 <button data-action="save-evaluation" data-look="${look.id}" ${scoresClosed()?'disabled':''} class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-2.5 rounded uppercase tracking-wider transition">
-                                    ${scoresClosed()?'Notas encerradas':ev.nota?'Atualizar avaliação':'Salvar avaliação'}
+                                    ${scoresClosed()?'Avaliação indisponível':ev.nota?'Atualizar avaliação':'Salvar avaliação'}
                                 </button>
                             </div>
                         </div>
@@ -2893,7 +2911,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }).join('');
         };
 
-        $('#btnOpenMatrix').onclick = () => { $('#juryMatrixContainer').classList.toggle('hidden'); };
+        $('#btnOpenMatrix').onclick = () => {
+            const panel=$('#juryMatrixContainer'),opening=panel.classList.contains('hidden');
+            panel.classList.toggle('hidden',!opening);
+            $('#btnOpenMatrix').setAttribute('aria-expanded',String(opening));
+            $('#btnOpenMatrix').innerHTML=opening?'✕ Fechar comparação':'▦ Comparar Notas';
+            if(opening)panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+        };
 
         $('#mainView').oninput = e => {
             if (e.target.classList.contains('score-slider')) {
@@ -2904,6 +2928,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const sliders = [...document.querySelectorAll(`.score-slider[data-look-id="${lId}"]`)];
                 const sum = sliders.reduce((acc, curr) => acc + Number(curr.value), 0);
                 $(`#tot-${lId}`).textContent = sum.toFixed(1);
+                draftScores.set(lId,sliders.map(s=>Number(s.value)));
+                const matrix=$('#juryMatrixGrid');
+                if(matrix){const items=matrix.children;const pos=looks.findIndex(l=>l.id===lId);if(pos>=0&&items[pos]){const total=items[pos].querySelector('.font-mono');if(total)total.textContent=sum.toFixed(1)+' / 50';const state=items[pos].lastElementChild;if(state){state.textContent='Não salvo';state.className='text-[10px] text-amber-300';}}}
             }
         };
 
@@ -2920,12 +2947,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         });
 
         const saveSingleEvaluation = async lookId => {
-            if(scoresClosed())throw new Error('A produção encerrou o prazo de notas.');
+            if(scoresClosed())throw new Error(juryStatus());
             if(globalState.themeId==='theme_next_supreme' && !looks.some(l=>l.id===lookId)) throw new Error('Apenas a Suprema vencedora pode ser avaliada.');
             const targetLook = looks.find(l => l.id === lookId);
             if(!targetLook)throw new Error('Look não encontrado nesta rodada.');
             const sliders = [...document.querySelectorAll(`.score-slider[data-look-id="${lookId}"]`)];
             const scores = sliders.map(s => Number(s.value));
+            if(scores.length!==5||scores.some(n=>!Number.isFinite(n)||n<0||n>10))throw new Error('Confira as cinco notas (0 a 10).');
             const totalSum = Number(scores.reduce((a, b) => a + b, 0).toFixed(1));
             const commentAdmin = $(`#commAdmin-${lookId}`) ? $(`#commAdmin-${lookId}`).value.trim() : '';
 
@@ -2944,12 +2972,22 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const sn = await db.doc(`avaliacoes/${lookId}_${currentUser.uid}`).get(), dv = sn.data() || {};
                 await db.doc(`avaliacoes_resumo/${sn.id}`).set({ look: dv.look ?? lookId, alvo: dv.alvo || null, ate: dv.alvoAte || '', rodada: dv.rodada || null, jurado: currentUser.uid, total: dv.total });
             } catch (e) { console.warn('[resumo]', e); }
+            evaluations[lookId]={...(evaluations[lookId]||{}),nota:scores,total:totalSum};
+            draftScores.delete(lookId);
+            refreshJuryUI();
         };
 
         $('#btnSubmitAllEvaluations').onclick = safeExec(async () => {
-            if(scoresClosed())throw new Error('O prazo de notas está encerrado.');
-            for (const look of looks) { await saveSingleEvaluation(look.id); }
-            showToast('Todas as notas foram enviadas para a direção!');
+            if(scoresClosed())throw new Error(juryStatus());
+            if(savingAll)return;
+            if(!looks.length)throw new Error('Não há looks disponíveis para avaliar.');
+            savingAll=true;const button=$('#btnSubmitAllEvaluations');if(button){button.disabled=true;button.textContent='SALVANDO...';}
+            let done=0;
+            try{
+                for(const look of looks){await saveSingleEvaluation(look.id);done++;}
+                showToast(`${done} avaliações salvas com sucesso.`);
+            }catch(e){throw new Error(`${done} de ${looks.length} avaliações salvas. ${e.message}`);}
+            finally{savingAll=false;if(button){button.textContent='Salvar Todas as Notas';button.disabled=scoresClosed()||!looks.length;}}
         });
 
         let supremeAllJuryLooks=[];
@@ -2973,7 +3011,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         fauCritiqueJuryMount();
         sub(db.collection('avaliacoes').where('jurado', '==', currentUser.uid), snap => {
             evaluations = {};
-            snap.docs.forEach(d => evaluations[d.data().look] = d.data());
+            snap.docs.forEach(d => {const v=d.data();if(v.rodada===globalState.rodada)evaluations[v.look]=v;});
             refreshJuryUI();
         });
     };
@@ -4156,7 +4194,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                             return `
                                 <tr class="border-b border-fashion-800 hover:bg-fashion-950/60 transition">
                                     <td class="p-2"><strong class="text-white">${esc(p.ate)}</strong></td>
-                                    <td class="p-2 text-fashion-gold font-sans">${esc(p.ate || 'Não definido')}</td>
+                                    <td class="p-2 text-fashion-gold font-sans">${esc(p.manifesto ? 'Manifesto cadastrado' : 'Sem manifesto')}</td>
                                     <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold ${p.role === 'admin' ? 'bg-fashion-gold/20 text-fashion-gold' : p.role === 'jurado' ? 'bg-purple-900/30 text-purple-300' : p.role === 'estilista' ? 'bg-blue-900/30 text-blue-300' : 'bg-fashion-800 text-gray-300'}">${esc(p.role || 'plateia')}</span></td>
                                     <td class="p-2">
                                         <select data-role-select="${p.id}" ${isSelf ? 'disabled' : ''} class="bg-fashion-950 border border-fashion-700 rounded px-2 py-1 text-[11px] text-white focus:outline-none">
@@ -4291,7 +4329,6 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         // Títulos oficiais: registro explícito pós-WhatsApp; nunca apurar votos pela interface pública.
         const fauOfficialIds=['fauOfficialIcon','fauOfficialFora','fauOfficialSaved'];
         const fauOfficialGet=()=>({icon:$('#fauOfficialIcon')?.value||'',fora:$('#fauOfficialFora')?.value||'',saved:Array.from($('#fauOfficialSaved')?.selectedOptions||[]).map(o=>o.value)});
-        if (!$('#fauOfficialLoad')) console.warn('Results Desk: painel de títulos não está no DOM; controles opcionais ignorados.');
         if ($('#fauOfficialLoad')) $('#fauOfficialLoad').onclick=safeExec(async()=>{
           const round=String(globalState.rodada||'');if(!round)throw new Error('Selecione uma rodada.');
           const snap=await db.collection('ranking_historico').doc(round).get();
@@ -4307,7 +4344,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           $('#fauOfficialStatus').textContent='Designers carregados. Confira a apuração oficial antes de publicar.';
         });
         if ($('#fauOfficialCopy')) $('#fauOfficialCopy').onclick=safeExec(async()=>{
-          const d=fauOfficialGet();const label=id=>$('#fauOfficialIcon').querySelector(`option[value="${CSS.escape(id)}"]`)?.textContent||'Não atribuído';
+          const d=fauOfficialGet();const label=id=>Array.from($('#fauOfficialIcon')?.options||[]).find(o=>o.value===id)?.textContent||'Não atribuído';
           const msg=`👑 *Ícone da Moda*\n${d.icon?label(d.icon):'Sem título nesta rodada'}\n\n🥀 *Fora de Moda*\n${d.fora?label(d.fora):'Sem título nesta rodada'}\n\n🛟 *Saved by the Atelier*\n${d.saved.length?d.saved.map(label).join('\n'):'Aguardando apuração'}`;
           await navigator.clipboard.writeText(msg);$('#fauOfficialStatus').textContent='Anúncio copiado para o WhatsApp. Publique lá antes de confirmar no site.';
         });
@@ -4320,7 +4357,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           if(!productionConfirm('Você já anunciou os títulos no WhatsApp e conferiu os desempates? Eles ficarão visíveis no After Show.'))return;
           await db.collection('fau_titulos_publicos').doc(round).set({...d,round,published:true,updatedAt:now(),updatedBy:currentUser.uid});
           await productionLog('official_titles_published',{round,icon:!!d.icon,fora:!!d.fora,saved:d.saved.length});
-          $('#fauOfficialStatus').textContent='Títulos registrados. Cado Designer verá sua distinção no After Show.';
+          $('#fauOfficialStatus').textContent='Títulos registrados. Cada Designer verá sua distinção no After Show.';
         });
         $('#fauArchiveSync').onclick=safeExec(async()=>{
           if(!isAdmin||!globalState.rodada)throw new Error('Configure a rodada primeiro.');
