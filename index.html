@@ -1070,9 +1070,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         renderView(`<section class="max-w-2xl mx-auto my-6 sm:my-10 rounded-3xl border border-fashion-gold/50 bg-fashion-950 p-5 sm:p-9 space-y-6" aria-label="Inscrição de Designer">
           <header class="text-center space-y-3">
             <p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY · FAU · THE CASTING</p>
-            <h1 class="font-cinzel text-2xl sm:text-3xl text-white">YOUR NAME. YOUR MAISON.</h1>
-            <p class="italic text-fashion-gold">Every legend starts with a name.</p>
-            <p class="text-sm text-gray-300 max-w-lg mx-auto">Aqui você assume uma nova identidade. Crie seu personagem de Designer, conheça as regras e entre no Workroom sem precisar revelar quem você é aos outros competidores.</p>
+            <h1 class="font-cinzel text-2xl sm:text-3xl text-white">CREATE YOUR DESIGNER IDENTITY</h1>
+            <p class="italic text-fashion-gold">Seu personagem. Sua identidade na competição.</p>
+            <p class="text-sm text-gray-300 max-w-lg mx-auto">Escolha um nome fictício de Designer para competir sem revelar seu nome real aos outros participantes.</p>
           </header>
           <div class="grid grid-cols-2 gap-2" aria-label="Etapas da inscrição">
             <div id="fauRegStepIndicator1" class="fau-reg-step is-active"><span>01</span><strong>IDENTIDADE</strong></div>
@@ -1080,13 +1080,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           </div>
           <form id="fauRegistrationForm" class="space-y-5" novalidate>
             <div id="fauRegStage1" class="space-y-4">
-              <div><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE DESIGNER IDENTITY</p><h2 class="font-cinzel text-xl text-white mt-1">Quem entra na passarela?</h2><p class="text-xs text-gray-400 mt-2">Você não precisa competir com sua identidade real. Crie um personagem: um alter ego com nome, personalidade e estética próprios. É essa identidade fictícia que os outros participantes e a plateia verão. Seu nome real fica reservado à produção, conforme as permissões do sistema.</p></div>
+              <div><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE DESIGNER IDENTITY</p><h2 class="font-cinzel text-xl text-white mt-1">Quem entra na passarela?</h2><p class="text-xs text-gray-400 mt-2">Seu nome de Designer é um personagem criado para o reality. Ele será sua identidade pública para os participantes, jurados e plateia. Seu nome real fica reservado à produção.</p></div>
               <label class="block space-y-2 text-xs text-gray-200">SEU NOME REAL <input id="fauRegReal" maxlength="90" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" autocomplete="name" placeholder="Como a produção pode chamar você?"></label>
-              <label class="block space-y-2 text-xs text-gray-200">NOME DE DESIGNER / MAISON <input id="fauRegDesigner" maxlength="70" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu nome na competição"><span class="block text-[11px] text-gray-400">Invente um nome artístico ou uma Maison fictícia. Evite usar seu nome real, apelidos conhecidos ou informações que possam identificar você. É esse personagem que aparecerá nos editoriais, rankings e votações.</span></label>
-              <div class="rounded-xl border border-fashion-gold/30 bg-fashion-900/60 p-4 space-y-2" aria-live="polite"><p class="text-[10px] tracking-[.2em] text-fashion-gold">RUNWAY PREVIEW</p><p id="fauRegMaisonPreview" class="font-cinzel text-xl text-white break-words">YOUR MAISON</p><p class="text-xs text-gray-400">PROJECT RUNWAY: FAU · DESIGNER</p></div>
+              <label class="block space-y-2 text-xs text-gray-200">NOME DE DESIGNER <input id="fauRegDesigner" maxlength="70" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu nome na competição"><span class="block text-[11px] text-gray-400">Escolha um nome fictício. Evite seu nome real, apelidos conhecidos ou referências que possam identificar você. É esse nome que aparecerá nos looks, rankings e votações.</span></label>
+              <div class="rounded-xl border border-fashion-gold/30 bg-fashion-900/60 p-4 space-y-2" aria-live="polite"><p class="text-[10px] tracking-[.2em] text-fashion-gold">SEU NOME NA PASSARELA</p><p id="fauRegMaisonPreview" class="font-cinzel text-xl text-white break-words">SEU DESIGNER</p><p class="text-xs text-gray-400">PROJECT RUNWAY: FAU · DESIGNER</p></div>
               <div id="fauRegCredentials" class="space-y-4">
                 <div class="relative"><p class="text-xs text-gray-300 mb-2">ACESSO À SUA CONTA</p><button type="button" id="fauRegGoogle" class="w-full border border-fashion-gold/60 text-white rounded-lg px-4 py-3 text-xs hover:bg-fashion-gold/10">CONTINUAR COM GOOGLE</button><p class="text-[11px] text-gray-400 text-center my-3">OU CRIE SEU ACESSO ABAIXO</p></div>
-                <label class="block space-y-2 text-xs text-gray-200">USUÁRIO <input id="fauRegUsername" minlength="3" maxlength="24" required pattern="[a-zA-Z0-9_]{3,24}" class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" autocomplete="username" placeholder="Ex.: minha_maison"><span class="block text-[11px] text-gray-400">3 a 24 caracteres. Letras, números e _</span></label>
+                <label class="block space-y-2 text-xs text-gray-200">USUÁRIO <input id="fauRegUsername" minlength="3" maxlength="24" required pattern="[a-zA-Z0-9_]{3,24}" class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white" autocomplete="username" placeholder="Ex.: meu_usuario"><span class="block text-[11px] text-gray-400">3 a 24 caracteres. Letras, números e _</span></label>
                 <label class="block space-y-2 text-xs text-gray-200">SENHA <span class="relative block"><input id="fauRegPassword" type="password" minlength="8" maxlength="128" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 pr-16 text-white" autocomplete="new-password" placeholder="Pelo menos 8 caracteres"><button type="button" class="fau-reg-reveal" data-reveal="fauRegPassword" aria-label="Mostrar senha">VER</button></span></label>
                 <label class="block space-y-2 text-xs text-gray-200">CONFIRMAR SENHA <span class="relative block"><input id="fauRegPasswordConfirm" type="password" minlength="8" maxlength="128" required class="fau-reg-input w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 pr-16 text-white" autocomplete="new-password" placeholder="Repita sua senha"><button type="button" class="fau-reg-reveal" data-reveal="fauRegPasswordConfirm" aria-label="Mostrar confirmação">VER</button></span></label>
               </div>
@@ -1117,7 +1117,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             document.querySelector('#fauRegStage'+stage)?.scrollIntoView({behavior:'smooth',block:'start'});
         };
         $('#fauRegDesigner').addEventListener('input',()=>{
-            $('#fauRegMaisonPreview').textContent=$('#fauRegDesigner').value.trim()||'YOUR MAISON';
+            $('#fauRegMaisonPreview').textContent=$('#fauRegDesigner').value.trim()||'SEU DESIGNER';
         });
         document.querySelectorAll('[data-reveal]').forEach(btn=>btn.addEventListener('click',()=>{
             const input=document.getElementById(btn.dataset.reveal);
