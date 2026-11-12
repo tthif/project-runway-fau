@@ -255,6 +255,18 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 .fau-vault-card{transition:border-color .2s,transform .2s}
 .fau-vault-card:hover{border-color:#d1b38b;transform:translateY(-2px)}
 @media(max-width:480px){.fau-vault-photo{max-height:175px}.fau-vault-filter{padding:.5rem .55rem}}
+</style><style id="fau-vault-viewer-style">
+.fau-vault-viewer[hidden]{display:none!important}
+.fau-vault-viewer{position:fixed!important;inset:0!important;z-index:2147483000!important;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:12px;background:rgba(5,5,7,.97);padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));box-sizing:border-box}
+.fau-vault-viewer-top,.fau-vault-viewer-footer{width:min(100%,1050px);display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px}
+.fau-vault-viewer-kicker{color:#d1b38b;font-size:10px;letter-spacing:.17em}
+.fau-vault-viewer-close{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #73644e;border-radius:10px;color:#fff;font-size:12px}
+.fau-vault-viewer-stage{display:flex;align-items:center;justify-content:center;gap:12px;min-height:0;flex:1;width:min(100%,1100px)}
+.fau-vault-viewer-stage img{display:block;max-width:min(100%,850px);max-height:calc(100dvh - 175px);width:auto;height:auto;object-fit:contain;border-radius:8px;box-shadow:0 12px 50px #000}
+.fau-vault-viewer-arrow{flex:0 0 42px;height:48px;border:1px solid #554a3b;border-radius:9px;color:#e6cfaa;font-size:32px;line-height:1}
+.fau-vault-viewer-arrow:disabled{opacity:.2;cursor:default}
+.fau-vault-viewer-footer p{font-size:13px}
+@media(max-width:600px){.fau-vault-viewer{gap:8px}.fau-vault-viewer-stage{gap:5px}.fau-vault-viewer-arrow{flex-basis:32px;height:40px;font-size:26px}.fau-vault-viewer-stage img{max-width:calc(100% - 74px);max-height:calc(100dvh - 145px)}.fau-vault-viewer-kicker{font-size:9px}.fau-vault-viewer-close span{display:none}}
 </style></head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -1616,12 +1628,20 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             <span id="fauVaultCount" class="text-xs text-gray-400" aria-live="polite">Abrindo arquivo…</span>
           </div>
           <div id="publicThemeClues" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4"><p class="text-gray-400 text-sm col-span-full text-center py-10">Abrindo o arquivo de pistas…</p></div>
-          <div id="fauVaultModal" class="hidden fixed inset-0 z-[110] bg-black/90 p-4 sm:p-8 flex items-center justify-center" role="dialog" aria-modal="true" aria-label="Ampliar pista" tabindex="-1">
-            <button type="button" id="fauVaultClose" class="absolute top-4 right-4 text-white border border-white/30 rounded-full w-10 h-10 text-xl" aria-label="Fechar fotografia">×</button>
-            <div class="max-w-3xl w-full text-center space-y-3"><img id="fauVaultModalImg" class="max-h-[75vh] w-auto max-w-full object-contain mx-auto rounded-lg" alt=""><p id="fauVaultModalTitle" class="font-cinzel text-fashion-gold text-sm"></p></div>
-          </div>
         </section>`;
-        const list=$('#publicThemeClues'), count=$('#fauVaultCount'), modal=$('#fauVaultModal');
+        // Visualizador fora de #mainView: evita cortes, transformações e z-index do layout.
+        document.getElementById('fauVaultModal')?.remove();
+        const modal=document.createElement('div');
+        modal.id='fauVaultModal';
+        modal.className='fau-vault-viewer';
+        modal.hidden=true;
+        modal.setAttribute('role','dialog');
+        modal.setAttribute('aria-modal','true');
+        modal.setAttribute('aria-label','Fotografia do tema');
+        modal.tabIndex=-1;
+        modal.innerHTML=`<div class="fau-vault-viewer-top"><span class="fau-vault-viewer-kicker">THE THEME VAULT · VISUAL ARCHIVE</span><button type="button" id="fauVaultClose" class="fau-vault-viewer-close" aria-label="Fechar fotografia">✕ <span>FECHAR</span></button></div><div class="fau-vault-viewer-stage"><button type="button" id="fauVaultPrev" class="fau-vault-viewer-arrow" aria-label="Fotografia anterior">‹</button><img id="fauVaultModalImg" alt=""/><button type="button" id="fauVaultNext" class="fau-vault-viewer-arrow" aria-label="Próxima fotografia">›</button></div><div class="fau-vault-viewer-footer"><p id="fauVaultModalTitle" class="font-cinzel text-fashion-gold"></p><span id="fauVaultPosition" class="text-xs text-gray-400"></span></div>`;
+        document.body.appendChild(modal);
+        const list=$('#publicThemeClues'), count=$('#fauVaultCount');
         let entries=[], filter='all',previousFocus=null;
         const paint=()=>{
             if(!list?.isConnected)return;
@@ -1641,20 +1661,55 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             host.querySelectorAll('[data-vault-filter]').forEach(b=>{const active=b===btn;b.classList.toggle('is-active',active);b.setAttribute('aria-pressed',String(active));});
             paint();
         }));
-        const closeModal=()=>{modal.classList.add('hidden');document.body.style.overflow='';previousFocus?.focus?.();};
-        $('#fauVaultClose').onclick=closeModal;
+        let activeId=null, priorOverflow='';
+        const closeModal=()=>{
+            if(modal.hidden)return;
+            modal.hidden=true;document.body.style.overflow=priorOverflow;
+            previousFocus?.focus?.();
+        };
+        const showPhoto=(id)=>{
+            const shown=entries.filter(e=>filter==='all'||(filter==='used'?e.data.used:!e.data.used)).filter(e=>!!e.data.photo);
+            const index=shown.findIndex(e=>e.id===id);
+            if(index<0)return;
+            const item=shown[index];activeId=item.id;
+            const img=modal.querySelector('#fauVaultModalImg');
+            img.src=item.data.photo;img.alt=`Pista visual ${item.number}`;
+            modal.querySelector('#fauVaultModalTitle').textContent=item.data.revealedName||`MYSTERY ${String(item.number).padStart(2,'0')}`;
+            modal.querySelector('#fauVaultPosition').textContent=`${index+1} / ${shown.length}`;
+            modal.querySelector('#fauVaultPrev').disabled=shown.length<2;
+            modal.querySelector('#fauVaultNext').disabled=shown.length<2;
+        };
+        const movePhoto=(direction)=>{
+            const shown=entries.filter(e=>filter==='all'||(filter==='used'?e.data.used:!e.data.used)).filter(e=>!!e.data.photo);
+            if(!shown.length)return;
+            const index=shown.findIndex(e=>e.id===activeId);
+            showPhoto(shown[(index+direction+shown.length)%shown.length].id);
+        };
+        modal.querySelector('#fauVaultClose').onclick=closeModal;
+        modal.querySelector('#fauVaultPrev').onclick=()=>movePhoto(-1);
+        modal.querySelector('#fauVaultNext').onclick=()=>movePhoto(1);
         modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});
-        const onKey=e=>{if(e.key==='Escape'&&!modal.classList.contains('hidden'))closeModal();};
+        const onKey=e=>{
+            if(modal.hidden)return;
+            if(e.key==='Escape'){e.preventDefault();closeModal();}
+            else if(e.key==='ArrowLeft'){e.preventDefault();movePhoto(-1);}
+            else if(e.key==='ArrowRight'){e.preventDefault();movePhoto(1);}
+            else if(e.key==='Tab'){
+                const buttons=[...modal.querySelectorAll('button:not(:disabled)')];
+                const i=buttons.indexOf(document.activeElement);
+                if(e.shiftKey&&i<=0){e.preventDefault();buttons[buttons.length-1]?.focus();}
+                else if(!e.shiftKey&&i===buttons.length-1){e.preventDefault();buttons[0]?.focus();}
+            }
+        };
         document.addEventListener('keydown',onKey);
-        unsubsTab.push(()=>{document.removeEventListener('keydown',onKey);document.body.style.overflow='';});
+        unsubsTab.push(()=>{document.removeEventListener('keydown',onKey);closeModal();modal.remove();});
         list.addEventListener('click',e=>{
             const btn=e.target.closest('[data-vault-id]');if(!btn)return;
             const item=entries.find(x=>x.id===btn.dataset.vaultId);if(!item)return;
             if(!item.data.photo){showToast('Fotografia ainda não cadastrada.');return;}
-            previousFocus=btn;
-            const img=$('#fauVaultModalImg');img.src=item.data.photo;img.alt=`Pista visual ${item.number}`;
-            $('#fauVaultModalTitle').textContent=item.data.revealedName||`MYSTERY ${String(item.number).padStart(2,'0')}`;
-            modal.classList.remove('hidden');document.body.style.overflow='hidden';$('#fauVaultClose').focus();
+            previousFocus=btn;priorOverflow=document.body.style.overflow;
+            showPhoto(item.id);modal.hidden=false;document.body.style.overflow='hidden';
+            modal.querySelector('#fauVaultClose').focus();
         });
         const unsub=db.collection('theme_vault_public').onSnapshot(snap=>{
             if(!list.isConnected)return;
