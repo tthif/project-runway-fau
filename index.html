@@ -6058,7 +6058,7 @@ const apply=()=>{
    legend.append(summary,p);main.prepend(legend);
   }
   // Public look images are discoverable to keyboard users; accessible label when missing.
-  main.querySelectorAll('img.img-look').forEach(img=>{
+  main.querySelectorAll('#runwayGrid img.img-look,#runwayGroups img.img-look,#juryCardsContainer img.img-look').forEach(img=>{
    if(!img.hasAttribute('alt')||!img.alt.trim())img.alt='Look de moda apresentado na passarela';
    if(!img.hasAttribute('tabindex'))img.tabIndex=0;
    if(!img.hasAttribute('role'))img.setAttribute('role','button');
@@ -6359,5 +6359,101 @@ const root=document.getElementById('mainView');if(root)new MutationObserver(inst
 })();
 </script>
 
+
+<style id="fau-editorial-viewers-fix">
+.fau-runway-viewer{position:fixed!important;inset:0!important;z-index:10000!important;box-sizing:border-box;max-width:none!important;max-height:100dvh!important;overflow-y:auto!important;background:rgba(8,7,10,.97)!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;padding:clamp(12px,3vw,28px)!important}
+.fau-runway-viewer .fau-viewer-stage{flex:0 1 auto;min-height:0;max-width:100%;width:min(100%,1000px)}
+.fau-runway-viewer .fau-viewer-stage img{display:block!important;width:100%!important;height:auto!important;max-height:min(60dvh,680px)!important;object-fit:contain!important;aspect-ratio:auto!important;min-width:0!important}
+.fau-runway-viewer .fau-viewer-info{flex:0 0 auto;max-width:100%;min-width:0}
+.fau-runway-viewer .fau-viewer-info p{overflow-y:auto;max-height:15dvh}
+#juryCardsContainer img.img-look{cursor:zoom-in;max-height:420px;object-fit:contain;background:#141216}
+.fau-jury-photo-dialog{position:fixed!important;inset:0!important;z-index:10001!important;display:flex!important;align-items:center;justify-content:center;box-sizing:border-box;padding:16px;background:rgba(5,5,8,.96)}
+.fau-jury-photo-dialog[hidden]{display:none!important}
+.fau-jury-photo-panel{width:min(100%,900px);max-height:calc(100dvh - 32px);min-height:0;display:flex;flex-direction:column;gap:12px}
+.fau-jury-photo-head{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#d1b38b;font-size:12px}
+.fau-jury-photo-head button{padding:10px 16px;border:1px solid #8e785c;border-radius:8px;color:#fff}
+.fau-jury-photo-panel img{display:block;width:100%;height:auto;max-height:calc(100dvh - 110px);min-height:0;object-fit:contain;aspect-ratio:auto!important;border-radius:8px}
+@media(max-width:640px){.fau-runway-viewer{justify-content:flex-start!important;padding:12px!important}.fau-runway-viewer .fau-viewer-stage img{max-height:55dvh!important}.fau-jury-photo-dialog{padding:10px}.fau-jury-photo-panel img{max-height:calc(100dvh - 90px)}}
+</style>
+<script id="fau-jury-photo-viewer-fix">
+(()=>{
+let dialog=null,previousFocus=null;
+function close(){if(!dialog)return;dialog.remove();dialog=null;document.removeEventListener('keydown',keys);if(previousFocus?.isConnected)previousFocus.focus();}
+function keys(e){if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'&&dialog){e.preventDefault();dialog.querySelector('button')?.focus();}}
+function open(img){close();previousFocus=img;dialog=document.createElement('div');dialog.className='fau-jury-photo-dialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Fotografia da criação ampliada');dialog.innerHTML='<div class="fau-jury-photo-panel"><div class="fau-jury-photo-head"><span>PROJECT RUNWAY: FAU · JURY VIEW</span><button type="button" aria-label="Fechar fotografia">✕ FECHAR</button></div><img alt="Fotografia da criação ampliada"></div>';const photo=dialog.querySelector('img');photo.src=img.currentSrc||img.src;photo.alt=img.alt||'Look para avaliação';dialog.querySelector('button').onclick=close;dialog.addEventListener('click',e=>{if(e.target===dialog)close();});document.body.appendChild(dialog);document.addEventListener('keydown',keys);dialog.querySelector('button').focus();}
+document.addEventListener('click',e=>{const img=e.target.closest?.('#juryCardsContainer img.img-look');if(!img)return;open(img);});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;const img=e.target.closest?.('#juryCardsContainer img.img-look');if(!img)return;e.preventDefault();open(img);});
+})();
+</script>
+
+<style id="fau-image-consistency-v1">
+/* Consistent framing across Workroom, archive, special challenges and previews */
+.img-look{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;object-position:center;background:#141419}
+#fauUploadPreview,#fauEditPreview,#fauDemoImagePreview{display:block;max-width:100%;width:auto;max-height:240px;height:auto;object-fit:contain;margin-inline:auto}
+#fauUploadPreview.hidden,#fauEditPreview.hidden,#fauDemoImagePreview.hidden{display:none!important}
+.fau-archive-img{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;object-position:center}
+.fau-photo-zoom{cursor:zoom-in}
+.fau-photo-zoom:focus-visible{outline:2px solid #d1b38b;outline-offset:3px}
+#fauUniversalImageViewer[hidden]{display:none!important}
+#fauUniversalImageViewer{position:fixed;inset:0;z-index:2147482900;background:rgba(5,5,8,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:clamp(12px,3vw,28px);box-sizing:border-box}
+#fauUniversalImageViewer .fau-zoom-top{width:min(100%,1000px);display:flex;align-items:center;justify-content:space-between;gap:16px}
+#fauUniversalImageViewer .fau-zoom-top span{color:#d1b38b;font-size:11px;letter-spacing:.14em}
+#fauUniversalImageViewer button{border:1px solid #786748;border-radius:9px;padding:10px 18px;color:#f5f0e8;font-size:12px}
+#fauUniversalImageViewer img{display:block;max-width:min(100%,1000px);max-height:calc(100dvh - 130px);width:auto;height:auto;object-fit:contain;min-height:0;box-shadow:0 10px 55px rgba(0,0,0,.5)}
+#fauUniversalImageViewer p{color:#bfb7ad;font-size:12px;text-align:center;max-width:700px;overflow-wrap:anywhere}
+@media(max-width:640px){#fauUniversalImageViewer img{max-height:calc(100dvh - 145px)}}
+@media(prefers-reduced-motion:reduce){.fau-photo-zoom{transition:none!important}}
+</style>
+<script id="fau-image-consistency-script">
+(()=>{
+  const exclusions='button,a,label,[role="button"],#fauVaultViewer,#fauV83Premiere,.fau-runway-viewer,.fau-vault-viewer,[id*="lightbox"],[id*="Lightbox"]';
+  const isEligible=img=>{
+    if(!img||!img.src||img.closest(exclusions))return false;
+    if(img.id==='fauUploadPreview'||img.id==='fauEditPreview'||img.id==='fauDemoImagePreview')return false;
+    if(img.closest('#runwayGrid,#runwayGroups,#fauVaultGrid,#fauVaultViewer,#fauUniversalImageViewer'))return false;
+    if(img.matches('[data-no-zoom]'))return false;
+    return !!img.closest('main,#main-content,#app,[id="view"],.fau-archive-card,.fau-atelier-identity') &&
+      (img.classList.contains('img-look')||img.classList.contains('fau-archive-img')||img.closest('.fau-archive-card'));
+  };
+  const viewer=document.createElement('div');
+  viewer.id='fauUniversalImageViewer';viewer.hidden=true;
+  viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Fotografia ampliada');
+  viewer.innerHTML='<div class="fau-zoom-top"><span>PROJECT RUNWAY: FAU · EDITORIAL</span><button type="button" id="fauUniversalImageClose">FECHAR ×</button></div><img alt=""><p></p>';
+  document.body.appendChild(viewer);
+  const photo=viewer.querySelector('img'),caption=viewer.querySelector('p'),closeButton=viewer.querySelector('button');
+  let lastFocus=null,oldOverflow='';
+  const close=()=>{if(viewer.hidden)return;viewer.hidden=true;document.body.style.overflow=oldOverflow;photo.removeAttribute('src');lastFocus?.focus?.();};
+  const open=img=>{
+    lastFocus=document.activeElement;oldOverflow=document.body.style.overflow;
+    photo.src=img.currentSrc||img.src;photo.alt=img.alt||'Editorial ampliado';
+    caption.textContent=img.alt||'Editorial de moda';
+    viewer.hidden=false;document.body.style.overflow='hidden';closeButton.focus();
+  };
+  closeButton.addEventListener('click',close);
+  viewer.addEventListener('click',e=>{if(e.target===viewer)close();});
+  document.addEventListener('keydown',e=>{
+    if(viewer.hidden)return;
+    if(e.key==='Escape'){e.preventDefault();close();}
+    if(e.key==='Tab'){e.preventDefault();closeButton.focus();}
+  });
+  document.addEventListener('click',e=>{
+    const img=e.target.closest?.('img');
+    if(isEligible(img)){e.preventDefault();open(img);}
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    if(isEligible(e.target)){e.preventDefault();open(e.target);}
+  });
+  const observer=new MutationObserver(()=>{
+    document.querySelectorAll('img.img-look,img.fau-archive-img').forEach(img=>{
+      if(isEligible(img)&&!img.classList.contains('fau-photo-zoom')){
+        img.classList.add('fau-photo-zoom');img.setAttribute('tabindex','0');
+        img.setAttribute('role','button');img.setAttribute('title','Ampliar fotografia');
+      }
+    });
+  });
+  observer.observe(document.body,{subtree:true,childList:true});
+})();
+</script>
 </body>
 </html>
