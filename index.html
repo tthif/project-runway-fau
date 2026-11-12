@@ -190,6 +190,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 @media(max-width:640px){header .font-cinzel{font-size:.8rem!important;letter-spacing:.06em}#mainContent{padding-left:16px;padding-right:16px}#mainView h2.font-cinzel{font-size:clamp(1.5rem,7vw,2.2rem)}.fau-entrance-stage h1{font-size:2.7rem!important}#navContainer{padding-inline:12px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}#mainView > *{animation:none!important}}
 </style>
+<style id="fau-hq-refinement">#fauDirectorPanels [hidden],#fauDirectorShell [hidden]{display:none!important}.fau-hq-tabs{scrollbar-width:thin}.fau-hq-overview button:focus-visible{outline:3px solid #f0eae1;outline-offset:3px}.fau-hq-header nav{position:static!important;background:transparent!important;border:0!important}.fau-hq-overview details summary{list-style:revert}.fau-hq-overview details[open]{border-color:#d1b38b}@media(max-width:640px){.fau-hq-header{padding:16px}.fau-hq-tabs button{min-width:max-content}.fau-hq-overview{padding:16px}}</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3478,47 +3479,59 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             </div>
         `);
 
-        // Director's cut: uma única navegação operacional, sem duplicar controles nem listeners.
+        // PRODUCTION HQ — progressive disclosure. Existing Firebase handlers remain intact.
         (() => {
           const root=document.querySelector('#fauProductionDesk')?.parentElement;
           if(!root)return;
           const groups=[
-            {id:'episode',label:'01 · Episódio',hint:'O que está acontecendo agora',keys:['fauProductionDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck']},
-            {id:'cast',label:'02 · Elenco',hint:'Inscrições, designers e acessos',keys:['fauDesignerRoster','castQuickList','profileManagerContainer','createRole']},
-            {id:'judging',label:'03 · Julgamento',hint:'Notas, críticas e apuração',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn']},
-            {id:'show',label:'04 · Ao vivo',hint:'Cenas, anúncios e revelações',keys:['fauLiveScenes','fauRevealMoment','fauRevealSuggest','fauBroadcastPublish']},
-            {id:'archive',label:'05 · Bastidores',hint:'Arquivos e configurações avançadas',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
+            {id:'episode',label:'Episódio',hint:'Rodada, prazos e entregas',keys:['fauProductionDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck']},
+            {id:'cast',label:'Elenco',hint:'Designers, jurados e inscrições',keys:['fauDesignerRoster','castQuickList','profileManagerContainer','createRole']},
+            {id:'judging',label:'Julgamento',hint:'Notas, títulos e eliminação',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn']},
+            {id:'show',label:'Ao vivo',hint:'Cenas e revelações públicas',keys:['fauLiveScenes','fauRevealMoment','fauRevealSuggest','fauBroadcastPublish']},
+            {id:'archive',label:'Bastidores',hint:'Configurações, histórico e ferramentas raras',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
           ];
           const shell=document.createElement('div');shell.id='fauDirectorShell';shell.className='space-y-5';
-          shell.innerHTML=`<div class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 md:p-7"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY: FAU · EXECUTIVE PRODUCER</p><h2 class="font-cinzel text-3xl text-white mt-2">THE DIRECTOR'S CUT</h2><p class="text-sm text-gray-300 mt-2">Uma temporada. Um comando de cada vez.</p><div id="fauDirectorTabs" class="flex gap-2 overflow-x-auto mt-5 pb-2" role="tablist" aria-label="Áreas da produção"></div><p id="fauDirectorHint" class="text-xs text-gray-400 mt-3" aria-live="polite"></p></div><div id="fauDirectorPanels"></div>`;
+          shell.innerHTML=`<header class="fau-hq-header rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 md:p-7 space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY: FAU · PRODUCTION HQ</p><h2 class="font-cinzel text-3xl text-white">THE CONTROL ROOM</h2><p class="text-sm text-gray-300">Você dirige o episódio. A produção cuida do resto.</p><nav id="fauDirectorTabs" class="fau-hq-tabs flex gap-2 overflow-x-auto pt-3 pb-2" role="tablist" aria-label="Áreas da produção"></nav><p id="fauDirectorHint" class="text-xs text-gray-400" aria-live="polite"></p></header><div id="fauDirectorPanels"></div>`;
           root.prepend(shell);
           const panels=shell.querySelector('#fauDirectorPanels');
           groups.forEach(g=>{const panel=document.createElement('div');panel.id='fau-panel-'+g.id;panel.className='space-y-5';panel.setAttribute('role','tabpanel');panel.hidden=true;panels.append(panel);});
           const directChild=el=>{let node=el;while(node&&node.parentElement!==root)node=node.parentElement;return node?.parentElement===root?node:null;};
           const assigned=new Set([shell]);
-          groups.forEach(g=>g.keys.forEach(key=>{
-            const el=document.getElementById(key);if(!el)return;
-            const top=directChild(el);if(!top||assigned.has(top))return;
-            assigned.add(top);panels.querySelector('#fau-panel-'+g.id).append(top);
-          }));
-          // Preserve remaining controls, but put uncommon operations behind the backstage tab.
+          groups.forEach(g=>g.keys.forEach(key=>{const el=document.getElementById(key);if(!el)return;const top=directChild(el);if(!top||assigned.has(top))return;assigned.add(top);panels.querySelector('#fau-panel-'+g.id).append(top);}));
           [...root.children].filter(n=>!assigned.has(n)).forEach(n=>panels.querySelector('#fau-panel-archive').append(n));
-          // A single overview replaces the repeated episode checklist and duplicate stage navigation.
           const redundant=root.querySelector('[aria-label="Episode Checklist"]');if(redundant)redundant.hidden=true;
           const stageGrid=root.querySelector('[aria-label="Season Flow da produção"] .grid');if(stageGrid)stageGrid.hidden=true;
+          // A single Live Show Studio: scenes, reveal editor and prepared official results in one place.
+          const showPanel=panels.querySelector('#fau-panel-show');
+          ['Live Show Director','The Results Show Director','Official Reveal Assistant'].forEach(label=>{const section=root.querySelector('[aria-label="'+label+'"]');if(section)showPanel.append(section);});
+          const judgingPanel=panels.querySelector('#fau-panel-judging');
+          const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);
+          const critique=root.querySelector('#fauCritiqueAdmin')?.closest('section');if(critique)judgingPanel.append(critique);
+          const episodePanel=panels.querySelector('#fau-panel-episode');
+          const status=root.querySelector('[aria-label="Production Status"]');if(status)episodePanel.append(status);
           const tabs=shell.querySelector('#fauDirectorTabs');
           const activate=id=>{
-            groups.forEach(g=>{
-              const active=g.id===id,button=tabs.querySelector('[data-director-tab="'+g.id+'"]'),panel=panels.querySelector('#fau-panel-'+g.id);
-              panel.hidden=!active;button.setAttribute('aria-selected',String(active));button.className='shrink-0 rounded-lg border px-4 py-3 text-xs font-semibold '+(active?'bg-fashion-gold text-black border-fashion-gold':'bg-fashion-950 text-gray-300 border-fashion-700');
-            });
+            if(!groups.some(g=>g.id===id))id='episode';
+            groups.forEach(g=>{const active=g.id===id,button=tabs.querySelector('[data-director-tab="'+g.id+'"]'),panel=panels.querySelector('#fau-panel-'+g.id);panel.hidden=!active;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;button.className='shrink-0 rounded-lg border px-4 py-3 text-xs font-semibold '+(active?'bg-fashion-gold text-black border-fashion-gold':'bg-fashion-950 text-gray-300 border-fashion-700');});
             shell.querySelector('#fauDirectorHint').textContent=groups.find(g=>g.id===id).hint;
             try{sessionStorage.setItem('fauDirectorTab',id);}catch(e){}
           };
           groups.forEach(g=>{const b=document.createElement('button');b.type='button';b.dataset.directorTab=g.id;b.textContent=g.label;b.setAttribute('role','tab');b.onclick=()=>activate(g.id);tabs.append(b);});
-          activate(groups.some(g=>g.id===sessionStorage.getItem('fauDirectorTab'))?sessionStorage.getItem('fauDirectorTab'):'episode');
-          // Existing shortcuts still work even when the destination belongs to another tab.
-          shell.addEventListener('click',e=>{const trigger=e.target.closest('[data-production-target]');if(!trigger)return;const dest=document.getElementById(trigger.dataset.productionTarget);const panel=dest?.closest('[role="tabpanel"]');if(panel){const id=panel.id.replace('fau-panel-','');if(id!==sessionStorage.getItem('fauDirectorTab'))activate(id);}},true);
+          let previous='episode';try{previous=sessionStorage.getItem('fauDirectorTab')||'episode';}catch(e){}activate(previous);
+          shell.addEventListener('click',e=>{const trigger=e.target.closest('[data-production-target]');if(!trigger)return;const dest=document.getElementById(trigger.dataset.productionTarget);const panel=dest?.closest('[role="tabpanel"]');if(panel)activate(panel.id.replace('fau-panel-',''));},true);
+          // Contextual command center: status is derived from the existing season state, never fabricated.
+          const overview=document.createElement('section');overview.className='fau-hq-overview rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 md:p-6 space-y-4';overview.setAttribute('aria-label','Episode Overview');
+          const theme=typeof getTheme==='function'?getTheme():null;
+          const phase=!globalState.themeId?'setup':globalState.berlinda?.length?'pool':globalState.urna?'ballot':globalState.liberado?'runway':globalState.prazo&&now()>globalState.prazo?'judging':'workroom';
+          const steps=[['setup','Preparar o desafio','Escolha o tema e defina o prazo.','newThemeId'],['workroom','Acompanhar entregas','Confira o andamento dos designers e os prazos.','fauStatusDashboard'],['judging','Conferir avaliações','Verifique notas e pendências dos jurados.','adminOutput'],['runway','Preparar a passarela','Confira as publicações e as avaliações.','adminOutput'],['ballot','Acompanhar votação','Confira os votos antes de formar o Elimination Pool.','adminOutput'],['pool','Preparar o veredito','Confira a berlinda e a dinâmica especial.','adminOutput']];
+          const current=steps.find(x=>x[0]===phase)||steps[0];
+          overview.innerHTML=`<div class="flex flex-wrap justify-between gap-3 items-center"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">NOW PRODUCING · EPISODE ${esc(globalState.rodada||'—')}</p><h3 class="font-cinzel text-2xl text-white mt-2">${esc(theme?.title||'Prepare a próxima estreia')}</h3></div><span class="text-[10px] border border-fashion-gold/40 text-fashion-gold rounded-full px-3 py-2">${esc(phase.toUpperCase())}</span></div><div class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">PRÓXIMA AÇÃO SUGERIDA</p><h4 class="font-cinzel text-xl text-white">${esc(current[1])}</h4><p class="text-xs text-gray-300">${esc(current[2])}</p><button type="button" id="fauNextAction" class="rounded-lg bg-fashion-gold text-black font-semibold px-4 py-3 text-xs">Abrir controle →</button></div><details class="rounded-xl border border-fashion-700 p-4"><summary class="cursor-pointer text-sm text-fashion-gold">Roteiro de produção · etapas do episódio</summary><ol class="list-decimal pl-5 mt-3 space-y-2 text-xs text-gray-300"><li>Configurar desafio e prazo</li><li>Receber looks e liberar envelopes, quando houver</li><li>Conferir avaliações e apurar o ranking</li><li>Realizar votações e dinâmica especial</li><li>Conduzir revelações e confirmar o veredito</li></ol><p class="text-[11px] text-gray-400 mt-3">As etapas dependem do tema. Nada é publicado automaticamente.</p></details>`;
+          episodePanel.prepend(overview);
+          overview.querySelector('#fauNextAction').onclick=()=>{const target=document.getElementById(current[3]);if(!target)return;const parent=target.closest('[role="tabpanel"]');if(parent)activate(parent.id.replace('fau-panel-',''));target.scrollIntoView({behavior:'smooth',block:'center'});target.focus?.({preventScroll:true});};
+          // Episode-specific controls: keep the selected challenge in focus.
+          const twist=root.querySelector('#fauActiveTwistControls');if(twist?.children.length){const section=twist.closest('section')||twist.parentElement;if(section)judgingPanel.prepend(section);}
+          // Casting lists are appended asynchronously by the original admin renderer.
+          window.fauDirectorMoveCast=()=>{const cast=panels.querySelector('#fau-panel-cast');['fauDesignerRoster'].forEach(id=>{const el=document.getElementById(id);if(el&&!cast.contains(el))cast.append(el);});const enrollment=document.getElementById('fauEnrollToggle')?.closest('section');if(enrollment&&!cast.contains(enrollment))cast.prepend(enrollment);};
         })();
         // Organização editorial: operações da rodada primeiro, conteúdos de arquivo por último.
         const desk=$('#adminOutput')?.closest('div.bg-fashion-900');
@@ -4390,6 +4403,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             await refreshEnrollment();
         });
         refreshEnrollment();
+        if(typeof window.fauDirectorMoveCast==='function')window.fauDirectorMoveCast();
         // The Designer Roster — dados privados, operações somente pela produção.
         const rosterList=$('#fauRosterList');
         const loadDesignerRoster=async()=>{
