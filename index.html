@@ -1085,7 +1085,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     };
     // Uma única fonte de regras para a inscrição e para a aba The Rulebook.
     const FAU_RULEBOOK_SECTIONS = [
-            ["✦", "01 · The Competition", "Inspirado no reality show Project Runway, o PROJECT RUNWAY: FAU coloca você no papel de um Designer em uma competição de moda criada para o universo digital.\nA cada rodada, você recebe um desafio e precisa usar ferramentas de inteligência artificial para GERAR IMAGENS DE LOOKS ORIGINAIS. Você escolhe a direção criativa: roupas, silhuetas, materiais, styling, cenário e apresentação. Depois, dá um nome à criação e escreve um conceito que explique sua ideia.\nO nome FAU nasce daquilo que move a nossa passarela: FASHION, porque a roupa é a protagonista; ART, porque cada look precisa contar uma história; e UNIQUENESS, porque queremos reconhecer a visão de quem está por trás de cada criação.\nOs jurados avaliam os looks, os próprios Designers participam de votações e, a cada rodada, alguém pode deixar a competição. Não é preciso costurar ou produzir roupas físicas: o desafio é transformar sua imaginação em imagens de moda usando IA.\nA inteligência artificial é a ferramenta. A identidade, as escolhas e a visão de moda são suas. WELCOME TO THE RUNWAY!"],
+            ["✦", "01 · The Competition", "Inspirado no reality show Project Runway, o PROJECT RUNWAY: FAU coloca você no papel de um Designer em uma competição de moda criada para o universo digital.\nA cada rodada, você recebe um desafio e precisa usar ferramentas de inteligência artificial para GERAR IMAGENS DE LOOKS ORIGINAIS. Você escolhe a direção criativa: roupas, silhuetas, materiais, styling, cenário e apresentação. Depois, dá um nome à criação e escreve um conceito que explique sua ideia.\nOs jurados avaliam os looks, os próprios Designers participam de votações e, a cada rodada, alguém pode deixar a competição. Não é preciso costurar ou produzir roupas físicas: o desafio é transformar sua imaginação em imagens de moda usando IA.\nA inteligência artificial é a ferramenta. A identidade, as escolhas e a visão de moda são suas. WELCOME TO THE RUNWAY!"],
             ["✦", "02 · The Challenges", "A cada rodada, a produção revela um briefing com tema, exigências, restrições e prazo.\nAlguns desafios incluem sorteios, entregas múltiplas e dinâmicas especiais. Leia o briefing antes de começar: as regras específicas da rodada prevalecem sobre este manual.\nDESIGNERS, YOU HAVE A CHALLENGE!"],
             ["✦", "03 · The Submission", "Cada look exige três elementos: THE LOOK (imagem final criada com IA), THE TITLE (nome original) e THE CONCEPT (texto de até 500 caracteres, incluindo espaços).\nA entrega acontece no Workroom, dentro do prazo indicado no relógio. Após o encerramento, novos envios e edições ficam indisponíveis.\nEm desafios com múltiplos looks, todos os itens exigidos precisam ser entregues. Campos extras e referências serão indicados no briefing. Não é necessário enviar o prompt.\nMAKE IT WORK!"],
             ["⚖", "04 · The Judging", "Cada jurado atribui de 0 a 10 pontos em cinco critérios:\nI · CREATIVITY & ORIGINALITY — inovação e ousadia.\nII · CONCEPT & STORYTELLING — força da ideia e coerência do texto.\nIII · VISUAL EXECUTION — fotografia, iluminação, composição e cenário.\nIV · STYLING & COMPOSITION — roupas, acessórios, beleza e harmonia visual.\nV · CHALLENGE INTERPRETATION — interpretação e cumprimento do briefing.\nCalcula-se a média dos jurados em cada critério. A soma das cinco médias forma a nota da rodada, até 50 pontos."],
@@ -1135,10 +1135,32 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               <button id="fauRegNext" type="button" class="w-full bg-fashion-gold text-fashion-950 font-bold py-3.5 rounded-lg text-xs tracking-widest">CONTINUAR →</button>
             </div>
             <div id="fauRegStage2" class="space-y-4 hidden">
-              <h2 class="font-cinzel text-xl text-white">REGRAS DA COMPETIÇÃO</h2>
-              <p class="text-sm text-gray-300">Crie looks com IA, siga os desafios e entregue no prazo. Jurados avaliam e os participantes votam. A cada rodada, alguém pode ser eliminado.</p>
-              <details id="fauRegRulebook" class="rounded-2xl border border-fashion-gold/30 bg-fashion-900/50 p-4"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold">LER REGRAS COMPLETAS</summary><div class="mt-4 max-h-[22rem] overflow-y-auto pr-1 space-y-2" tabindex="0" aria-label="Manual oficial do participante">${fauRulebookMarkup(true)}</div></details>
-              <label class="flex items-start gap-3 rounded-xl border border-fashion-700 bg-fashion-900 p-4 text-xs text-gray-200 cursor-pointer"><input type="checkbox" id="fauRegAccept" required class="mt-0.5 accent-amber-400 w-4 h-4"><span>Li e aceito as regras da competição.</span></label>
+              <div class="space-y-2">
+                <p class="text-[10px] tracking-[.24em] text-fashion-gold">BEFORE YOU HIT THE RUNWAY</p>
+                <h2 class="font-cinzel text-xl sm:text-2xl text-white">YOUR DESIGNER BRIEFING</h2>
+                <p class="text-sm text-gray-300 leading-relaxed">Inspirado no <em>Project Runway</em>, o FAU é uma competição em que você <strong class="text-white">gera imagens de looks com IA</strong>, dá nome às criações e apresenta seus conceitos. Antes de entrar, conheça o essencial.</p>
+              </div>
+              <div class="grid sm:grid-cols-2 gap-2" aria-label="O essencial da competição">
+                <div class="rounded-xl border border-fashion-700 bg-fashion-900/70 p-3.5"><span class="text-fashion-gold text-[10px] tracking-widest">01 · CREATE</span><p class="text-white font-semibold text-sm mt-1">Crie looks com IA</p><p class="text-gray-400 text-xs mt-1 leading-relaxed">Cada desafio tem um briefing e exigências próprias.</p></div>
+                <div class="rounded-xl border border-fashion-700 bg-fashion-900/70 p-3.5"><span class="text-fashion-gold text-[10px] tracking-widest">02 · SUBMIT</span><p class="text-white font-semibold text-sm mt-1">Imagem, título e conceito</p><p class="text-gray-400 text-xs mt-1 leading-relaxed">Conceito de até 500 caracteres. Envie antes do relógio zerar.</p></div>
+                <div class="rounded-xl border border-fashion-700 bg-fashion-900/70 p-3.5"><span class="text-fashion-gold text-[10px] tracking-widest">03 · JUDGING</span><p class="text-white font-semibold text-sm mt-1">Os jurados avaliam</p><p class="text-gray-400 text-xs mt-1 leading-relaxed">Cinco critérios, até 50 pontos por rodada.</p></div>
+                <div class="rounded-xl border border-fashion-700 bg-fashion-900/70 p-3.5"><span class="text-fashion-gold text-[10px] tracking-widest">04 · SURVIVE</span><p class="text-white font-semibold text-sm mt-1">Seus concorrentes votam</p><p class="text-gray-400 text-xs mt-1 leading-relaxed">Votações secretas também influenciam quem continua.</p></div>
+              </div>
+              <details id="fauRegRulebook" class="group rounded-2xl border border-fashion-gold/40 bg-fashion-900/50 overflow-hidden">
+                <summary class="cursor-pointer list-none p-4 flex items-center justify-between gap-3 hover:bg-fashion-gold/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-fashion-gold" aria-label="Abrir manual completo">
+                  <span class="min-w-0"><strong class="block text-sm text-fashion-gold">THE OFFICIAL RULEBOOK</strong><span class="block text-xs text-gray-400 mt-1">Explore as 17 regras, capítulo por capítulo, sem sair da inscrição.</span></span>
+                  <span class="text-fashion-gold text-xl shrink-0 transition-transform group-open:rotate-180" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="border-t border-fashion-700 p-3 sm:p-4 space-y-3">
+                  <p class="text-xs text-gray-400">Toque em uma regra para abrir. Você pode consultar o manual novamente depois de entrar.</p>
+                  <div class="space-y-2" aria-label="Manual oficial do participante">${fauRulebookMarkup(true)}</div>
+                  <button type="button" id="fauRegCloseRules" class="w-full border border-fashion-gold/40 text-fashion-gold rounded-lg py-3 text-xs font-semibold">FECHAR MANUAL ↑</button>
+                </div>
+              </details>
+              <label class="flex items-start gap-3 rounded-xl border border-fashion-gold/30 bg-fashion-900 p-4 text-xs text-gray-200 cursor-pointer hover:border-fashion-gold/60">
+                <input type="checkbox" id="fauRegAccept" required class="mt-0.5 accent-amber-400 w-4 h-4 shrink-0">
+                <span><strong class="block text-white text-sm">Estou pronto para a passarela.</strong><span class="block text-gray-400 mt-1 leading-relaxed">Li o resumo, tive acesso ao manual completo e concordo com as regras da competição.</span></span>
+              </label>
               <p id="fauRegError" role="alert" class="text-red-300 text-xs" aria-live="polite"></p>
               <div class="flex gap-3"><button type="button" id="fauRegPrev" class="border border-fashion-700 rounded-lg px-4 py-3 text-xs text-gray-200">← VOLTAR</button><button id="fauRegSubmit" type="submit" class="flex-1 bg-fashion-gold text-fashion-950 font-bold py-3 rounded-lg text-xs tracking-widest">FINALIZAR INSCRIÇÃO</button></div>
             </div>
@@ -1170,6 +1192,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(!google&&$('#fauRegPassword').value!==$('#fauRegPasswordConfirm').value){err.textContent='As senhas não coincidem.';return;}
             fauRegSetStage(2);
         };
+        $('#fauRegCloseRules').onclick=()=>{const manual=$('#fauRegRulebook');manual.open=false;manual.scrollIntoView({behavior:'smooth',block:'nearest'});};
         $('#fauRegPrev').onclick=()=>fauRegSetStage(1);
         $('#fauRegBack').onclick=()=>showLogin();
         if(signedUser?.providerData?.some(p=>p.providerId==='google.com')){
