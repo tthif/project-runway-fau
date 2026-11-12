@@ -284,7 +284,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 <div id="atelierHistoryModal" class="fixed inset-0 bg-black/95 z-50 hidden flex flex-col justify-center items-center p-6 text-center backdrop-blur-md">
     <div class="max-w-3xl w-full bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center border-b border-fashion-700 pb-3">
-            <span id="historyModalTitle" class="font-cinzel text-fashion-gold text-sm tracking-widest uppercase font-bold">Portfólio da Maison</span>
+            <span id="historyModalTitle" class="font-cinzel text-fashion-gold text-sm tracking-widest uppercase font-bold">Portfólio do Designer</span>
             <button onclick="closeAtelierHistoryModal()" class="text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="historyModalContent" class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs"></div>
@@ -417,7 +417,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 code: "WEEK — BEAUTY IS IN THE EYE",
                 fixedOrder: null,
                 title: "BEAUTY IS IN THE EYE — Criação Autoral & Releitura às Cegas",
-                subtitle: "Primeiro sua visão. Depois, um conceito anônimo de outra maison. O segundo look só começa quando a produção liberar os envelopes.",
+                subtitle: "Primeiro sua visão. Depois, um conceito anônimo de outro Designer. O segundo look só começa quando a produção liberar os envelopes.",
                 elimTipo: "single",
                 numSubmissoes: 2,
                 slotLabels: ["Look 1 — Criação Autoral Original", "Look 2 — Releitura às Cegas (Conceito Sorteado)"],
@@ -456,7 +456,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 code: "WEEK — THE NEXT SUPREME",
                 fixedOrder: null,
                 title: "THE NEXT SUPREME",
-                subtitle: "Duas Supremas por maison. Votação secreta do elenco escolhe apenas uma imagem por maison para avaliação dos jurados.",
+                subtitle: "Duas Supremas por Designer. Votação secreta do elenco escolhe apenas uma imagem por Designer para avaliação dos jurados.",
                 elimTipo: "single",
                 numSubmissoes: 2,
                 slotLabels: ["Slot 1 — OLD SUPREME · The Reigning Queen", "Slot 2 — NEXT SUPREME · The Heir Apparent"],
@@ -639,12 +639,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 code: "GRANDE FINAL",
                 fixedOrder: 99,
                 title: "THE FOUR ACTS OF A LEGEND — The Final Show",
-                subtitle: "🏆 FOUR ACTS. ONE MAISON. ONE LEGEND. Quatro editoriais, uma única narrativa: origem, reinvenção de um FORA DE MODA, confronto com um ÍCONE DA MODA e a consagração da Maison. Na final, as pontuações da temporada são zeradas.",
+                subtitle: "🏆 FOUR ACTS. ONE DESIGNER. ONE LEGEND. Quatro editoriais, uma única narrativa: origem, reinvenção de um FORA DE MODA, confronto com um ÍCONE DA MODA e a consagração do Designer. Na final, as pontuações da temporada são zeradas.",
                 elimTipo: "finale",
                 numSubmissoes: 4,
                 slotLabels: ["ACT I — THE ORIGIN", "ACT II — THE REINVENTION", "ACT III — THE CONFRONTATION", "ACT IV — THE LEGEND"],
                 drawType: "none",
-                mandate: "🏆 THE FOUR ACTS OF A LEGEND — Crie quatro editoriais originais com uma narrativa e um HOUSE CODE reconhecível. ACT I — THE ORIGIN: escolha uma referência histórica, cultural ou estética e traduza sua essência em moda, sem fantasia literal. ACT II — THE REINVENTION: reinvente um look oficialmente eleito FORA DE MODA na temporada, preservando conexão reconhecível e transformando-o pela identidade da seu Designer. ACT III — THE CONFRONTATION: releia um look oficialmente eleito ÍCONE DA MODA, dialogando com a criação consagrada sem copiá-la. ACT IV — THE LEGEND: apresente o editorial definitivo da Maison e seu legado. A referência do Ato I e o House Code devem conectar os quatro capítulos. Cada ato exige imagem, título, conceito de até 500 caracteres. Informe também nome da Maison, referência de origem, cinco pilares do House Code (silhueta, materiais/texturas, paleta, detalhes, filosofia), manifesto da coleção e identificação dos looks originais dos atos II e III com autores e rodadas. Cada ato vale até 50 pontos, total de 200. O placar da temporada é zerado na final.",
+                mandate: "🏆 THE FOUR ACTS OF A LEGEND — Crie quatro editoriais originais com uma narrativa e um HOUSE CODE reconhecível. ACT I — THE ORIGIN: escolha uma referência histórica, cultural ou estética e traduza sua essência em moda, sem fantasia literal. ACT II — THE REINVENTION: reinvente um look oficialmente eleito FORA DE MODA na temporada, preservando conexão reconhecível e transformando-o pela identidade da seu Designer. ACT III — THE CONFRONTATION: releia um look oficialmente eleito ÍCONE DA MODA, dialogando com a criação consagrada sem copiá-la. ACT IV — THE LEGEND: apresente o editorial definitivo do Designer e seu legado. A referência do Ato I e o House Code devem conectar os quatro capítulos. Cada ato exige imagem, título, conceito de até 500 caracteres. Informe também nome do Designer, referência de origem, cinco pilares do House Code (silhueta, materiais/texturas, paleta, detalhes, filosofia), manifesto da coleção e identificação dos looks originais dos atos II e III com autores e rodadas. Cada ato vale até 50 pontos, total de 200. O placar da temporada é zerado na final.",
                 extraField: null
             }
         };
@@ -794,7 +794,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const winVote=votes.find(v=>v.targetUid===r.uid&&v.voterUid===win?.uid);
             if(winVote) return {...r,slot:winVote.slot,decidedBy:'WIN',deciderUid:win.uid};
             const own=await supremeTieRef(r.uid).get();
-            if(own.exists&&[1,2].includes(own.data().slot)) return {...r,slot:own.data().slot,decidedBy:'própria maison',deciderUid:r.uid};
+            if(own.exists&&[1,2].includes(own.data().slot)) return {...r,slot:own.data().slot,decidedBy:'próprio Designer',deciderUid:r.uid};
             return {...r,decidedBy:'pending_self'};
         }));
     };
@@ -819,9 +819,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const snap=await tx.get(ref), data=snap.data();
             if(!data || data.phase!=='active') throw new Error('A corrente não está aberta.');
             if(data.currentUid!==currentUser.uid) throw new Error('Ainda não é sua vez de salvar.');
-            if(data.saved.includes(targetUid) || data.winUid===targetUid) throw new Error('Esta maison já está salva.');
+            if(data.saved.includes(targetUid) || data.winUid===targetUid) throw new Error('Este Designer já está salva.');
             const eligible=data.eligible||[];
-            if(!eligible.some(x=>x.uid===targetUid)) throw new Error('Maison não elegível.');
+            if(!eligible.some(x=>x.uid===targetUid)) throw new Error('Designer não elegível.');
             const nextSaved=[...data.saved,targetUid];
             const remaining=eligible.filter(x=>!nextSaved.includes(x.uid));
             const finished=remaining.length===1;
@@ -925,7 +925,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     const stageAtLeast = id => stageIndex(currentFlowStage()) >= stageIndex(id);
     const flowHint = role => {
       const stage=FLOW_STAGES.find(x=>x.id===currentFlowStage())||FLOW_STAGES[0];
-      const roleTips={estilista:{preparation:'Defina seu Designer, a assinatura criativa que você levará à passarela, e aguarde a estreia.',creation:'Confira o desafio e envie sua criação antes do prazo.',runway:'Acompanhe a passarela quando for liberada.',judging:'A bancada está avaliando as criações.',voting:'Entre na cabine somente se a votação estiver aberta.',results:'Aguarde as revelações oficiais da produção.',next:'A próxima escolha pode estar nas mãos do Ícone da Moda.'},jurado:{preparation:'Aguarde a estreia da temporada.',creation:'Conheça o desafio; as avaliações ainda não começaram.',runway:'Observe as criações e seus Creative Dossiers.',judging:'Entre na bancada e registre suas notas.',voting:'Os estilistas votam em segredo. Sua avaliação continua independente.',results:'Acompanhe os resultados oficialmente revelados.',next:'Aguarde o anúncio do próximo desafio.'},plateia:{preparation:'A passarela ainda não estreou.',creation:'As Maisons estão trabalhando nos bastidores.',runway:'Acompanhe o desfile assim que for liberado.',judging:'Os jurados estão deliberando.',voting:'A votação é exclusiva dos estilistas.',results:'Acompanhe as revelações autorizadas.',next:'As pistas do próximo desafio aguardam a escolha.'}};
+      const roleTips={estilista:{preparation:'Defina seu Designer, a assinatura criativa que você levará à passarela, e aguarde a estreia.',creation:'Confira o desafio e envie sua criação antes do prazo.',runway:'Acompanhe a passarela quando for liberada.',judging:'A bancada está avaliando as criações.',voting:'Entre na cabine somente se a votação estiver aberta.',results:'Aguarde as revelações oficiais da produção.',next:'A próxima escolha pode estar nas mãos do Ícone da Moda.'},jurado:{preparation:'Aguarde a estreia da temporada.',creation:'Conheça o desafio; as avaliações ainda não começaram.',runway:'Observe as criações e seus Creative Dossiers.',judging:'Entre na bancada e registre suas notas.',voting:'Os estilistas votam em segredo. Sua avaliação continua independente.',results:'Acompanhe os resultados oficialmente revelados.',next:'Aguarde o anúncio do próximo desafio.'},plateia:{preparation:'A passarela ainda não estreou.',creation:'Os Designers estão trabalhando nos bastidores.',runway:'Acompanhe o desfile assim que for liberado.',judging:'Os jurados estão deliberando.',voting:'A votação é exclusiva dos estilistas.',results:'Acompanhe as revelações autorizadas.',next:'As pistas do próximo desafio aguardam a escolha.'}};
       return {stage,tip:(roleTips[role]||roleTips.plateia)[stage.id]};
     };
 
@@ -1058,7 +1058,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             ['🚨','12 · The Elimination Pool','Normalmente três estilistas elegíveis à eliminação: os dois piores da rodada e o pior do acumulado ainda não incluído; twists podem alterar essa formação. BOTTOM é posição no ranking da rodada.'],
             ['🛟','13 · The Save Vote','Mais votado e 2º mais votado são salvos; o menos votado é OUT. Empate: Fora de Moda perde → Ícone tem prioridade → WIN decide.'],
             ['🔥','14 · Top 5 — The Final Filter','Rodada somada ao acumulado: 1º vai direto à final, 5º sai. Os 3 do meio disputam 2 vagas só pela nota do Top 5.'],
-            ['🏁','15 · The Four Acts of a Legend','Três finalistas começam com placar zerado. Quatro editoriais, House Code e manifesto da Maison; cada ato vale até 50 pontos, totalizando até 200.'],
+            ['🏁','15 · The Four Acts of a Legend','Três finalistas começam com placar zerado. Quatro editoriais, House Code e manifesto do Designer; cada ato vale até 50 pontos, totalizando até 200.'],
             ['🎥','16 · The Confessional Room','Depoimentos livres publicados somente pelos estilistas e visíveis a todos. A produção pode moderar o conteúdo.'],
             ['🎤','17 · Final Word','Respeite briefings e prazos, defenda suas ideias. THE RUNWAY IS YOURS. MAKE IT COUNT.']
         ];
@@ -1204,7 +1204,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     const showRegistrationReceipt = (user,already=false) => {
         $('#navContainer').innerHTML='';$('#userHeaderSlot').innerHTML='';
         renderView(`<section class="max-w-lg mx-auto my-10 p-8 text-center border border-fashion-gold/50 rounded-3xl bg-fashion-950 space-y-5"><p class="text-fashion-gold text-xs tracking-[.3em]">PROJECT RUNWAY · FAU</p><h1 class="font-cinzel text-3xl text-white">${already?'YOU’RE ALREADY IN!':'YOU’RE IN!'}</h1><p class="italic text-fashion-gold">Your journey to the runway begins now.</p><p class="text-sm text-gray-200">${already?'Sua inscrição já está ativa.':'Inscrição realizada com sucesso!'} Seu Designer está pronto.</p><button id="fauRegLogout" class="w-full bg-fashion-gold text-fashion-950 font-bold px-5 py-3 rounded-lg text-xs">ENTRAR →</button></section>`);
-        $('#fauRegLogout').onclick=async()=>{const button=$('#fauRegLogout');button.disabled=true;button.textContent='ENTRANDO…';activeTab='work';try{await initUserSession(auth.currentUser);}catch(error){button.disabled=false;button.textContent='ENTRAR →';showToast('Não foi possível entrar: '+(error.message||error));}};
+        $('#fauRegLogout').onclick=async()=>{const button=$('#fauRegLogout');button.disabled=true;button.textContent='ENTRANDO…';activeTab='meu_perfil';try{await initUserSession(auth.currentUser);}catch(error){button.disabled=false;button.textContent='ENTRAR →';showToast('Não foi possível entrar: '+(error.message||error));}};
     };
     const showLogin = () => {
         $('#navContainer').innerHTML = '';
@@ -1573,7 +1573,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const deadline=flow.deadline?new Date(flow.deadline).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):null;
         const candidates={
           admin:[['direcao','OPEN THE CONTROL ROOM','Organize a rodada, autorize cada etapa e conduza a produção.'],['runway','PREVIEW THE RUNWAY','Confira o desfile já liberado.']],
-          estilista: !hasMaisonIdentity()?[['work','CREATE YOUR DESIGNER IDENTITY','Defina seu nome e manifesto para entrar na competição.']]:flow.submissionsOpen?[['work','ENTER THE WORKROOM','Crie, envie ou revise suas entregas antes do encerramento.']]:flow.ballotOpen?[['tribunal','ENTER THE VOTING ROOM','Confira as opções e registre seus votos secretos.']]:flow.runwayOpen?[['runway','WATCH THE RUNWAY','Explore os looks oficialmente liberados.']]:[['work','CHECK YOUR WORKROOM','Acompanhe sua participação e aguarde a próxima etapa.']],
+          estilista: !hasMaisonIdentity()?[['meu_perfil','CREATE YOUR DESIGNER IDENTITY','Defina seu nome e manifesto no perfil antes da estreia.']]:flow.submissionsOpen?[['work','ENTER THE WORKROOM','Crie, envie ou revise suas entregas antes do encerramento.']]:flow.ballotOpen?[['tribunal','ENTER THE VOTING ROOM','Confira as opções e registre seus votos secretos.']]:flow.runwayOpen?[['runway','WATCH THE RUNWAY','Explore os looks oficialmente liberados.']]:[['work','CHECK YOUR WORKROOM','Acompanhe sua participação e aguarde a próxima etapa.']],
           jurado: [['bancada','ENTER THE JUDGES’ PANEL','Confira as avaliações e críticas disponíveis.']],
           plateia: flow.runwayOpen?[['runway','TAKE YOUR FRONT-ROW SEAT','A passarela está aberta para a plateia.']]:[['conf','BEHIND THE SEAMS','Conheça os bastidores disponíveis ao público.']]
         };
@@ -1683,71 +1683,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         let allMyLooks = [];
         let roundSubmissions = [];
         let activeStylistsCount = 0;
-        if (!hasMaisonIdentity() || !globalState.rodada) {
-            renderView(`<div class="max-w-2xl mx-auto space-y-6 py-8">
-                <div class="text-center space-y-2"><span class="text-fashion-gold text-xs tracking-[.3em] font-cinzel">PROJECT RUNWAY: FAU</span>
-                <h2 class="text-white text-3xl font-cinzel">YOUR DESIGNER IDENTITY</h2>
-                <p class="text-gray-300 text-sm">${hasMaisonIdentity() ? 'Seu Designer está pronto. Você pode mudar o nome até a estreia.' : 'Escolha o nome fictício que vai representar você na competição.'}</p></div>
-                ${!globalState.rodada ? `<div class="rounded-2xl bg-fashion-900 border border-fashion-gold/40 p-6 space-y-4">
-                    <label class="text-fashion-gold text-xs uppercase tracking-widest block">NOME DO DESIGNER *</label><p class="text-[11px] text-gray-400 mt-1 mb-2">É o nome que todos verão. Evite usar seu nome real.</p>
-                    <input id="welcomeMaison" value="${esc(currentUser.ate && currentUser.ate !== 'Público' ? currentUser.ate : '')}" maxlength="70" placeholder="Ex.: Alexander Noir" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" />
-                    <label class="text-fashion-gold text-xs uppercase tracking-widest block">MANIFESTO (OPCIONAL)</label>
-                    <textarea id="welcomeBio" maxlength="300" rows="3" placeholder="Sua visão de moda em poucas palavras" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white">${esc(currentUser.bio||'')}</textarea>
-                    <button id="welcomeSave" class="w-full bg-fashion-gold text-black font-cinzel font-bold rounded-lg p-3">${hasMaisonIdentity() ? 'SALVAR' : 'CONFIRMAR DESIGNER'}</button>
-                </div>` : `<div class="rounded-2xl bg-fashion-900 border border-fashion-gold/40 p-6 text-center space-y-3"><div class="text-4xl">✦</div><h3 class="text-fashion-gold font-cinzel text-xl">${esc(currentUser.ate)}</h3><p class="text-gray-300 text-sm">Nome de Designer confirmado. Aguarde a estreia para conhecer seu Atelier e o primeiro desafio.</p></div>`}
-                ${!globalState.rodada ? `<div class="text-center space-y-2"><p class="text-xs text-gray-400">Tudo pronto? Agora é só aguardar o primeiro desafio.</p><div class="flex justify-center gap-4"><button type="button" id="fauNewDesignerRules" class="text-xs text-fashion-gold underline underline-offset-4">VER REGRAS</button><button type="button" id="fauNewDesignerVault" class="text-xs text-gray-300 underline underline-offset-4">VER TEMAS</button></div></div>`:''}
-            </div>`);
-            document.getElementById('fauNewDesignerRules')?.addEventListener('click',()=>navigate('manual'));
-            document.getElementById('fauNewDesignerVault')?.addEventListener('click',()=>navigate('pistas'));
-            const welcomeBio=document.getElementById('welcomeBio');
-            if(welcomeBio){
-                const count=document.createElement('p');
-                count.className='text-[11px] text-gray-400 text-right';
-                count.setAttribute('aria-live','polite');
-                welcomeBio.insertAdjacentElement('afterend',count);
-                const updateCount=()=>count.textContent=`${welcomeBio.value.length} / 300 caracteres`;
-                welcomeBio.addEventListener('input',updateCount);updateCount();
-            }
-            const save = document.getElementById('welcomeSave');
-            if (save) save.onclick = safeExec(async () => {
-                if (globalState.rodada || globalState.themeId) throw new Error('A temporada já começou. Para alterar sua identidade, procure a produção.');
-                const ate = document.getElementById('welcomeMaison').value.trim();
-                if (ate.length < 2 || ate.length > 70) throw new Error('O nome do Designer precisa ter entre 2 e 70 caracteres.');
-                if (/[<>]/.test(ate)) throw new Error('O nome não pode conter os símbolos < ou >.');
-                const bio = document.getElementById('welcomeBio').value.trim();
-                if (bio.length > 300) throw new Error('O manifesto pode ter até 300 caracteres.');
-                await db.doc(`perfis/${currentUser.uid}`).update({ate, bio});
-                Object.assign(currentUser, {ate, bio});
-                document.querySelector('#userHeaderSlot .font-cinzel').textContent = ate;
-                showToast('Sua identidade foi salva! Bem-vindo ao elenco do Project Runway: FAU.');
-                navigate('work');
-            });
+        if (!hasMaisonIdentity()) { navigate('meu_perfil'); return; }
+        if (!globalState.rodada) {
+            renderView(`<section class="max-w-2xl mx-auto py-10 space-y-5 text-center"><p class="text-fashion-gold text-xs tracking-[.25em]">THE WORKROOM</p><h2 class="font-cinzel text-3xl text-white">THE RUNWAY AWAITS</h2><p class="text-sm text-gray-300">Seu Designer está inscrito. O Workroom será liberado com o primeiro desafio.</p><button id="fauWorkToProfile" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-5 py-3 text-xs">VER MEU PERFIL</button></section>`);
+            $('#fauWorkToProfile').onclick=()=>navigate('meu_perfil');
             return;
         }
-        // Manifesto pessoal permanece editável após a estreia, sem alterar o nome de Designer.
-        const addManifestoEditor=()=>{
-            const host=$('#mainView');if(!host||$('#fauManifestoEditor'))return;
-            const section=document.createElement('section');section.id='fauManifestoEditor';
-            section.className='rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3 mb-6';
-            section.innerHTML=`<h3 class="font-cinzel text-fashion-gold">YOUR DESIGNER MANIFESTO</h3><p class="text-xs text-gray-300">Seu manifesto fica salvo no seu perfil. Você pode atualizá-lo a qualquer momento; os outros participantes só poderão ler os manifestos quando a temporada começar.</p><textarea id="fauManifestoText" maxlength="300" rows="4" class="w-full bg-fashion-900 border border-fashion-700 rounded p-3 text-white" placeholder="Qual é sua visão de moda?">${esc(currentUser.bio||'')}</textarea><div class="flex items-center justify-between gap-2"><span id="fauManifestoCount" class="text-xs text-gray-400"></span><button id="fauManifestoSave" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">SALVAR MANIFESTO</button></div><p id="fauManifestoFeedback" class="text-xs text-gray-400" aria-live="polite"></p>`;
-            host.prepend(section);
-            const input=section.querySelector('#fauManifestoText'),counter=section.querySelector('#fauManifestoCount');
-            const update=()=>counter.textContent=`${input.value.length}/300 caracteres`;
-            input.addEventListener('input',update);update();
-            section.querySelector('#fauManifestoSave').onclick=safeExec(async()=>{
-                const bio=input.value.trim();if(bio.length>300)throw new Error('O manifesto pode ter até 300 caracteres.');
-                const button=section.querySelector('#fauManifestoSave');button.disabled=true;
-                try{await db.doc(`perfis/${currentUser.uid}`).update({bio});currentUser.bio=bio;section.querySelector('#fauManifestoFeedback').textContent='Última versão salva com sucesso.';showToast('Manifesto atualizado!');}
-                finally{button.disabled=false;}
-            });
-            // Mantém o texto sincronizado com a versão mais recente do banco, inclusive entre dispositivos.
-            sub(db.doc(`perfis/${currentUser.uid}`),snap=>{
-                if(!snap.exists||!section.isConnected)return;
-                const saved=snap.data().bio||'';
-                if(document.activeElement!==input){input.value=saved;update();}
-            });
-        };
-        queueMicrotask(addManifestoEditor);
         queueMicrotask(()=>{
             const host=$('#mainView');if(!host||$('#fauPublicManifestos'))return;
             const panel=document.createElement('section');panel.id='fauPublicManifestos';panel.className='rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3 mb-6';
@@ -1781,7 +1722,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     </div>
                 </div>
 
-                <section class="fau-atelier-identity rounded-2xl border border-fashion-gold/30 bg-gradient-to-r from-fashion-950 via-fashion-900 to-fashion-950 p-5 md:p-7 space-y-4" aria-label="Identidade da Maison e espaço de criação">
+                <section class="fau-atelier-identity rounded-2xl border border-fashion-gold/30 bg-gradient-to-r from-fashion-950 via-fashion-900 to-fashion-950 p-5 md:p-7 space-y-4" aria-label="Identidade do Designer e espaço de criação">
                     <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] uppercase tracking-[.3em] text-fashion-gold">THE DESIGNER · ${esc(currentUser.ate || 'FAU')}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">YOUR NAME. YOUR VISION.</h3><p class="text-[11px] text-gray-300 mt-1">DESIGNER · Sua identidade na competição. ATELIER · Seu espaço de criação.</p></div><span class="text-[10px] text-gray-400 tracking-widest">WEEK ${esc(globalState.rodada || '—')}</span></div>
                     ${currentUser.bio ? `<p class="text-sm italic text-gray-300 border-l-2 border-fashion-gold/50 pl-4">${esc(currentUser.bio)}</p>` : '<p class="text-xs text-gray-400">Cada criação é uma assinatura. Faça desta rodada a sua declaração de moda.</p>'}
                     <div class="grid grid-cols-3 gap-2 text-center text-[10px] uppercase tracking-wider">
@@ -1805,7 +1746,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <!-- PORTFÓLIO DE CRIAÇÕES ANTERIORES -->
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
                     <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
-                        <h3 class="font-cinzel text-white text-base">THE MAISON ARCHIVE · Looks da temporada</h3>
+                        <h3 class="font-cinzel text-white text-base">THE DESIGNER ARCHIVE · Looks da temporada</h3>
                         <span class="text-xs text-fashion-gold font-mono" id="myLooksCount">0 looks</span>
                     </div>
                     <div id="myLooksArchiveGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs"></div>
@@ -1844,29 +1785,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const myBio = currentUser.bio || '';
 
             if (maisonName === 'Público' || (!globalState.rodada && !globalState.themeId)) {
-                $('#atelierSetupModule').innerHTML = `
-                    <div class="bg-fashion-900 border-2 border-fashion-gold p-6 rounded-lg space-y-4 shadow-xl">
-                        <div class="border-b border-fashion-700 pb-2">
-                            <span class="text-xs uppercase tracking-widest text-fashion-gold font-bold font-cinzel">1. THE MAISON · Sua identidade criativa</span>
-                            <h3 class="font-cinzel text-lg text-white font-bold">Nome e manifesto da Maison</h3>
-                            <p class="text-xs text-gray-400">Você é o designer da sua própria Maison. Defina o nome e a identidade criativa que representarão suas criações na temporada.</p>
-                        </div>
-
-                        <div class="space-y-4 text-xs">
-                            <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-1.5">
-                                <label class="block text-fashion-gold uppercase tracking-wider font-semibold font-cinzel">Nome do Designer</label>
-                                <input id="setupAtelierNameInput" value="${esc(maisonName !== 'Público' ? maisonName : '')}" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white font-cinzel font-bold text-sm focus:outline-none focus:border-fashion-gold" placeholder="Ex: Maison Mugler FAU">
-                            </div>
-                            <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-1.5">
-                                <label class="block text-fashion-gold uppercase tracking-wider font-semibold font-cinzel">Manifesto / Biografia da Maison</label>
-                                <textarea id="setupAtelierBioInput" rows="2" maxlength="300" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2.5 text-white text-xs focus:outline-none focus:border-fashion-gold" placeholder="Descreva a visão, a estética e a assinatura criativa da seu Designer...">${esc(myBio)}</textarea>
-                            </div>
-                            <button id="btnLockAtelierIdentity" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-widest text-xs transition font-cinzel">
-                                ${hasMaisonIdentity() ? "Salvar nome do Designer" : "Confirmar nome do Designer"}
-                            </button>
-                        </div>
-                    </div>
-                `;
+                $('#atelierSetupModule').innerHTML = `<div class="rounded-xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-3"><p class="text-xs text-fashion-gold">YOUR DESIGNER IDENTITY</p><p class="text-sm text-gray-300">Nome e manifesto ficam no seu perfil.</p><button id="fauGoProfile" class="text-xs text-fashion-gold underline underline-offset-4">ABRIR MEU PERFIL</button></div>`;
+                $('#fauGoProfile').onclick=()=>navigate('meu_perfil');
                 $('#workroomFormModule').innerHTML = '';
                 return;
             } else {
@@ -1875,7 +1795,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                         <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
                             <div class="flex items-center gap-2">
                                 <i class="fa-solid fa-crown text-fashion-gold text-sm"></i>
-                                <span class="font-cinzel text-xs text-white font-bold tracking-wider">THE MAISON · ${esc(maisonName)}</span>
+                                <span class="font-cinzel text-xs text-white font-bold tracking-wider">THE DESIGNER · ${esc(maisonName)}</span>
                             </div>
                             <span class="text-[10px] bg-fashion-800 text-fashion-gold px-2 py-0.5 rounded border border-fashion-gold/30 font-mono">ESTILISTA: ${esc(stilistaFixo)}</span>
                         </div>
@@ -1949,7 +1869,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 formSlot.innerHTML = `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-5 space-y-4">
                     <p class="text-[10px] tracking-[.3em] text-fashion-gold">02 · THE ATELIER / 03 · THE DELIVERY</p>
                     <h3 class="font-cinzel text-2xl text-white">${editable?'Your runway look':'Your submitted looks'}</h3>
-                    <p class="text-xs text-gray-300">${editable?'Sua última entrega já está salva. Os campos abaixo vêm preenchidos e você pode atualizar a imagem, o título e o conceito até o prazo terminar.':'As entregas estão encerradas. Confira seus looks no arquivo da Maison.'}</p>
+                    <p class="text-xs text-gray-300">${editable?'Sua última entrega já está salva. Os campos abaixo vêm preenchidos e você pode atualizar a imagem, o título e o conceito até o prazo terminar.':'As entregas estão encerradas. Confira seus looks no arquivo do Designer.'}</p>
                     ${editable?`<div class="flex flex-wrap gap-2" id="fauInlineLookTabs" role="group" aria-label="Escolher look para editar">${currentRoundLooks.slice().sort((a,b)=>(a.slot||0)-(b.slot||0)).map((l,i)=>`<button type="button" data-edit-look="${esc(l.id)}" class="rounded border border-fashion-gold/50 px-4 py-2 text-xs text-fashion-gold">${esc(getTheme()?.slotLabels?.[l.slot-1]||'LOOK '+(l.slot||i+1))}</button>`).join('')}</div><div id="fauInlineEditHost"></div>`:'<p class="text-green-300 text-xs">✓ Entregas recebidas pela produção.</p>'}
                 </section>`;
                 if(editable)queueMicrotask(()=>document.querySelector('#fauInlineLookTabs [data-edit-look]')?.click());
@@ -2010,19 +1930,19 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     const actIndex = currentRoundLooks.length;
                     const actTitles = ['🌍 ACT I — THE ORIGIN','♻️ ACT II — THE REINVENTION','⚔️ ACT III — THE CONFRONTATION','👑 ACT IV — THE LEGEND'];
                     const actHints = [
-                      'Escolha a raiz histórica, cultural ou estética da Maison. Transforme sua essência em moda, sem fantasia literal.',
+                      'Escolha a raiz histórica, cultural ou estética do Designer. Transforme sua essência em moda, sem fantasia literal.',
                       'Reinterprete um look que recebeu oficialmente FORA DE MODA. Preserve elementos reconhecíveis, mas transforme-o pela identidade da seu Designer.',
                       'Reinterprete um look que recebeu oficialmente ÍCONE DA MODA. Preserve a essência e apresente uma assinatura autoral própria.',
-                      'Apresente a imagem definitiva da Maison: o legado, a assinatura e a evolução dos três atos anteriores.'
+                      'Apresente a imagem definitiva do Designer: o legado, a assinatura e a evolução dos três atos anteriores.'
                     ];
                     const previousFinal = currentRoundLooks[0]?.finaleMeta || {};
                     const shared = actIndex===0 ? `<div class="space-y-3 border-t border-fashion-700 pt-4">
                       <h4 class="font-cinzel text-fashion-gold">🧵 THE HOUSE CODE · IDENTIDADE DA MAISON</h4>
-                      <label class="block text-xs text-gray-300">Nome da Maison<input id="finalMaison" maxlength="100" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" value="${esc(currentUser.ate||'')}" placeholder="Nome oficial da Maison"></label>
+                      <label class="block text-xs text-gray-300">Nome do Designer<input id="finalMaison" maxlength="100" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" value="${esc(currentUser.ate||'')}" placeholder="Nome oficial do Designer"></label>
                       <label class="block text-xs text-gray-300">Referência de origem<input id="finalOrigin" maxlength="180" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" placeholder="Movimento, cultura, período ou estética"></label>
                       ${[['Silhueta','finalSilhouette'],['Materiais e texturas','finalMaterials'],['Paleta de cores','finalPalette'],['Detalhes de assinatura','finalSignature'],['Filosofia criativa','finalPhilosophy']].map(([label,id])=>`<label class="block text-xs text-gray-300">${label}<textarea id="${id}" maxlength="500" rows="2" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white"></textarea></label>`).join('')}
-                      <label class="block text-xs text-gray-300">Collection Manifesto — a história dos quatro atos<textarea id="finalManifesto" maxlength="3000" rows="4" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" placeholder="Explique a visão da Maison e como os quatro capítulos se conectam"></textarea></label>
-                    </div>` : `<div class="text-xs text-gray-300 border border-fashion-gold/30 rounded p-3">🧵 Maison: <strong>${esc(previousFinal.maison||currentUser.ate||'—')}</strong> · Origem: ${esc(previousFinal.origin||'—')}. Mantenha o House Code nos quatro editoriais.</div>`;
+                      <label class="block text-xs text-gray-300">Collection Manifesto — a história dos quatro atos<textarea id="finalManifesto" maxlength="3000" rows="4" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" placeholder="Explique a visão do Designer e como os quatro capítulos se conectam"></textarea></label>
+                    </div>` : `<div class="text-xs text-gray-300 border border-fashion-gold/30 rounded p-3">🧵 Designer: <strong>${esc(previousFinal.maison||currentUser.ate||'—')}</strong> · Origem: ${esc(previousFinal.origin||'—')}. Mantenha o House Code nos quatro editoriais.</div>`;
                     const archive = actIndex===1 || actIndex===2 ? `<label class="block text-xs text-gray-300">📜 Referência oficial do arquivo (look, estilista e rodada)<textarea id="finalArchive" maxlength="600" rows="3" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-1 text-white" placeholder="Nome do look original, Maison/estilista responsável e rodada em que recebeu o título oficial"></textarea></label>` : '';
                     formSlot.insertAdjacentHTML('afterbegin', `<section class="bg-fashion-950 border border-fashion-gold/50 rounded-lg p-5 mb-4 space-y-3">
                       <h3 class="font-cinzel text-fashion-gold text-lg">${actTitles[actIndex]||'THE FINAL SHOW'}</h3>
@@ -2153,12 +2073,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             }
 
             if (target.id === 'btnLockAtelierIdentity') {
-                if (globalState.rodada || globalState.themeId) throw new Error('A identidade da Maison fica bloqueada após o início da competição. Solicite mudanças à produção.');
+                if (globalState.rodada || globalState.themeId) throw new Error('O nome e o manifesto do Designer ficam bloqueados após a estreia.');
                 const atelierName = $('#setupAtelierNameInput').value.trim();
                 const atelierBio = $('#setupAtelierBioInput').value.trim();
 
-                if (atelierName.length < 2 || atelierName.length > 70 || atelierBio.length > 300) throw new Error('Informe um nome de Maison (2–70 caracteres) e manifesto (até 300).');
-                if (/[<>]/.test(atelierName)) throw new Error('O nome da Maison não pode conter os símbolos < ou >.');
+                if (atelierName.length < 2 || atelierName.length > 70 || atelierBio.length > 300) throw new Error('Informe um nome de Designer (2–70 caracteres) e manifesto (até 300).');
+                if (/[<>]/.test(atelierName)) throw new Error('O nome do Designer não pode conter os símbolos < ou >.');
 
                 await db.doc(`perfis/${currentUser.uid}`).update({
                     ate: atelierName,
@@ -2168,7 +2088,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 currentUser.ate = atelierName;
                 currentUser.bio = atelierBio;
 
-                showToast('Identidade da Maison oficializada com sucesso!');
+                showToast('Identidade do Designer salva!');
                 refreshWorkroomUI();
             }
 
@@ -2205,7 +2125,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     if (previousFinalLooks.length===0) {
                         const val=id=>document.getElementById(id)?.value.trim()||'';
                         finaleMeta = {maison:val('finalMaison'),origin:val('finalOrigin'),silhouette:val('finalSilhouette'),materials:val('finalMaterials'),palette:val('finalPalette'),signature:val('finalSignature'),philosophy:val('finalPhilosophy'),manifesto:val('finalManifesto')};
-                        if(Object.values(finaleMeta).some(v=>!v)) throw new Error('Preencha o nome da Maison, referência de origem, os cinco códigos da Maison e o manifesto da coleção.');
+                        if(Object.values(finaleMeta).some(v=>!v)) throw new Error('Preencha o nome do Designer, referência de origem, os cinco códigos do Designer e o manifesto da coleção.');
                     } else {
                         finaleMeta = {...(previousFinalLooks[0].finaleMeta||{})};
                     }
@@ -2280,19 +2200,47 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     VIEWS.meu_perfil = async () => {
         if(currentUser.role!=='estilista') {navigate('home');return;}
         const uid=currentUser.uid;
-        renderView(`<section class="max-w-3xl mx-auto space-y-5"><p class="text-fashion-gold text-[10px] tracking-[.3em]">PRIVATE DESIGNER DOSSIER</p><h2 class="font-cinzel text-3xl text-white">MY MAISON · ${esc(currentUser.ate||'Designer')}</h2><p class="text-gray-400 text-sm">Seu perfil é o único lugar em que seu desempenho acumulado aparece. Notas de cada rodada e pontuações de outros participantes não são exibidas.</p><div id="fauMyAggregate" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-6" role="status">Consultando seu desempenho privado…</div><button type="button" id="fauBackHome" class="border border-fashion-700 rounded-lg px-5 py-3 text-xs text-gray-200">VOLTAR AO SEASON HUB</button></section>`);
+        const locked=!!(globalState.rodada || globalState.themeId);
+        renderView(`<section class="max-w-3xl mx-auto space-y-5">
+          <p class="text-fashion-gold text-[10px] tracking-[.3em]">MY PROFILE</p>
+          <h2 class="font-cinzel text-3xl text-white">YOUR DESIGNER IDENTITY</h2>
+          <p class="text-gray-300 text-sm">${locked?'Sua identidade está definida para esta temporada.':'Defina seu nome fictício e seu manifesto antes da estreia.'}</p>
+          <div class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-4">
+            ${locked?`<div><p class="text-xs tracking-widest text-fashion-gold">NOME DE DESIGNER</p><h3 class="font-cinzel text-xl text-white mt-2">${esc(currentUser.ate||'Designer')}</h3></div><div><p class="text-xs tracking-widest text-fashion-gold">MANIFESTO</p><p id="fauProfileManifesto" class="text-sm text-gray-300 whitespace-pre-wrap mt-2">${esc(currentUser.bio||'Nenhum manifesto definido.')}</p></div><p class="text-xs text-gray-400">Edição encerrada após a estreia.</p>`:
+            `<label class="block space-y-2"><span class="text-xs text-fashion-gold tracking-widest">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu personagem na competição"><span class="block text-xs text-gray-400">Use um nome fictício para não revelar sua identidade real.</span></label><label class="block space-y-2"><span class="text-xs text-fashion-gold tracking-widest">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Qual é sua visão de moda?">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" class="text-xs text-gray-300" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs tracking-widest">SALVAR IDENTIDADE</button>`}
+          </div>
+          <div id="fauMyAggregate" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-6" role="status">Consultando seu desempenho privado…</div>
+          <button id="fauBackHome" type="button" class="border border-fashion-700 rounded-lg px-5 py-3 text-xs text-gray-200">VOLTAR AO SEASON HUB</button>
+        </section>`);
         $('#fauBackHome')?.addEventListener('click',()=>navigate('home'));
+        if(!locked){
+            const bio=$('#fauProfileBioInput');const count=$('#fauProfileBioCount');
+            const updateCount=()=>count.textContent=`${bio.value.length} / 300`;
+            bio.addEventListener('input',updateCount);updateCount();
+            $('#fauProfileSaveIdentity').onclick=safeExec(async()=>{
+                if(globalState.rodada || globalState.themeId)throw new Error('A temporada já começou. A identidade não pode mais ser alterada.');
+                const ate=$('#fauProfileNameInput').value.trim(),manifesto=bio.value.trim();
+                if(ate.length<2||ate.length>70||/[<>]/.test(ate))throw new Error('Informe um nome de Designer válido (2 a 70 caracteres).');
+                if(manifesto.length>300)throw new Error('O manifesto pode ter até 300 caracteres.');
+                const btn=$('#fauProfileSaveIdentity');btn.disabled=true;btn.textContent='SALVANDO…';
+                try{
+                    await db.doc(`perfis/${uid}`).update({ate,bio:manifesto});
+                    Object.assign(currentUser,{ate,bio:manifesto});
+                    const header=document.querySelector('#userHeaderSlot .font-cinzel');if(header)header.textContent=ate;
+                    $('#fauProfileSaveStatus').textContent='Identidade salva!';showToast('Identidade do Designer salva!');
+                }finally{btn.disabled=false;btn.textContent='SALVAR IDENTIDADE';}
+            });
+        }else{
+            sub(db.doc(`perfis/${uid}`),snap=>{if(!snap.exists||activeTab!=='meu_perfil')return;const el=$('#fauProfileManifesto');if(el)el.textContent=snap.data().bio||'Nenhum manifesto definido.';});
+        }
         try{
-            // Privacy boundary: read only a per-user summary, never raw juror evaluations.
-            // This document must be published by trusted production/server code.
             const summary=await db.doc(`desempenho_privado/${uid}`).get();
             if(currentUser.uid!==uid||activeTab!=='meu_perfil')return;
-            const data=summary.exists?summary.data():null;
-            const avg=Number(data?.acumulado);
+            const data=summary.exists?summary.data():null,avg=Number(data?.acumulado);
             const valid=data&&Number.isFinite(avg)&&avg>=0&&avg<=50;
             const slot=$('#fauMyAggregate');
-            if(slot)slot.innerHTML=`<p class="text-[10px] tracking-[.25em] text-fashion-gold">SEASON PERFORMANCE · PRIVATE</p><p class="font-cinzel text-5xl text-white mt-3">${valid?avg.toFixed(2):'—'}<span class="text-lg text-gray-400"> / 50</span></p><p class="text-gray-400 text-xs mt-3">${valid?'Seu acumulado oficial, calculado pela produção.':'Seu acumulado ainda não foi publicado pela produção.'}</p><p class="text-xs text-gray-500 mt-4">Somente seu acumulado é exibido aqui. Notas individuais e classificações gerais continuam reservadas.</p>`;
-        }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyAggregate');if(slot)slot.textContent='Não foi possível carregar seu acumulado. Tente novamente mais tarde.';}
+            if(slot)slot.innerHTML=`<p class="text-[10px] tracking-[.25em] text-fashion-gold">SEASON PERFORMANCE · PRIVATE</p><p class="font-cinzel text-5xl text-white mt-3">${valid?avg.toFixed(2):'—'}<span class="text-lg text-gray-400"> / 50</span></p><p class="text-gray-400 text-xs mt-3">${valid?'Seu acumulado oficial, calculado pela produção.':'Seu acumulado ainda não foi publicado pela produção.'}</p>`;
+        }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyAggregate');if(slot)slot.textContent='Não foi possível carregar seu acumulado.';}
     };
 
     VIEWS.historico = async (insideArchive=false) => {
@@ -2672,7 +2620,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const id=b.dataset.critiqueAudio,old=found.get(id)||{};
                 if(old.source==='site'&&old.received&&!confirm('Já existe uma crítica escrita. Substituir pelo registro de áudio recebido?'))return;
                 const undo=old.source==='whatsapp'&&old.received;
-                await db.collection('criticas_solicitadas').doc(id).set({round,juror:b.dataset.critiqueJuror,jurorNome:b.dataset.critiqueName,maison:b.dataset.critiqueMaison,source:undo?'':'whatsapp',text:undo?'':(old.source==='site'?'':(old.text||'')),received:!undo,updatedAt:now()},{merge:true});
+                await db.collection('criticas_solicitadas').doc(id).set({round,juror:b.dataset.critiqueJuror,jurorNome:b.dataset.critiqueName,maison:b.dataset.critiqueDesigner,source:undo?'':'whatsapp',text:undo?'':(old.source==='site'?'':(old.text||'')),received:!undo,updatedAt:now()},{merge:true});
                 await fauCritiqueAdminMount();
             }));
         }catch(e){if(root.isConnected)root.innerHTML=`<p class="text-xs text-amber-300">Não foi possível carregar críticas: ${esc(e.message)}</p>`;}
@@ -2717,7 +2665,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const fm=look.finaleMeta;
         if(!extra && !twist && !fm)return '';
         const finalDossier=fm ? `<div class="space-y-1 text-xs text-gray-300 border-t border-fashion-700 pt-2">
-          <p><strong class="text-fashion-gold">🏛️ Maison:</strong> ${esc(fm.maison||'—')}</p>
+          <p><strong class="text-fashion-gold">🏛️ Designer:</strong> ${esc(fm.maison||'—')}</p>
           <p><strong class="text-fashion-gold">🌍 Referência de origem:</strong> ${esc(fm.origin||'—')}</p>
           ${fm.archiveReference?`<p><strong class="text-fashion-gold">📜 Look do arquivo:</strong> ${esc(fm.archiveReference)}</p>`:''}
           <p><strong>House Code:</strong> ${esc([fm.silhouette,fm.materials,fm.palette,fm.signature,fm.philosophy].filter(Boolean).join(' · '))}</p>
@@ -2799,7 +2747,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                                     `).join('')}
                                 </div>
 
-                                <p class="text-[11px] text-gray-400 border-t border-fashion-700 pt-3">📝 Aqui você envia apenas as notas. Se a produção solicitar uma crítica após a apuração, ela aparecerá abaixo da bancada, uma única vez por Maison.</p>
+                                <p class="text-[11px] text-gray-400 border-t border-fashion-700 pt-3">📝 Aqui você envia apenas as notas. Se a produção solicitar uma crítica após a apuração, ela aparecerá abaixo da bancada, uma única vez por Designer.</p>
 
                                 <button data-action="save-evaluation" data-look="${look.id}" ${scoresClosed()?'disabled':''} class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-2.5 rounded uppercase tracking-wider transition">
                                     ${scoresClosed()?'Notas encerradas':ev.nota?'Atualizar avaliação':'Salvar avaliação'}
@@ -2906,7 +2854,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         [/traitors/,['🗝️','THE BLACK BANQUET','Trust no one at the table.','from-red-950 via-black to-fashion-950']],
         [/mathematics/,['🔢','BEAUTY IN NUMBERS','Where precision meets imagination.','from-indigo-950 via-fashion-950 to-black']],
         [/maria/,['👑','THE MANY MARIAS','There will never be another one.','from-amber-950 via-fashion-950 to-black']],
-        [/final|legend/,['🏆','FOUR ACTS OF A LEGEND','One Maison. One legacy.','from-yellow-950 via-fashion-950 to-black']],
+        [/final|legend/,['🏆','FOUR ACTS OF A LEGEND','One Designer. One legacy.','from-yellow-950 via-fashion-950 to-black']],
         [/pink/,['💗','THE PINK CONTROVERSY','Wear your statement.','from-pink-950 via-fashion-950 to-black']],
         [/seduction/,['🖤','THE ART OF SEDUCTION','Fashion has its own language.','from-red-950 via-fashion-950 to-black']],
         [/awards/,['✨','THE RED CARPET','Are you in the right place?','from-purple-950 via-fashion-950 to-black']]
@@ -2934,7 +2882,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <div class="bg-fashion-900 border border-fashion-700 p-12 rounded-lg text-center space-y-4 max-w-xl mx-auto my-12">
                     <i class="fa-solid fa-lock text-fashion-gold text-3xl"></i>
                     <h2 class="font-cinzel text-xl text-white">The Runway está fechada</h2>
-                    <p class="text-xs text-gray-400 leading-relaxed font-light">As Maisons estão finalizando suas criações e escolhas de direção criativa. O desfile começará em breve.</p>
+                    <p class="text-xs text-gray-400 leading-relaxed font-light">Os Designers estão finalizando suas criações e escolhas de direção criativa. O desfile começará em breve.</p>
                 </div>
             `);
             return;
@@ -3078,7 +3026,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 const box=$('#supremeVotingBox');
                 const pairs=[...new Set(looks.map(l=>l.uid))].map(uid=>({uid,items:looks.filter(l=>l.uid===uid)})).filter(p=>p.items.length===2);
                 if(supremeBroadcast?.phase==='voting' && currentUser.role==='estilista') {
-                    box.innerHTML=`<div class="border border-fashion-gold rounded-xl bg-fashion-950 p-5 space-y-5"><h3 class="font-cinzel text-fashion-gold text-xl">👑 THE SUPREME VOTE · THE PEOPLE DECIDE</h3><p class="text-xs text-gray-300">Escolha secretamente UMA Suprema por maison. Não é permitido votar na própria maison.</p>${pairs.filter(p=>p.uid!==currentUser.uid).map(p=>{
+                    box.innerHTML=`<div class="border border-fashion-gold rounded-xl bg-fashion-950 p-5 space-y-5"><h3 class="font-cinzel text-fashion-gold text-xl">👑 THE SUPREME VOTE · THE PEOPLE DECIDE</h3><p class="text-xs text-gray-300">Escolha secretamente UMA Suprema por Designer. Não é permitido votar na próprio Designer.</p>${pairs.filter(p=>p.uid!==currentUser.uid).map(p=>{
                         const old=p.items.find(l=>l.slot===1),next=p.items.find(l=>l.slot===2);
                         const mine=supremeMyVotes.find(v=>v.targetUid===p.uid);
                         return `<section class="border-t border-fashion-gold/30 pt-4 space-y-3"><h4 class="font-cinzel text-white">${esc(old?.ate||next?.ate)}</h4><div class="grid grid-cols-2 gap-3">${[old,next].map((l,i)=>`<div class="space-y-2"><img src="${esc(l?.url||'')}" class="w-full img-look rounded"><p class="text-xs text-fashion-gold">${i===0?'👑 OLD SUPREME':'⚡ NEXT SUPREME'}</p><button data-supreme-vote="${esc(p.uid)}|${i+1}" class="w-full rounded px-2 py-2 text-xs ${mine?.slot===i+1?'bg-fashion-gold text-black':'bg-fashion-800 text-white border border-fashion-gold/40'}">${mine?.slot===i+1?'✓ Seu voto':'Votar para salvar'}</button></div>`).join('')}</div></section>`;
@@ -3120,12 +3068,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     <div class="bg-fashion-900 border border-fashion-700 rounded-lg overflow-hidden space-y-3 p-4 flex flex-col justify-between">
                         <div class="space-y-2">
                             <div class="flex justify-between items-center border-b border-fashion-700/60 pb-2">
-                                <button onclick="openAtelierHistory('${look.uid}', '${esc(look.ate)}')" class="font-cinzel font-bold text-fashion-gold hover:underline text-xs tracking-wider text-left flex items-center gap-1" title="Ver Histórico da Maison">
+                                <button onclick="openAtelierHistory('${look.uid}', '${esc(look.ate)}')" class="font-cinzel font-bold text-fashion-gold hover:underline text-xs tracking-wider text-left flex items-center gap-1" title="Ver Histórico do Designer">
                                     <i class="fa-solid fa-book-open text-[10px]"></i> ${esc(look.ate)}
                                 </button>
                                 ${currentUser.role==='plateia'?'':`<label class="flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer"><input type="checkbox" data-faceoff="${look.id}" ${isChecked ? 'checked' : ''} class="accent-fashion-gold"><span>Face-Off</span></label>`}
                             </div>
-                            <img src="${esc(look.url)}" alt="Editorial ${esc(look.titulo||'sem título')} da Maison ${esc(look.ate)}" class="w-full img-look rounded border border-fashion-700 shadow" loading="lazy" tabindex="0" role="button" title="Abrir editorial em tela cheia">
+                            <img src="${esc(look.url)}" alt="Editorial ${esc(look.titulo||'sem título')} do Designer ${esc(look.ate)}" class="w-full img-look rounded border border-fashion-700 shadow" loading="lazy" tabindex="0" role="button" title="Abrir editorial em tela cheia">
                             <div class="font-cinzel text-fashion-gold font-bold text-xs">${esc(look.titulo || 'Look Sem Nome')}</div>
                             <p class="text-[11px] text-gray-300 italic leading-relaxed">${esc(look.mem)}</p>
                             ${creativeDossier(look)}
@@ -3181,7 +3129,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(supremeBtn) {
                 if(globalState.themeId!=='theme_next_supreme'||!isCastVoter()||supremeBroadcast?.phase!=='voting') throw new Error('A votação Supreme não está aberta.');
                 const [targetUid,rawSlot]=supremeBtn.dataset.supremeVote.split('|');
-                if(targetUid===currentUser.uid) throw new Error('Você não pode votar na própria maison.');
+                if(targetUid===currentUser.uid) throw new Error('Você não pode votar na próprio Designer.');
                 const slot=Number(rawSlot);
                 if(![1,2].includes(slot)) throw new Error('Suprema inválida.');
                 await db.doc(`supreme_votos/${globalState.rodada}_${currentUser.uid}_${targetUid}`).set({rodada:globalState.rodada,voterUid:currentUser.uid,targetUid,slot,t:now()});
@@ -3339,8 +3287,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
               <div class="relative text-fashion-gold text-xs tracking-[.35em] uppercase">PROJECT RUNWAY: FAU · THE VOTING ROOM</div>
               <div class="relative text-4xl">👑 <span class="text-fashion-gold">✦</span> 🥀</div>
               <h2 class="relative font-cinzel text-white text-2xl md:text-4xl">THE CAST HAS THE POWER</h2>
-              <p class="relative text-sm text-gray-300 max-w-xl mx-auto">Duas escolhas independentes, dois envelopes secretos. Compare os editoriais, escolha uma Maison e confirme apenas quando tiver certeza.</p><div class="relative flex justify-center flex-wrap gap-2"><button type="button" id="ballotSeeRunway" class="border border-fashion-gold/50 rounded-lg px-4 py-2 text-xs text-fashion-gold">VER LOOKS NO DESFILE</button><button type="button" id="ballotSeeRules" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs text-gray-300">CONSULTAR REGRAS</button></div>
-              <div class="relative text-xs text-gray-400">RODADA ${esc(String(roundAtOpen))} · Não é permitido votar na própria Maison</div>
+              <p class="relative text-sm text-gray-300 max-w-xl mx-auto">Duas escolhas independentes, dois envelopes secretos. Compare os editoriais, escolha um Designer e confirme apenas quando tiver certeza.</p><div class="relative flex justify-center flex-wrap gap-2"><button type="button" id="ballotSeeRunway" class="border border-fashion-gold/50 rounded-lg px-4 py-2 text-xs text-fashion-gold">VER LOOKS NO DESFILE</button><button type="button" id="ballotSeeRules" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs text-gray-300">CONSULTAR REGRAS</button></div>
+              <div class="relative text-xs text-gray-400">RODADA ${esc(String(roundAtOpen))} · Não é permitido votar na próprio Designer</div>
             </header>
             <div id="castVoteProgress" class="rounded-xl border border-fashion-700 bg-fashion-900 px-5 py-4 text-sm text-gray-300" aria-live="polite">Preparando a cabine de votação...</div>
             <div class="grid md:grid-cols-2 gap-5">
@@ -3371,7 +3319,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const refreshStatus = (type) => {
           const conf=ballot[type];
           const chosenName=candidates?.find(d=>d.id===selectedBefore[type])?.data()?.ate;
-          $(`#${conf.status}`).textContent=saved[type]?`🔒 ENVELOPE LACRADO · ${chosenName?'Sua escolha: '+chosenName+'. ':''}Voto recebido em sigilo. O resultado permanece secreto até a revelação oficial.`:'Selecione uma Maison para confirmar.';
+          $(`#${conf.status}`).textContent=saved[type]?`🔒 ENVELOPE LACRADO · ${chosenName?'Sua escolha: '+chosenName+'. ':''}Voto recebido em sigilo. O resultado permanece secreto até a revelação oficial.`:'Selecione um Designer para confirmar.';
           $(`#${conf.button}`).textContent=saved[type]?'VOTO REGISTRADO ✓':`CONFIRMAR ${conf.label.toUpperCase()}`;
           $(`#${conf.button}`).disabled=!canVote||saved[type]||!document.querySelector(`input[name="ballot_${type}"]:checked`);
           document.querySelectorAll(`input[name="ballot_${type}"]`).forEach(r=>{r.disabled=!canVote||saved[type];if(saved[type])r.checked=false;});
@@ -3381,7 +3329,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const candidates=candidatesSnap.docs.filter(d=>!d.data().out&&!d.data().disabled&&d.id!==currentUser.uid);
         const renderCandidates=(type)=>{
           const conf=ballot[type];
-          $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>`<label class="flex items-center gap-3 p-3 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500" ${!canVote?'disabled':''}><span class="text-white text-sm">${esc(d.data().ate||'Maison')}</span></label>`).join(''):'<p class="text-sm text-gray-400">Nenhuma Maison elegível nesta rodada.</p>';
+          $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>`<label class="flex items-center gap-3 p-3 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500" ${!canVote?'disabled':''}><span class="text-white text-sm">${esc(d.data().ate||'Maison')}</span></label>`).join(''):'<p class="text-sm text-gray-400">Nenhum Designer elegível nesta rodada.</p>';
           refreshStatus(type);
         };
         for(const type of ['veto','fdm'])renderCandidates(type);
@@ -3389,7 +3337,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           document.getElementById(ballot[type].box)?.addEventListener('change',event=>{
             if(!event.target.matches(`input[name="ballot_${type}"]`))return;
             const selected=candidates.find(d=>d.id===event.target.value);
-            document.getElementById(ballot[type].status).textContent=selected?`Sua escolha: ${selected.data().ate||'Maison'}. Confira antes de lacrar o envelope.`:'Selecione uma Maison.';
+            document.getElementById(ballot[type].status).textContent=selected?`Sua escolha: ${selected.data().ate||'Maison'}. Confira antes de lacrar o envelope.`:'Selecione um Designer.';
             document.getElementById(ballot[type].button).disabled=!canVote||saved[type]||!selected;
             document.querySelectorAll(`input[name="ballot_${type}"]`).forEach(input=>{
               input.closest('label')?.classList.toggle('fau-ballot-selected',input.checked);
@@ -3408,9 +3356,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             if(globalState.rodada!==roundAtOpen)throw new Error('A rodada mudou. Atualize a página.');
             if(globalState.prazo&&now()>globalState.prazo)throw new Error('A votação desta rodada foi encerrada.');
             const selected=document.querySelector(`input[name="ballot_${type}"]:checked`);
-            if(!selected)throw new Error('Escolha uma Maison antes de confirmar.');
+            if(!selected)throw new Error('Escolha um Designer antes de confirmar.');
             const targetUid=selected.value;
-            if(targetUid===currentUser.uid||!candidates.some(d=>d.id===targetUid))throw new Error('Esta Maison não está elegível.');
+            if(targetUid===currentUser.uid||!candidates.some(d=>d.id===targetUid))throw new Error('Esto Designer não está elegível.');
             const name=candidates.find(d=>d.id===targetUid)?.data()?.ate||'Maison';
             if(!window.confirm(`Confirmar seu voto secreto para ${ballot[type].label}: ${name}? ATENÇÃO: após confirmar, não será possível alterar.`))return;
             const btn=$(`#${ballot[type].button}`);btn.disabled=true;
@@ -3453,10 +3401,10 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           </div>`);return;}
         const ref=db.doc(`votos/ber_${round}_${currentUser.uid}`), previous=await ref.get();
         renderView(`<div class="max-w-2xl mx-auto space-y-6 pb-12">
-          <header class="rounded-2xl bg-fashion-900 border border-fashion-red/40 p-8 text-center space-y-3"><div class="text-4xl">⚖️</div><p class="text-fashion-red text-xs tracking-[.25em]">THE FINAL SAY · SECRET BALLOT</p><h2 class="font-cinzel text-3xl text-white">THE ELIMINATION POOL</h2><p class="text-gray-300 text-sm">${globalState.themeId==='theme_tarantino'?'THE LAST STAND · ':''}Uma decisão pode mudar o destino de uma Maison. Escolha quem merece continuar.</p><p class="text-xs text-gray-400">Seu voto é secreto e definitivo. Confira sua escolha antes de confirmar.</p></header>
-          <section class="bg-fashion-900 border border-fashion-700 rounded-2xl p-5 md:p-7 space-y-4"><p class="text-xs uppercase tracking-widest text-fashion-gold">SELECT ONE MAISON TO SAVE</p><button type="button" id="saveVoteRunway" class="text-xs text-fashion-gold underline underline-offset-4">Rever os editoriais no desfile</button>
+          <header class="rounded-2xl bg-fashion-900 border border-fashion-red/40 p-8 text-center space-y-3"><div class="text-4xl">⚖️</div><p class="text-fashion-red text-xs tracking-[.25em]">THE FINAL SAY · SECRET BALLOT</p><h2 class="font-cinzel text-3xl text-white">THE ELIMINATION POOL</h2><p class="text-gray-300 text-sm">${globalState.themeId==='theme_tarantino'?'THE LAST STAND · ':''}Uma decisão pode mudar o destino de um Designer. Escolha quem merece continuar.</p><p class="text-xs text-gray-400">Seu voto é secreto e definitivo. Confira sua escolha antes de confirmar.</p></header>
+          <section class="bg-fashion-900 border border-fashion-700 rounded-2xl p-5 md:p-7 space-y-4"><p class="text-xs uppercase tracking-widest text-fashion-gold">SELECT ONE DESIGNER TO SAVE</p><button type="button" id="saveVoteRunway" class="text-xs text-fashion-gold underline underline-offset-4">Rever os editoriais no desfile</button>
           <div class="space-y-3">${pool.map((b,i)=>`<label class="fau-save-option flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-5 cursor-pointer hover:border-fashion-gold transition"><input type="radio" name="salvationVote" value="${esc(b.uid)}" ${previous.exists?'disabled':''} class="accent-yellow-500 w-5 h-5"><div class="flex-1"><div class="text-[10px] text-gray-500 tracking-[.2em]">NOMINEE ${String(i+1).padStart(2,'0')}</div><div class="font-cinzel text-white text-lg">${esc(b.ate)}</div><p class="text-[11px] text-gray-400 mt-1">I want this Maison to stay.</p></div><span class="text-fashion-gold text-xl" aria-hidden="true">✦</span></label>`).join('')}</div>
-          <p id="saveBallotStatus" class="text-xs text-gray-300" aria-live="polite">${previous.exists?`🔒 ENVELOPE LACRADO · Sua escolha: ${esc(pool.find(b=>b.uid===previous.data()?.alvo)?.ate||'Maison')}. Resultado oculto até o anúncio oficial.`:'Selecione a Maison que deseja salvar. Seu voto só será registrado após a confirmação.'}</p>
+          <p id="saveBallotStatus" class="text-xs text-gray-300" aria-live="polite">${previous.exists?`🔒 ENVELOPE LACRADO · Sua escolha: ${esc(pool.find(b=>b.uid===previous.data()?.alvo)?.ate||'Maison')}. Resultado oculto até o anúncio oficial.`:'Selecione o Designer que deseja salvar. Seu voto só será registrado após a confirmação.'}</p>
           <button id="btnSaveAtelier" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-bold py-4 rounded-lg uppercase tracking-widest text-xs">${previous.exists?'VOTO REGISTRADO ✓':'CONFIRMAR VOTO PARA SALVAR'}</button></section>
           <div class="rounded-xl border border-fashion-700/70 p-5 text-center space-y-2"><p class="font-cinzel text-fashion-gold">One choice. One chance to save.</p><p class="text-xs text-gray-400">Você está votando para <strong>salvar</strong>, não para eliminar. As duas Maisons mais salvas continuam; a menos votada corre o risco de deixar a competição, respeitando os desempates oficiais.</p></div><p class="text-center text-xs text-gray-400">🔒 O voto fica lacrado. Nem a escolha registrada nem a contagem ou o resultado são exibidos antes da revelação oficial.</p></div>`);
         $('#saveVoteRunway')?.addEventListener('click',()=>navigate('runway'));
@@ -3470,7 +3418,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         if(previous.exists)$('#btnSaveAtelier').disabled=true;
         $('#btnSaveAtelier').onclick=safeExec(async()=>{
           if(previous.exists)throw new Error('Este voto já foi registrado e não pode ser alterado.');
-          const chosen=document.querySelector('input[name="salvationVote"]:checked');if(!chosen)throw new Error('Escolha uma Maison para salvar.');
+          const chosen=document.querySelector('input[name="salvationVote"]:checked');if(!chosen)throw new Error('Escolha um Designer para salvar.');
           if(globalState.rodada!==round||!globalState.urna||!isCastVoter()||globalState.berlinda?.some(b=>b.uid===currentUser.uid)||!globalState.berlinda?.some(b=>b.uid===chosen.value))throw new Error('A votação mudou ou foi encerrada.');
           const name=pool.find(b=>b.uid===chosen.value)?.ate||'Maison';if(!window.confirm(`Salvar ${name}? Seu voto será secreto e DEFINITIVO. Não será possível alterar depois de confirmar.`))return;
           const btn=$('#btnSaveAtelier');btn.disabled=true;
@@ -4021,7 +3969,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             fauStatusEl.innerHTML=[
               '<p class="text-[11px] text-fashion-gold tracking-widest">✂️ ENTREGAS E AVALIAÇÕES</p>',
               '<div class="grid grid-cols-1 lg:grid-cols-2 gap-3">',
-              fauStatusCard('✂️ Entregas das Maisons',cast,submitted,`${required} look(s) por Maison`),
+              fauStatusCard('✂️ Entregas dos Designers',cast,submitted,`${required} look(s) por Maison`),
               fauStatusCard('⚖️ Avaliações dos jurados',jurors,juryDone,lookIds.size?`${lookIds.size} looks na bancada`:'aguardando looks'),
               '</div>',
               '<p class="text-[11px] text-fashion-gold tracking-widest pt-2">🗳️ VOTAÇÕES DA RODADA</p>',
@@ -4092,7 +4040,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         // Cenas são marcadores editoriais da produção, não gatilhos de publicação.
         const liveScenes=[
           ['🎬','Opening Sequence','Abertura e briefing'],['✂️','The Workroom','Bastidores e entregas'],
-          ['👠','The Runway','Apresentação das Maisons'],['⚖️','Judges’ Verdict','Avaliação da bancada'],
+          ['👠','The Runway','Apresentação dos Designers'],['⚖️','Judges’ Verdict','Avaliação da bancada'],
           ['🏆','The Weekly WIN','Anúncio do WIN da rodada'],['🗳️','The Voting Room','Votação dos estilistas'],
           ['🚨','The Elimination Pool','Revelação dos elegíveis'],['🏆','The Final Decision','Resultado oficial']
         ];
@@ -4226,7 +4174,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           if(!productionConfirm('Você já anunciou os títulos no WhatsApp e conferiu os desempates? Eles ficarão visíveis no After Show.'))return;
           await db.collection('fau_titulos_publicos').doc(round).set({...d,round,published:true,updatedAt:now(),updatedBy:currentUser.uid});
           await productionLog('official_titles_published',{round,icon:!!d.icon,fora:!!d.fora,saved:d.saved.length});
-          $('#fauOfficialStatus').textContent='Títulos registrados. Cada Maison verá sua distinção no After Show.';
+          $('#fauOfficialStatus').textContent='Títulos registrados. Cado Designer verá sua distinção no After Show.';
         });
         $('#fauArchiveSync').onclick=safeExec(async()=>{
           if(!isAdmin||!globalState.rodada)throw new Error('Configure a rodada primeiro.');
@@ -4515,8 +4463,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const imageSlots=Array.from({length:count},(_,i)=>`<div class="border border-dashed border-fashion-gold/50 rounded-lg p-3 text-center"><span class="text-fashion-gold text-lg" aria-hidden="true">▧</span><p class="text-xs text-white">LOOK ${i+1}</p><p class="text-[10px] text-gray-400">Selecionar imagem do dispositivo (.jpg, .png, .webp)</p></div>`).join('');
             let body='';
             if(directorRole==='designer')body=`${card('THE BRIEFING',theme?.mandate||$('#newRoundRules')?.value||'Briefing definido pela produção.')}${draw?card('YOUR ENVELOPE','A dinâmica individual aparece aqui quando o sorteio ou escolha for habilitado.'):''}<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${imageSlots}</div>${extra?card('CAMPO ESPECIAL',extra.label):''}${card('THE SUBMISSION','Título e conceito por look · Upload de arquivos · Entrega editável até o encerramento.')}`;
-            if(directorRole==='judge')body=`${card('THE JUDGES’ PANEL',`Avaliação de ${count} look(s) por Maison. Cinco critérios por look, notas de 0 a 10.`)}${card('VISUALIZAÇÃO','Imagens enviadas pelos designers, título e conceito; navegação entre as Maisons.')}${special?card('DINÂMICA DA RODADA',special):''}${card('THE CRITIQUE CALL','Críticas solicitadas somente depois da apuração, quando a produção liberar essa etapa.')}`;
-            if(directorRole==='audience')body=`${card('THE FRONT ROW',`Galeria editorial de ${count} look(s) por Maison, após liberação pela produção.`)}${card('THE RUNWAY','Ampliação de imagens, título e conceito. Nenhuma nota confidencial aparece.')}${draw?card('SEGREDOS DO DESAFIO','Sorteios e escolhas individuais só aparecem quando forem públicos.'):''}${card('RESULTADOS','Classificações somente após anúncio oficial; texto e ícones, nunca apenas cores.')}`;
+            if(directorRole==='judge')body=`${card('THE JUDGES’ PANEL',`Avaliação de ${count} look(s) por Designer. Cinco critérios por look, notas de 0 a 10.`)}${card('VISUALIZAÇÃO','Imagens enviadas pelos designers, título e conceito; navegação entre as Maisons.')}${special?card('DINÂMICA DA RODADA',special):''}${card('THE CRITIQUE CALL','Críticas solicitadas somente depois da apuração, quando a produção liberar essa etapa.')}`;
+            if(directorRole==='audience')body=`${card('THE FRONT ROW',`Galeria editorial de ${count} look(s) por Designer, após liberação pela produção.`)}${card('THE RUNWAY','Ampliação de imagens, título e conceito. Nenhuma nota confidencial aparece.')}${draw?card('SEGREDOS DO DESAFIO','Sorteios e escolhas individuais só aparecem quando forem públicos.'):''}${card('RESULTADOS','Classificações somente após anúncio oficial; texto e ícones, nunca apenas cores.')}`;
             if(directorRole==='admin')body=`${card('PRODUCTION CHECKLIST',`Receber ${count} arquivo(s) de imagem por Designer · Fechar entregas · Abrir julgamento · Publicar quando decidir.`)}${draw?card('TWIST CONTROL',`Dinâmica especial: ${theme.drawType}. Verificar sorteios e permissões antes de liberar.`):''}${special?card('SPECIAL RULE',special):''}${card('ELIMINAÇÃO',isFinal?'Grande final: pontuação acumulada reiniciada.':elimin==='none'?'Rodada não eliminatória.':elimin==='double'?'Rodada com eliminação dupla.':'Rodada com eliminação padrão.')}${card('PRIVACIDADE','Esta prévia não expõe votos, notas, facções secretas ou resultados não publicados.')}`;
             const demo=directorRole==='designer'?`<section class="rounded-lg border border-fashion-gold/40 p-3 space-y-3"><p class="text-[10px] text-fashion-gold tracking-widest">INTERACTIVE TEST · LOCAL ONLY</p><label class="text-xs text-gray-200 block">Fotografia de teste (arquivo do dispositivo)<input id="fauDemoImage" type="file" accept="image/png,image/jpeg,image/webp" class="block w-full mt-2 text-xs" /></label><img id="fauDemoImagePreview" alt="Prévia da fotografia selecionada" class="hidden max-h-56 w-full object-contain rounded bg-black" /><label class="text-xs text-gray-200 block">Nome do look de teste<input id="fauDemoTitle" maxlength="100" class="block w-full mt-2 p-2 bg-black border border-fashion-700 rounded text-white" placeholder="Ex.: The First Sin" /></label><button type="button" id="fauDemoSubmit" class="px-4 py-2 rounded bg-fashion-gold text-black text-xs font-bold">Simular entrega</button><p id="fauDemoMessage" role="status" aria-live="polite" class="text-xs text-gray-300">Nenhum dado será enviado ou salvo.</p></section>`:directorRole==='judge'?`<section class="rounded-lg border border-fashion-gold/40 p-3 space-y-3"><p class="text-xs text-fashion-gold">INTERACTIVE TEST · THE JUDGES' PANEL</p><p class="text-[11px] text-gray-300">Avalie ficticiamente os ${count} looks. Cada critério recebe nota de 0 a 10. Nada será salvo.</p>${Array.from({length:count},(_,look)=>`<fieldset class="border border-fashion-700 rounded-lg p-3 space-y-2"><legend class="text-fashion-gold text-xs px-1">LOOK ${look+1}</legend>${CRITERIOS.map((criterion,i)=>`<label class="flex items-center justify-between gap-2 text-xs text-gray-200"><span>${esc(criterion)}</span><input type="number" class="fau-demo-criterion w-16 bg-black border border-fashion-700 rounded p-2 text-white" min="0" max="10" step="0.5" value="5" aria-label="Look ${look+1}, ${esc(criterion)}"></label>`).join('')}<p class="text-xs text-fashion-gold">Total: <output class="fau-demo-total">25</output> / 50</p></fieldset>`).join('')}<p class="text-[11px] text-gray-400">Simulação local · sem notas ou comentários reais.</p></section>`:directorRole==='audience'?`<section class="rounded-lg border border-fashion-gold/40 p-3 space-y-3"><p class="text-xs text-fashion-gold">FRONT ROW · VISIBILITY TEST</p><label class="flex items-center gap-2 text-xs text-gray-200"><input id="fauDemoPublicToggle" type="checkbox" class="accent-amber-300"> Simular liberação pública dos looks</label><div id="fauDemoPublicContent" role="status" class="text-xs text-gray-300">THE RUNWAY IS CLOSED · A plateia aguarda a liberação da produção.</div><p class="text-[10px] text-gray-400">Simulação visual. Não publica nem revela arquivos ou dados privados.</p></section>`:'';
             root.innerHTML=`<div class="space-y-3">${header}<div class="grid gap-2 mt-4">${body}</div>${demo}<p class="text-[10px] text-gray-400 border-t border-fashion-700 pt-3">PRÉVIA ILUSTRATIVA E TESTE LOCAL · Não reproduz integralmente as dinâmicas reais. Não grava no Firebase. Para validar segurança, use contas reais de teste e as regras do projeto.</p></div>`;
@@ -4869,14 +4817,14 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 for(const r of results.filter(r=>r.decidedBy==='pending_self')) batch.set(db.doc(`supreme_pendencias/${globalState.rodada}_${r.uid}`),{pending:true,uid:r.uid,round:globalState.rodada});
                 await batch.commit();
             }
-            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold rounded p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold">👑 THE PEOPLE DECIDE · DOSSIÊ PRIVADO</h3><p class="text-xs">Fase: ${esc(st.phase)}. Resultado ainda não publicado.</p>${results.map(r=>`<div class="text-xs border-b border-fashion-700 pb-2"><strong>${esc(r.ate)}</strong> · OLD ${r.old} × NEXT ${r.next} ${r.slot?'· Vencedora: '+(r.slot===1?'OLD':'NEXT')+' · '+esc(r.decidedBy):'· EMPATE: a própria maison decide'}</div>`).join('')}</div>`;
+            $('#adminOutput').innerHTML=`<div class="border border-fashion-gold rounded p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold">👑 THE PEOPLE DECIDE · DOSSIÊ PRIVADO</h3><p class="text-xs">Fase: ${esc(st.phase)}. Resultado ainda não publicado.</p>${results.map(r=>`<div class="text-xs border-b border-fashion-700 pb-2"><strong>${esc(r.ate)}</strong> · OLD ${r.old} × NEXT ${r.next} ${r.slot?'· Vencedora: '+(r.slot===1?'OLD':'NEXT')+' · '+esc(r.decidedBy):'· EMPATE: a próprio Designer decide'}</div>`).join('')}</div>`;
         });
         if ($('#btnSupremePublish')) $('#btnSupremePublish').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
             if(st.phase!=='closed') throw new Error('Encerre a votação antes de confirmar vencedoras.');
             const results=await supremeResolveTies(await supremeResults());
-            if(results.some(r=>!r.slot)) throw new Error('Há empate sem voto válido do Ícone ou WIN. A própria maison empatada precisa escolher no Workroom antes da confirmação.');
+            if(results.some(r=>!r.slot)) throw new Error('Há empate sem voto válido do Ícone ou WIN. A próprio Designer empatada precisa escolher no Workroom antes da confirmação.');
             if(!productionConfirm('CONFIRMAR as Supremas vencedoras e liberar APENAS essas imagens para os jurados? As perdedoras não receberão notas.')) return;
             await supremeRef().update({phase:'selected',winners:results.map(r=>({uid:r.uid,slot:r.slot,ate:r.ate,old:r.old,next:r.next,decidedBy:r.decidedBy,deciderUid:r.deciderUid||null})),publishedBy:currentUser.uid,publishedAt:firebase.firestore.FieldValue.serverTimestamp()});
             await productionLog('supreme_winners_selected',{round:globalState.rodada,winners:results.map(r=>({uid:r.uid,slot:r.slot}))});
@@ -5137,7 +5085,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 if (isFinal) return ['WINNER · VENCEDOR DA TEMPORADA', '2º LUGAR', '3º LUGAR'][idx] || '';
                 if (idx === 0) return 'WIN (PROTEGIDO)';
                 // HIGH/TOP e LOW/BOTTOM são classificações da rodada, não o Elimination Pool.
-                // Em elencos pequenos, não atribuir HIGH e LOW à mesma Maison.
+                // Em elencos pequenos, não atribuir HIGH e LOW à mesmo Designer.
                 const highCount = Math.min(2, Math.max(0, count - 1));
                 const lowCount = isNonElim ? 0 : Math.min(3, Math.max(0, count - 1 - highCount));
                 if (idx <= highCount) return 'HIGH';
@@ -5576,7 +5524,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const row=castRows.find(x=>x.uid===uid);if(!row)throw new Error('Conta não encontrada.');
             const r=row.registration||{},l=row.legacy||{},p=row.profile||{};
             const real=prompt('Nome real:',r.real||l.real||'');if(real===null)return;
-            const designer=prompt('Nome de Designer / Maison:',p.ate||r.designer||l.ate||'');if(designer===null)return;
+            const designer=prompt('Nome de Designer / Designer:',p.ate||r.designer||l.ate||'');if(designer===null)return;
             const username=r.username||p.username||l.username||''; // O login real não pode ser alterado editando o Firestore.
             const bio=prompt('Manifesto / biografia:',p.bio||'');if(bio===null)return;
             if(real.trim().length<2||real.length>90||designer.trim().length<2||designer.length>70||username.length>100||bio.length>300||/[<>]/.test(real+designer+username+bio))throw new Error('Confira os campos e limites de caracteres.');
@@ -5704,7 +5652,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const title = $('#historyModalTitle');
         const content = $('#historyModalContent');
 
-        title.textContent = `Portfólio da Maison — ${atelierName}`;
+        title.textContent = `Portfólio do Designer — ${atelierName}`;
         content.innerHTML = '<p class="col-span-full text-gray-400 py-8">Carregando looks e pontuações...</p>';
         modal.classList.remove('hidden');
 
@@ -5726,7 +5674,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         let bioHtml = '';
         if (perfilData.bio) {
             bioHtml = `<div class="col-span-full bg-fashion-950 p-3 rounded border border-fashion-gold/40 text-left text-xs text-gray-300 italic mb-2">
-                <strong class="text-fashion-gold not-italic font-cinzel">Maison: ${esc(perfilData.ate || 'Não definida')}</strong> — "${esc(perfilData.bio)}"
+                <strong class="text-fashion-gold not-italic font-cinzel">Designer: ${esc(perfilData.ate || 'Não definida')}</strong> — "${esc(perfilData.bio)}"
             </div>`;
         }
 
