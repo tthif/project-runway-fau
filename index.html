@@ -2566,7 +2566,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           <button type="button" id="archiveShowOverview" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">THE ARCHIVE</button>
           <button type="button" id="archiveShowTrackRecord" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">THE TRACK RECORD</button>
         </nav>
-        <div id="fauArchiveLoading" class="text-gray-400 text-sm" role="status">Abrindo os arquivos publicados…</div>
+        <div id="fauArchiveLoading" class="text-gray-400 text-sm animate-pulse" role="status">✦ Abrindo os arquivos oficiais da temporada…</div>
         <div id="fauArchiveBody" class="space-y-8"></div>
       </section>`);
       const trackButton=document.getElementById('archiveShowTrackRecord');
@@ -2651,17 +2651,56 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             ${lines.length?lines.map(l=>`<p class="text-gray-300 text-sm mt-1">${l}</p>`).join(''):'<p class="text-gray-400 text-sm mt-1">Aguardando resultados oficiais.</p>'}
           </article>`;
         }).join('');
+        const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^https:\/\//i.test(x.image)).length;
+        const availableRounds=[...new Set([...rounds.map(r=>r.round),...publications.map(p=>roundKey(p.round))])].filter(Boolean).sort((a,b)=>fauArchiveSort(b,a));
+        const gallery=publications.filter(x=>typeof x.image==='string'&&/^https:\/\//i.test(x.image)).sort((a,b)=>fauArchiveSort(roundKey(b.round),roundKey(a.round))).map((x,i)=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" data-round="${esc(roundKey(x.round))}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
+          <img src="${esc(x.image)}" loading="lazy" alt="Look publicado: ${esc(x.title||'Criação do acervo')}" class="fau-archive-img w-full aspect-[3/4] object-contain bg-black" />
+          <div class="p-3 space-y-1"><p class="text-[10px] tracking-widest text-fashion-gold">WEEK ${esc(roundKey(x.round))}</p><h4 class="text-sm text-white font-cinzel">${esc(x.title||'Criação do arquivo')}</h4>${x.designer||x.ate?`<p class="text-xs text-gray-400">${esc(x.designer||x.ate)}</p>`:''}</div></article>`).join('');
         body.innerHTML=`
-          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">The WINs & The Icons</h3>
-          <p class="text-gray-400 text-sm">WIN é a vitória de uma rodada, decidida pelos jurados. WINNER é o título exclusivo de quem vence a temporada. Ícone da Moda é uma distinção separada, decidida pelos participantes. Todos ficam registrados no Hall.</p>
-          ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm">Nenhuma conquista oficial disponível ainda.</p>'}</section>
-          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">The Designers' Dossiers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
-          <section class="space-y-3"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
-          <p class="text-gray-400 text-sm">A história da competição, capítulo por capítulo, com base apenas nos anúncios oficiais.</p>
+          <div class="grid grid-cols-3 gap-2 sm:gap-4" aria-label="Resumo do arquivo">
+            <div class="bg-fashion-950 border border-fashion-700 rounded-xl p-3 sm:p-5"><p class="text-2xl sm:text-3xl font-cinzel text-white">${rounds.length}</p><p class="text-[10px] text-gray-400 uppercase tracking-wider mt-1">Capítulos oficiais</p></div>
+            <div class="bg-fashion-950 border border-fashion-700 rounded-xl p-3 sm:p-5"><p class="text-2xl sm:text-3xl font-cinzel text-white">${people.size}</p><p class="text-[10px] text-gray-400 uppercase tracking-wider mt-1">Designers registrados</p></div>
+            <div class="bg-fashion-950 border border-fashion-700 rounded-xl p-3 sm:p-5"><p class="text-2xl sm:text-3xl font-cinzel text-white">${totalLooks}</p><p class="text-[10px] text-gray-400 uppercase tracking-wider mt-1">Looks publicados</p></div>
+          </div>
+          <div class="flex flex-wrap gap-2" role="tablist" aria-label="Explorar o arquivo">
+            <button type="button" role="tab" aria-selected="true" data-archive-tab="gallery" class="fau-archive-tab bg-fashion-gold text-black font-bold rounded px-4 py-3 text-xs">THE LOOKBOOK</button>
+            <button type="button" role="tab" aria-selected="false" data-archive-tab="hall" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">HALL OF FASHION</button>
+            <button type="button" role="tab" aria-selected="false" data-archive-tab="designers" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">DESIGNER LEGACY</button>
+            <button type="button" role="tab" aria-selected="false" data-archive-tab="story" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">SEASON STORY</button>
+          </div>
+          <section data-archive-panel="gallery" class="space-y-4" role="tabpanel">
+            <div><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL LOOKBOOK</p><h3 class="font-cinzel text-2xl text-white mt-1">Every Look Tells a Story</h3><p class="text-sm text-gray-400 mt-2">Explore as criações que já foram oficialmente liberadas pela produção.</p></div>
+            <div class="flex flex-col sm:flex-row gap-2"><label class="flex-1"><span class="sr-only">Buscar no arquivo</span><input id="fauArchiveSearch" type="search" placeholder="Buscar look, Designer ou conceito…" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg px-4 py-3 text-sm text-white" /></label>
+            <label><span class="sr-only">Filtrar por semana</span><select id="fauArchiveRound" class="w-full sm:w-auto bg-fashion-950 border border-fashion-700 rounded-lg px-4 py-3 text-sm text-white"><option value="">Todas as semanas</option>${availableRounds.map(r=>`<option value="${esc(r)}">WEEK ${esc(r)}</option>`).join('')}</select></label></div>
+            <p id="fauArchiveCount" class="text-xs text-gray-400" aria-live="polite"></p>
+            <div id="fauArchiveGallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${gallery||'<p class="col-span-full text-sm text-gray-400 py-8 text-center">The runway is still waiting. Os looks aparecerão aqui após a publicação oficial.</p>'}</div>
+            <p id="fauArchiveEmpty" class="hidden text-sm text-gray-400 text-center py-8">Nenhum look corresponde à sua busca. Experimente outra palavra ou semana.</p>
+          </section>
+          <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">The WINs & The Icons</h3>
+          <p class="text-gray-400 text-sm">WIN é a vitória de uma rodada, decidida pelos jurados. WINNER é o título exclusivo de quem vence a temporada. Ícone da Moda é uma distinção separada, decidida pelos participantes.</p>
+          ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm py-6">O Hall abrirá após as primeiras conquistas oficiais.</p>'}</section>
+          <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">The Designers’ Dossiers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
+          <section data-archive-panel="story" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
+          <p class="text-gray-400 text-sm">Reviva a temporada capítulo por capítulo, somente com anúncios oficiais.</p>
           <div class="bg-fashion-950 border border-fashion-700 rounded-xl p-5 space-y-3">${story||'<p class="text-gray-400 text-sm">A primeira história ainda será escrita.</p>'}</div></section>
           ${ranksResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O histórico oficial não está acessível com as permissões atuais. O site não tentará ler notas privadas.</p>':''}
           ${titlesResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Os títulos publicados não estão acessíveis com as permissões atuais.</p>':''}
           ${publicationsResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O acervo de imagens publicadas não está acessível com as permissões atuais.</p>':''}`;
+        const tabs=[...body.querySelectorAll('[data-archive-tab]')];
+        tabs.forEach(tab=>tab.addEventListener('click',()=>{
+          const chosen=tab.dataset.archiveTab;
+          tabs.forEach(t=>{const active=t===tab;t.setAttribute('aria-selected',String(active));t.classList.toggle('bg-fashion-gold',active);t.classList.toggle('text-black',active);t.classList.toggle('font-bold',active);t.classList.toggle('border',!active);t.classList.toggle('border-fashion-700',!active);});
+          body.querySelectorAll('[data-archive-panel]').forEach(panel=>panel.classList.toggle('hidden',panel.dataset.archivePanel!==chosen));
+        }));
+        const search=body.querySelector('#fauArchiveSearch'),select=body.querySelector('#fauArchiveRound');
+        const filterArchive=()=>{
+          const q=(search?.value||'').trim().toLocaleLowerCase('pt-BR'),round=select?.value||'';
+          let visible=0;
+          body.querySelectorAll('.fau-archive-entry').forEach(card=>{const show=(!round||card.dataset.round===round)&&(!q||(card.dataset.search||'').includes(q));card.classList.toggle('hidden',!show);if(show)visible++;});
+          const counter=body.querySelector('#fauArchiveCount');if(counter)counter.textContent=`${visible} ${visible===1?'look encontrado':'looks encontrados'}`;
+          body.querySelector('#fauArchiveEmpty')?.classList.toggle('hidden',visible>0||totalLooks===0);
+        };
+        search?.addEventListener('input',filterArchive);select?.addEventListener('change',filterArchive);filterArchive();
         loading?.remove();
       }catch(e){console.error('Fashion Archive',e);if(loading?.isConnected)loading.textContent='Não foi possível abrir o arquivo agora.';}
     };
