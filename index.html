@@ -1045,7 +1045,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         if(submit){submit.disabled=closed||submit.dataset.saving==='true';if(closed)submit.textContent=phase==='closed'?'PRAZO ENCERRADO · ENVIO BLOQUEADO':'AGUARDANDO ABERTURA';}
         document.querySelectorAll('#fauInlineEditHost button[type="submit"],#fauInlineEditHost [data-save-edit]').forEach(b=>{b.disabled=closed;});
         const form=document.getElementById('workroomFormModule');
-        if(form&&closed){form.querySelectorAll('input[type="file"],#lookTitleInput,#lookMemorialText').forEach(el=>{el.disabled=true;});}
+        if(form){form.querySelectorAll('input[type="file"],#lookTitleInput,#lookMemorialText').forEach(el=>{el.disabled=closed;});}
 
         if(fill){const elapsed = !deadline ? 0 : remaining<=0 ? 100 : remaining<=600 ? 97 : remaining<=3600 ? 90 : remaining<=86400 ? 75 : 30;fill.style.width=elapsed+'%';}
         // No repeated alarms or modal interruptions; changing the stage is visual only.
@@ -1954,7 +1954,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             $('#workroomThermometer').innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><p class="text-[10px] tracking-[.22em] text-fashion-gold">BACKSTAGE · DELIVERY PULSE</p><h3 class="font-cinzel text-white text-base mt-1">The Submission Board</h3></div><span class="text-[10px] text-gray-400">CONTAGEM ANÔNIMA</span></div>
               <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent===null?'—':sent}</strong><span class="text-gray-300 text-xs">JÁ ENVIARAM</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending===null?'—':pending}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
               <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
-              <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a contagem oficial da produção.':`${percent}% dos Designers já entregaram. Nenhuma identidade é revelada.`}</p>`;
+              <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a sincronização da produção.':`${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${submissionPulse?.updatedAt?.toDate ? ' · Atualizado '+submissionPulse.updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`}</p>`;
 
             const beauty = globalState.themeId === 'theme_beauty_eye' ? await beautyState() : null;
             const beautyAssignment = beauty?.assignments?.find(a=>a.uid===currentUser.uid);
@@ -2310,17 +2310,16 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     uid: currentUser.uid
                 });
 
+                if(now() >= Number(globalState.prazo))throw new Error('TIME IS UP · O prazo terminou durante o envio da imagem.');
                 try {await batch.commit();}
-                catch(error){if(submitButton){submitButton.disabled=false;submitButton.textContent='TENTAR NOVAMENTE';}throw error;}
+                catch(error){if(submitButton){submitButton.disabled=now()>=Number(globalState.prazo);submitButton.textContent=submitButton.disabled?'PRAZO ENCERRADO':'TENTAR NOVAMENTE';}throw error;}
                 showToast('Entrega confirmada pelo servidor! Make it work!');
             }
         });
 
-        db.collection('perfis').get().then(snap => {
-            const profiles = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            activeStylistsCount = profiles.filter(d => d.role === 'estilista' && !d.out && !d.disabled).length;
-            refreshWorkroomUI();
-        });
+        // Total de participantes vem exclusivamente do agregado anônimo do backend.
+        // Não consultar o elenco completo no navegador do Designer.
+
 
         let myEvaluations = [];
 
@@ -2331,7 +2330,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
         // Notas individuais são privadas; o designer consulta apenas o acumulado no perfil.
 
-        // This document must be written by trusted production backend (not by designers).
+        // A Direção publica somente os totais; Designers nunca leem envios alheios.
         // Schema: config/entregas_publicas -> {rodada, enviados, total}.
         sub(db.doc('config/entregas_publicas'), doc => {
             const data = doc.exists ? doc.data() : null;
@@ -4167,6 +4166,49 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         ['looks','avaliacoes','votos','perfis'].forEach(name=>{
           const query=name==='perfis'?db.collection(name):db.collection(name).where('rodada','==',globalState.rodada || 'sem-rodada');
           sub(query,()=>refreshFauStatus());
+        });
+
+        // Contagem anônima sem Cloud Functions: a Direção sincroniza o placar
+        // com dados privados, publicando apenas números no documento público.
+        // Não há leitura de nomes/envios alheios pelo Designer.
+        let fauRosterForPulse = null;
+        let fauLooksForPulse = null;
+        let fauPulseWriting = false;
+        let fauPulsePending = false;
+        let fauLastPulseSignature = '';
+        const syncFauPublicPulse = async () => {
+            if (!isAdmin || !globalState.rodada || !fauRosterForPulse || !fauLooksForPulse) return;
+            const round = String(globalState.rodada);
+            const active = new Set(fauRosterForPulse.docs.filter(d => {
+                const p = d.data();
+                return p.role === 'estilista' && p.disabled !== true && p.ativo !== false && p.eliminado !== true;
+            }).map(d => d.id));
+            const required = Number(getTheme()?.numSubmissoes || globalState.numSubmissoes || 1);
+            const counts = new Map();
+            fauLooksForPulse.docs.forEach(d => {
+                const l = d.data();
+                if(active.has(l.uid)) counts.set(l.uid, (counts.get(l.uid)||0)+1);
+            });
+            const sent = [...counts.values()].filter(n => n >= required).length;
+            const signature = [round, sent, active.size, required].join('|');
+            if(signature === fauLastPulseSignature) return;
+            if(fauPulseWriting){fauPulsePending=true;return;}
+            fauPulseWriting=true;
+            try {
+                await db.doc('config/entregas_publicas').set({
+                    rodada:round, enviados:sent, total:active.size,
+                    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                });
+                fauLastPulseSignature=signature;
+            }catch(error){console.warn('Não foi possível atualizar a contagem anônima:',error);}
+            finally {
+                fauPulseWriting=false;
+                if(fauPulsePending){fauPulsePending=false;queueMicrotask(syncFauPublicPulse);}
+            }
+        };
+        sub(db.collection('perfis'), snap=>{fauRosterForPulse=snap;syncFauPublicPulse();});
+        sub(db.collection('looks').where('rodada','==',globalState.rodada||'sem-rodada'), snap=>{
+            fauLooksForPulse=snap;syncFauPublicPulse();
         });
 
         sub(db.collection('perfis'), snap => {
