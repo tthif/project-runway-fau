@@ -282,21 +282,23 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 @media(prefers-reduced-motion:reduce){.fau-rulebook *{scroll-behavior:auto!important;transition:none!important}}
 </style>
 <style id="fau-account-mobile-fix">
-header>div{min-width:0;gap:14px}header>div>div:first-child{min-width:0;flex-shrink:0}#userHeaderSlot{min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:9px}#userHeaderSlot .fau-account-name{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}#userHeaderSlot .fau-account-role{white-space:nowrap;flex-shrink:0}#userHeaderSlot .fau-account-link{white-space:nowrap;flex-shrink:0}#userHeaderSlot button{min-height:36px;flex-shrink:0}
+header>div{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0;min-height:64px;height:auto!important}
+header>div>div:first-child{display:flex;align-items:center;gap:7px!important;flex:0 1 auto;min-width:0;white-space:nowrap}
+#userHeaderSlot{display:flex!important;flex:0 0 auto;align-items:center;justify-content:flex-end;gap:7px!important;min-width:0;white-space:nowrap}
+#userHeaderSlot .fau-account-name{display:none!important}
+#userHeaderSlot .fau-account-role{white-space:nowrap;flex-shrink:0}
+#userHeaderSlot .fau-account-link{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;min-width:34px;min-height:36px;border-radius:7px}
+#userHeaderSlot button[title="Sair"]{flex-shrink:0;margin:0!important;min-width:30px;min-height:36px}
 @media(max-width:640px){
- header>div{height:auto!important;min-height:64px;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;gap:8px!important;padding:12px 16px!important}
- header>div>div:first-child{width:100%;display:flex;align-items:center;gap:9px!important}
- header .font-cinzel{font-size:13px!important;letter-spacing:.07em!important;white-space:nowrap}
- header .font-cinzel+span{display:inline!important;font-size:10px!important;white-space:nowrap;padding-left:9px!important}
- #userHeaderSlot{width:100%;justify-content:flex-start;gap:8px!important;flex-wrap:nowrap}
- #userHeaderSlot .fau-account-name{display:block;flex:1 1 auto;max-width:none;min-width:0;font-size:11px;color:#d1b38b}
- #userHeaderSlot .fau-account-role{font-size:9px!important;padding:6px 8px!important}
- #userHeaderSlot .fau-account-link{font-size:10px!important;padding:7px 9px!important;border-radius:7px}
- #userHeaderSlot .fau-account-link:before{content:none!important}
- #userHeaderSlot button[title="Sair"]{margin-left:auto!important;padding:7px!important}
+ header>div{padding:10px 12px!important;gap:6px!important}
+ header .font-cinzel{font-size:clamp(9px,2.65vw,13px)!important;letter-spacing:0!important;white-space:nowrap}
+ header .font-cinzel+span{font-size:clamp(8px,2vw,10px)!important;padding-left:6px!important;letter-spacing:0!important;white-space:nowrap}
+ #userHeaderSlot{gap:5px!important}
+ #userHeaderSlot .fau-account-role{font-size:9px!important;padding:6px 5px!important;letter-spacing:0!important}
+ #userHeaderSlot .fau-account-link{padding:6px!important;font-size:13px!important}
  nav{top:0!important;position:relative!important}
 }
-@media(max-width:380px){#userHeaderSlot .fau-account-name{font-size:10px}#userHeaderSlot .fau-account-link{font-size:9px!important}}
+@media(max-width:360px){header>div{padding-left:7px!important;padding-right:7px!important}header .font-cinzel{font-size:9px!important}#userHeaderSlot .fau-account-role{font-size:8px!important}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
@@ -1447,9 +1449,9 @@ header>div{min-width:0;gap:14px}header>div>div:first-child{min-width:0;flex-shri
         }
 
         $('#userHeaderSlot').innerHTML = `
-            <span class="fau-account-name text-fashion-gold font-medium" title="${esc(currentUser.ate)}">${esc(currentUser.ate)}</span>
-            <span class="fau-account-role text-[10px] bg-fashion-800 text-white px-2 py-0.5 rounded border border-fashion-700 uppercase font-semibold" aria-label="Seu perfil: ${currentUser.role}">${currentUser.role === 'estilista' ? 'DESIGNER' : currentUser.role === 'jurado' ? 'JURADO' : currentUser.role === 'plateia' ? 'PLATEIA' : 'PRODUÇÃO'}${isAdmin ? ' · HOST/JÚRI' : ''}</span>
-            ${!user.isAnonymous && !user.providerData?.some(p=>p.providerId==='google.com')?'<button id="fauLinkGoogle" class="fau-account-link text-[10px] text-fashion-gold border border-fashion-gold/40 rounded px-2 py-1" title="Usar Google nesta mesma conta">VINCULAR GOOGLE</button>':''}
+            
+            <span class="fau-account-role text-[10px] bg-fashion-800 text-white px-2 py-0.5 rounded border border-fashion-700 uppercase font-semibold" aria-label="Seu perfil: ${currentUser.role}">${currentUser.role === 'estilista' ? 'DESIGNER' : currentUser.role === 'jurado' ? 'JURADO' : currentUser.role === 'plateia' ? 'PLATEIA' : 'HOST/JÚRI'}</span>
+            ${!user.isAnonymous && !user.providerData?.some(p=>p.providerId==='google.com')?'<button id="fauLinkGoogle" class="fau-account-link text-[10px] text-fashion-gold border border-fashion-gold/40 rounded px-2 py-1" title="Vincular Google" aria-label="Vincular Google"><i class="fa-brands fa-google" aria-hidden="true"></i></button>':''}
             <button onclick="auth.signOut()" class="text-gray-400 hover:text-white transition ml-2" title="Sair">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </button>
