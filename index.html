@@ -1493,7 +1493,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const deadline = Number(g.prazo) || 0;
         const submissionsOpen = configured && deadline > now();
         const runwayOpen = configured && !!g.liberado;
-        const ballotOpen = configured && !!g.urna;
+        const ballotOpen = configured && runwayOpen && !(Array.isArray(g.berlinda) && g.berlinda.length > 0);
         const rankingVisible = configured && !!g.rankingLiberado;
         const phase = !configured ? 'preseason' : rankingVisible && !submissionsOpen && !ballotOpen ? 'intermission' : submissionsOpen ? 'workroom' : !runwayOpen ? 'backstage' : ballotOpen ? 'voting' : rankingVisible ? 'results' : 'runway';
         const labels = {preseason:'PRÉ-ESTREIA',workroom:'THE WORKROOM',backstage:'BACKSTAGE · AGUARDANDO ESTREIA',runway:'THE RUNWAY',voting:'THE VOTING ROOM',results:'THE RESULTS SHOW',intermission:'BETWEEN THE RUNWAYS'};
@@ -1504,10 +1504,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         const flow=getSeasonFlow();
         let tabs=[...(ABAS_POR_PERFIL[role] || ['runway','conf','manual'])];
         if(role==='estilista') {
-            if(currentUser.out) return ['home','meu_perfil','runway','conf','legado','pistas','manual'];
-            if(!hasMaisonIdentity() || !flow.configured) return ['home','meu_perfil','work','legado','pistas','manual'];
+            if(currentUser.out) return ['home','meu_perfil','runway','tribunal','conf','legado','pistas','manual'];
+            if(!hasMaisonIdentity() || !flow.configured) return ['home','meu_perfil','work','tribunal','legado','pistas','manual'];
             if(!flow.runwayOpen) tabs=tabs.filter(t=>t!=='runway');
-            if(!flow.ballotOpen) tabs=tabs.filter(t=>t!=='tribunal');
             if(!flow.rankingVisible && !flow.ballotOpen) tabs=tabs.filter(t=>t!=='berlinda');
         } else if(role==='plateia') {
             if(!flow.runwayOpen) tabs=tabs.filter(t=>t!=='runway');
@@ -2035,7 +2034,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                                 <i class="fa-solid fa-crown text-fashion-gold text-sm"></i>
                                 <span class="font-cinzel text-xs text-white font-bold tracking-wider">THE DESIGNER · ${esc(maisonName)}</span>
                             </div>
-                            <span class="text-[10px] bg-fashion-800 text-fashion-gold px-2 py-0.5 rounded border border-fashion-gold/30 font-mono">ESTILISTA: ${esc(maisonName)}</span>
+                            <span class="text-[10px] bg-fashion-800 text-fashion-gold px-2 py-0.5 rounded border border-fashion-gold/30 font-mono">ESTILISTA: ${esc(stilistaFixo)}</span>
                         </div>
                         ${myBio ? `<p class="text-[11px] text-gray-300 italic"><strong class="text-fashion-gold font-cinzel">Manifesto:</strong> "${esc(myBio)}"</p>` : ''}
                     </div>
@@ -3589,12 +3588,16 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 renderView('<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-8 text-center"><h2 class="font-cinzel text-fashion-gold">🕯️ THE LAST JUDGMENT</h2><p class="text-gray-300 text-sm mt-3">A cerimônia está sob controle da produção. Aguarde a próxima revelação.</p></div>');return;
             }
         }
-        if (!globalState.rodada || (globalState.prazo && now() > globalState.prazo && !isAdmin)) {
+        // A cabine só abre com o desfile publicado e fecha assim que o Pool é formado.
+        // O prazo de entrega do Workroom não interfere no período de votação.
+        const castBallotOpen = () => !!globalState.rodada && !!globalState.liberado && !(Array.isArray(globalState.berlinda) && globalState.berlinda.length);
+        if (!castBallotOpen()) {
+            const poolStarted = Array.isArray(globalState.berlinda) && globalState.berlinda.length > 0;
             renderView(`
                 <div class="bg-fashion-900 border border-fashion-700 p-12 rounded-lg text-center space-y-4 max-w-xl mx-auto my-12">
                     <i class="fa-solid fa-lock text-fashion-gold text-3xl"></i>
-                    <h2 class="font-cinzel text-xl text-white">The Voting Room · Fechada</h2>
-                    <p class="text-xs text-gray-400 leading-relaxed font-light">A votação interna para <strong>Ícone da Moda</strong> e <strong>Fora de Moda</strong> só fica ativa enquanto a rodada estiver em andamento e aberta!</p>
+                    <h2 class="font-cinzel text-xl text-white">The Voting Room · ${poolStarted ? 'Encerrada' : 'Aguardando a Passarela'}</h2>
+                    <p class="text-xs text-gray-400 leading-relaxed">${poolStarted ? 'A votação para Ícone da Moda e Fora de Moda foi encerrada com a abertura do Elimination Pool. Aguarde a revelação oficial.' : 'A cabine de votação será liberada quando a produção abrir a passarela.'}</p>
                 </div>
             `);
             return;
@@ -3688,7 +3691,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
           $(`#${ballot[type].button}`).onclick=safeExec(async()=>{
             if(saved[type])throw new Error('Este voto já foi registrado e não pode ser alterado.');
             if(globalState.rodada!==roundAtOpen)throw new Error('A rodada mudou. Atualize a página.');
-            if(globalState.prazo&&now()>globalState.prazo)throw new Error('A votação desta rodada foi encerrada.');
+            if(!castBallotOpen() || !isCastVoter())throw new Error('A votação foi encerrada ou você não está elegível.');
             const selected=document.querySelector(`input[name="ballot_${type}"]:checked`);
             if(!selected)throw new Error('Escolha um Designer antes de confirmar.');
             const targetUid=selected.value;
