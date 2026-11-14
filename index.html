@@ -2974,6 +2974,9 @@ header>div>div:first-child{display:flex;align-items:center;gap:7px!important;fle
         let looks = [];
         let evaluations = {};
         let week01References = new Map();
+        // O nome exibido vem do cadastro atual, nunca do snapshot do envio.
+        let juryNamesByUid = new Map();
+        const juryLiveName = look => juryNamesByUid.get(String(look.uid)) || look.ate || 'Designer';
         const juryStageOpen = () => !!globalState.rodada && !!globalState.themeId && stageAtLeast('judging');
         const juryCanViewLooks = () => isAdmin || juryStageOpen();
         const scoresClosed = () => !juryStageOpen() || !!globalState.notasEncerradas;
@@ -3059,7 +3062,7 @@ header>div>div:first-child{display:flex;align-items:center;gap:7px!important;fle
                 return `
                     <div class="bg-fashion-950 p-2 rounded border border-fashion-700 text-center space-y-1">
                         <img src="${esc(l.url)}" class="w-full aspect-[3/4] object-cover rounded">
-                        <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(l.ate)}</div>
+                        <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(juryLiveName(l))}</div>
                         <div class="text-fashion-gold font-mono font-bold text-xs">${tot}${tot==='—'?'':' / 50'}</div><div class="text-[10px] ${draftScores.has(l.id)?'text-amber-300':ev.nota?'text-green-300':'text-gray-400'}">${draftScores.has(l.id)?'Não salvo':ev.nota?'Salvo':'Pendente'}</div>
                     </div>
                 `;
@@ -3075,7 +3078,7 @@ header>div>div:first-child{display:flex;align-items:center;gap:7px!important;fle
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
                                 <img src="${esc(look.url)}" class="w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
-                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(look.ate)}</div><p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
+                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div><p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
                                 ${creativeDossier(look)}
                                 ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}<p class="text-xs text-gray-300">Elemento reinterpretado: ${esc(look.themeExtra||'Não informado')}</p></div>`;})() : ''}
                                 <div class="bg-fashion-950 p-2.5 rounded border border-fashion-700 space-y-1">
@@ -3208,6 +3211,12 @@ header>div>div:first-child{display:flex;align-items:center;gap:7px!important;fle
                 : supremeAllJuryLooks;
             refreshJuryUI();
         };
+        // Sincroniza renomeações do ADM em tempo real, inclusive em looks antigos.
+        // O UID permanece a chave de relacionamento de notas e submissões.
+        if(juryCanViewLooks()) sub(db.collection('perfis').where('role','==','estilista'), snap => {
+            juryNamesByUid = new Map(snap.docs.map(d => [String(d.id), d.data().ate || d.data().nome || d.data().name]).filter(x => x[1]));
+            refreshJuryUI();
+        });
         if(juryCanViewLooks() && globalState.themeId==='w02_new_form') sub(db.collection('looks').where('themeId','==','w01_first_garment'),snap=>{
             week01References=new Map(snap.docs.map(d=>[d.data().uid,{id:d.id,...d.data()}]));
             refreshJuryUI();
