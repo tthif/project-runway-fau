@@ -341,7 +341,22 @@ header>div>div:first-child{flex:0 1 auto!important;min-width:0}
  #userHeaderSlot button[title="Sair"]{min-width:24px;min-height:32px}
  .fau-status-inner{padding:5px 7px}
 }
-@media(max-width:390px){header .font-cinzel+span{display:none}#userHeaderSlot .fau-account-display{max-width:80px}}
+@media(max-width:390px){#userHeaderSlot .fau-account-display{max-width:75px}}
+</style>
+<style id="fau-navigation-cleanup-2026">
+/* Full brand always visible, including on narrow phones. */
+header>div>div:first-child{flex-shrink:1!important;min-width:0}
+header .fau-brand-full{display:inline!important}
+header .fau-brand-short{display:none!important}
+header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
+#userHeaderSlot{flex-shrink:1!important}
+@media(max-width:640px){header>div{padding-inline:8px!important;gap:4px!important}header .font-cinzel{font-size:clamp(9px,2.4vw,12px)!important;letter-spacing:-.035em!important}header .font-cinzel+span{font-size:8px!important;padding-left:4px!important;letter-spacing:0!important}#userHeaderSlot .fau-account-display{max-width:clamp(55px,16vw,95px);font-size:10px!important;padding:5px!important}#userHeaderSlot{gap:3px!important}#userHeaderSlot .fau-account-link{min-width:27px!important;padding:4px!important}}
+/* A compact episode label on operational pages; full producer text only in Season Hub. */
+#globalStatusBanner.fau-episode-mini{padding:5px 12px!important;background:#19161b!important;border-bottom:1px solid rgba(209,179,139,.15)!important}
+.fau-episode-mini .fau-mini-inner{max-width:1060px;margin:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font:500 11px/1.4 Inter,system-ui,sans-serif}
+.fau-episode-mini .fau-mini-name{color:#d1b38b;font-weight:700;letter-spacing:.06em}
+.fau-episode-mini .fau-mini-stage{color:#b9afb8}
+#globalStatusBanner.fau-episode-mini .fau-status-pill{font-size:9px}
 </style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
@@ -1553,6 +1568,14 @@ header>div>div:first-child{flex:0 1 auto!important;min-width:0}
         else if (doubleElimination) badges.push('<span class="fau-status-pill fau-status-pill-danger">ELIMINAÇÃO DUPLA · 2 OUT</span>');
         if (photos > 1 && globalState.fase !== 'final') badges.push(`<span class="fau-status-pill">${photos} FOTOS NESTA RODADA</span>`);
         const rules = typeof globalState.regras === 'string' ? globalState.regras : '';
+        const isHub = activeTab === 'home';
+        b.classList.toggle('fau-episode-mini', !isHub);
+        if (!isHub) {
+            const title = (typeof fauRoundLabel === 'function' ? fauRoundLabel() : (globalState.themeId || ''));
+            b.innerHTML = `<div class="fau-mini-inner"><span class="fau-mini-name">${esc(title)}</span><span class="fau-mini-stage">${esc(flow.stage.title)}</span>${badges.join('')}</div>`;
+            b.classList.remove('hidden');
+            return;
+        }
         b.innerHTML = `<div class="fau-status-inner">
             <div class="fau-status-top">
                 <span class="fau-status-stage">${esc(flow.stage.icon + ' ' + flow.stage.title)}</span>
@@ -1616,6 +1639,11 @@ header>div>div:first-child{flex:0 1 auto!important;min-width:0}
         `).join('');
 
         VIEWS[activeTab]();
+        updateGlobalBanner();
+        const quote = document.getElementById('quoteStrip');
+        const hero = document.getElementById('challengeHero');
+        if (quote) quote.classList.toggle('hidden', activeTab !== 'home');
+        if (hero && activeTab !== 'home') hero.classList.add('hidden');
         renderAfterShow();
     };
 
@@ -6212,7 +6240,7 @@ header>div>div:first-child{flex:0 1 auto!important;min-width:0}
             const d = (globalState.prazo || 0) - Date.now();
             const t = !globalState.prazo ? 'WORKROOM · AGUARDANDO PRAZO' : d <= 0 ? 'TIME IS UP · THE WORKROOM IS CLOSED' : d <= 60000 ? 'THE FINAL MINUTE' : d <= 600000 ? 'THE FINAL COUNTDOWN' : d <= 3600000 ? 'ONE HOUR REMAINING' : d <= 86400000 ? 'THE FINAL DAY' : 'THE WORKROOM IS OPEN';
             hero.innerHTML = `<div class="text-[10px] tracking-[.4em] text-fashion-gold font-cinzel">${fase}</div><div class="font-cinzel text-white text-lg tracking-widest">${esc(fauRoundLabel())}</div><div class="font-mono text-xs ${d <= 0 ? 'text-red-400' : 'text-gray-300'}">${t}</div>`;
-            hero.classList.toggle('hidden', currentUser.role === 'plateia' && !globalState.liberado);
+            hero.classList.toggle('hidden', activeTab !== 'home' || (currentUser.role === 'plateia' && !globalState.liberado));
         }, 1000);
 
         // The winner is revealed by the host on WhatsApp. Never show an automatic
