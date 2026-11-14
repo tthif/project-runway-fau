@@ -281,6 +281,11 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 .fau-rulebook [hidden]{display:none!important}.fau-rulebook button:focus-visible,.fau-rulebook summary:focus-visible{outline:2px solid #e6c28d;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.fau-rulebook *{scroll-behavior:auto!important;transition:none!important}}
 </style>
+<style id="fau-account-mobile-fix">
+header>div{min-width:0}#userHeaderSlot{justify-content:flex-end;flex:1;min-width:0;gap:8px}#userHeaderSlot>*{flex-shrink:0}#userHeaderSlot .fau-account-name{min-width:0;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}#userHeaderSlot .fau-account-role{white-space:nowrap}#userHeaderSlot .fau-account-link{white-space:nowrap}#userHeaderSlot button{min-height:36px;flex-shrink:0}
+@media(max-width:640px){header>div{padding:10px 12px;gap:8px}header .font-cinzel{font-size:11px!important;letter-spacing:.025em!important}header .font-cinzel+span{display:none}#userHeaderSlot{gap:5px}#userHeaderSlot .fau-account-name{max-width:88px;font-size:11px}#userHeaderSlot .fau-account-role{font-size:9px;padding:5px 6px}#userHeaderSlot .fau-account-link{font-size:0;padding:8px;border-radius:7px}#userHeaderSlot .fau-account-link:before{content:'Google';font-size:10px}#userHeaderSlot button[title="Sair"]{margin-left:0;padding:7px}}
+@media(max-width:380px){#userHeaderSlot .fau-account-name{display:none}header .font-cinzel{font-size:10px!important}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -288,12 +293,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
 <!-- CABEÇALHO -->
 <header class="border-b border-fashion-700 bg-fashion-900/90 backdrop-blur-md sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div class="flex items-center space-x-3 cursor-pointer" onclick="if(auth.currentUser && currentUser) navigate('runway')">
+    <div class="max-w-6xl mx-auto px-4 min-h-16 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 cursor-pointer min-w-0 shrink-0" onclick="if(auth.currentUser && currentUser) navigate('runway')">
             <span class="font-cinzel font-bold text-white text-base tracking-widest">PROJECT RUNWAY</span>
             <span class="text-xs text-fashion-gold tracking-widest uppercase border-l border-fashion-700 pl-3 font-cinzel">F · A · U</span>
         </div>
-        <div id="userHeaderSlot" class="flex items-center space-x-3 text-xs"></div>
+        <div id="userHeaderSlot" class="flex items-center gap-2 text-xs min-w-0"></div>
     </div>
 </header>
 
@@ -1430,9 +1435,9 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         }
 
         $('#userHeaderSlot').innerHTML = `
-            <span class="text-fashion-gold font-medium font-cinzel">${esc(currentUser.ate)}</span>
-            <span class="text-[10px] bg-fashion-800 text-white px-2 py-0.5 rounded border border-fashion-700 uppercase font-semibold" aria-label="Seu perfil: ${currentUser.role}">${currentUser.role === 'estilista' ? 'DESIGNER' : currentUser.role === 'jurado' ? 'JURADO' : currentUser.role === 'plateia' ? 'PLATEIA' : 'PRODUÇÃO'}${isAdmin ? ' · JÚRI' : ''}</span>
-            ${!user.isAnonymous && !user.providerData?.some(p=>p.providerId==='google.com')?'<button id="fauLinkGoogle" class="text-[10px] text-fashion-gold border border-fashion-gold/40 rounded px-2 py-1" title="Usar Google nesta mesma conta">VINCULAR GOOGLE</button>':''}
+            <span class="fau-account-name text-fashion-gold font-medium" title="${esc(currentUser.ate)}">${esc(currentUser.ate)}</span>
+            <span class="fau-account-role text-[10px] bg-fashion-800 text-white px-2 py-0.5 rounded border border-fashion-700 uppercase font-semibold" aria-label="Seu perfil: ${currentUser.role}">${currentUser.role === 'estilista' ? 'DESIGNER' : currentUser.role === 'jurado' ? 'JURADO' : currentUser.role === 'plateia' ? 'PLATEIA' : 'PRODUÇÃO'}${isAdmin ? ' · JÚRI' : ''}</span>
+            ${!user.isAnonymous && !user.providerData?.some(p=>p.providerId==='google.com')?'<button id="fauLinkGoogle" class="fau-account-link text-[10px] text-fashion-gold border border-fashion-gold/40 rounded px-2 py-1" title="Usar Google nesta mesma conta">VINCULAR GOOGLE</button>':''}
             <button onclick="auth.signOut()" class="text-gray-400 hover:text-white transition ml-2" title="Sair">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
             </button>
@@ -3011,6 +3016,15 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
     };
 
     const refreshJuryUI = () => {
+            if (!juryStageOpen()) {
+                const cards=$('#juryCardsContainer');
+                if(cards)cards.innerHTML='<section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-8 text-center space-y-3"><div class="text-3xl">🔒</div><h3 class="font-cinzel text-fashion-gold text-xl">THE JUDGES’ PANEL</h3><p class="text-sm text-gray-300">A bancada ainda não foi liberada pela produção.</p><p class="text-xs text-gray-400">Os looks e Creative Dossiers serão revelados somente na abertura das avaliações.</p></section>';
+                const matrix=$('#juryMatrixGrid');if(matrix)matrix.innerHTML='';
+                const progress=$('#fauJuryProgressText');if(progress)progress.textContent='Aguardando liberação';
+                const bar=$('#fauJuryProgressBar');if(bar)bar.style.width='0%';
+                const button=$('#btnSubmitAllEvaluations');if(button)button.disabled=true;
+                return;
+            }
             const container = $('#juryCardsContainer');
             const completed=looks.filter(l=>!!evaluations[l.id]).length;
             const progressText=$('#fauJuryProgressText'),progressBar=$('#fauJuryProgressBar');
@@ -3179,16 +3193,17 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 : supremeAllJuryLooks;
             refreshJuryUI();
         };
-        if(globalState.themeId==='w02_new_form') sub(db.collection('looks').where('themeId','==','w01_first_garment'),snap=>{
+        if(juryStageOpen() && globalState.themeId==='w02_new_form') sub(db.collection('looks').where('themeId','==','w01_first_garment'),snap=>{
             week01References=new Map(snap.docs.map(d=>[d.data().uid,{id:d.id,...d.data()}]));
             refreshJuryUI();
         });
-        sub(db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
+        if(juryStageOpen()) sub(db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
             supremeAllJuryLooks=snap.docs.map(d => ({ id: d.id, ...d.data() }));
             refreshSupremeJury();
         });
-        if(globalState.themeId==='theme_next_supreme') sub(supremeRef(),snap=>{supremeJuryState=snap.data()||null;refreshSupremeJury();});
+        if(juryStageOpen() && globalState.themeId==='theme_next_supreme') sub(supremeRef(),snap=>{supremeJuryState=snap.data()||null;refreshSupremeJury();});
 
+        if(!juryStageOpen()){refreshJuryUI();return;}
         fauCritiqueJuryMount();
         sub(db.collection('avaliacoes').where('jurado', '==', currentUser.uid), snap => {
             evaluations = {};
