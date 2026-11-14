@@ -682,6 +682,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 extraField: null
             }
         };
+    // Rótulos editoriais: nunca usar o identificador técnico da rodada na interface.
+    const fauRoundLabel = () => {
+        const theme = SEASON_THEMES[globalState?.themeId];
+        if (theme) return [theme.code, theme.title].filter(Boolean).join(' — ');
+        return globalState?.rodada ? 'DESAFIO EM ANDAMENTO' : 'AGUARDANDO A PRÓXIMA RODADA';
+    };
+    const fauRoundCode = () => SEASON_THEMES[globalState?.themeId]?.code || 'THE CHALLENGE';
     const getTheme = () => SEASON_THEMES[globalState.themeId] || null;
     const drawKey = () => `${globalState.rodada}_${currentUser.uid}`;
     const themeHasDraw = t => t && t.drawType && t.drawType !== 'none' && t.drawType !== 'faction_choice' && t.drawType !== 'blind_concept_swap';
@@ -1945,7 +1952,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div class="space-y-1">
                         <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">THE ATELIER · Seu espaço de criação</span>
-                        <h2 class="font-cinzel text-2xl text-white font-normal">The Workroom · Rodada ${esc(globalState.rodada || 'Pendente')}</h2>
+                        <h2 class="font-cinzel text-2xl text-white font-normal">The Workroom · ${esc(fauRoundLabel())}</h2>
                         <p class="text-xs text-gray-400">Meta do desafio: <strong class="text-fashion-gold">${requiredLooks} look(s) gerados por IA</strong> para a passarela.</p>
                     </div>
                     <div id="fauWorkroomClock" class="fau-clock rounded-xl px-6 py-4 text-center" role="timer" aria-label="Prazo de entrega da rodada">
@@ -1958,7 +1965,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 </div>
 
                 <section class="fau-atelier-identity rounded-2xl border border-fashion-gold/30 bg-gradient-to-r from-fashion-950 via-fashion-900 to-fashion-950 p-5 md:p-7 space-y-4" aria-label="Identidade do Designer e espaço de criação">
-                    <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] uppercase tracking-[.3em] text-fashion-gold">THE DESIGNER · ${esc(currentUser.ate || 'FAU')}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">YOUR NAME. YOUR VISION.</h3><p class="text-[11px] text-gray-300 mt-1">DESIGNER · Sua identidade na competição. ATELIER · Seu espaço de criação.</p></div><span class="text-[10px] text-gray-400 tracking-widest">WEEK ${esc(globalState.rodada || '—')}</span></div>
+                    <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] uppercase tracking-[.3em] text-fashion-gold">THE DESIGNER · ${esc(currentUser.ate || 'FAU')}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">YOUR NAME. YOUR VISION.</h3><p class="text-[11px] text-gray-300 mt-1">DESIGNER · Sua identidade na competição. ATELIER · Seu espaço de criação.</p></div><span class="text-[10px] text-gray-400 tracking-widest">${esc(fauRoundCode())}</span></div>
                     ${currentUser.bio ? `<p class="text-sm italic text-gray-300 border-l-2 border-fashion-gold/50 pl-4">${esc(currentUser.bio)}</p>` : '<p class="text-xs text-gray-400">Cada criação é uma assinatura. Faça desta rodada a sua declaração de moda.</p>'}
                     <div class="grid grid-cols-3 gap-2 text-center text-[10px] uppercase tracking-wider">
                         <div class="rounded-lg border border-fashion-700 p-3"><span class="block text-fashion-gold text-lg mb-1">01</span>Read the Brief</div>
@@ -2946,7 +2953,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                 <div class="border-b border-fashion-700 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Avaliação Técnica (Fashion, Art & Uniqueness)</span>
-                        <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel · Rodada ${esc(globalState.rodada || '')}</h2><p class="text-xs mt-2 ${scoresClosed()?'text-red-300':'text-green-300'}">${scoresClosed()?'🔒 '+juryStatus():'● '+juryStatus()}</p>
+                        <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel · ${esc(fauRoundLabel())}</h2><p class="text-xs mt-2 ${scoresClosed()?'text-red-300':'text-green-300'}">${scoresClosed()?'🔒 '+juryStatus():'● '+juryStatus()}</p>
                     </div>
                     <div class="flex gap-2">
                         <button id="btnOpenMatrix" class="bg-fashion-800 hover:bg-fashion-700 text-fashion-sand px-3 py-1.5 rounded border border-fashion-600 text-xs">
@@ -3234,8 +3241,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             <div class="space-y-8">
                 <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
                     <div>
-                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Desfile Oficial (Fashion, Art & Uniqueness)</span>
-                        <h2 class="font-cinzel text-2xl text-white font-normal">The Runway · Rodada ${esc(globalState.rodada || '')}</h2>
+                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Desfile Oficial · Fashion, Art & Uniqueness</span>
+                        <h2 class="font-cinzel text-2xl text-white font-normal">The Runway · ${esc(fauRoundLabel())}</h2>
                     </div>
                 </div>
 
@@ -6113,7 +6120,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             const fase = globalState.fase === 'final' ? 'THE GRAND FINALE' : globalState.fase === 'top5' ? 'TOP 5 — THE FINAL FILTER' : 'THE CHALLENGE';
             const d = (globalState.prazo || 0) - Date.now();
             const t = !globalState.prazo ? 'WORKROOM · AGUARDANDO PRAZO' : d <= 0 ? 'TIME IS UP · THE WORKROOM IS CLOSED' : d <= 60000 ? 'THE FINAL MINUTE' : d <= 600000 ? 'THE FINAL COUNTDOWN' : d <= 3600000 ? 'ONE HOUR REMAINING' : d <= 86400000 ? 'THE FINAL DAY' : 'THE WORKROOM IS OPEN';
-            hero.innerHTML = `<div class="text-[10px] tracking-[.4em] text-fashion-gold font-cinzel">${fase}</div><div class="font-cinzel text-white text-lg tracking-widest">${esc(pretty(globalState.rodada))}</div><div class="font-mono text-xs ${d <= 0 ? 'text-red-400' : 'text-gray-300'}">${t}</div>`;
+            hero.innerHTML = `<div class="text-[10px] tracking-[.4em] text-fashion-gold font-cinzel">${fase}</div><div class="font-cinzel text-white text-lg tracking-widest">${esc(fauRoundLabel())}</div><div class="font-mono text-xs ${d <= 0 ? 'text-red-400' : 'text-gray-300'}">${t}</div>`;
             hero.classList.toggle('hidden', currentUser.role === 'plateia' && !globalState.liberado);
         }, 1000);
 
