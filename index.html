@@ -1913,9 +1913,12 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
     // 2. THE WORKROOM (DESIGNER & PROMPT MASTER)
     VIEWS.work = () => {
+        if(currentUser?.role !== 'estilista'){navigate('home');return;}
         let allMyLooks = [];
         let submissionPulse = null;
         let activeStylistsCount = 0;
+        let looksLoaded = false;
+        let workroomRenderVersion = 0;
         if (!hasMaisonIdentity()) { navigate('meu_perfil'); return; }
         if (!globalState.rodada) {
             renderView(`<section class="max-w-2xl mx-auto py-10 space-y-5 text-center"><p class="text-fashion-gold text-xs tracking-[.25em]">THE WORKROOM</p><h2 class="font-cinzel text-3xl text-white">THE RUNWAY AWAITS</h2><p class="text-sm text-gray-300">Seu Designer está inscrito. O Workroom será liberado com o primeiro desafio.</p><button id="fauWorkToProfile" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-5 py-3 text-xs">VER MEU PERFIL</button></section>`);
@@ -2014,6 +2017,8 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
             sub(restaRef(),snap=>renderResta(snap.exists?snap.data():null));
         }
         const refreshWorkroomUI = async () => {
+            const renderVersion = ++workroomRenderVersion;
+            if (!looksLoaded) return;
             const maisonName = currentUser.ate || '';
             const myBio = currentUser.bio || '';
 
@@ -2091,6 +2096,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
                     }
                 }
             }
+            if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
             const formSlot = $('#workroomFormModule');
             if (beauty && currentRoundLooks.length===1 && beauty.phase==='first') {
                 formSlot.innerHTML = `<div class="bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg text-center space-y-3">
@@ -2416,10 +2422,24 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 
         let myEvaluations = [];
 
-        sub(db.collection('looks').where('uid', '==', currentUser.uid), snap => {
+        // O formulário não pode depender do sucesso do listener de looks para aparecer.
+        // Mostra o estado inicial imediatamente, mas só libera o envio após carregar
+        // o histórico para evitar duplicações ou sobrescritas de slots.
+        const showWorkroomError = error => {
+            console.error('[workroom]', error);
+            const host = document.getElementById('workroomFormModule');
+            if (host) host.innerHTML = `<section class="rounded-xl border border-red-500/50 bg-fashion-900 p-5 space-y-3"><h3 class="font-cinzel text-white">Não foi possível carregar as entregas</h3><p class="text-xs text-gray-300">${esc(error?.code === 'permission-denied' ? 'Sua conta não tem permissão para consultar os próprios looks. A produção precisa revisar as regras do Firestore.' : error?.message || 'Verifique a conexão e tente novamente.')}</p><button type="button" id="fauRetryWorkroom" class="border border-fashion-gold text-fashion-gold px-4 py-2 rounded">TENTAR NOVAMENTE</button></section>`;
+            document.getElementById('fauRetryWorkroom')?.addEventListener('click',()=>navigate('work'));
+        };
+        const safeRefreshWorkroom = () => refreshWorkroomUI().catch(showWorkroomError);
+        const waitingHost = document.getElementById('workroomFormModule');
+        if(waitingHost) waitingHost.innerHTML = '<section class="border border-fashion-gold/40 bg-fashion-900 rounded-xl p-5 text-sm text-gray-300" role="status">Preparando seu ateliê e conferindo suas entregas…</section>';
+        const looksQuery = db.collection('looks').where('uid', '==', currentUser.uid);
+        unsubsTab.push(looksQuery.onSnapshot(snap => {
+            looksLoaded = true;
             allMyLooks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            refreshWorkroomUI();
-        });
+            safeRefreshWorkroom();
+        }, showWorkroomError));
 
         // Notas individuais são privadas; o designer consulta apenas o acumulado no perfil.
 
@@ -2428,7 +2448,18 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
         sub(db.doc('config/entregas_publicas'), doc => {
             const data = doc.exists ? doc.data() : null;
             submissionPulse = data && String(data.rodada)===String(globalState.rodada) ? data : null;
-            refreshWorkroomUI();
+            // Atualiza somente a contagem: não recria o formulário e não perde
+            // imagem ou texto que o Designer esteja preenchendo.
+            const board = document.getElementById('workroomThermometer');
+            if(board && submissionPulse){
+                const sent = Math.max(0, Number(submissionPulse.enviados)||0);
+                const total = Math.max(sent, Number(submissionPulse.total)||0);
+                const pending = Math.max(0,total-sent);
+                const counts=board.querySelectorAll('.grid strong');
+                if(counts.length>=2){counts[0].textContent=String(sent);counts[1].textContent=String(pending);}
+                const bar=board.querySelector('.h-full.bg-fashion-gold');
+                if(bar)bar.style.width=(total?Math.round(100*sent/total):0)+'%';
+            }
         });
     };
 
