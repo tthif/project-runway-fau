@@ -300,6 +300,21 @@ header>div>div:first-child{display:flex;align-items:center;gap:7px!important;fle
 }
 @media(max-width:360px){header>div{padding-left:7px!important;padding-right:7px!important}header .font-cinzel{font-size:9px!important}#userHeaderSlot .fau-account-role{font-size:8px!important}}
 </style>
+<style id="fau-status-editorial">
+/* Comunicado editorial: o texto salvo pelo ADM é exibido integralmente, sem reescrita. */
+#globalStatusBanner{background:#19161b!important;text-align:left!important;padding:16px clamp(16px,4vw,28px)!important;border-bottom:1px solid rgba(209,179,139,.22)!important;font-size:14px!important}
+.fau-status-inner{max-width:1060px;margin:0 auto;border:1px solid rgba(209,179,139,.25);background:linear-gradient(125deg,#211b22,#19161b);border-radius:14px;padding:clamp(16px,3vw,24px);box-shadow:0 12px 32px rgba(0,0,0,.12)}
+.fau-status-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fau-status-stage{color:#d1b38b;font:600 12px Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.fau-status-pills{display:flex;flex-wrap:wrap;gap:7px}
+.fau-status-pill{display:inline-block;color:#e4cba4;background:rgba(209,179,139,.09);border:1px solid rgba(209,179,139,.35);padding:5px 9px;border-radius:5px;font:600 10px Inter,system-ui,sans-serif;letter-spacing:.05em}
+.fau-status-pill-danger{color:#f0a5ac;background:rgba(142,52,70,.14);border-color:rgba(142,52,70,.55)}
+.fau-status-description{color:#e6dfe4;font:400 clamp(13px,2.3vw,15px)/1.6 Inter,system-ui,sans-serif;margin:10px 0 0}
+.fau-status-communication{border-top:1px solid rgba(209,179,139,.22);margin-top:16px;padding-top:16px}
+.fau-status-kicker{font:600 10px Inter,system-ui,sans-serif;letter-spacing:.18em;color:#d1b38b;margin-bottom:9px}
+.fau-status-rules{font:400 clamp(13px,2.3vw,15px)/1.75 Inter,system-ui,sans-serif;color:#e6dfe4;white-space:pre-wrap;overflow-wrap:anywhere;text-align:left}
+@media(max-width:640px){#globalStatusBanner{padding:12px!important}.fau-status-inner{padding:15px}.fau-status-top{align-items:flex-start}.fau-status-stage{font-size:11px}.fau-status-description{margin-top:8px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -1498,30 +1513,30 @@ header>div>div:first-child{display:flex;align-items:center;gap:7px!important;fle
 
     const updateGlobalBanner = () => {
         const b = $('#globalStatusBanner');
-        let bannerMsg = '';
-
-        if (!globalState.rodada || !globalState.themeId) { b.classList.add('hidden'); b.innerHTML=''; return; }
-        const flow=flowHint(currentUser?.role||'plateia');
-        bannerMsg += `<span class="text-fashion-gold text-[10px] uppercase tracking-wider">${esc(flow.stage.icon+' '+flow.stage.title)}</span> <span class="text-gray-300 text-[10px]">${esc(flow.tip)}</span> `;
-        if (globalState.elimTipo === 'none' || globalState.naoEliminatoria) {
-            bannerMsg += `<span class="bg-blue-900/40 text-blue-300 border border-blue-600 px-2 py-0.5 rounded ml-2 font-mono uppercase font-bold">✨ RODADA NÃO ELIMINATÓRIA</span> `;
-        } else if (globalState.elimDupla || globalState.elimTipo === 'double') {
-            bannerMsg += `<span class="bg-fashion-red/20 text-red-400 px-2 py-0.5 rounded ml-2 font-mono uppercase font-bold">⚠️ ELIMINAÇÃO DUPLA (2 OUT)</span> `;
+        if (!globalState.rodada || !globalState.themeId) {
+            b.classList.add('hidden'); b.innerHTML = ''; return;
         }
-
-        if ((globalState.numSubmissoes || 1) > 1 && globalState.fase !== 'final') {
-            bannerMsg += `<span class="bg-fashion-gold/20 text-fashion-gold border border-fashion-gold/40 px-2 py-0.5 rounded ml-2 font-mono uppercase font-bold">📸 ${globalState.numSubmissoes} FOTOS NESTA RODADA</span> `;
-        }
-        if (globalState.regras) {
-            bannerMsg += `<div class="mt-2 text-fashion-sand"><span class="text-fashion-gold font-cinzel uppercase tracking-widest">Regras desta rodada:</span> ${esc(globalState.regras)}</div>`;
-        }
-
-        if (bannerMsg) {
-            b.innerHTML = bannerMsg;
-            b.classList.remove('hidden');
-        } else {
-            b.classList.add('hidden');
-        }
+        const flow = flowHint(currentUser?.role || 'plateia');
+        const noElimination = globalState.elimTipo === 'none' || globalState.naoEliminatoria;
+        const doubleElimination = globalState.elimDupla || globalState.elimTipo === 'double';
+        const photos = Number(globalState.numSubmissoes || 1);
+        const badges = [];
+        if (noElimination) badges.push('<span class="fau-status-pill">SEM ELIMINAÇÃO</span>');
+        else if (doubleElimination) badges.push('<span class="fau-status-pill fau-status-pill-danger">ELIMINAÇÃO DUPLA · 2 OUT</span>');
+        if (photos > 1 && globalState.fase !== 'final') badges.push(`<span class="fau-status-pill">${photos} FOTOS NESTA RODADA</span>`);
+        const rules = typeof globalState.regras === 'string' ? globalState.regras : '';
+        b.innerHTML = `<div class="fau-status-inner">
+            <div class="fau-status-top">
+                <span class="fau-status-stage">${esc(flow.stage.icon + ' ' + flow.stage.title)}</span>
+                <div class="fau-status-pills">${badges.join('')}</div>
+            </div>
+            <p class="fau-status-description">${esc(flow.tip)}</p>
+            ${rules ? `<section class="fau-status-communication" aria-label="Comunicado da produção">
+                <div class="fau-status-kicker">COMUNICADO DA PRODUÇÃO</div>
+                <div class="fau-status-rules">${esc(rules)}</div>
+            </section>` : ''}
+        </div>`;
+        b.classList.remove('hidden');
     };
 
     // SEASON FLOW — um estado compartilhado para orientar todas as experiências.
