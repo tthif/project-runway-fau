@@ -3082,10 +3082,6 @@ header>div>div:first-child{display:flex;align-items:center;gap:7px!important;fle
                                 ${creativeDossier(look)}
                                 ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}<p class="text-xs text-gray-300">Elemento reinterpretado: ${esc(look.themeExtra||'Não informado')}</p></div>`;})() : ''}
                                 <div class="bg-fashion-950 p-2.5 rounded border border-fashion-700 space-y-1">
-                                    <span class="text-[9px] uppercase tracking-wider text-fashion-gold font-bold font-cinzel block">Prompt Enviado pelo Estilista:</span>
-                                    <p class="text-[11px] text-gray-300 font-mono bg-black/40 p-2 rounded">Não exigido nesta temporada.</p>
-                                </div>
-                                <div class="bg-fashion-950 p-2.5 rounded border border-fashion-700 space-y-1">
                                     <span class="text-[9px] uppercase tracking-wider text-fashion-gold font-bold font-cinzel block">Conceito & Título ("${esc(look.titulo || '')}"):</span>
                                     <p class="text-[11px] text-gray-300 italic leading-relaxed">${esc(look.mem)}</p>
                                 </div>
