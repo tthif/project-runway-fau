@@ -3494,11 +3494,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 <div id="runwayGroups"></div>
                 <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
                 <div class="fau-runway-extras space-y-3 mt-7">
-                  <details class="fau-runway-extra rounded-xl border border-fashion-700 bg-fashion-900/50" id="fauRunwayPressDetails">
-                    <summary class="px-4 py-4 cursor-pointer text-sm text-fashion-gold font-medium">THE FASHION PRESS <span class="text-gray-400 text-xs">· Notícias da temporada</span></summary>
-                    <div class="px-4 pb-4">                <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4" aria-label="The Fashion Press"><div class="flex flex-wrap justify-between items-center gap-2"><div><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE FASHION PRESS</p><h3 class="font-cinzel text-lg">PREVIOUSLY ON PROJECT RUNWAY: FAU...</h3></div><span class="text-[10px] text-gray-400">Somente anúncios liberados pela produção</span></div><div id="fauPressFeed" class="grid md:grid-cols-2 gap-3 text-xs text-gray-300">Aguardando notícias oficiais...</div></section>
-</div>
-                  </details>
+                  <section class="fau-runway-extra rounded-xl border border-fashion-700 bg-fashion-900/50 px-4 py-4" id="fauRunwayPressDetails" aria-label="The Fashion Press">
+                    <div class="mb-3"><h3 class="text-sm text-fashion-gold font-medium">THE FASHION PRESS <span class="text-gray-400 text-xs">· Notícias da temporada</span></h3></div>
+                    <div id="fauPressFeed" class="grid md:grid-cols-2 gap-3 text-xs text-gray-300" aria-live="polite">Aguardando notícias oficiais...</div>
+                  </section>
                   <details class="fau-runway-extra rounded-xl border border-fashion-700 bg-fashion-900/50" id="fauRunwayArchiveDetails">
                     <summary class="px-4 py-4 cursor-pointer text-sm text-fashion-gold font-medium">THE FASHION ARCHIVE <span class="text-gray-400 text-xs">· Looks históricos</span></summary>
                     <div class="px-4 pb-4">                <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4" aria-label="The Fashion Archive"><div><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE FASHION ARCHIVE</p><h3 class="font-cinzel text-lg">The Looks That Made History</h3><p class="text-xs text-gray-400">Um acervo de criações publicadas pela produção, sem notas privadas.</p></div><div id="fauPublicArchive" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">O arquivo será aberto após as primeiras publicações.</div></section>
