@@ -444,6 +444,15 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-hub-official-text{white-space:pre-wrap;overflow-wrap:break-word;color:#e6dfe4;font:400 15px/1.75 Inter,system-ui,sans-serif;text-align:left}
 @media(max-width:640px){.fau-hub-official-text{font-size:14px;line-height:1.7}.fau-hub-official-brief{margin-top:16px;padding-top:15px}.fau-hub-status .fau-status-stage{font-size:11px}}
 </style>
+<style id="fau-runway-ux-2026">
+@media(max-width:640px){
+  #mainView:has(#runwayGrid)>div.space-y-8{row-gap:1rem!important;}
+  #mainView:has(#runwayGrid) .fau-runway-editorial{margin-top:0!important;}
+  #mainView:has(#runwayGrid) .fau-runway-extra>div>section{border:0!important;padding:0!important;background:transparent!important;}
+  #mainView:has(#runwayGrid) .fau-runway-extra summary{list-style-position:inside;}
+}
+#mainView:has(#runwayGrid) #runwayGroups:empty,#mainView:has(#runwayGrid) #runwayGrid:empty{display:none;}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3473,20 +3482,29 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
                 ${currentUser.role==='plateia'?`<section class="fau-frontrow-welcome rounded-2xl border border-fashion-gold/40 p-5 md:p-8 space-y-4" aria-label="Sua primeira fila"><p class="text-[10px] tracking-[.28em] text-fashion-gold">YOUR FRONT-ROW PASS · ${esc(fauRoundDisplayName())}</p><h3 class="font-cinzel text-3xl text-white">Welcome to the Front Row.</h3><p class="text-sm text-gray-300">Acompanhe os editoriais, descubra as histórias por trás das criações e reaja aos seus looks favoritos. Os resultados só aparecem quando a produção revelar.</p><div class="flex flex-wrap gap-2"><button type="button" data-frontrow-jump="runwayGroups" class="fau-frontrow-primary px-4 py-3 rounded-lg text-xs font-bold">EXPLORAR OS LOOKS ↓</button><button type="button" data-frontrow-jump="fauPressFeed" class="border border-fashion-gold/40 px-4 py-3 rounded-lg text-xs text-fashion-gold">ÚLTIMAS NOTÍCIAS</button><button type="button" data-frontrow-jump="fauPublicArchive" class="border border-fashion-700 px-4 py-3 rounded-lg text-xs">ARQUIVO</button></div><p class="text-[11px] text-gray-400">Sua participação é livre: reações e comentários não alteram notas, votos oficiais ou eliminações.</p></section>`:''}
                 ${runwayOpening()}
-                <section class="rounded-lg border border-fashion-700 bg-fashion-900/60 p-3 flex flex-wrap items-center justify-between gap-2"><div><p class="text-[10px] uppercase tracking-widest text-fashion-gold">THE FASHION PRESS</p><p class="text-xs text-gray-300">O desfile e os Creative Dossiers são publicados pela produção. Notas e votos individuais permanecem privados.</p></div><span class="text-[10px] text-gray-400">FRONT ROW · ${esc(fauRoundDisplayName())}</span></section>
-                <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4" aria-label="The Fashion Press"><div class="flex flex-wrap justify-between items-center gap-2"><div><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE FASHION PRESS</p><h3 class="font-cinzel text-lg">PREVIOUSLY ON PROJECT RUNWAY: FAU...</h3></div><span class="text-[10px] text-gray-400">Somente anúncios liberados pela produção</span></div><div id="fauPressFeed" class="grid md:grid-cols-2 gap-3 text-xs text-gray-300">Aguardando notícias oficiais...</div></section>
-                <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4" aria-label="The Fashion Archive"><div><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE FASHION ARCHIVE</p><h3 class="font-cinzel text-lg">The Looks That Made History</h3><p class="text-xs text-gray-400">Um acervo de criações publicadas pela produção, sem notas privadas.</p></div><div id="fauPublicArchive" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">O arquivo será aberto após as primeiras publicações.</div></section>
                 <section id="fauReunionPublic" class="hidden rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE REUNION · SEASON SECRETS</p><h3 class="font-cinzel text-xl">The Final Reveal</h3><div id="fauReunionCards" class="grid md:grid-cols-2 gap-3"></div></section>
                 <div id="supremeVotingBox"></div>
                 <section id="fauCeremonyPublic" class="hidden rounded-2xl border border-fashion-gold/60 bg-gradient-to-b from-fashion-900 to-black p-6 text-center space-y-4" aria-live="polite"><p class="text-[10px] tracking-[.35em] text-fashion-gold">🎬 THE RESULTS SHOW · LIVE REVEAL</p><h3 id="fauCeremonyTitle" class="font-cinzel text-2xl text-white"></h3><p id="fauCeremonyMessage" class="text-gray-300"></p><p id="fauCeremonyStep" class="text-[10px] text-fashion-gold"></p></section><div id="publishedRankingBox"></div><div id="fauCritiquePublic" class="mt-5"></div>
                 <div id="faceOffComparisonBox" class="hidden bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg space-y-4"></div>
-                <section class="fau-runway-editorial rounded-2xl border border-fashion-gold/30 bg-gradient-to-r from-black via-fashion-900 to-black p-6 md:p-9 text-center space-y-3">
-                  <p class="text-[10px] tracking-[.4em] text-fashion-gold">THE COLLECTION · THE CREATIVE VISION</p>
-                  <h3 class="font-cinzel text-2xl md:text-3xl text-white">EVERY LOOK TELLS A STORY.</h3>
-                  <p class="text-xs text-gray-300 max-w-xl mx-auto">Toque em um look para entrar no modo editorial. Navegue entre as criações, amplie cada fotografia e leia o conceito sem sair do desfile.</p>
-                  <p class="text-[10px] tracking-widest text-fashion-gold/80">NO SCORES · NO SPOILERS · ONLY FASHION</p>
+                <section class="fau-runway-editorial rounded-xl border border-fashion-gold/25 bg-fashion-900/40 px-4 py-4 md:px-6 md:py-5 space-y-2">
+                  <p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL RUNWAY</p>
+                  <h3 class="font-cinzel text-xl md:text-2xl text-white">Every Look Tells a Story.</h3>
+                  <p class="text-sm text-gray-300 leading-relaxed">Explore os looks publicados. Toque em uma fotografia para ampliar e ler o conceito.</p>
                 </section>
-                ${currentUser.role==='plateia'?'':`<section class="rounded-xl border border-fashion-700 bg-fashion-950/80 p-5 space-y-2"><p class="text-[10px] tracking-[.3em] text-fashion-gold">🎟️ FRONT ROW · THE AUDIENCE</p><h3 class="font-cinzel text-white">A runway deserves an audience.</h3><p class="text-xs text-gray-300">Explore as criações e seus conceitos. A plateia pode deixar comentários quando habilitados, mas não decide as notas dos jurados, os votos secretos ou as eliminações.</p></section>`}<div class="fau-runway-section-heading"><span>THE OFFICIAL RUNWAY</span><p>Selecione uma fotografia para ver o editorial completo. Use as setas para navegar.</p></div><div id="runwayGroups"></div><div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+                <div id="runwayGroups"></div>
+                <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+                <div class="fau-runway-extras space-y-3 mt-7">
+                  <details class="fau-runway-extra rounded-xl border border-fashion-700 bg-fashion-900/50" id="fauRunwayPressDetails">
+                    <summary class="px-4 py-4 cursor-pointer text-sm text-fashion-gold font-medium">THE FASHION PRESS <span class="text-gray-400 text-xs">· Notícias da temporada</span></summary>
+                    <div class="px-4 pb-4">                <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4" aria-label="The Fashion Press"><div class="flex flex-wrap justify-between items-center gap-2"><div><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE FASHION PRESS</p><h3 class="font-cinzel text-lg">PREVIOUSLY ON PROJECT RUNWAY: FAU...</h3></div><span class="text-[10px] text-gray-400">Somente anúncios liberados pela produção</span></div><div id="fauPressFeed" class="grid md:grid-cols-2 gap-3 text-xs text-gray-300">Aguardando notícias oficiais...</div></section>
+</div>
+                  </details>
+                  <details class="fau-runway-extra rounded-xl border border-fashion-700 bg-fashion-900/50" id="fauRunwayArchiveDetails">
+                    <summary class="px-4 py-4 cursor-pointer text-sm text-fashion-gold font-medium">THE FASHION ARCHIVE <span class="text-gray-400 text-xs">· Looks históricos</span></summary>
+                    <div class="px-4 pb-4">                <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4" aria-label="The Fashion Archive"><div><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE FASHION ARCHIVE</p><h3 class="font-cinzel text-lg">The Looks That Made History</h3><p class="text-xs text-gray-400">Um acervo de criações publicadas pela produção, sem notas privadas.</p></div><div id="fauPublicArchive" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">O arquivo será aberto após as primeiras publicações.</div></section>
+</div>
+                  </details>
+                </div>
             </div>
         `);
 
