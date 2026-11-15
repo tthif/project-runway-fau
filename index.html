@@ -435,7 +435,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-result-portrait{width:76px;height:92px;object-fit:cover;object-position:center top;border-radius:10px;border:1px solid rgba(204,170,112,.65);background:#171217;flex-shrink:0}
 .fau-result-portrait-small{width:42px;height:52px;object-fit:cover;object-position:center top;border-radius:7px;border:1px solid rgba(204,170,112,.45);background:#171217;flex-shrink:0}
 .fau-result-portrait-placeholder{display:inline-flex;align-items:center;justify-content:center;color:#c4a875}
-</style></head>
+</style><style id="fau-season-hub-no-duplicates-2026">
+#challengeHero{display:none!important}
+.fau-hub-status .fau-status-top{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.fau-hub-status .fau-status-stage{font-size:12px;line-height:1.5;letter-spacing:.04em}
+.fau-hub-official-brief{margin-top:22px;padding-top:19px;border-top:1px solid rgba(209,179,139,.27)}
+.fau-hub-official-label{color:#d1b38b;font:600 11px Inter,system-ui,sans-serif;letter-spacing:.17em;margin-bottom:12px}
+.fau-hub-official-text{white-space:pre-wrap;overflow-wrap:break-word;color:#e6dfe4;font:400 15px/1.75 Inter,system-ui,sans-serif;text-align:left}
+@media(max-width:640px){.fau-hub-official-text{font-size:14px;line-height:1.7}.fau-hub-official-brief{margin-top:16px;padding-top:15px}.fau-hub-status .fau-status-stage{font-size:11px}}
+</style>
+</head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -1652,16 +1661,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             b.classList.remove('hidden');
             return;
         }
-        b.innerHTML = `<div class="fau-status-inner">
+        // Season Hub: status curto. O comunicado completo aparece uma única vez no card oficial.
+        b.innerHTML = `<div class="fau-status-inner fau-hub-status">
             <div class="fau-status-top">
-                <span class="fau-status-stage">${esc(flow.stage.icon + ' ' + flow.stage.title)}</span>
+                <span class="fau-status-stage">${esc(fauRoundLabel())} · ${esc(flow.stage.title)}</span>
                 <div class="fau-status-pills">${badges.join('')}</div>
             </div>
-            <p class="fau-status-description">${esc(flow.tip)}</p>
-            ${rules ? `<section class="fau-status-communication" aria-label="Comunicado da produção">
-                <div class="fau-status-kicker">REGRAS DESTA RODADA:</div>
-                <div class="fau-status-rules">${esc(rules)}</div>
-            </section>` : ''}
         </div>`;
         b.classList.remove('hidden');
     };
@@ -1878,7 +1883,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const [cta,...others]=available.length?available:fallback;
         const shortcuts=allowed.filter(t=>t!=='home'&&t!==cta?.[0]).slice(0,4);
         const roleNames={admin:'PRODUCTION HQ',estilista:'DESIGNER ACCESS',jurado:'JUDGES’ ACCESS',plateia:'FRONT ROW ACCESS'};
-        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p><p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
+        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">COMUNICADO OFICIAL DA PRODUÇÃO</p><p class="fau-hub-official-text">${esc(globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
         document.querySelectorAll('[data-hub-go]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.hubGo)));
     };
 
@@ -6356,7 +6361,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const d = (globalState.prazo || 0) - Date.now();
             const t = !globalState.prazo ? 'WORKROOM · AGUARDANDO PRAZO' : d <= 0 ? 'TIME IS UP · THE WORKROOM IS CLOSED' : d <= 60000 ? 'THE FINAL MINUTE' : d <= 600000 ? 'THE FINAL COUNTDOWN' : d <= 3600000 ? 'ONE HOUR REMAINING' : d <= 86400000 ? 'THE FINAL DAY' : 'THE WORKROOM IS OPEN';
             hero.innerHTML = `<div class="text-[10px] tracking-[.4em] text-fashion-gold font-cinzel">${fase}</div><div class="font-cinzel text-white text-lg tracking-widest">${esc(fauRoundLabel())}</div><div class="font-mono text-xs ${d <= 0 ? 'text-red-400' : 'text-gray-300'}">${t}</div>`;
-            hero.classList.toggle('hidden', activeTab !== 'home' || (currentUser.role === 'plateia' && !globalState.liberado));
+            // A faixa intermediária repetia o desafio e a fase; a central já apresenta ambos.
+            hero.classList.add('hidden');
         }, 1000);
 
         // The winner is revealed by the host on WhatsApp. Never show an automatic
