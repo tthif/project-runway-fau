@@ -628,6 +628,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-runway-viewer .fau-viewer-look-title[hidden]{display:none!important}
 .fau-runway-viewer .fau-viewer-info{gap:5px!important}
 </style>
+<style id="fau-submission-suite-layout-2026">
+/* Extra requirements, envelope choices and image uploads share one submission area. */
+.fau-submission-suite{background:#1d191e;border:1px solid #554751;border-radius:15px;padding:clamp(14px,3vw,24px);display:flex;flex-direction:column;gap:18px;min-width:0}
+.fau-submission-suite>#personalTwistSlot:empty,.fau-submission-suite>#fauMutationModule:empty,.fau-submission-suite>#workroomFormModule:empty{display:none}
+.fau-submission-suite>#personalTwistSlot,.fau-submission-suite>#fauMutationModule,.fau-submission-suite>#workroomFormModule{margin:0!important;min-width:0}
+.fau-submission-suite>#personalTwistSlot>section,.fau-submission-suite>#personalTwistSlot>div,.fau-submission-suite>#fauMutationModule>section,.fau-submission-suite>#fauMutationModule>div{margin:0!important}
+.fau-submission-suite>#personalTwistSlot>section,.fau-submission-suite>#personalTwistSlot>div{background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important}
+.fau-submission-suite>#workroomFormModule>div.bg-fashion-900{background:transparent!important;border:0!important;padding:0!important;border-radius:0!important;box-shadow:none!important}
+.fau-submission-suite>#workroomFormModule>div.bg-fashion-900+div.bg-fashion-900{border-top:1px solid rgba(209,179,139,.3)!important;padding-top:22px!important}
+.fau-submission-suite>#personalTwistSlot:not(:empty)+#fauMutationModule:not(:empty),.fau-submission-suite>#fauMutationModule:not(:empty)+#workroomFormModule:not(:empty),.fau-submission-suite>#personalTwistSlot:not(:empty)~#workroomFormModule:not(:empty){scroll-margin-top:80px}
+@media(max-width:640px){.fau-submission-suite{padding:16px;gap:16px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -1072,8 +1084,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const t=getTheme();
         if(!t || !currentUser || currentUser.role!=='estilista')throw new Error('Escolha exclusiva dos estilistas.');
         if(!themeHasDraw(t) && t.drawType!=='faction_choice')throw new Error('Esta rodada não tem sorteio.');
-        const gate=await getDrawGate();
-        if(gate.phase!=='selection')throw new Error('A produção encerrou a escolha dos envelopes.');
         const wedding=t.drawType==='invitation_box_3d';
         const choices=wedding?['color','element','print'].map(k=>document.getElementById('wedding_'+k)?.value):[];
         const chosen=wedding?choices.join('-'):(t.drawType==='faction_choice'?document.getElementById('factionChoice')?.value:document.getElementById('sealedEnvelope')?.value);
@@ -1088,33 +1098,32 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         });
         await renderPersonalTwist();
-        showToast('Envelope lacrado! Aguarde a produção autorizar a revelação.');
+        showToast('Envelope aberto! Seu resultado foi salvo e estará disponível sempre que entrar.');
     }
     async function renderPersonalTwist() {
         const slot=document.getElementById('personalTwistSlot');if(!slot)return;
         const t=getTheme();if(!t){slot.innerHTML='';return;}
-        const [draw,gate]=await Promise.all([getPersonalTwist(),getDrawGate()]);
-        const released=gate.phase==='released';
+        const draw=await getPersonalTwist();
+        const released=true;
         const isDraw=themeHasDraw(t);
         if(!t.extraField && !t.slotLabels && !isDraw && t.drawType!=='faction_choice' && !draw){slot.innerHTML='';return;}
         slot.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
           ${t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
           ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
-          ${isDraw?`<p class="text-xs text-amber-200">${t.drawType==='invitation_box_3d'?'💌 Abra sua Invitation Box e escolha um dos cinco envelopes lacrados em cada categoria. O conteúdo permanece secreto até a produção liberar a revelação.':'🎁 Escolha um dos 12 envelopes sem conhecer o conteúdo. Sua escolha será definitiva. Apenas a produção decide quando os resultados serão revelados.'}</p>`:''}
+          ${isDraw?`<p class="text-xs text-amber-200">${t.drawType==='invitation_box_3d'?'Escolha um envelope em cada categoria. Ao confirmar, o resultado aparece imediatamente e fica salvo.':'Escolha um dos 12 envelopes. Ao confirmar, o resultado aparece imediatamente e fica salvo.'}</p>`:''}
           ${draw?`<div class="border border-fashion-gold/50 rounded p-4 text-center">
-              <div class="text-[10px] uppercase text-gray-400">${released?'ENVELOPE ABERTO':'🔒 ENVELOPE LACRADO'}</div>
+              <div class="text-[10px] uppercase text-gray-400">${released?'ENVELOPE ABERTO':'ENVELOPE ABERTO'}</div>
               <strong class="text-fashion-gold">${released?esc(draw.value):(t.drawType==='invitation_box_3d'?`COLOR ${esc(draw.weddingNumbers?.color||'?')} · ELEMENT ${esc(draw.weddingNumbers?.element||'?')} · PRINT ${esc(draw.weddingNumbers?.print||'?')} — aguardando revelação`:`Envelope ${esc(draw.envelope||'confirmado')} — aguardando liberação da produção`)}</strong>
             </div>`:
             (isDraw||t.drawType==='faction_choice')?
             `<div class="space-y-3">${t.drawType==='invitation_box_3d'?`<div class="text-center py-3 border border-fashion-gold/30 rounded-lg bg-fashion-950/60"><div class="text-3xl mb-1">💌</div><div class="font-cinzel text-fashion-gold tracking-widest text-sm">THE INVITATION BOX</div><p class="text-xs text-gray-400 mt-1">Three little secrets. Choose your sealed invitations.</p></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-3">${[['color','🎨 COLOR'],['element','🧵 ELEMENT'],['print','🪡 PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded-lg p-3 bg-fashion-950/50"><div class="text-xs text-fashion-gold font-bold mb-2">${label}</div><input type="hidden" id="wedding_${key}" value=""><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-wedding-category="${key}" data-wedding-envelope="${n}" aria-pressed="false" class="wedding-envelope border border-fashion-gold/30 rounded-md py-3 px-0.5 text-center bg-fashion-900 hover:bg-fashion-gold/20 hover:border-fashion-gold transition-colors"><span class="block text-lg">✉️</span><span class="block text-[10px] text-fashion-gold mt-1">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><div id="wedding_status_${key}" class="text-[11px] text-gray-400 mt-2">🔒 Escolha um envelope</div></div>`).join('')}</div>`:t.drawType==='faction_choice'?
                 '<select id="factionChoice" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select>':
                 `<p class="text-xs text-fashion-gold tracking-widest text-center">CHOOSE YOUR FATE</p><input type="hidden" id="sealedEnvelope" value=""><div class="grid grid-cols-3 gap-3">${Array.from({length:12},(_,i)=>`<button type="button" data-sealed-envelope="${i+1}" aria-pressed="false" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p id="sealedEnvelopeStatus" class="text-xs text-gray-400 text-center">Selecione um envelope para confirmar.</p>`}
-                <button id="btnRevealTwist" ${gate.phase!=='selection'?'disabled':''} class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold disabled:opacity-50">${t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
-          ${gate.phase==='selection'?'':gate.phase==='locked'?'<p class="text-xs text-amber-200">A produção encerrou as escolhas. Aguarde a abertura dos envelopes.</p>':'<p class="text-xs text-fashion-gold">✨ A produção liberou os resultados!</p>'}
+                <button id="btnRevealTwist"  class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold disabled:opacity-50">${t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
         </div>`;
         slot.querySelectorAll('[data-wedding-envelope]').forEach(envelope=>{
             envelope.addEventListener('click',()=>{
-                if(gate.phase!=='selection')return;
+
                 const category=envelope.dataset.weddingCategory;
                 const number=envelope.dataset.weddingEnvelope;
                 const field=document.getElementById('wedding_'+category);
@@ -1133,7 +1142,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             });
         });
         slot.querySelectorAll('[data-sealed-envelope]').forEach(envelope=>envelope.addEventListener('click',()=>{
-            if(gate.phase!=='selection')return;
+
             const number=envelope.dataset.sealedEnvelope;
             const field=slot.querySelector('#sealedEnvelope');if(!field)return;
             field.value=number;
@@ -2410,6 +2419,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     // TEST LAB: admin-only, read-only preview using the same Workroom markup and mutation panel.
     // No globalState mutation, no Firebase writes, no impersonation of Designer accounts.
     const fauTestLabState={themeId:'w01_first_garment',envelope:null,mutationIndex:null,draw:null,released:false,wedding:{},selectedEnvelope:null,phaseTwo:false};
+    // Conceito demonstrativo isolado: não expõe looks reais nem interfere no sorteio da produção.
+    function fauLabBeautyConcept(){
+      return {title:'O Peso do Invisível',concept:'Para mim, a beleza nasce do que permanece quando retiramos as aparências. A criação traduz memórias e marcas do tempo em uma presença que não pede permissão para existir.'};
+    }
     function fauLabTwist(t){
       const draw=fauTestLabState.draw, released=fauTestLabState.released;
       const extra=t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="">Escolha...</option>${(t.extraField.options||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select>`:`<input class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:'';
@@ -2418,10 +2431,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       if(!extra&&!slots&&(!t.drawType||t.drawType==='none'))return '';
       let control='';
       if(t.drawType==='faction_choice')control=`<label class="block text-xs text-gray-300">ESCOLHA SUA FACÇÃO<select id="fauLabFaction" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select></label><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA ESCOLHA</button>`;
-      else if(t.drawType==='blind_concept_swap')control=fauTestLabState.phaseTwo?`<p class="text-xs text-fashion-gold">THE TWIST — ANOTHER POINT OF VIEW</p><p class="text-xs text-gray-300">A produção entregará um conceito anônimo. A imagem original permanece secreta.</p>`:'';
+      else if(t.drawType==='blind_concept_swap')control=fauTestLabState.phaseTwo?`<div class="space-y-3"><p class="text-[10px] tracking-[.18em] text-fashion-gold">THE TWIST — ANOTHER POINT OF VIEW</p><p class="text-xs text-gray-300">Você recebeu um conceito de outro Designer. A imagem e a autoria permanecem em segredo.</p><div class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-widest text-fashion-gold">YOUR SEALED CONCEPT · SORTEIO EXCLUSIVO</p><h3 class="font-cinzel text-2xl text-white">${esc(fauLabBeautyConcept().title)}</h3><p class="text-sm text-gray-200 whitespace-pre-wrap">${esc(fauLabBeautyConcept().concept)}</p><p class="text-[11px] text-gray-400">Conceito fictício para o Test Lab. No Workroom real, cada Designer recebe um conceito original diferente, sem repetição e sem receber o próprio.</p></div></div>`:'';
       else if(t.drawType==='invitation_box_3d')control=`<div class="text-center text-fashion-gold font-cinzel">THE INVITATION BOX</div><div class="grid grid-cols-1 md:grid-cols-3 gap-3">${[['color','COLOR'],['element','ELEMENT'],['print','PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded p-3"><p class="text-xs text-fashion-gold mb-2">${label}</p><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-lab-wedding="${key}|${n}" class="border border-fashion-gold/30 rounded p-2 text-xs ${fauTestLabState.wedding[key]===n?'bg-fashion-gold text-black':'text-fashion-gold'}">✉<br>${n}</button>`).join('')}</div></div>`).join('')}</div><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA INVITATION BOX</button>`;
-      else if(t.drawType&&t.drawType!=='none')control=`<p class="text-xs text-amber-200 text-center">Escolha um dos 12 envelopes lacrados. A produção controla quando o resultado é revelado.</p><div class="grid grid-cols-3 gap-3">${Array.from({length:12},(_,i)=>`<button type="button" data-lab-envelope="${i+1}" aria-pressed="${fauTestLabState.selectedEnvelope===i+1}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold ${fauTestLabState.selectedEnvelope===i+1?'ring-2 ring-fashion-gold bg-fashion-gold/20':''}"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p class="text-xs text-gray-400 text-center">${fauTestLabState.selectedEnvelope?`Envelope ${String(fauTestLabState.selectedEnvelope).padStart(2,'0')} selecionado — conteúdo lacrado`:'Escolha um envelope para confirmar.'}</p><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR ENVELOPE LACRADO</button>`;
-      if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-xs text-gray-400">${released?'ENVELOPE ABERTO':'ENVELOPE LACRADO'}</p><strong class="text-fashion-gold">${released?esc(draw.value):esc(draw.label)}</strong></div>${released?'':`<button id="fauLabRelease" class="border border-fashion-gold text-fashion-gold rounded px-4 py-2 text-xs">SIMULAR LIBERAÇÃO DA PRODUÇÃO</button>`}<button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
+      else if(t.drawType&&t.drawType!=='none')control=`<p class="text-xs text-amber-200 text-center">Escolha um dos 12 envelopes lacrados. O resultado aparece imediatamente após confirmar e permanece salvo.</p><div class="grid grid-cols-3 gap-3">${Array.from({length:12},(_,i)=>`<button type="button" data-lab-envelope="${i+1}" aria-pressed="${fauTestLabState.selectedEnvelope===i+1}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold ${fauTestLabState.selectedEnvelope===i+1?'ring-2 ring-fashion-gold bg-fashion-gold/20':''}"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p class="text-xs text-gray-400 text-center">${fauTestLabState.selectedEnvelope?`Envelope ${String(fauTestLabState.selectedEnvelope).padStart(2,'0')} selecionado — conteúdo lacrado`:'Escolha um envelope para confirmar.'}</p><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR ENVELOPE LACRADO</button>`;
+      if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-xs text-gray-400">ENVELOPE ABERTO · RESULTADO DO SORTEIO</p><strong class="text-fashion-gold">${esc(draw.value)}</strong></div><button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
       return `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">${extra}${slots}${control}</section>`;
     }
     VIEWS.testlab=()=>{
@@ -2446,12 +2459,15 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="fau-workroom-overview-content"><div id="fauWorkroomClock" class="fau-clock rounded-xl px-4 py-3 text-center" role="timer"><span class="fau-clock-kicker block">⏱ PRAZO DE ENTREGA</span><div id="roundTimer" class="fau-clock-digits">23:59:59</div><div id="fauClockStatus" class="fau-clock-status">PRAZO SIMULADO</div><div class="fau-clock-track"><div id="fauClockProgress" class="fau-clock-fill" style="width:50%"></div></div><p id="fauClockDirection" class="fau-clock-direction">Make it work.</p></div>
             <div class="fau-submission-board"><div id="workroomThermometer" class="text-xs"><div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div><p class="text-xs text-gray-300">0 de 20 Designers enviaram · 20 faltam</p><p class="text-[10px] text-gray-500 mt-2">Dados fictícios para visualização</p></div></div></div>
           </section>
-          <div id="personalTwistSlot" class="mb-5">${fauLabTwist(theme)}</div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
+          <div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
           <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada"><details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${esc(phaseOne?({'theme_beauty_eye':'THE CHALLENGE — Apresente sua visão pessoal da beleza em um look autoral. Envie sua primeira criação. A produção anunciará os próximos acontecimentos no momento certo.','theme_rest_in_style':'THE CHALLENGE — Crie um look para um funeral sem utilizar preto. A produção anunciará os próximos acontecimentos no momento certo.','theme_tarantino':'THE CHALLENGE — Crie uma proposta autoral inspirada no universo cinematográfico de Tarantino. Aguarde novas instruções da produção.','theme_plaid_bay':'THE CHALLENGE — Reinvente o uniforme xadrez da Baia para um ex-participante de A Fazenda. Xadrez obrigatório. Aguarde novas instruções da produção.'}[theme.id]):theme.mandate||'Aguarde as instruções da produção.')}</div></details></section>
+          <section class="fau-submission-suite" aria-label="Envio do desafio">
+          <div id="personalTwistSlot">${fauLabTwist(theme)}</div>
           <div id="fauMutationModule">${isMutation?fauMutationPanel(fauTestLabState.envelope?{envelope:fauTestLabState.envelope,mutationIndex:fauTestLabState.mutationIndex}:null,false):''}</div>
           <div id="workroomFormModule" class="space-y-5">${visibleSlots.map(slot=>`<div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6"><div class="space-y-3"><h3 class="font-cinzel text-2xl text-white">Envie seu look</h3></div>${theme.id==='theme_beauty_eye'&&!fauTestLabState.phaseTwo?'':`<div class="border-b border-fashion-700 pb-3"><h3 class="font-cinzel text-lg text-white font-normal">${theme.slotLabels?.[slot-1] ? esc(theme.slotLabels[slot-1]) : 'Look '+slot+(count>1?' de '+count:'')}</h3></div>`}
           <div class="space-y-4 text-xs"><div><label class="block text-gray-300 mb-1 uppercase tracking-wider font-semibold">Fotografia do look</label><input type="file" data-lab-look-file="${slot}" accept="image/jpeg,image/png,image/webp" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white"><p class="text-[11px] text-gray-400 mt-2">Selecione uma imagem JPG, PNG ou WebP com até 5 MB. Você poderá conferir a prévia antes de entregar.</p></div><div data-lab-preview="${slot}" class="hidden rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">YOUR LOOK · FILE READY</p><img class="max-h-64 w-full object-contain rounded" alt="Prévia do look"></div>
           <div><label class="uppercase tracking-wider font-semibold text-gray-300 block mb-1">Nome da Criação</label><input class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white font-cinzel" placeholder="Ex: Sombra Abissal, Veludo Tóxico..."></div><div><div class="flex flex-wrap justify-between items-center gap-2 mb-2"><label class="uppercase tracking-wider font-semibold text-gray-300">Conceito (até 500 caracteres)</label><span data-lab-chars="${slot}" class="text-gray-500 font-mono text-xs whitespace-nowrap">0 / 500</span></div><textarea data-lab-concept="${slot}" maxlength="500" rows="9" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white" placeholder="Explique a inspiração, a narrativa e a conexão com a assinatura do seu Designer..."></textarea></div><button data-lab-submit="${slot}" type="button" class="w-full bg-fashion-gold text-black font-semibold py-3 rounded uppercase tracking-widest text-xs">Enviar</button></div></div>`).join('')}</div>
+          </section>
           <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4"><div class="flex justify-between items-center border-b border-fashion-700 pb-2"><h3 class="font-cinzel text-white text-base">Meus looks</h3><span class="text-xs text-fashion-gold font-mono">0 looks</span></div><p class="text-xs text-gray-400">Nenhuma criação anterior neste ambiente de teste.</p></div>
         </div></div>`);
       document.getElementById('fauLabTheme').onchange=e=>{fauTestLabState.themeId=e.target.value;fauTestLabState.envelope=null;fauTestLabState.mutationIndex=null;fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};fauTestLabState.selectedEnvelope=null;fauTestLabState.phaseTwo=false;VIEWS.testlab();};
@@ -2460,12 +2476,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       document.querySelectorAll('[data-lab-wedding]').forEach(b=>b.onclick=()=>{const [key,n]=b.dataset.labWedding.split('|');fauTestLabState.wedding[key]=Number(n);VIEWS.testlab();});
       const labConfirm=document.getElementById('fauLabDrawConfirm');if(labConfirm)labConfirm.onclick=()=>{
         let value='',label='';
-        if(theme.drawType==='faction_choice'){value=document.getElementById('fauLabFaction').value;label='Facção escolhida — aguardando confirmação';}
+        if(theme.drawType==='faction_choice'){value=document.getElementById('fauLabFaction').value;label='Facção escolhida';}
         else if(theme.drawType==='invitation_box_3d'){
           const w=fauTestLabState.wedding;if(!w.color||!w.element||!w.print){showToast('Escolha um envelope em cada uma das três categorias.');return;}
-          value=[theme.invitationBoxMap.colors[w.color-1],theme.invitationBoxMap.elements[w.element-1],theme.invitationBoxMap.prints[w.print-1]].join(' • ');label=`COLOR ${w.color} · ELEMENT ${w.element} · PRINT ${w.print} — aguardando revelação`;
-        }else{const n=fauTestLabState.selectedEnvelope;if(!n){showToast('Escolha um envelope antes de confirmar.');return;}const pool=theme.drawPool||[];value=pool.length?pool[Math.floor(Math.random()*pool.length)]:'Sorteio de demonstração sem opções cadastradas';label=`Envelope ${String(n).padStart(2,'0')} — aguardando liberação da produção`;}
-        fauTestLabState.draw={value,label};fauTestLabState.released=false;VIEWS.testlab();
+          value=[theme.invitationBoxMap.colors[w.color-1],theme.invitationBoxMap.elements[w.element-1],theme.invitationBoxMap.prints[w.print-1]].join(' • ');label=`COLOR ${w.color} · ELEMENT ${w.element} · PRINT ${w.print}`;
+        }else{const n=fauTestLabState.selectedEnvelope;if(!n){showToast('Escolha um envelope antes de confirmar.');return;}const pool=theme.drawPool||[];value=pool.length?pool[Math.floor(Math.random()*pool.length)]:'Sorteio de demonstração sem opções cadastradas';label=`Envelope ${String(n).padStart(2,'0')}`;}
+        fauTestLabState.draw={value,label};fauTestLabState.released=true;VIEWS.testlab();
       };
       const labRelease=document.getElementById('fauLabRelease');if(labRelease)labRelease.onclick=()=>{fauTestLabState.released=true;VIEWS.testlab();};
       const labReset=document.getElementById('fauLabDrawReset');if(labReset)labReset.onclick=()=>{fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};fauTestLabState.selectedEnvelope=null;VIEWS.testlab();};
@@ -2560,13 +2576,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     </div>
                 </section>
 
-                <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
+                <div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
                     <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed">${(()=>{const raw=String(getTheme()?.mandate || 'Aguarde as instruções da produção.');const parts=raw.split(/(?=Envie imagem completa gerada por IA|Cinco critérios de 0 a 10|NÃO HÁ ELIMINAÇÃO)/i).filter(Boolean);return parts.map((part,i)=>`<p class="${i?'mt-3 pt-3 border-t border-fashion-700/50':''}">${esc(part.trim())}</p>`).join('')})()}</div></details>
                 </section>
 
-                <div id="fauMutationModule"></div>
-                <div id="workroomFormModule"></div>
+                <section class="fau-submission-suite" aria-label="Envio do desafio">
+                    <div id="personalTwistSlot"></div>
+                    <div id="fauMutationModule"></div>
+                    <div id="workroomFormModule"></div>
+                </section>
 
 
 
@@ -3003,10 +3022,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if(theme?.id==='w02_new_form' && !(await fauMutationRef(globalState.rodada,currentUser.uid).get()).exists) throw new Error('Abra seu envelope na Mutation Machine antes de enviar o look.');
                 if(theme?.id==='w02_new_form' && !allMyLooks.some(l=>l.themeId==='w01_first_garment')) throw new Error('Sua criação da Week 01 não foi encontrada. Procure a produção para regularizar o histórico antes de enviar A New Form.');
                 const draw = theme ? await getPersonalTwist() : null;
-                if(themeHasDraw(theme)){
-                    const gate=await getDrawGate();
-                    if(gate.phase!=='released')throw new Error('Aguarde a produção liberar o resultado do seu envelope antes de enviar o look.');
-                }
                 if (theme && (themeHasDraw(theme) || theme.drawType === 'faction_choice') && !draw) throw new Error('Abra seu envelope antes de enviar o look.');
                 if (theme?.extraField && !document.getElementById('themeExtraInput')?.value.trim()) throw new Error('Preencha a exigência especial deste desafio.');
                 if(theme?.id==='theme_climate_chaos') {
@@ -4595,8 +4610,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         <button id="ctrlAudit" class="bg-fashion-950 border border-fashion-700 rounded p-3 text-xs hover:border-fashion-gold">🔒 Auditoria</button>
                     </div>
                     <div class="flex flex-wrap gap-2 items-center text-xs">
-                        <button id="btnDrawLock" class="border border-fashion-gold/50 rounded px-3 py-2 text-fashion-gold">🔒 Encerrar escolha de envelopes</button>
-                        <button id="btnDrawRelease" class="bg-fashion-gold text-black rounded px-3 py-2">🎁 Liberar resultados</button>
+                        <!-- Os envelopes agora revelam imediatamente; controle de bloqueio removido. -->
+
                     </div>
                     <div class="flex flex-wrap gap-2 items-center text-xs"><span class="text-gray-400">Prévia de perfil:</span><select id="ctrlPreviewRole" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white"><option value="estilista">Estilista</option><option value="jurado">Jurado</option><option value="plateia">Plateia</option></select><button id="ctrlPreview" class="border border-fashion-gold/50 rounded px-3 py-2 text-fashion-gold">Ver permissões e estado</button></div>
                     <div id="ctrlOutput" class="bg-fashion-950 rounded border border-fashion-800 p-4 text-xs text-gray-300 max-h-96 overflow-auto">Selecione uma área para consultar os registros.</div>
@@ -4840,33 +4855,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         $('#ctrlDraft').onclick = safeExec(async () => {
             const q = await db.collection('rascunhos_producao').get();
             ctrlDisplay('Rascunhos privados — todas as rodadas', q.docs);
-        });
-        $('#btnDrawLock').onclick=safeExec(async()=>{
-            const theme=getTheme();
-            if(!themeHasDraw(theme))throw new Error('Esta rodada não possui sorteio de envelopes.');
-            const gate=await getDrawGate();
-            if(gate.phase!=='selection')throw new Error('A escolha já foi encerrada.');
-            const participants=await db.collection('perfis').where('role','==','estilista').get();
-            const eligible=participants.docs.filter(d=>!d.data().out&&!d.data().disabled);
-            const draws=await Promise.all(eligible.map(d=>db.doc(`sorteios/${globalState.rodada}_${d.id}`).get()));
-            const missing=eligible.filter((d,i)=>!draws[i].exists);
-            if(missing.length)throw new Error('Ainda faltam envelopes de: '+missing.map(d=>d.data().ate||d.id).join(', '));
-            if(!productionConfirm('ENCERRAR as escolhas? Os resultados continuarão ocultos até sua autorização.'))return;
-            await drawGateRef().set({phase:'locked',themeId:theme.id,rodada:globalState.rodada,
-                lockedBy:currentUser.uid,lockedAt:firebase.firestore.FieldValue.serverTimestamp()});
-            await productionLog('draw_choices_locked',{round:globalState.rodada});
-            showToast('Escolhas encerradas. Os envelopes continuam lacrados.');
-        });
-        $('#btnDrawRelease').onclick=safeExec(async()=>{
-            const theme=getTheme();
-            if(!themeHasDraw(theme))throw new Error('Esta rodada não possui sorteio de envelopes.');
-            const gate=await getDrawGate();
-            if(gate.phase!=='locked')throw new Error('Encerre as escolhas antes de revelar os resultados.');
-            if(!productionConfirm('REVELAR os resultados? Cada estilista poderá visualizar seu próprio sorteio no Workroom.'))return;
-            await drawGateRef().update({phase:'released',releasedBy:currentUser.uid,
-                releasedAt:firebase.firestore.FieldValue.serverTimestamp()});
-            await productionLog('draw_results_released',{round:globalState.rodada});
-            showToast('Envelopes abertos! Os estilistas podem consultar os resultados.');
         });
         $('#ctrlDraws').onclick = safeExec(async () => {
             const collections = ['sorteios','escolhas'];
