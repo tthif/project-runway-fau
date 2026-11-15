@@ -1097,7 +1097,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const released=gate.phase==='released';
         const isDraw=themeHasDraw(t);
         if(!t.extraField && !t.slotLabels && !isDraw && t.drawType!=='faction_choice' && !draw){slot.innerHTML='';return;}
-        const envelopeOptions=Array.from({length:12},(_,i)=>`<option value="${i+1}">Envelope ${String(i+1).padStart(2,'0')}</option>`).join('');
         slot.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
           ${t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
           ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
@@ -1109,7 +1108,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             (isDraw||t.drawType==='faction_choice')?
             `<div class="space-y-3">${t.drawType==='invitation_box_3d'?`<div class="text-center py-3 border border-fashion-gold/30 rounded-lg bg-fashion-950/60"><div class="text-3xl mb-1">💌</div><div class="font-cinzel text-fashion-gold tracking-widest text-sm">THE INVITATION BOX</div><p class="text-xs text-gray-400 mt-1">Three little secrets. Choose your sealed invitations.</p></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-3">${[['color','🎨 COLOR'],['element','🧵 ELEMENT'],['print','🪡 PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded-lg p-3 bg-fashion-950/50"><div class="text-xs text-fashion-gold font-bold mb-2">${label}</div><input type="hidden" id="wedding_${key}" value=""><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-wedding-category="${key}" data-wedding-envelope="${n}" aria-pressed="false" class="wedding-envelope border border-fashion-gold/30 rounded-md py-3 px-0.5 text-center bg-fashion-900 hover:bg-fashion-gold/20 hover:border-fashion-gold transition-colors"><span class="block text-lg">✉️</span><span class="block text-[10px] text-fashion-gold mt-1">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><div id="wedding_status_${key}" class="text-[11px] text-gray-400 mt-2">🔒 Escolha um envelope</div></div>`).join('')}</div>`:t.drawType==='faction_choice'?
                 '<select id="factionChoice" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select>':
-                `<label class="block text-xs text-gray-300">ESCOLHA SEU ENVELOPE</label><select id="sealedEnvelope" class="w-full bg-fashion-950 border border-fashion-700 rounded p-3 text-white">${envelopeOptions}</select>`}
+                `<p class="text-xs text-fashion-gold tracking-widest text-center">CHOOSE YOUR FATE</p><input type="hidden" id="sealedEnvelope" value=""><div class="grid grid-cols-3 gap-3">${Array.from({length:12},(_,i)=>`<button type="button" data-sealed-envelope="${i+1}" aria-pressed="false" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p id="sealedEnvelopeStatus" class="text-xs text-gray-400 text-center">Selecione um envelope para confirmar.</p>`}
                 <button id="btnRevealTwist" ${gate.phase!=='selection'?'disabled':''} class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold disabled:opacity-50">${t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
           ${gate.phase==='selection'?'':gate.phase==='locked'?'<p class="text-xs text-amber-200">A produção encerrou as escolhas. Aguarde a abertura dos envelopes.</p>':'<p class="text-xs text-fashion-gold">✨ A produção liberou os resultados!</p>'}
         </div>`;
@@ -1133,6 +1132,19 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if(status)status.textContent='💌 Envelope '+String(number).padStart(2,'0')+' selecionado — conteúdo lacrado';
             });
         });
+        slot.querySelectorAll('[data-sealed-envelope]').forEach(envelope=>envelope.addEventListener('click',()=>{
+            if(gate.phase!=='selection')return;
+            const number=envelope.dataset.sealedEnvelope;
+            const field=slot.querySelector('#sealedEnvelope');if(!field)return;
+            field.value=number;
+            slot.querySelectorAll('[data-sealed-envelope]').forEach(el=>{
+                const active=el===envelope;el.setAttribute('aria-pressed',String(active));
+                el.classList.toggle('ring-2',active);el.classList.toggle('ring-fashion-gold',active);
+                el.classList.toggle('bg-fashion-gold/20',active);
+            });
+            const status=slot.querySelector('#sealedEnvelopeStatus');
+            if(status)status.textContent='Envelope '+String(number).padStart(2,'0')+' selecionado — conteúdo lacrado';
+        }));
         const btn=document.getElementById('btnRevealTwist');if(btn)btn.onclick=safeExec(revealPersonalTwist);
     }
 
@@ -2397,31 +2409,36 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     }
     // TEST LAB: admin-only, read-only preview using the same Workroom markup and mutation panel.
     // No globalState mutation, no Firebase writes, no impersonation of Designer accounts.
-    const fauTestLabState={themeId:'w01_first_garment',envelope:null,mutationIndex:null,draw:null,released:false,wedding:{}};
+    const fauTestLabState={themeId:'w01_first_garment',envelope:null,mutationIndex:null,draw:null,released:false,wedding:{},selectedEnvelope:null,phaseTwo:false};
     function fauLabTwist(t){
       const draw=fauTestLabState.draw, released=fauTestLabState.released;
       const extra=t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="">Escolha...</option>${(t.extraField.options||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select>`:`<input class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:'';
-      const slots=t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:'';
+      const hiddenSecond=t.id==='theme_beauty_eye'&&!fauTestLabState.phaseTwo;
+      const slots=t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${hiddenSecond?esc('Look 1 — Criação Autoral Original'):t.slotLabels.map(esc).join(' / ')}</p>`:'';
       if(!extra&&!slots&&(!t.drawType||t.drawType==='none'))return '';
       let control='';
       if(t.drawType==='faction_choice')control=`<label class="block text-xs text-gray-300">ESCOLHA SUA FACÇÃO<select id="fauLabFaction" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select></label><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA ESCOLHA</button>`;
-      else if(t.drawType==='blind_concept_swap')control=`<p class="text-xs text-gray-300">A produção atribui o conceito de outro Designer sem revelar a imagem original. Esta etapa depende de entregas reais.</p>`;
+      else if(t.drawType==='blind_concept_swap')control=fauTestLabState.phaseTwo?`<p class="text-xs text-fashion-gold">THE TWIST — ANOTHER POINT OF VIEW</p><p class="text-xs text-gray-300">A produção entregará um conceito anônimo. A imagem original permanece secreta.</p>`:'';
       else if(t.drawType==='invitation_box_3d')control=`<div class="text-center text-fashion-gold font-cinzel">THE INVITATION BOX</div><div class="grid grid-cols-1 md:grid-cols-3 gap-3">${[['color','COLOR'],['element','ELEMENT'],['print','PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded p-3"><p class="text-xs text-fashion-gold mb-2">${label}</p><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-lab-wedding="${key}|${n}" class="border border-fashion-gold/30 rounded p-2 text-xs ${fauTestLabState.wedding[key]===n?'bg-fashion-gold text-black':'text-fashion-gold'}">✉<br>${n}</button>`).join('')}</div></div>`).join('')}</div><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA INVITATION BOX</button>`;
-      else if(t.drawType&&t.drawType!=='none')control=`<p class="text-xs text-amber-200">Escolha um dos 12 envelopes lacrados. A produção controla quando o resultado é revelado.</p><label class="text-xs text-gray-300">ESCOLHA SEU ENVELOPE<select id="fauLabEnvelope" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded">${Array.from({length:12},(_,i)=>`<option value="${i+1}">Envelope ${String(i+1).padStart(2,'0')}</option>`).join('')}</select></label><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">CONFIRMAR ENVELOPE LACRADO</button>`;
+      else if(t.drawType&&t.drawType!=='none')control=`<p class="text-xs text-amber-200 text-center">Escolha um dos 12 envelopes lacrados. A produção controla quando o resultado é revelado.</p><div class="grid grid-cols-3 gap-3">${Array.from({length:12},(_,i)=>`<button type="button" data-lab-envelope="${i+1}" aria-pressed="${fauTestLabState.selectedEnvelope===i+1}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold ${fauTestLabState.selectedEnvelope===i+1?'ring-2 ring-fashion-gold bg-fashion-gold/20':''}"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p class="text-xs text-gray-400 text-center">${fauTestLabState.selectedEnvelope?`Envelope ${String(fauTestLabState.selectedEnvelope).padStart(2,'0')} selecionado — conteúdo lacrado`:'Escolha um envelope para confirmar.'}</p><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR ENVELOPE LACRADO</button>`;
       if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-xs text-gray-400">${released?'ENVELOPE ABERTO':'ENVELOPE LACRADO'}</p><strong class="text-fashion-gold">${released?esc(draw.value):esc(draw.label)}</strong></div>${released?'':`<button id="fauLabRelease" class="border border-fashion-gold text-fashion-gold rounded px-4 py-2 text-xs">SIMULAR LIBERAÇÃO DA PRODUÇÃO</button>`}<button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
       return `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">${extra}${slots}${control}</section>`;
     }
     VIEWS.testlab=()=>{
       if(currentUser?.role!=='admin'){navigate('home');return;}
       const theme=SEASON_THEMES[fauTestLabState.themeId]||SEASON_THEMES.w01_first_garment;
-      const count=Number(theme.numSubmissoes)||1;
+      const phased=['theme_beauty_eye','theme_rest_in_style','theme_tarantino','theme_plaid_bay'].includes(theme.id);
+      const phaseOne=phased&&!fauTestLabState.phaseTwo;
+      const count=phaseOne&&theme.id==='theme_beauty_eye'?1:Number(theme.numSubmissoes)||1;
+      const visibleSlots=theme.id==='theme_beauty_eye'?[fauTestLabState.phaseTwo?2:1]:Array.from({length:count},(_,i)=>i+1);
       const isMutation=theme.id==='w02_new_form';
-      const themeOptions=Object.values(SEASON_THEMES).sort((a,b)=>(a.fixedOrder||99)-(b.fixedOrder||99)).map(t=>`<option value="${esc(t.id)}" ${t.id===theme.id?'selected':''}>${esc(t.code||'WEEK')} — ${esc(t.title)}</option>`).join('');
+      const themeOptions=Object.values(SEASON_THEMES).sort((a,b)=>(a.fixedOrder||99)-(b.fixedOrder||99)).map(t=>`<option value="${esc(t.id)}" ${t.id===theme.id?'selected':''}>${esc(t.code||'WEEK')} — ${esc(t.id==='theme_beauty_eye'?'BEAUTY IS IN THE EYE':t.title)}</option>`).join('');
       renderView(`<div class="space-y-5 max-w-5xl mx-auto" id="fauExactTestLab">
         <section class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4 space-y-3">
           <div class="flex flex-wrap justify-between gap-2"><div><p class="text-[10px] tracking-[.22em] text-fashion-gold">PRODUCTION ONLY · TEST LAB</p><h2 class="font-cinzel text-2xl text-white mt-1">THE WORKROOM PREVIEW</h2></div><span class="text-[10px] border border-fashion-gold/50 rounded px-3 py-2 text-fashion-gold self-start">SEM GRAVAÇÃO</span></div>
           <label class="block text-xs text-gray-300">Escolha o tema<select id="fauLabTheme" class="w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-3 text-white">${themeOptions}</select></label>
-          <p class="text-xs text-gray-400">Prévia visual com o mesmo layout, estilos e componentes do Workroom. Os envios e envelopes são demonstrativos: nenhuma ação altera a rodada ativa.</p>
+          <p class="text-xs text-gray-400">Prévia demonstrativa: nenhuma ação altera a rodada ativa.</p>
+          ${phased?`<div class="border border-fashion-gold/30 rounded-lg p-3 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">CONTROLE DE REVELAÇÃO · APENAS ADMIN</p><p class="text-xs text-gray-300">${phaseOne?'FASE 01 — Os Designers veem apenas o desafio inicial.':'FASE 02 — Twist revelada pela produção.'}</p><button id="fauLabPhaseToggle" type="button" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold">${phaseOne?'REVELAR FASE 02 (TESTE)':'VOLTAR À FASE 01'}</button></div>`:''}
         </section>
         <div class="space-y-6">
           <section class="fau-workroom-overview bg-fashion-900 border border-fashion-700 p-4 md:p-5 rounded-xl" aria-label="Prazo e entregas da rodada">
@@ -2430,14 +2447,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="fau-submission-board"><div id="workroomThermometer" class="text-xs"><div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div><p class="text-xs text-gray-300">0 de 20 Designers enviaram · 20 faltam</p><p class="text-[10px] text-gray-500 mt-2">Dados fictícios para visualização</p></div></div></div>
           </section>
           <div id="personalTwistSlot" class="mb-5">${fauLabTwist(theme)}</div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
-          <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada"><details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${esc(theme.mandate||'Aguarde as instruções da produção.')}</div></details></section>
+          <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada"><details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${esc(phaseOne?({'theme_beauty_eye':'THE CHALLENGE — Apresente sua visão pessoal da beleza em um look autoral. Envie sua primeira criação. A produção anunciará os próximos acontecimentos no momento certo.','theme_rest_in_style':'THE CHALLENGE — Crie um look para um funeral sem utilizar preto. A produção anunciará os próximos acontecimentos no momento certo.','theme_tarantino':'THE CHALLENGE — Crie uma proposta autoral inspirada no universo cinematográfico de Tarantino. Aguarde novas instruções da produção.','theme_plaid_bay':'THE CHALLENGE — Reinvente o uniforme xadrez da Baia para um ex-participante de A Fazenda. Xadrez obrigatório. Aguarde novas instruções da produção.'}[theme.id]):theme.mandate||'Aguarde as instruções da produção.')}</div></details></section>
           <div id="fauMutationModule">${isMutation?fauMutationPanel(fauTestLabState.envelope?{envelope:fauTestLabState.envelope,mutationIndex:fauTestLabState.mutationIndex}:null,false):''}</div>
-          <div id="workroomFormModule"><div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6"><div class="space-y-3"><h3 class="font-cinzel text-2xl text-white">Envie seu look</h3></div><div class="border-b border-fashion-700 pb-3 flex justify-between items-center"><h3 class="font-cinzel text-lg text-white font-normal">Look 1 de ${count}</h3></div>
-          <div class="space-y-4 text-xs"><div><label class="block text-gray-300 mb-1 uppercase tracking-wider font-semibold">Fotografia do look</label><input type="file" id="fauLabLookFile" accept="image/jpeg,image/png,image/webp" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white"><p class="text-[11px] text-gray-400 mt-2">Selecione uma imagem JPG, PNG ou WebP com até 5 MB. Você poderá conferir a prévia antes de entregar.</p></div><div id="fauLabFilePreview" class="hidden rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">YOUR LOOK · FILE READY</p><img class="max-h-64 w-full object-contain rounded" alt="Prévia do look"></div>
-          <div><label class="uppercase tracking-wider font-semibold text-gray-300 block mb-1">Nome da Criação</label><input class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white font-cinzel" placeholder="Ex: Sombra Abissal, Veludo Tóxico..."></div><div><div class="flex flex-wrap justify-between items-center gap-2 mb-2"><label class="uppercase tracking-wider font-semibold text-gray-300">Conceito (até 500 caracteres)</label><span id="fauLabChars" class="text-gray-500 font-mono text-xs whitespace-nowrap">0 / 500</span></div><textarea id="lookMemorialText" maxlength="500" rows="9" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white" placeholder="Explique a inspiração, a narrativa e a conexão com a assinatura da seu Designer..."></textarea></div><button id="fauLabSubmit" type="button" class="w-full bg-fashion-gold text-black font-semibold py-3 rounded uppercase tracking-widest text-xs">Enviar</button></div></div></div>
+          <div id="workroomFormModule" class="space-y-5">${visibleSlots.map(slot=>`<div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6"><div class="space-y-3"><h3 class="font-cinzel text-2xl text-white">Envie seu look</h3></div>${theme.id==='theme_beauty_eye'&&!fauTestLabState.phaseTwo?'':`<div class="border-b border-fashion-700 pb-3"><h3 class="font-cinzel text-lg text-white font-normal">${theme.slotLabels?.[slot-1] ? esc(theme.slotLabels[slot-1]) : 'Look '+slot+(count>1?' de '+count:'')}</h3></div>`}
+          <div class="space-y-4 text-xs"><div><label class="block text-gray-300 mb-1 uppercase tracking-wider font-semibold">Fotografia do look</label><input type="file" data-lab-look-file="${slot}" accept="image/jpeg,image/png,image/webp" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white"><p class="text-[11px] text-gray-400 mt-2">Selecione uma imagem JPG, PNG ou WebP com até 5 MB. Você poderá conferir a prévia antes de entregar.</p></div><div data-lab-preview="${slot}" class="hidden rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">YOUR LOOK · FILE READY</p><img class="max-h-64 w-full object-contain rounded" alt="Prévia do look"></div>
+          <div><label class="uppercase tracking-wider font-semibold text-gray-300 block mb-1">Nome da Criação</label><input class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white font-cinzel" placeholder="Ex: Sombra Abissal, Veludo Tóxico..."></div><div><div class="flex flex-wrap justify-between items-center gap-2 mb-2"><label class="uppercase tracking-wider font-semibold text-gray-300">Conceito (até 500 caracteres)</label><span data-lab-chars="${slot}" class="text-gray-500 font-mono text-xs whitespace-nowrap">0 / 500</span></div><textarea data-lab-concept="${slot}" maxlength="500" rows="9" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white" placeholder="Explique a inspiração, a narrativa e a conexão com a assinatura do seu Designer..."></textarea></div><button data-lab-submit="${slot}" type="button" class="w-full bg-fashion-gold text-black font-semibold py-3 rounded uppercase tracking-widest text-xs">Enviar</button></div></div>`).join('')}</div>
           <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4"><div class="flex justify-between items-center border-b border-fashion-700 pb-2"><h3 class="font-cinzel text-white text-base">Meus looks</h3><span class="text-xs text-fashion-gold font-mono">0 looks</span></div><p class="text-xs text-gray-400">Nenhuma criação anterior neste ambiente de teste.</p></div>
         </div></div>`);
-      document.getElementById('fauLabTheme').onchange=e=>{fauTestLabState.themeId=e.target.value;fauTestLabState.envelope=null;fauTestLabState.mutationIndex=null;fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};VIEWS.testlab();};
+      document.getElementById('fauLabTheme').onchange=e=>{fauTestLabState.themeId=e.target.value;fauTestLabState.envelope=null;fauTestLabState.mutationIndex=null;fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};fauTestLabState.selectedEnvelope=null;fauTestLabState.phaseTwo=false;VIEWS.testlab();};
+      const phaseToggle=document.getElementById('fauLabPhaseToggle');if(phaseToggle)phaseToggle.onclick=()=>{fauTestLabState.phaseTwo=!fauTestLabState.phaseTwo;VIEWS.testlab();};
+      document.querySelectorAll('[data-lab-envelope]').forEach(b=>b.onclick=()=>{fauTestLabState.selectedEnvelope=Number(b.dataset.labEnvelope);VIEWS.testlab();});
       document.querySelectorAll('[data-lab-wedding]').forEach(b=>b.onclick=()=>{const [key,n]=b.dataset.labWedding.split('|');fauTestLabState.wedding[key]=Number(n);VIEWS.testlab();});
       const labConfirm=document.getElementById('fauLabDrawConfirm');if(labConfirm)labConfirm.onclick=()=>{
         let value='',label='';
@@ -2445,14 +2464,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         else if(theme.drawType==='invitation_box_3d'){
           const w=fauTestLabState.wedding;if(!w.color||!w.element||!w.print){showToast('Escolha um envelope em cada uma das três categorias.');return;}
           value=[theme.invitationBoxMap.colors[w.color-1],theme.invitationBoxMap.elements[w.element-1],theme.invitationBoxMap.prints[w.print-1]].join(' • ');label=`COLOR ${w.color} · ELEMENT ${w.element} · PRINT ${w.print} — aguardando revelação`;
-        }else{const n=Number(document.getElementById('fauLabEnvelope').value);const pool=theme.drawPool||[];value=pool.length?pool[Math.floor(Math.random()*pool.length)]:'Sorteio de demonstração sem opções cadastradas';label=`Envelope ${String(n).padStart(2,'0')} — aguardando liberação da produção`;}
+        }else{const n=fauTestLabState.selectedEnvelope;if(!n){showToast('Escolha um envelope antes de confirmar.');return;}const pool=theme.drawPool||[];value=pool.length?pool[Math.floor(Math.random()*pool.length)]:'Sorteio de demonstração sem opções cadastradas';label=`Envelope ${String(n).padStart(2,'0')} — aguardando liberação da produção`;}
         fauTestLabState.draw={value,label};fauTestLabState.released=false;VIEWS.testlab();
       };
       const labRelease=document.getElementById('fauLabRelease');if(labRelease)labRelease.onclick=()=>{fauTestLabState.released=true;VIEWS.testlab();};
-      const labReset=document.getElementById('fauLabDrawReset');if(labReset)labReset.onclick=()=>{fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};VIEWS.testlab();};
-      document.getElementById('lookMemorialText').oninput=e=>document.getElementById('fauLabChars').textContent=e.target.value.length+' / 500';
-      document.getElementById('fauLabSubmit').onclick=()=>showToast('TEST LAB · Envio demonstrativo. Nada foi gravado.');
-      document.getElementById('fauLabLookFile').onchange=e=>{const file=e.target.files?.[0],box=document.getElementById('fauLabFilePreview');if(!file){box.classList.add('hidden');return;}if(file.size>5*1024*1024){showError('O arquivo deve ter no máximo 5 MB.');e.target.value='';return;}const url=URL.createObjectURL(file);box.querySelector('img').src=url;box.classList.remove('hidden');box.querySelector('img').onload=()=>URL.revokeObjectURL(url);};
+      const labReset=document.getElementById('fauLabDrawReset');if(labReset)labReset.onclick=()=>{fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};fauTestLabState.selectedEnvelope=null;VIEWS.testlab();};
+      document.querySelectorAll('[data-lab-concept]').forEach(el=>el.oninput=()=>{document.querySelector(`[data-lab-chars="${el.dataset.labConcept}"]`).textContent=el.value.length+' / 500';});
+      document.querySelectorAll('[data-lab-submit]').forEach(el=>el.onclick=()=>showToast(theme.id==='theme_next_supreme'?'TEST LAB · As duas Supremas são enviadas juntas no Workroom real. Nenhum dado foi gravado.':'TEST LAB · Envio demonstrativo. Nada foi gravado.'));
+      document.querySelectorAll('[data-lab-look-file]').forEach(el=>el.onchange=()=>{const file=el.files?.[0],box=document.querySelector(`[data-lab-preview="${el.dataset.labLookFile}"]`);if(!file){box.classList.add('hidden');return;}if(file.size>5*1024*1024){showError('O arquivo deve ter no máximo 5 MB.');el.value='';return;}const url=URL.createObjectURL(file);box.querySelector('img').src=url;box.classList.remove('hidden');box.querySelector('img').onload=()=>URL.revokeObjectURL(url);});
       document.querySelectorAll('#fauMutationModule [data-mutation-envelope]').forEach(b=>b.onclick=()=>{const n=Number(b.dataset.mutationEnvelope);if(!confirm(`Abrir envelope ${String(n).padStart(2,'0')} no TEST LAB?`))return;fauTestLabState.envelope=n;fauTestLabState.mutationIndex=fauMutationShuffle()[n-1];VIEWS.testlab();});
     };
     // 2. THE WORKROOM (DESIGNER & PROMPT MASTER)
@@ -2801,6 +2820,31 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 $('#lookMemorialText').oninput = e => {
                     $('#charCounter').textContent = `${e.target.value.length} / 500 letras`;
                 };
+                // THE NEXT SUPREME: duas entregas na mesma etapa, com confirmação única.
+                if (getTheme()?.id === 'theme_next_supreme' && currentRoundLooks.length === 0) {
+                    const supremeFields = [
+                      ['OLD SUPREME', 'THE REIGNING QUEEN'],
+                      ['NEXT SUPREME', 'THE HEIR APPARENT']
+                    ];
+                    formSlot.innerHTML = `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-5 space-y-5">
+                      <div><p class="text-[10px] tracking-widest text-fashion-gold">THE NEXT SUPREME · OLD vs NEXT</p><h3 class="font-cinzel text-2xl text-white mt-2">Duas Supremas. Um trono.</h3><p class="text-sm text-gray-300 mt-2">Envie as duas criações juntas. Cada uma precisa de sua própria fotografia, título e conceito.</p></div>
+                      ${supremeFields.map(([name,subtitle],i)=>`<fieldset class="border border-fashion-700 rounded-xl p-4 space-y-4"><legend class="font-cinzel text-fashion-gold px-2">LOOK 0${i+1} — ${name}</legend><p class="text-xs text-gray-400">${subtitle}</p>
+                        <label class="block text-xs text-gray-300 uppercase tracking-wider">Fotografia do look<input data-supreme-file="${i}" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-2 text-white"></label>
+                        <div data-supreme-preview="${i}" class="hidden"><img alt="Prévia de ${name}" class="max-h-64 w-full object-contain rounded"><p class="text-xs text-gray-400 mt-1"></p></div>
+                        <label class="block text-xs text-gray-300 uppercase tracking-wider">Nome da criação<input data-supreme-title="${i}" maxlength="120" class="block w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-3 text-white" placeholder="Título de ${name}"></label>
+                        <label class="block text-xs text-gray-300 uppercase tracking-wider">Conceito (até 500 caracteres)<span data-supreme-counter="${i}" class="float-right">0 / 500</span><textarea data-supreme-concept="${i}" maxlength="500" rows="5" class="block w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-3 text-white" placeholder="Conceito de ${name}"></textarea></label>
+                      </fieldset>`).join('')}
+                      <button type="button" id="btnSubmitSupremes" class="w-full bg-fashion-gold text-black font-semibold py-3 rounded uppercase tracking-widest text-xs">ENVIAR AS DUAS SUPREMAS</button>
+                    </section>`;
+                    formSlot.querySelectorAll('[data-supreme-concept]').forEach(el=>el.addEventListener('input',()=>{formSlot.querySelector(`[data-supreme-counter="${el.dataset.supremeConcept}"]`).textContent=`${el.value.length} / 500`;}));
+                    formSlot.querySelectorAll('[data-supreme-file]').forEach(el=>el.addEventListener('change',()=>{
+                      const file=el.files?.[0],wrap=formSlot.querySelector(`[data-supreme-preview="${el.dataset.supremeFile}"]`);
+                      if(wrap.dataset.url){URL.revokeObjectURL(wrap.dataset.url);delete wrap.dataset.url;}
+                      wrap.classList.add('hidden');if(!file)return;
+                      if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){el.value='';showToast('Use JPG, PNG ou WebP de até 5 MB.');return;}
+                      const url=URL.createObjectURL(file);wrap.dataset.url=url;wrap.querySelector('img').src=url;wrap.querySelector('p').textContent=`${file.name} · ${(file.size/1048576).toFixed(2)} MB`;wrap.classList.remove('hidden');
+                    }));
+                }
             }
 
             fauUpdateClock();
@@ -2910,6 +2954,36 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
                 showToast('Identidade do Designer salva!');
                 refreshWorkroomUI();
+            }
+
+            if (target.id === 'btnSubmitSupremes') {
+                if(getTheme()?.id!=='theme_next_supreme')throw new Error('Entrega disponível somente em THE NEXT SUPREME.');
+                if(!Number(globalState.prazo)||now()>=Number(globalState.prazo))throw new Error('O prazo de entrega está encerrado.');
+                const existing=allMyLooks.filter(l=>l.rodada===globalState.rodada);
+                if(existing.length)throw new Error('Já existem entregas nesta rodada. Atualize os looks pelo painel de edição ou procure a produção.');
+                const inputs=[0,1].map(i=>({file:document.querySelector(`[data-supreme-file="${i}"]`)?.files?.[0],title:document.querySelector(`[data-supreme-title="${i}"]`)?.value.trim(),concept:document.querySelector(`[data-supreme-concept="${i}"]`)?.value.trim()}));
+                for(let i=0;i<2;i++){
+                    const v=inputs[i];if(!v.file||!v.title||!v.concept)throw new Error(`Preencha foto, título e conceito da ${i?'NEXT':'OLD'} SUPREME.`);
+                    if(!['image/jpeg','image/png','image/webp'].includes(v.file.type)||v.file.size>5*1024*1024)throw new Error('Cada fotografia deve ser JPG, PNG ou WebP de até 5 MB.');
+                    if(v.concept.length>500)throw new Error('O conceito deve ter até 500 caracteres.');
+                }
+                const button=document.getElementById('btnSubmitSupremes');
+                if(!button||button.disabled)throw new Error('Envio em andamento.');
+                button.disabled=true;button.textContent='ENVIANDO AS DUAS SUPREMAS...';
+                try{
+                    showToast('Otimizando as duas fotografias...');
+                    const photos=[];for(const item of inputs)photos.push(await compressImageToBase64(item.file));
+                    if(now()>=Number(globalState.prazo))throw new Error('TIME IS UP · O prazo terminou durante o envio.');
+                    const batch=db.batch();
+                    inputs.forEach((item,i)=>{
+                        const id=`${globalState.rodada}_${currentUser.uid}_${i}`;
+                        batch.set(db.doc(`looks/${id}`),{uid:currentUser.uid,ate:currentUser.ate,rodada:globalState.rodada,themeId:'theme_next_supreme',slot:i+1,twistValue:null,beautySourceUid:null,themeExtra:'',finaleMeta:null,titulo:item.title,url:photos[i],mem:item.concept,t:now()});
+                        batch.set(db.doc(`envios/${id}`),{rodada:globalState.rodada,uid:currentUser.uid});
+                    });
+                    await batch.commit();
+                    showToast('OLD SUPREME e NEXT SUPREME recebidas! MAKE IT WORK!');
+                }catch(error){button.disabled=false;button.textContent='TENTAR ENVIAR AS DUAS SUPREMAS';throw error;}
+                return;
             }
 
             if (target.id === 'btnSubmitLook') {
