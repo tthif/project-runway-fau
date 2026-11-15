@@ -3195,6 +3195,29 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             }));
         }catch(e){if(root.isConnected)root.innerHTML=`<p class="text-xs text-amber-300">Não foi possível carregar críticas: ${esc(e.message)}</p>`;}
     };
+        const creativeDossier = (look) => {
+        const theme=SEASON_THEMES[look.themeId] || getTheme();
+        const extra=look.themeExtra?.trim();
+        const twist=look.twistValue?.trim();
+        const fm=look.finaleMeta;
+        if(!extra && !twist && !fm)return '';
+        const finalDossier=fm ? `<div class="space-y-1 text-xs text-gray-300 border-t border-fashion-700 pt-2">
+          <p><strong class="text-fashion-gold">🏛️ Designer:</strong> ${esc(fm.maison||'—')}</p>
+          <p><strong class="text-fashion-gold">🌍 Referência de origem:</strong> ${esc(fm.origin||'—')}</p>
+          ${fm.archiveReference?`<p><strong class="text-fashion-gold">📜 Look do arquivo:</strong> ${esc(fm.archiveReference)}</p>`:''}
+          <p><strong>House Code:</strong> ${esc([fm.silhouette,fm.materials,fm.palette,fm.signature,fm.philosophy].filter(Boolean).join(' · '))}</p>
+          ${fm.manifesto?`<p><strong>Manifesto:</strong> ${esc(fm.manifesto)}</p>`:''}
+        </div>` : '';
+        const label=theme?.id==='theme_amoras_cut' ? '🎬 Personagem em cena' : (theme?.extraField?.label || 'Referência obrigatória');
+        return `<section class="bg-fashion-950 border border-fashion-gold/40 rounded p-3 space-y-2">
+          <p class="font-cinzel text-[10px] uppercase tracking-wider text-fashion-gold">✦ Creative Dossier — Especificações da Criação</p>
+          ${twist?`<p class="text-xs text-white"><span class="text-gray-400">🎁 Sorteio:</span> ${esc(twist)}</p>`:''}
+          ${extra?`<p class="text-xs text-white"><span class="text-gray-400">${esc(label)}:</span> ${esc(extra)}</p>`:''}
+          ${finalDossier}
+        </section>`;
+    };
+
+
     VIEWS.bancada = () => {
         let looks = [];
         let evaluations = {};
@@ -3237,27 +3260,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             </div>
         `);
 
-        const creativeDossier = (look) => {
-        const theme=SEASON_THEMES[look.themeId] || getTheme();
-        const extra=look.themeExtra?.trim();
-        const twist=look.twistValue?.trim();
-        const fm=look.finaleMeta;
-        if(!extra && !twist && !fm)return '';
-        const finalDossier=fm ? `<div class="space-y-1 text-xs text-gray-300 border-t border-fashion-700 pt-2">
-          <p><strong class="text-fashion-gold">🏛️ Designer:</strong> ${esc(fm.maison||'—')}</p>
-          <p><strong class="text-fashion-gold">🌍 Referência de origem:</strong> ${esc(fm.origin||'—')}</p>
-          ${fm.archiveReference?`<p><strong class="text-fashion-gold">📜 Look do arquivo:</strong> ${esc(fm.archiveReference)}</p>`:''}
-          <p><strong>House Code:</strong> ${esc([fm.silhouette,fm.materials,fm.palette,fm.signature,fm.philosophy].filter(Boolean).join(' · '))}</p>
-          ${fm.manifesto?`<p><strong>Manifesto:</strong> ${esc(fm.manifesto)}</p>`:''}
-        </div>` : '';
-        const label=theme?.id==='theme_amoras_cut' ? '🎬 Personagem em cena' : (theme?.extraField?.label || 'Referência obrigatória');
-        return `<section class="bg-fashion-950 border border-fashion-gold/40 rounded p-3 space-y-2">
-          <p class="font-cinzel text-[10px] uppercase tracking-wider text-fashion-gold">✦ Creative Dossier — Especificações da Criação</p>
-          ${twist?`<p class="text-xs text-white"><span class="text-gray-400">🎁 Sorteio:</span> ${esc(twist)}</p>`:''}
-          ${extra?`<p class="text-xs text-white"><span class="text-gray-400">${esc(label)}:</span> ${esc(extra)}</p>`:''}
-          ${finalDossier}
-        </section>`;
-    };
 
     const refreshJuryUI = () => {
             if (!juryCanViewLooks()) {
