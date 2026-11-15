@@ -596,6 +596,33 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
  #fauV83Premiere .fau-story-shell{width:min(92vw,560px)!important;height:min(94dvh,940px)!important}
 }
 </style>
+<style id="fau-jury-editorial-compact-2026">
+#mainView:has(#juryCardsContainer)>.space-y-6{display:flex;flex-direction:column;gap:16px}
+#mainView:has(#juryCardsContainer)>.space-y-6>*{margin-top:0!important;margin-bottom:0!important}
+#mainView:has(#juryCardsContainer) .fau-jury-actions{flex-wrap:wrap;align-items:center}
+#mainView:has(#juryCardsContainer) #btnOpenMatrix{background:transparent!important;border-color:#645662!important;color:#cfc3ca!important;font-weight:500}
+#mainView:has(#juryCardsContainer) #fauJuryProgressBar{transition:width .35s}
+#mainView:has(#juryCardsContainer) #juryCardsContainer{display:flex;flex-direction:column;gap:16px}
+#mainView:has(#juryCardsContainer) .fau-jury-card{padding:clamp(14px,2.5vw,22px)!important;border-radius:12px}
+#mainView:has(#juryCardsContainer) .fau-jury-card>.grid{gap:clamp(14px,2vw,24px)}
+#mainView:has(#juryCardsContainer) .fau-jury-look-photo{object-fit:contain!important;max-height:560px;background:#100d12;cursor:zoom-in}
+#mainView:has(#juryCardsContainer) .fau-jury-dossier{overflow:hidden}
+#mainView:has(#juryCardsContainer) .fau-jury-dossier summary{list-style:none;min-height:44px}
+#mainView:has(#juryCardsContainer) .fau-jury-dossier summary::-webkit-details-marker{display:none}
+#mainView:has(#juryCardsContainer) .fau-jury-dossier[open] .fau-jury-chevron{transform:rotate(180deg)}
+#mainView:has(#juryCardsContainer) .fau-jury-total{gap:12px;align-items:flex-start}
+#mainView:has(#juryCardsContainer) .fau-jury-total>span{font-size:11px;line-height:1.5}
+#mainView:has(#juryCardsContainer) .fau-jury-total>div{white-space:nowrap}
+#mainView:has(#juryCardsContainer) .fau-jury-scoring .score-slider{height:18px!important;accent-color:#d1b38b;touch-action:pan-y}
+@media(max-width:640px){
+#mainView:has(#juryCardsContainer) .fau-jury-actions{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#mainView:has(#juryCardsContainer) .fau-jury-actions button{width:100%;font-size:10px!important;padding:10px 7px!important;min-height:42px}
+#mainView:has(#juryCardsContainer) .fau-jury-card{padding:14px!important}
+#mainView:has(#juryCardsContainer) .fau-jury-look-photo{max-height:65dvh}
+#mainView:has(#juryCardsContainer) .fau-jury-scoring{margin-top:0!important}
+#mainView:has(#juryCardsContainer) .fau-jury-scoring .space-y-3{margin-top:10px}
+}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -2431,7 +2458,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
                 <!-- PORTFÓLIO DE CRIAÇÕES ANTERIORES -->
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
-                    <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
+                    <div class="fau-jury-total flex justify-between items-center border-b border-fashion-700 pb-2">
                         <h3 class="font-cinzel text-white text-base">Meus looks</h3>
                         <span class="text-xs text-fashion-gold font-mono" id="myLooksCount">0 looks</span>
                     </div>
@@ -3401,10 +3428,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="space-y-6">
                 <div class="border-b border-fashion-700 pb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Avaliação Técnica (Fashion, Art & Uniqueness)</span>
-                        <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel · ${esc(fauRoundLabel())}</h2><p class="text-xs mt-2 ${scoresClosed()?'text-red-300':'text-green-300'}">${scoresClosed()?'🔒 '+juryStatus():'● '+juryStatus()}</p>
+                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">FASHION · ART · UNIQUENESS</span>
+                        <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel</h2><p class="text-xs mt-2 ${scoresClosed()?'text-red-300':'text-green-300'}">${scoresClosed()?'🔒 '+juryStatus():'● '+juryStatus()}</p>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 fau-jury-actions">
                         <button id="btnOpenMatrix" class="bg-fashion-800 hover:bg-fashion-700 text-fashion-sand px-3 py-1.5 rounded border border-fashion-600 text-xs">
                             <i class="fa-solid fa-table-cells"></i> Comparar Notas
                         </button>
@@ -3419,7 +3446,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div id="juryMatrixGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 text-xs"></div>
                 </div>
 
-                <section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-4 space-y-2" aria-label="Progresso de avaliação"><div class="flex justify-between items-center gap-2"><span class="text-xs uppercase tracking-widest text-fashion-gold">⚖️ YOUR JUDGING DESK</span><span id="fauJuryProgressText" class="text-xs text-gray-300">Preparando avaliações...</span></div><div class="h-2 rounded-full bg-fashion-950 overflow-hidden"><div id="fauJuryProgressBar" class="h-full bg-fashion-gold transition-all duration-500" style="width:0%"></div></div><p class="text-[11px] text-gray-400">Confira a imagem, o Creative Dossier e os cinco critérios. Salve suas notas antes de sair da bancada.</p></section>
+                <section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-4 space-y-2" aria-label="Progresso de avaliação"><div class="flex justify-between items-center gap-2"><span class="text-xs uppercase tracking-widest text-fashion-gold">⚖️ YOUR JUDGING DESK</span><span id="fauJuryProgressText" class="text-xs text-gray-300">Preparando avaliações...</span></div><div class="h-2 rounded-full bg-fashion-950 overflow-hidden"><div id="fauJuryProgressBar" class="h-full bg-fashion-gold transition-all duration-500" style="width:0%"></div></div><p class="text-[11px] text-gray-400">Avalie cada criação e salve suas notas antes de sair.</p></section>
                 <div id="juryCardsContainer" class="space-y-8"></div><section id="fauCritiqueJury" class="mt-6"></section>
             </div>
         `);
@@ -3438,7 +3465,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const container = $('#juryCardsContainer');
             const completed=looks.filter(l=>!!evaluations[l.id]).length;
             const progressText=$('#fauJuryProgressText'),progressBar=$('#fauJuryProgressBar');
-            if(progressText)progressText.textContent=`${completed} de ${looks.length} avaliações salvas`;
+            if(progressText)progressText.textContent=`${completed}/${looks.length} avaliados`;
             if(progressBar)progressBar.style.width=(looks.length?Math.round(completed/looks.length*100):0)+'%';
             const allButton=$('#btnSubmitAllEvaluations');
             if(allButton)allButton.disabled=scoresClosed()||savingAll||!looks.length;
@@ -3466,21 +3493,21 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const commentAdmin = ev.comentAdmin || '';
 
                 return `
-                    <div class="bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
+                    <div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
-                                <img src="${esc(look.url)}" class="w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
+                                <img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
                                 <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div><p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
                                 ${creativeDossier(look)}
                                 ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}<p class="text-xs text-gray-300">Elemento reinterpretado: ${esc(look.themeExtra||'Não informado')}</p></div>`;})() : ''}
-                                <div class="bg-fashion-950 p-2.5 rounded border border-fashion-700 space-y-1">
-                                    <span class="text-[9px] uppercase tracking-wider text-fashion-gold font-bold font-cinzel block">Conceito & Título ("${esc(look.titulo || '')}"):</span>
-                                    <p class="text-[11px] text-gray-300 italic leading-relaxed">${esc(look.mem)}</p>
-                                </div>
+                                <details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700">
+                                    <summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>LER CONCEITO · ${esc(look.titulo || 'Sem título')}</span><span class="fau-jury-chevron" aria-hidden="true">⌄</span></summary>
+                                    <p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p>
+                                </details>
                             </div>
-                            <div class="md:col-span-8 space-y-4 text-xs">
+                            <div class="fau-jury-scoring md:col-span-8 space-y-4 text-xs">
                                 <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
-                                    <span class="uppercase tracking-wider text-gray-400 font-semibold font-cinzel">Critérios Oficiais Fashion, Art & Uniqueness (0 a 10)</span>
+                                    <span class="uppercase tracking-wider text-gray-400 font-semibold font-cinzel">Critérios de avaliação · 0 a 10</span>
                                     <div class="font-cinzel text-fashion-gold font-bold text-sm">
                                         Total: <span id="tot-${look.id}">${(scores.reduce((a, b) => a + b, 0)).toFixed(1)}</span> / 50.0
                                     </div>
@@ -3500,7 +3527,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                                     `).join('')}
                                 </div>
 
-                                <p class="text-[11px] text-gray-400 border-t border-fashion-700 pt-3">📝 Aqui você envia apenas as notas. Se a produção solicitar uma crítica após a apuração, ela aparecerá abaixo da bancada, uma única vez por Designer.</p>
+
 
                                 <button data-action="save-evaluation" data-look="${look.id}" ${scoresClosed()?'disabled':''} class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-2.5 rounded uppercase tracking-wider transition">
                                     ${scoresClosed()?'Avaliação indisponível':ev.nota?'Atualizar avaliação':'Salvar avaliação'}
