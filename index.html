@@ -2377,12 +2377,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="space-y-6">
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div class="space-y-1">
-                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">THE ATELIER · Seu espaço de criação</span>
-                        <h2 class="font-cinzel text-2xl text-white font-normal">The Workroom · ${esc(fauRoundLabel())}</h2>
-                        <p class="text-xs text-gray-400">Meta do desafio: <strong class="text-fashion-gold">${requiredLooks} look(s) gerados por IA</strong> para a passarela.</p>
+                        <h2 class="font-cinzel text-2xl text-white font-normal">Seu espaço de criação</h2>
+                        <p class="text-xs text-gray-400">${requiredLooks} ${requiredLooks===1?'look para enviar':'looks para enviar'} · Confira o prazo e prepare sua entrega.</p>
                     </div>
                     <div id="fauWorkroomClock" class="fau-clock rounded-xl px-6 py-4 text-center" role="timer" aria-label="Prazo de entrega da rodada">
-                        <span class="fau-clock-kicker block">⏱ THE WORKROOM CLOCK</span>
+                        <span class="fau-clock-kicker block">⏱ PRAZO DE ENTREGA</span>
                         <div id="roundTimer" class="fau-clock-digits">--:--:--</div>
                         <div id="fauClockStatus" class="fau-clock-status">Aguardando o prazo oficial</div>
                         <div class="fau-clock-track"><div id="fauClockProgress" class="fau-clock-fill"></div></div>
@@ -2394,15 +2393,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 <section class="fau-submission-board rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4" aria-label="Progresso anônimo das entregas"><div id="workroomThermometer" class="text-xs" aria-live="polite"><p class="text-fashion-gold">THE SUBMISSION BOARD · Sincronizando entregas...</p></div></section>
                 <div id="workroomFormModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
-                    <div class="flex items-center justify-between gap-2"><span class="text-[10px] tracking-[.25em] text-fashion-gold">01 · THE BRIEF</span><span class="text-[10px] text-gray-400">YOUR NEXT CHALLENGE</span></div>
-                    <details class="border-t border-fashion-700 pt-3"><summary class="cursor-pointer text-xs text-fashion-gold">Ler briefing completo e regras de envio</summary><div class="flex flex-wrap gap-2 text-[11px] text-fashion-gold mt-3"><span class="border border-fashion-700 rounded px-3 py-1">${requiredLooks} look(s)</span><span class="border border-fashion-700 rounded px-3 py-1">JPG, PNG ou WebP · até 5 MB</span><span class="border border-fashion-700 rounded px-3 py-1">Conceito · até 500 caracteres</span></div><p class="text-xs text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
+                    <details open class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold">Briefing do desafio <span class="text-gray-400 font-normal">· toque para recolher</span></summary><div class="flex flex-wrap gap-2 text-[11px] text-fashion-gold mt-3"><span class="border border-fashion-700 rounded px-3 py-1">${requiredLooks} look(s)</span><span class="border border-fashion-700 rounded px-3 py-1">JPG, PNG ou WebP · até 5 MB</span><span class="border border-fashion-700 rounded px-3 py-1">Conceito · até 500 caracteres</span></div><p class="text-xs text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
                 </section>
 
 
                 <!-- PORTFÓLIO DE CRIAÇÕES ANTERIORES -->
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
                     <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
-                        <h3 class="font-cinzel text-white text-base">THE DESIGNER ARCHIVE · Looks da temporada</h3>
+                        <h3 class="font-cinzel text-white text-base">Meus looks</h3>
                         <span class="text-xs text-fashion-gold font-mono" id="myLooksCount">0 looks</span>
                     </div>
                     <div id="myLooksArchiveGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs"></div>
@@ -2458,7 +2456,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const total = pulseReady && Number.isFinite(Number(submissionPulse.total)) ? Math.max(sent, Number(submissionPulse.total)) : activeStylistsCount;
             const pending = sent===null ? null : Math.max(0,total-sent);
             const percent = sent===null || total<=0 ? 0 : Math.min(100,Math.round(sent/total*100));
-            $('#workroomThermometer').innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><p class="text-[10px] tracking-[.22em] text-fashion-gold">BACKSTAGE · DELIVERY PULSE</p><h3 class="font-cinzel text-white text-base mt-1">The Submission Board</h3></div><span class="text-[10px] text-gray-400">CONTAGEM ANÔNIMA</span></div>
+            $('#workroomThermometer').innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div></div>
               <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent===null?'—':sent}</strong><span class="text-gray-300 text-xs">JÁ ENVIARAM</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending===null?'—':pending}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
               <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
               <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a sincronização da produção.':`${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${submissionPulse?.updatedAt?.toDate ? ' · Atualizado '+submissionPulse.updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`}</p>`;
@@ -2516,7 +2514,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             } else if (currentRoundLooks.length >= requiredLooks) {
                 const editable = Number(globalState.prazo)>now();
                 formSlot.innerHTML = `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-5 space-y-4">
-                    <p class="text-[10px] tracking-[.3em] text-fashion-gold">02 · THE ATELIER / 03 · THE DELIVERY</p>
                     <h3 class="font-cinzel text-2xl text-white">${editable?'Your runway look':'Your submitted looks'}</h3>
                     <p class="text-xs text-gray-300">${editable?'Sua última entrega já está salva. Os campos abaixo vêm preenchidos e você pode atualizar a imagem, o título e o conceito até o prazo terminar.':'As entregas estão encerradas. Confira seus looks no arquivo do Designer.'}</p>
                     ${editable?`<div class="flex flex-wrap gap-2" id="fauInlineLookTabs" role="group" aria-label="Escolher look para editar">${currentRoundLooks.slice().sort((a,b)=>(a.slot||0)-(b.slot||0)).map((l,i)=>`<button type="button" data-edit-look="${esc(l.id)}" class="rounded border border-fashion-gold/50 px-4 py-2 text-xs text-fashion-gold">${esc(getTheme()?.slotLabels?.[l.slot-1]||'LOOK '+(l.slot||i+1))}</button>`).join('')}</div><div id="fauInlineEditHost"></div>`:'<p class="text-green-300 text-xs">✓ Entregas recebidas pela produção.</p>'}
@@ -2525,10 +2522,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             } else {
                 formSlot.innerHTML = `
                     <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6">
-                        <div class="space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">02 · THE ATELIER / 03 · THE DELIVERY</p><h3 class="font-cinzel text-2xl text-white">Create your runway look</h3><p class="text-xs text-gray-300">Escolha sua imagem, dê um nome à criação e conte sua história. Revise tudo antes de enviar.</p></div>
+                        <div class="space-y-3"><h3 class="font-cinzel text-2xl text-white">Envie seu look</h3></div>
                 <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
-                            <h3 class="font-cinzel text-lg text-white font-normal">Envio para a Passarela · Look ${currentRoundLooks.length + 1} de ${requiredLooks}</h3>
-                            <span class="text-xs text-fashion-gold font-mono">Fashion, Art & Uniqueness</span>
+                            <h3 class="font-cinzel text-lg text-white font-normal">Look ${currentRoundLooks.length + 1} de ${requiredLooks}</h3>
                         </div>
 
                         <div class="space-y-4 text-xs">
