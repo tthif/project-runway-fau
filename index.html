@@ -1219,7 +1219,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         estilista: ['meu_perfil', 'work', 'runway', 'tribunal', 'berlinda', 'conf'],
         jurado: ['bancada', 'runway', 'conf'],
         plateia: ['runway', 'conf'],
-        admin: ['direcao', 'bancada', 'runway', 'tribunal', 'conf']
+        admin: ['direcao', 'work', 'bancada', 'runway', 'tribunal', 'conf']
     };
 
     Object.values(ABAS_POR_PERFIL).forEach(a => { a.unshift('home'); a.push('cast'); a.push('legado'); a.push('pistas'); a.push('manual'); });
@@ -2316,6 +2316,48 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
     // 2. THE WORKROOM (DESIGNER & PROMPT MASTER)
     VIEWS.work = () => {
+        if(currentUser?.role === 'admin') {
+            // Production-only, read-only Workroom: never expose Designer submission actions to ADM.
+            const round = globalState.rodada;
+            const deadline = globalState.prazo ? new Date(globalState.prazo) : null;
+            renderView(`<section class="space-y-4 max-w-5xl mx-auto" id="fauAdminWorkroom">
+              <header class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-4 space-y-2">
+                <div class="flex items-center justify-between gap-3 flex-wrap"><span class="text-xs tracking-widest text-fashion-gold">THE WORKROOM · PRODUÇÃO</span><span class="text-[10px] rounded-full border border-fashion-gold/40 px-3 py-1 text-fashion-gold">VISUALIZAÇÃO ADM</span></div>
+                <h2 class="font-cinzel text-xl text-white">${esc(fauRoundLabel())}</h2>
+                <p class="text-xs text-gray-300">Acompanhe as entregas sem alterar ou enviar looks pelos Designers.</p>
+                <p id="fauAdminWorkroomDeadline" class="text-xs text-fashion-gold">${deadline && !Number.isNaN(deadline.getTime()) ? 'Prazo: '+deadline.toLocaleString('pt-BR') : 'Prazo definido no Control Room'}</p>
+              </header>
+              <div id="fauAdminWorkroomCount" class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 text-sm text-gray-300">Sincronizando entregas...</div>
+              <div id="fauAdminWorkroomList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"><p class="text-gray-400 text-sm">Carregando elenco...</p></div>
+            </section>`);
+            if(!round){$('#fauAdminWorkroomCount').textContent='Nenhuma rodada ativa.';$('#fauAdminWorkroomList').innerHTML='';return;}
+            let designers=[],looks=[],readyProfiles=false,readyLooks=false;
+            const paint=()=>{
+                const list=$('#fauAdminWorkroomList'),counter=$('#fauAdminWorkroomCount');
+                if(!list||!counter)return;
+                if(!readyProfiles||!readyLooks)return;
+                const byUid=new Map();
+                for(const look of looks){
+                    const uid=look.uid;if(!uid)continue;
+                    if(!byUid.has(uid))byUid.set(uid,[]);
+                    byUid.get(uid).push(look);
+                }
+                const required=globalState.fase==='final'?4:(Number(globalState.numSubmissoes)||1);
+                const eligible=designers.filter(d=>!d.disabled&&!d.out);
+                const completed=eligible.filter(d=>(byUid.get(d.uid)||[]).length>=required).length;
+                counter.innerHTML=`<strong class="text-fashion-gold">${completed} de ${eligible.length}</strong> Designers concluíram as entregas · <strong>${eligible.length-completed}</strong> ainda faltam. <span class="block text-xs text-gray-400 mt-1">Informações individuais visíveis somente para a produção.</span>`;
+                list.innerHTML=eligible.map(d=>{
+                    const entries=(byUid.get(d.uid)||[]).sort((a,b)=>(a.slot||0)-(b.slot||0));
+                    return `<article class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-3">
+                      <div class="flex items-center gap-3">${d.fotoElenco?`<img src="${esc(d.fotoElenco)}" alt="" class="w-12 h-12 object-cover rounded-lg">`:`<div class="w-12 h-12 rounded-lg bg-fashion-950 border border-fashion-700 flex items-center justify-center">✂</div>`}<div class="min-w-0 flex-1"><h3 class="font-cinzel text-fashion-gold text-sm break-words">${esc(d.ate||'Designer')}</h3><p class="text-xs text-gray-400">${entries.length} de ${required} look(s) · ${entries.length>=required?'ENTREGA COMPLETA':'PENDENTE'}</p></div></div>
+                      ${entries.length?`<div class="grid grid-cols-2 gap-2">${entries.map(l=>`<div class="space-y-1">${l.url?`<img src="${esc(l.url)}" alt="Look enviado por ${esc(d.ate||'Designer')}" loading="lazy" class="w-full aspect-[3/4] object-contain bg-black rounded-md">`:'<div class="aspect-[3/4] bg-black rounded-md"></div>'}<p class="text-xs text-gray-200 break-words">${esc(l.titulo||'Sem título')}</p><details class="text-xs text-gray-300"><summary class="cursor-pointer text-fashion-gold">Ler conceito</summary><p class="mt-2 whitespace-pre-wrap break-words">${esc(l.mem||'')}</p></details></div>`).join('')}</div>`:'<p class="text-xs text-gray-400">Nenhum look enviado nesta rodada.</p>'}
+                    </article>`;
+                }).join('')||'<p class="text-sm text-gray-400">Nenhum Designer ativo cadastrado.</p>';
+            };
+            sub(db.collection('perfis').where('role','==','estilista'),snap=>{designers=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR'));readyProfiles=true;paint();});
+            sub(db.collection('looks').where('rodada','==',round),snap=>{looks=snap.docs.map(d=>({id:d.id,...d.data()}));readyLooks=true;paint();});
+            return;
+        }
         if(currentUser?.role !== 'estilista'){navigate('home');return;}
         let allMyLooks = [];
         let submissionPulse = null;
@@ -7334,5 +7376,33 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
   });
 })();
 </script>
+
+<style id="fau-runway-tight-header-v2">
+/* One concise status line; the global week strip already names the challenge. */
+#mainView:has(#runwayGrid) .fau-runway-minihead{display:none!important}
+#mainView:has(#runwayGrid) > .space-y-8{display:flex!important;flex-direction:column!important;gap:12px!important}
+#mainView:has(#runwayGrid) > .space-y-8 > *{margin-top:0!important;margin-bottom:0!important}
+#mainView:has(#runwayGrid) > .space-y-8 > :empty{display:none!important}
+#mainView:has(#runwayGrid) #fauAdminRunwayPreview{align-self:flex-start;margin:0 0 1px!important;padding:5px 10px!important;font-size:10px!important}
+#mainView:has(#runwayGrid) #fauV83Launch{margin:0 0 5px!important;min-height:50px!important}
+#mainView:has(#runwayGrid) #runwayGrid{margin-top:0!important}
+#mainView:has(#runwayGrid) .fau-runway-extras{margin-top:20px!important}
+#mainView:has(#runwayGrid) #runwayGroups:empty{display:none!important}
+#mainView:has(#runwayGrid) #publishedRankingBox:empty,
+#mainView:has(#runwayGrid) #fauCritiquePublic:empty,
+#mainView:has(#runwayGrid) #supremeVotingBox:empty{display:none!important}
+@media(max-width:600px){#mainView:has(#runwayGrid) > .space-y-8{gap:10px!important}}
+</style>
+
+<style id="fau-runway-designer-name-tight">
+/* Keep the designer label directly against the photo, without a blank band. */
+#runwayGrid .fau-collection-card{padding:0!important;overflow:hidden!important}
+#runwayGrid .fau-collection-card > .space-y-2{gap:0!important;margin:0!important;padding:0!important}
+#runwayGrid .fau-collection-card .fau-collection-copy{padding:7px 9px!important;min-height:0!important;height:auto!important;margin:0!important;display:block!important;flex:none!important;gap:0!important}
+#runwayGrid .fau-collection-card .fau-collection-name{padding:0!important;margin:0!important;min-height:0!important;height:auto!important;line-height:1.2!important;display:flex!important;align-items:center!important;gap:5px!important}
+#runwayGrid .fau-collection-card .fau-collection-name button{padding:0!important;margin:0!important;min-height:0!important;line-height:1.25!important;font-size:12px!important}
+#runwayGrid .fau-collection-card .fau-collection-photo{margin:0!important;padding:0!important}
+#runwayGrid .fau-collection-card .fau-collection-photo img.img-look{margin:0!important;border-radius:0!important}
+</style>
 </body>
 </html>
