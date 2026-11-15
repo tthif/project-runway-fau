@@ -545,6 +545,29 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #fauV83Launch[hidden]{display:none!important}
 @media(min-width:600px){#fauV83Premiere .fau-story-shell{height:min(94dvh,920px);border:1px solid #6b5356;border-radius:14px}}
 </style>
+
+<style id="fau-runway-compact-2026">
+/* Put the runway and its creations ahead of explanatory content. */
+.fau-preview-chip{display:inline-flex;width:max-content;max-width:100%;border:1px solid #80664d;border-radius:999px;padding:6px 12px;color:#d4b58e;font-size:10px;letter-spacing:.16em;font-weight:700;background:#211920}
+.fau-runway-minihead{display:flex;flex-wrap:wrap;gap:7px 14px;align-items:baseline;margin:0 0 -12px;padding:0 0 9px;border-bottom:1px solid #493a42}
+.fau-runway-minihead span{font-size:10px;letter-spacing:.22em;color:#c7a57b}
+.fau-runway-minihead strong{font-family:Georgia,serif;font-size:15px;color:#f1e7e4;font-weight:400}
+#mainView:has(#runwayGrid) details:has(> summary:first-child){scroll-margin-top:100px}
+#mainView:has(#runwayGrid) details:has(> summary:first-child):not(#fauRunwayArchiveDetails){display:none!important}
+#fauV83Launch{max-width:none!important;margin:0 0 14px!important;min-height:56px;border-radius:12px!important;font-size:13px!important;letter-spacing:.13em}
+#fauV83Premiere .fau-story-top{padding:0 3px 6px!important;min-height:42px}
+#fauV83Premiere .fau-story-identity{flex:1;min-width:0;display:flex;flex-direction:row;align-items:center;gap:10px}
+#fauV83Premiere .fau-story-identity small{display:none!important}
+#fauV83Premiere .fau-story-identity strong{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;font-size:16px!important;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden!important}
+#fauV83Premiere .fau-story-zone{background:transparent!important;background-color:transparent!important;box-shadow:none!important;border:0!important;outline:0!important;color:transparent!important;opacity:1!important}
+#fauV83Premiere .fau-story-zone:focus-visible{outline:2px solid #d0b28a!important;outline-offset:-3px!important}
+#fauV83Premiere .fau-story-caption{right:12px;left:12px;bottom:10px}
+#fauV83Premiere #fauStoryLookTitle{font-size:17px!important;line-height:1.25!important;max-height:3.8em!important;margin:4px 0 8px!important}
+#fauV83Premiere #fauPremiereConcept{padding:9px 12px!important;font-size:11px!important;border-radius:9px!important}
+#fauV83Premiere .fau-story-sheet[hidden]{display:none!important}
+#fauV83Premiere .fau-story-sheet{max-height:min(72dvh,650px);overflow-y:auto;touch-action:pan-y}
+@media(max-width:600px){#fauV83Premiere .fau-story-shell{padding-left:6px;padding-right:6px}#fauV83Premiere .fau-story-bottom{padding:4px 0!important}#fauV83Premiere #fauStoryHint{display:none}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3612,17 +3635,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 </div>
 
                 ${currentUser.role==='plateia'?`<section class="fau-frontrow-welcome rounded-2xl border border-fashion-gold/40 p-5 md:p-8 space-y-4" aria-label="Sua primeira fila"><p class="text-[10px] tracking-[.28em] text-fashion-gold">YOUR FRONT-ROW PASS · ${esc(fauRoundDisplayName())}</p><h3 class="font-cinzel text-3xl text-white">Welcome to the Front Row.</h3><p class="text-sm text-gray-300">Acompanhe os editoriais, descubra as histórias por trás das criações e reaja aos seus looks favoritos. Os resultados só aparecem quando a produção revelar.</p><div class="flex flex-wrap gap-2"><button type="button" data-frontrow-jump="runwayGroups" class="fau-frontrow-primary px-4 py-3 rounded-lg text-xs font-bold">EXPLORAR OS LOOKS ↓</button><button type="button" data-frontrow-jump="fauPressFeed" class="border border-fashion-gold/40 px-4 py-3 rounded-lg text-xs text-fashion-gold">ÚLTIMAS NOTÍCIAS</button><button type="button" data-frontrow-jump="fauPublicArchive" class="border border-fashion-700 px-4 py-3 rounded-lg text-xs">ARQUIVO</button></div><p class="text-[11px] text-gray-400">Sua participação é livre: reações e comentários não alteram notas, votos oficiais ou eliminações.</p></section>`:''}
-                ${isAdmin && !globalState.liberado ? `<section id="fauAdminRunwayPreview" class="rounded-xl border border-fashion-gold/60 bg-fashion-900/80 px-4 py-4 md:px-6" role="status"><p class="text-[10px] font-bold tracking-[.24em] text-fashion-gold">PREVIEW · ADMIN ONLY</p><p class="text-sm text-gray-200 mt-2">Prévia privada dos looks enviados. A passarela continua fechada para os demais perfis.</p></section>` : ''}
+                ${isAdmin && !globalState.liberado ? `<div id="fauAdminRunwayPreview" class="fau-preview-chip" role="status">PREVIEW · ADMIN ONLY</div>` : ''}
                 ${isAdmin && !globalState.liberado ? '' : runwayOpening()}
                 <section id="fauReunionPublic" class="hidden rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE REUNION · SEASON SECRETS</p><h3 class="font-cinzel text-xl">The Final Reveal</h3><div id="fauReunionCards" class="grid md:grid-cols-2 gap-3"></div></section>
                 <div id="supremeVotingBox"></div>
                 <section id="fauCeremonyPublic" class="hidden rounded-2xl border border-fashion-gold/60 bg-gradient-to-b from-fashion-900 to-black p-6 text-center space-y-4" aria-live="polite"><p class="text-[10px] tracking-[.35em] text-fashion-gold">🎬 THE RESULTS SHOW · LIVE REVEAL</p><h3 id="fauCeremonyTitle" class="font-cinzel text-2xl text-white"></h3><p id="fauCeremonyMessage" class="text-gray-300"></p><p id="fauCeremonyStep" class="text-[10px] text-fashion-gold"></p></section><div id="publishedRankingBox"></div><div id="fauCritiquePublic" class="mt-5"></div>
                 <div id="faceOffComparisonBox" class="hidden bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg space-y-4"></div>
-                <section class="fau-runway-editorial rounded-xl border border-fashion-gold/25 bg-fashion-900/40 px-4 py-4 md:px-6 md:py-5 space-y-2">
-                  <p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL RUNWAY</p>
-                  <h3 class="font-cinzel text-xl md:text-2xl text-white">${isAdmin && !globalState.liberado ? "Looks recebidos" : "Every Look Tells a Story."}</h3>
-                  <p class="text-sm text-gray-300 leading-relaxed">${isAdmin && !globalState.liberado ? "Explore as criações recebidas. Toque em um look para ver o editorial e seu conceito." : "Explore os looks publicados. Toque em uma fotografia para ampliar e ler o conceito."}</p>
-                </section>
+                <div class="fau-runway-minihead" aria-label="Desfile"><span>THE RUNWAY</span><strong>${esc(fauRoundDisplayName())}</strong></div>
                 <div id="runwayGroups"></div>
                 <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">${isAdmin && !globalState.liberado ? '<p class="col-span-full text-gray-300 text-sm">Carregando os looks recebidos…</p>' : ''}</div>
                 <div class="fau-runway-extras space-y-3 mt-7">
@@ -3648,6 +3667,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const runwayRoot=document.getElementById('mainView');
         let runwayViewer=null;
         const openRunwayCloseup=event=>{
+          if(document.getElementById('fauV83Premiere')?.hidden===false)return;
           const img=event.target.closest('#runwayGrid img.img-look, #runwayGroups img.img-look');
           if(!img || !runwayRoot?.contains(img))return;
           const images=[...runwayRoot.querySelectorAll('#runwayGrid img.img-look, #runwayGroups img.img-look')];
@@ -6929,7 +6949,7 @@ body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gra
  const $=s=>document.querySelector(s);
  const overlay=document.createElement('div');overlay.id='fauV83Premiere';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Fashion Stories · The Runway');
- overlay.innerHTML=`<div class="fau-story-shell"><div class="fau-story-bars" id="fauStoryBars" aria-label="Progresso do desfile"></div><header class="fau-story-top"><div class="fau-story-identity"><small>PROJECT RUNWAY: FAU · THE RUNWAY</small><strong id="fauV83SlideTitle"></strong></div><button id="fauV83Close" type="button" aria-label="Fechar Fashion Stories">✕</button></header><div class="fau-story-photo" id="fauStoryPhoto"><img id="fauV83SlideImg" alt="Look na passarela"><div class="fau-story-gradient"></div><div class="fau-story-caption"><span id="fauV83SlideCounter"></span><h2 id="fauStoryLookTitle"></h2><button type="button" id="fauPremiereConcept" aria-expanded="false">LER CONCEITO ↑</button></div><button class="fau-story-zone fau-story-zone-left" type="button" id="fauV83Prev" aria-label="Look anterior"></button><button class="fau-story-zone fau-story-zone-right" type="button" id="fauV83Next" aria-label="Próximo look"></button></div><div class="fau-story-bottom"><button id="fauStoryPrev" type="button">‹ ANTERIOR</button><span id="fauStoryHint">Toque para navegar</span><button id="fauStoryNext" type="button">PRÓXIMO ›</button></div><section id="fauPremiereConceptPanel" class="fau-story-sheet" hidden aria-label="Conceito da criação"><div class="fau-story-sheet-head"><span>CREATIVE DOSSIER</span><button id="fauStoryConceptClose" type="button">✕ FECHAR</button></div><h3 id="fauStoryConceptTitle"></h3><p id="fauPremiereConceptText"></p></section></div>`;
+ overlay.innerHTML=`<div class="fau-story-shell"><div class="fau-story-bars" id="fauStoryBars" aria-label="Progresso do desfile"></div><header class="fau-story-top"><div class="fau-story-identity"><small>THE RUNWAY · FAU</small><strong id="fauV83SlideTitle"></strong></div><button id="fauV83Close" type="button" aria-label="Fechar Fashion Stories">✕</button></header><div class="fau-story-photo" id="fauStoryPhoto"><img id="fauV83SlideImg" alt="Look na passarela"><div class="fau-story-gradient"></div><div class="fau-story-caption"><span id="fauV83SlideCounter"></span><h2 id="fauStoryLookTitle"></h2><button type="button" id="fauPremiereConcept" aria-expanded="false">LER CONCEITO ↑</button></div><button class="fau-story-zone fau-story-zone-left" type="button" id="fauV83Prev" aria-label="Look anterior"></button><button class="fau-story-zone fau-story-zone-right" type="button" id="fauV83Next" aria-label="Próximo look"></button></div><div class="fau-story-bottom"><button id="fauStoryPrev" type="button">‹ ANTERIOR</button><span id="fauStoryHint">Toque para navegar</span><button id="fauStoryNext" type="button">PRÓXIMO ›</button></div><section id="fauPremiereConceptPanel" class="fau-story-sheet" hidden aria-label="Conceito da criação"><div class="fau-story-sheet-head"><span>CREATIVE DOSSIER</span><button id="fauStoryConceptClose" type="button">✕ FECHAR</button></div><h3 id="fauStoryConceptTitle"></h3><p id="fauPremiereConceptText"></p></section></div>`;
  document.body.appendChild(overlay);
  let slides=[],idx=0,previousFocus=null,touchX=null,touchY=null;
  const panel=$('#fauPremiereConceptPanel');
@@ -6939,13 +6959,13 @@ body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gra
   const x=slides[idx];if(!x)return;
   $('#fauV83SlideImg').src=x.src;$('#fauV83SlideImg').alt=x.alt;
   $('#fauV83SlideTitle').textContent=x.designer||'THE RUNWAY';
-  $('#fauStoryLookTitle').textContent=x.title||'THE FIRST GARMENT';
+  $('#fauStoryLookTitle').textContent=(x.title||'THE FIRST GARMENT').replace(/^Editorial\s+/i,'').replace(/\s+do\s+Designer\s+.+$/i,'').trim();
   $('#fauV83SlideCounter').textContent=`LOOK ${idx+1} / ${slides.length}`;
   $('#fauStoryBars').innerHTML=slides.map((_,i)=>`<span class="${i<idx?'seen':i===idx?'current':''}"></span>`).join('');
   $('#fauV83Prev').disabled=idx===0;$('#fauStoryPrev').disabled=idx===0;
   $('#fauV83Next').disabled=idx===slides.length-1;$('#fauStoryNext').textContent=idx===slides.length-1?'VER TODOS ✓':'PRÓXIMO ›';
   $('#fauPremiereConceptText').textContent=x.concept||'Conceito não disponível.';
-  $('#fauStoryConceptTitle').textContent=x.title||x.designer||'Creative Dossier';
+  $('#fauStoryConceptTitle').textContent=(x.title||'Creative Dossier').replace(/^Editorial\s+/i,'').replace(/\s+do\s+Designer\s+.+$/i,'').trim();
   closePanel();$('#fauPremiereConcept').hidden=!x.concept;
  };
  const move=step=>{if(!panel.hidden){closePanel();return;}const next=idx+step;if(next>=slides.length){close();$('#runwayGrid')?.scrollIntoView({behavior:'smooth'});return;}idx=Math.max(0,next);show();};
@@ -6972,7 +6992,7 @@ body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gra
   const grid=$('#runwayGrid'),nav=$('#navContainer');
   const onRunway=[...(nav?.querySelectorAll('button')||[])].some(b=>b.getAttribute('aria-current')==='page'&&b.textContent.trim()==='The Runway');
   if(!grid||!onRunway){launch.hidden=true;if(!overlay.hidden)close();return;}
-  if(launch.parentNode!==grid.parentNode)grid.parentNode.insertBefore(launch,grid);
+  const groups=$('#runwayGroups');const anchor=groups||grid;if(launch.parentNode!==anchor.parentNode||launch.nextSibling!==anchor)anchor.parentNode.insertBefore(launch,anchor);
   launch.hidden=!grid.querySelector('img.img-look');
  };
  let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;update();});});
