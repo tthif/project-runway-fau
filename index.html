@@ -568,6 +568,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #fauV83Premiere .fau-story-sheet{max-height:min(72dvh,650px);overflow-y:auto;touch-action:pan-y}
 @media(max-width:600px){#fauV83Premiere .fau-story-shell{padding-left:6px;padding-right:6px}#fauV83Premiere .fau-story-bottom{padding:4px 0!important}#fauV83Premiere #fauStoryHint{display:none}}
 </style>
+<style id="fau-brief-readable-2026">#fauBriefingCard{padding:16px 18px!important}#fauBriefingCard .fau-brief-body{font-size:13px!important;line-height:1.65!important}#fauBriefingCard summary{min-height:32px}#fauBriefingCard details:not([open]) summary .fa-chevron-up{transform:rotate(180deg)}#btnSubmitLook{font-size:13px!important;letter-spacing:.12em!important}@media(max-width:640px){#fauBriefingCard{padding:15px!important}#fauBriefingCard .fau-brief-body{font-size:13px!important;line-height:1.65!important}}</style>
+<style id="fau-workroom-combined-overview">
+.fau-workroom-overview{min-width:0}
+.fau-workroom-overview-heading{margin-bottom:14px}
+.fau-workroom-overview-heading h2{margin:0 0 4px}
+.fau-workroom-overview-content{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px;align-items:stretch}
+.fau-workroom-overview-content #fauWorkroomClock{width:100%;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:center}
+.fau-workroom-overview-content .fau-submission-board{min-width:0;border:1px solid #453c44;border-radius:12px;padding:14px;display:flex;align-items:center}
+.fau-workroom-overview-content #workroomThermometer{width:100%}
+.fau-workroom-overview-content #workroomThermometer h3{font-size:15px!important}
+@media(max-width:640px){.fau-workroom-overview-content{grid-template-columns:1fr;gap:10px}.fau-workroom-overview-content #fauWorkroomClock{display:grid;height:auto;grid-template-columns:minmax(0,1fr) auto}.fau-workroom-overview-content .fau-submission-board{padding:12px}.fau-workroom-overview-heading{margin-bottom:10px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -2375,25 +2387,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
         renderView(`
             <div class="space-y-6">
-                <div class="bg-fashion-900 border border-fashion-700 p-4 md:p-5 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                    <div class="space-y-1">
+                <section class="fau-workroom-overview bg-fashion-900 border border-fashion-700 p-4 md:p-5 rounded-xl" aria-label="Prazo e entregas da rodada">
+                    <div class="fau-workroom-overview-heading">
                         <h2 class="font-cinzel text-2xl text-white font-normal">Seu espaço de criação</h2>
-                        <p class="text-xs text-gray-400">Confira o prazo e prepare sua entrega.</p>
+                        <p class="text-xs text-gray-400">Acompanhe o prazo e as entregas da rodada.</p>
                     </div>
-                    <div id="fauWorkroomClock" class="fau-clock rounded-xl px-6 py-4 text-center" role="timer" aria-label="Prazo de entrega da rodada">
-                        <span class="fau-clock-kicker block">⏱ PRAZO DE ENTREGA</span>
-                        <div id="roundTimer" class="fau-clock-digits">--:--:--</div>
-                        <div id="fauClockStatus" class="fau-clock-status">Aguardando o prazo oficial</div>
-                        <div class="fau-clock-track"><div id="fauClockProgress" class="fau-clock-fill"></div></div>
-                        <p id="fauClockDirection" class="fau-clock-direction">Make it work.</p>
+                    <div class="fau-workroom-overview-content">
+                        <div id="fauWorkroomClock" class="fau-clock rounded-xl px-4 py-3 text-center" role="timer" aria-label="Prazo de entrega da rodada">
+                            <span class="fau-clock-kicker block">⏱ PRAZO DE ENTREGA</span>
+                            <div id="roundTimer" class="fau-clock-digits">--:--:--</div>
+                            <div id="fauClockStatus" class="fau-clock-status">Aguardando o prazo oficial</div>
+                            <div class="fau-clock-track"><div id="fauClockProgress" class="fau-clock-fill"></div></div>
+                            <p id="fauClockDirection" class="fau-clock-direction">Make it work.</p>
+                        </div>
+                        <div class="fau-submission-board" aria-label="Progresso anônimo das entregas"><div id="workroomThermometer" class="text-xs" aria-live="polite"><p class="text-fashion-gold">Sincronizando entregas...</p></div></div>
                     </div>
-                </div>
+                </section>
 
                 <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
-                    <details open class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold">Briefing do desafio <span class="text-gray-400 font-normal">· toque para recolher</span></summary><p class="text-sm text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
+                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed">${(()=>{const raw=String(getTheme()?.mandate || 'Aguarde as instruções da produção.');const parts=raw.split(/(?=Envie imagem completa gerada por IA|Cinco critérios de 0 a 10|NÃO HÁ ELIMINAÇÃO)/i).filter(Boolean);return parts.map((part,i)=>`<p class="${i?'mt-3 pt-3 border-t border-fashion-700/50':''}">${esc(part.trim())}</p>`).join('')})()}</div></details>
                 </section>
-                <section class="fau-submission-board rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4" aria-label="Progresso anônimo das entregas"><div id="workroomThermometer" class="text-xs" aria-live="polite"><p class="text-fashion-gold">THE SUBMISSION BOARD · Sincronizando entregas...</p></div></section>
+
                 <div id="workroomFormModule"></div>
 
 
@@ -2550,7 +2565,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                                 <textarea id="lookMemorialText" maxlength="500" rows="9" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white focus:outline-none focus:border-fashion-gold" placeholder="Explique a inspiração, a narrativa e a conexão com a assinatura da seu Designer..."></textarea>
                             </div>
 
-                            <button id="btnSubmitLook" type="button" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-widest text-xs transition">Enviar Look Oficial para a Passarela</button>
+                            <button id="btnSubmitLook" type="button" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-widest text-xs transition">Enviar</button>
                         </div>
                     </div>
                 `;
