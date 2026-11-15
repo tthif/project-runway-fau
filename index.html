@@ -487,6 +487,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #fauV83Launch[hidden]{display:none!important}
 @media(max-width:640px){#fauV83Premiere .fau-stage{height:calc(100dvh - 20px)}#fauV83Premiere img{max-height:64dvh}#fauV83Premiere button{font-size:12px} .fau-runway-viewer .fau-viewer-stage{grid-template-columns:32px minmax(0,1fr) 32px;gap:3px}.fau-runway-viewer .fau-viewer-stage img{max-height:43dvh!important}.fau-runway-viewer .fau-viewer-top span{font-size:9px;letter-spacing:.08em}}
 </style>
+<style id="fau-runway-immersive-2026">
+#fauV83Premiere{padding:0!important;background:rgba(8,7,10,.985)!important}
+#fauV83Premiere .fau-stage-immersive{width:min(100%,720px)!important;height:100dvh!important;max-height:100dvh!important;padding:env(safe-area-inset-top,12px) 14px env(safe-area-inset-bottom,12px)!important;gap:9px!important;justify-content:space-between!important;overflow:hidden!important}
+.fau-premiere-header{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:45px}
+#fauV83Premiere .fau-premiere-header button{border:0!important;font-size:11px!important;letter-spacing:.08em;color:#d9c4a8;padding:12px!important}
+.fau-premiere-progress{height:2px;background:#493941;width:100%;overflow:hidden;flex-shrink:0}
+.fau-premiere-progress span{height:100%;display:block;background:#d1b38b;transition:width .35s ease}
+.fau-premiere-caption{width:100%;text-align:center;min-height:55px;display:flex;flex-direction:column;justify-content:center;gap:5px}
+#fauV83SlideTitle{font-size:clamp(15px,4vw,21px)!important;line-height:1.3!important;max-height:2.7em;overflow:hidden}
+.fau-premiere-photo{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;width:100%;overflow:hidden}
+#fauV83Premiere .fau-premiere-photo img{display:block;max-height:100%!important;max-width:100%!important;width:auto!important;height:auto!important;object-fit:contain!important;margin:0!important}
+.fau-premiere-actions{display:grid!important;grid-template-columns:1fr 1.2fr 1fr;gap:6px!important;width:100%;flex:0 0 auto;margin:0!important}
+#fauV83Premiere .fau-premiere-actions button{min-height:48px!important;padding:8px 5px!important;margin:0!important;border-radius:8px!important;font-size:11px!important}
+#fauV83Next{background:#d1b38b!important;color:#171116!important}
+#fauV83Premiere .fau-premiere-concept{width:100%;max-height:27dvh;overflow:auto;overscroll-behavior:contain;text-align:left;padding:14px 16px;border:1px solid #6b5657;border-radius:10px;background:#21191e;flex-shrink:0}
+#fauV83Premiere .fau-premiere-concept[hidden]{display:none!important}
+#fauV83Premiere .fau-premiere-concept p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:14px;color:#e8dfe1}
+#fauV83Launch{display:block!important;width:100%;max-width:420px;text-align:center;margin:14px auto 22px!important;background:linear-gradient(110deg,#33212a,#181318);color:#e8cfaa;border:1px solid #ae8f69!important}
+#fauV83Launch[hidden]{display:none!important}
+@media(max-width:520px){#fauV83Premiere .fau-stage-immersive{padding-left:10px!important;padding-right:10px!important}#fauV83Premiere .fau-premiere-actions button{font-size:10px!important}.fau-premiere-header .fau-premiere-eyebrow{font-size:9px!important;letter-spacing:.13em!important}}
+@media(prefers-reduced-motion:reduce){.fau-premiere-progress span{transition:none}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -6871,24 +6893,40 @@ body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gra
  const $=s=>document.querySelector(s);
  const overlay=document.createElement('div');overlay.id='fauV83Premiere';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Runway Premiere');
- overlay.innerHTML='<div class="fau-stage"><p class="fau-premiere-eyebrow">THE RUNWAY · FAU</p><h2 id="fauV83SlideTitle">THE RUNWAY PREMIERE</h2><p id="fauV83SlideCounter" style="color:#d1b38b;font-size:12px"></p><img id="fauV83SlideImg" alt="Look na passarela"><div><button id="fauV83Prev">Anterior</button><button id="fauV83Next">Próximo look</button><button id="fauV83Close">Fechar</button></div></div>';
+ overlay.innerHTML=`<div class="fau-stage fau-stage-immersive"><header class="fau-premiere-header"><span class="fau-premiere-eyebrow">PROJECT RUNWAY · FAU</span><button type="button" id="fauV83Close" aria-label="Fechar desfile">✕ <span>FECHAR</span></button></header><div class="fau-premiere-progress" aria-hidden="true"><span id="fauPremiereProgress"></span></div><div class="fau-premiere-caption"><span id="fauV83SlideCounter"></span><h2 id="fauV83SlideTitle"></h2></div><div class="fau-premiere-photo"><img id="fauV83SlideImg" alt="Look na passarela"></div><div class="fau-premiere-actions"><button type="button" id="fauV83Prev" aria-label="Look anterior">‹ <span>ANTERIOR</span></button><button type="button" id="fauPremiereConcept" aria-expanded="false">LER CONCEITO</button><button type="button" id="fauV83Next"><span>PRÓXIMO</span> ›</button></div><div class="fau-premiere-concept" id="fauPremiereConceptPanel" hidden><p id="fauPremiereConceptText"></p></div></div>`;
  document.body.appendChild(overlay);
- let slides=[],idx=0;
- const close=()=>{overlay.hidden=true;document.body.style.overflow='';};
- const show=()=>{const x=slides[idx];if(!x)return;$('#fauV83SlideImg').src=x.src;$('#fauV83SlideImg').alt=x.alt;$('#fauV83SlideTitle').textContent=x.title||'THE RUNWAY';$('#fauV83SlideCounter').textContent=`LOOK ${idx+1} / ${slides.length}`;$('#fauV83Prev').disabled=idx===0;$('#fauV83Next').disabled=idx===slides.length-1;};
- $('#fauV83Prev').onclick=()=>{idx=Math.max(0,idx-1);show();};
- $('#fauV83Next').onclick=()=>{idx=Math.min(slides.length-1,idx+1);show();};
- $('#fauV83Close').onclick=close;
+ let slides=[],idx=0,previousFocus=null,touchX=null;
+ const panel=$('#fauPremiereConceptPanel');
+ const close=()=>{overlay.hidden=true;document.body.style.overflow='';previousFocus?.focus?.();};
+ const show=()=>{
+  const x=slides[idx];if(!x)return;
+  $('#fauV83SlideImg').src=x.src;$('#fauV83SlideImg').alt=x.alt;
+  $('#fauV83SlideTitle').textContent=x.title||'THE RUNWAY';
+  $('#fauV83SlideCounter').textContent=`LOOK ${String(idx+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}`;
+  $('#fauPremiereProgress').style.width=`${100*(idx+1)/slides.length}%`;
+  $('#fauV83Prev').disabled=idx===0;$('#fauV83Next').disabled=idx===slides.length-1;
+  $('#fauPremiereConceptText').textContent=x.concept||'Conceito não disponível.';
+  panel.hidden=true;$('#fauPremiereConcept').setAttribute('aria-expanded','false');
+  $('#fauPremiereConcept').hidden=!x.concept;
+ };
+ const move=step=>{idx=Math.max(0,Math.min(slides.length-1,idx+step));show();};
+ $('#fauV83Prev').onclick=()=>move(-1);$('#fauV83Next').onclick=()=>move(1);$('#fauV83Close').onclick=close;
+ $('#fauPremiereConcept').onclick=()=>{panel.hidden=!panel.hidden;$('#fauPremiereConcept').setAttribute('aria-expanded',String(!panel.hidden));};
  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
- document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')$('#fauV83Next').click();if(e.key==='ArrowLeft')$('#fauV83Prev').click();});
- const launch=document.createElement('button');launch.type='button';launch.id='fauV83Launch';launch.textContent='▶ ASSISTIR AO DESFILE';
- launch.className='border border-fashion-gold/60 text-fashion-gold rounded px-4 py-2 text-xs my-3';launch.hidden=true;
+ overlay.addEventListener('touchstart',e=>{if(e.touches.length===1)touchX=e.touches[0].clientX;},{passive:true});
+ overlay.addEventListener('touchend',e=>{if(touchX===null)return;const dx=e.changedTouches[0].clientX-touchX;touchX=null;if(Math.abs(dx)>65&&!e.target.closest('button, .fau-premiere-concept'))move(dx<0?1:-1);},{passive:true});
+ document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')move(1);if(e.key==='ArrowLeft')move(-1);});
+ const launch=document.createElement('button');launch.type='button';launch.id='fauV83Launch';launch.textContent='▶ ASSISTIR AO DESFILE';launch.hidden=true;
  launch.onclick=()=>{
   const grid=$('#runwayGrid');
-  // Somente os looks do desfile principal, nunca os grupos de votações/twists.
   const candidates=[...(grid?.querySelectorAll('img.img-look')||[])].filter(el=>el.getAttribute('src')&&el.getBoundingClientRect().width>0);
-  slides=candidates.map(el=>({src:el.getAttribute('src'),alt:el.getAttribute('alt')||'Look da passarela',title:el.closest('.bg-fashion-900')?.querySelector('button[onclick^="openAtelierHistory"]')?.textContent?.trim()||'THE RUNWAY'}));
-  if(!slides.length)return;idx=0;show();overlay.hidden=false;document.body.style.overflow='hidden';$('#fauV83Close').focus();
+  slides=candidates.map(el=>{
+   const card=el.closest('.bg-fashion-900')||el.closest('section')||el.parentElement;
+   const title=card?.querySelector('.font-cinzel.text-fashion-gold.font-bold')?.textContent?.trim()||el.alt||'THE RUNWAY';
+   const concept=card?.querySelector('p.italic')?.textContent?.trim()||'';
+   return {src:el.getAttribute('src'),alt:el.alt||'Look da passarela',title,concept};
+  });
+  if(!slides.length)return;idx=0;previousFocus=document.activeElement;show();overlay.hidden=false;document.body.style.overflow='hidden';$('#fauV83Close').focus();
  };
  const update=()=>{
   const grid=$('#runwayGrid'),nav=$('#navContainer');
@@ -6897,7 +6935,7 @@ body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gra
   if(launch.parentNode!==grid.parentNode)grid.parentNode.insertBefore(launch,grid);
   launch.hidden=!grid.querySelector('img.img-look');
  };
- const observer=new MutationObserver(()=>{if(!window.requestAnimationFrame)return;requestAnimationFrame(update);});
+ let scheduled=false;const observer=new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;update();});});
  const main=$('#mainView');if(main)observer.observe(main,{childList:true,subtree:true});
  const nav=$('#navContainer');if(nav)observer.observe(nav,{childList:true,subtree:true});
  update();
