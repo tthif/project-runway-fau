@@ -1070,15 +1070,26 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     const drawKey = () => `${globalState.rodada}_${currentUser.uid}`;
     const themeHasDraw = t => t && t.drawType && t.drawType !== 'none' && t.drawType !== 'faction_choice' && t.drawType !== 'blind_concept_swap';
     function randomPick(items) { const bytes = new Uint32Array(1); crypto.getRandomValues(bytes); return items[bytes[0] % items.length]; }
-    function themeDrawValue(t) {
-        if (t.drawType === 'invitation_box_3d') throw new Error('Escolha os três números da caixinha antes de confirmar.');
-        if (t.drawType === 'climate_pairs') {
-            const seasons = ['🌸 Spring — Primavera', '☀️ Summer — Verão', '🍂 Autumn — Outono', '❄️ Winter — Inverno'];
-            const first = randomPick(seasons);
-            const second = randomPick(seasons.filter(x => x !== first));
-            return `${first} + ${second}`;
+    // Cada envelope recebe um resultado exclusivo dentro do conjunto do tema.
+    // A distribuição é embaralhada com crypto e registrada junto com a escolha.
+    function fauEnvelopePool(t) {
+        return Array.isArray(t?.drawPool) ? [...new Set(t.drawPool)] : [];
+    }
+    function fauSecureShuffle(values) {
+        const out=[...values];
+        for(let i=out.length-1;i>0;i--){
+            const limit=Math.floor(4294967296/(i+1))*(i+1);
+            let n;do{const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);n=bytes[0];}while(n>=limit);
+            const j=n%(i+1);[out[i],out[j]]=[out[j],out[i]];
         }
-        return randomPick(t.drawPool || ['Sem opções cadastradas']);
+        return out;
+    }
+    function fauEnvelopeAssignment(t,number) {
+        const pool=fauEnvelopePool(t);
+        if(!pool.length)throw new Error('Este tema não possui opções de envelope cadastradas.');
+        if(!Number.isInteger(number)||number<1||number>pool.length)throw new Error('Envelope inválido para este desafio.');
+        const order=fauSecureShuffle(pool);
+        return {value:order[number-1],order};
     }
     async function getPersonalTwist() { return (await db.doc(`sorteios/${drawKey()}`).get()).data() || null; }
     // Sorteios: o estilista escolhe um envelope numerado sem visualizar o conteúdo.
@@ -1098,8 +1109,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         await db.runTransaction(async tx=>{
             const snap=await tx.get(ref);
             if(snap.exists)throw new Error('Você já confirmou sua escolha. Não é possível alterar.');
-            const value=wedding?[t.invitationBoxMap.colors[Number(choices[0])-1],t.invitationBoxMap.elements[Number(choices[1])-1],t.invitationBoxMap.prints[Number(choices[2])-1]].join(' • '):(t.drawType==='faction_choice'?chosen:themeDrawValue(t));
-            tx.set(ref,{uid:currentUser.uid,rodada:globalState.rodada,themeId:t.id,envelope:chosen,value,...(wedding?{weddingNumbers:{color:Number(choices[0]),element:Number(choices[1]),print:Number(choices[2])}}:{}),
+            const assignment=(!wedding&&t.drawType!=='faction_choice')?fauEnvelopeAssignment(t,Number(chosen)):null;
+            const value=wedding?[t.invitationBoxMap.colors[Number(choices[0])-1],t.invitationBoxMap.elements[Number(choices[1])-1],t.invitationBoxMap.prints[Number(choices[2])-1]].join(' • '):(t.drawType==='faction_choice'?chosen:assignment.value);
+            tx.set(ref,{uid:currentUser.uid,rodada:globalState.rodada,themeId:t.id,envelope:chosen,value,...(assignment?{envelopeDistribution:assignment.order}:{}),...(wedding?{weddingNumbers:{color:Number(choices[0]),element:Number(choices[1]),print:Number(choices[2])}}:{}),
                 createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         });
         await renderPersonalTwist();
@@ -1115,7 +1127,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         slot.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
           ${t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
           ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
-          ${isDraw?`<p class="text-xs text-amber-200">${t.drawType==='invitation_box_3d'?'Escolha um envelope em cada categoria. Ao confirmar, o resultado aparece imediatamente e fica salvo.':'Escolha um dos 12 envelopes. Ao confirmar, o resultado aparece imediatamente e fica salvo.'}</p>`:''}
+          ${isDraw?`<p class="text-xs text-amber-200">${t.drawType==='invitation_box_3d'?'Escolha um envelope em cada categoria. Ao confirmar, o resultado aparece imediatamente e fica salvo.':`Escolha um dos ${fauEnvelopePool(t).length} envelopes. Cada um contém uma opção diferente. O resultado fica salvo após confirmar.`}</p>`:''}
           ${draw?`<div class="border border-fashion-gold/50 rounded p-4 text-center">
               <div class="text-[10px] uppercase text-gray-400">${released?'ENVELOPE ABERTO':'ENVELOPE ABERTO'}</div>
               <strong class="text-fashion-gold">${released?esc(draw.value):(t.drawType==='invitation_box_3d'?`COLOR ${esc(draw.weddingNumbers?.color||'?')} · ELEMENT ${esc(draw.weddingNumbers?.element||'?')} · PRINT ${esc(draw.weddingNumbers?.print||'?')} — aguardando revelação`:`Envelope ${esc(draw.envelope||'confirmado')} — aguardando liberação da produção`)}</strong>
@@ -1123,7 +1135,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             (isDraw||t.drawType==='faction_choice')?
             `<div class="space-y-3">${t.drawType==='invitation_box_3d'?`<div class="text-center py-3 border border-fashion-gold/30 rounded-lg bg-fashion-950/60"><div class="text-3xl mb-1">💌</div><div class="font-cinzel text-fashion-gold tracking-widest text-sm">THE INVITATION BOX</div><p class="text-xs text-gray-400 mt-1">Three little secrets. Choose your sealed invitations.</p></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-3">${[['color','🎨 COLOR'],['element','🧵 ELEMENT'],['print','🪡 PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded-lg p-3 bg-fashion-950/50"><div class="text-xs text-fashion-gold font-bold mb-2">${label}</div><input type="hidden" id="wedding_${key}" value=""><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-wedding-category="${key}" data-wedding-envelope="${n}" aria-pressed="false" class="wedding-envelope border border-fashion-gold/30 rounded-md py-3 px-0.5 text-center bg-fashion-900 hover:bg-fashion-gold/20 hover:border-fashion-gold transition-colors"><span class="block text-lg">✉️</span><span class="block text-[10px] text-fashion-gold mt-1">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><div id="wedding_status_${key}" class="text-[11px] text-gray-400 mt-2">🔒 Escolha um envelope</div></div>`).join('')}</div>`:t.drawType==='faction_choice'?
                 '<select id="factionChoice" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select>':
-                `<p class="text-xs text-fashion-gold tracking-widest text-center">CHOOSE YOUR FATE</p><input type="hidden" id="sealedEnvelope" value=""><div class="grid grid-cols-3 gap-3">${Array.from({length:12},(_,i)=>`<button type="button" data-sealed-envelope="${i+1}" aria-pressed="false" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p id="sealedEnvelopeStatus" class="text-xs text-gray-400 text-center">Selecione um envelope para confirmar.</p>`}
+                `<p class="text-xs text-fashion-gold tracking-widest text-center">CHOOSE YOUR FATE</p><input type="hidden" id="sealedEnvelope" value=""><div class="grid grid-cols-3 gap-3">${Array.from({length:fauEnvelopePool(t).length},(_,i)=>`<button type="button" data-sealed-envelope="${i+1}" aria-pressed="false" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p id="sealedEnvelopeStatus" class="text-xs text-gray-400 text-center">Selecione um envelope para confirmar.</p>`}
                 <button id="btnRevealTwist"  class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold disabled:opacity-50">${t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
         </div>`;
         slot.querySelectorAll('[data-wedding-envelope]').forEach(envelope=>{
@@ -2438,7 +2450,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       if(t.drawType==='faction_choice')control=`<label class="block text-xs text-gray-300">ESCOLHA SUA FACÇÃO<select id="fauLabFaction" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select></label><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA ESCOLHA</button>`;
       else if(t.drawType==='blind_concept_swap')control=fauTestLabState.phaseTwo?`<div class="space-y-3"><p class="text-[10px] tracking-[.18em] text-fashion-gold">THE TWIST — ANOTHER POINT OF VIEW</p><p class="text-xs text-gray-300">Você recebeu um conceito de outro Designer. A imagem e a autoria permanecem em segredo.</p><div class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-widest text-fashion-gold">YOUR SEALED CONCEPT · SORTEIO EXCLUSIVO</p><h3 class="font-cinzel text-2xl text-white">${esc(fauLabBeautyConcept().title)}</h3><p class="text-sm text-gray-200 whitespace-pre-wrap">${esc(fauLabBeautyConcept().concept)}</p><p class="text-[11px] text-gray-400">Conceito fictício para o Test Lab. No Workroom real, cada Designer recebe um conceito original diferente, sem repetição e sem receber o próprio.</p></div></div>`:'';
       else if(t.drawType==='invitation_box_3d')control=`<div class="text-center text-fashion-gold font-cinzel">THE INVITATION BOX</div><div class="grid grid-cols-1 md:grid-cols-3 gap-3">${[['color','COLOR'],['element','ELEMENT'],['print','PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded p-3"><p class="text-xs text-fashion-gold mb-2">${label}</p><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-lab-wedding="${key}|${n}" class="border border-fashion-gold/30 rounded p-2 text-xs ${fauTestLabState.wedding[key]===n?'bg-fashion-gold text-black':'text-fashion-gold'}">✉<br>${n}</button>`).join('')}</div></div>`).join('')}</div><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA INVITATION BOX</button>`;
-      else if(t.drawType&&t.drawType!=='none')control=`<p class="text-xs text-amber-200 text-center">Escolha um dos 12 envelopes lacrados. O resultado aparece imediatamente após confirmar e permanece salvo.</p><div class="grid grid-cols-3 gap-3">${Array.from({length:12},(_,i)=>`<button type="button" data-lab-envelope="${i+1}" aria-pressed="${fauTestLabState.selectedEnvelope===i+1}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold ${fauTestLabState.selectedEnvelope===i+1?'ring-2 ring-fashion-gold bg-fashion-gold/20':''}"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p class="text-xs text-gray-400 text-center">${fauTestLabState.selectedEnvelope?`Envelope ${String(fauTestLabState.selectedEnvelope).padStart(2,'0')} selecionado — conteúdo lacrado`:'Escolha um envelope para confirmar.'}</p><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR ENVELOPE LACRADO</button>`;
+      else if(t.drawType&&t.drawType!=='none')control=`<p class="text-xs text-amber-200 text-center">Escolha um dos ${fauEnvelopePool(t).length} envelopes lacrados. Cada um contém uma opção diferente. O resultado aparece após confirmar.</p><div class="grid grid-cols-3 gap-3">${Array.from({length:fauEnvelopePool(t).length},(_,i)=>`<button type="button" data-lab-envelope="${i+1}" aria-pressed="${fauTestLabState.selectedEnvelope===i+1}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold ${fauTestLabState.selectedEnvelope===i+1?'ring-2 ring-fashion-gold bg-fashion-gold/20':''}"><span class="block text-3xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p class="text-xs text-gray-400 text-center">${fauTestLabState.selectedEnvelope?`Envelope ${String(fauTestLabState.selectedEnvelope).padStart(2,'0')} selecionado — conteúdo lacrado`:'Escolha um envelope para confirmar.'}</p><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR ENVELOPE LACRADO</button>`;
       if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-xs text-gray-400">ENVELOPE ABERTO · RESULTADO DO SORTEIO</p><strong class="text-fashion-gold">${esc(draw.value)}</strong></div><button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
       return `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">${extra}${slots}${control}</section>`;
     }
@@ -2503,7 +2515,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         else if(theme.drawType==='invitation_box_3d'){
           const w=fauTestLabState.wedding;if(!w.color||!w.element||!w.print){showToast('Escolha um envelope em cada uma das três categorias.');return;}
           value=[theme.invitationBoxMap.colors[w.color-1],theme.invitationBoxMap.elements[w.element-1],theme.invitationBoxMap.prints[w.print-1]].join(' • ');label=`COLOR ${w.color} · ELEMENT ${w.element} · PRINT ${w.print}`;
-        }else{const n=fauTestLabState.selectedEnvelope;if(!n){showToast('Escolha um envelope antes de confirmar.');return;}const pool=theme.drawPool||[];value=pool.length?pool[Math.floor(Math.random()*pool.length)]:'Sorteio de demonstração sem opções cadastradas';label=`Envelope ${String(n).padStart(2,'0')}`;}
+        }else{const n=fauTestLabState.selectedEnvelope;if(!n){showToast('Escolha um envelope antes de confirmar.');return;}const assignment=fauEnvelopeAssignment(theme,n);value=assignment.value;label=`Envelope ${String(n).padStart(2,'0')}`;}
         fauTestLabState.draw={value,label};fauTestLabState.released=true;VIEWS.testlab();
       };
       const labRelease=document.getElementById('fauLabRelease');if(labRelease)labRelease.onclick=()=>{fauTestLabState.released=true;VIEWS.testlab();};
