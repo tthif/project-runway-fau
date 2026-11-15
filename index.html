@@ -7204,69 +7204,104 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 (()=>{let last=null;const init=()=>{const el=document.getElementById('fauPulseRefresh');if(el&&el!==last){last=el;el.click();}if(!el)last=null;};const obs=new MutationObserver(init);obs.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:true});init();})();
 </script>
 
-<style id="fau-runway-collection-v1">
-/* Compact runway overview: photography first, full details on demand. */
+<style id="fau-runway-collection-v2">
+/* One editorial per row; the photograph opens the original full editorial viewer. */
 #mainView:has(#runwayGrid) > div > .border-b:first-child{display:none!important}
-#mainView:has(#runwayGrid) .fau-runway-minihead{margin:0 0 12px!important;padding:0 0 10px!important}
-#mainView:has(#runwayGrid) #runwayGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
-#mainView:has(#runwayGrid) #runwayGrid > .bg-fashion-900{padding:8px!important;border-radius:12px!important;gap:0!important;justify-content:start!important;min-width:0}
-#runwayGrid .fau-collection-card > .space-y-2{display:flex;flex-direction:column;gap:7px}
-#runwayGrid .fau-collection-card .fau-collection-name{border:0!important;padding:4px 2px 2px!important;min-width:0}
-#runwayGrid .fau-collection-card .fau-collection-name button{font-size:12px!important;line-height:1.3!important;overflow-wrap:anywhere}
-#runwayGrid .fau-collection-card img.img-look{width:100%!important;aspect-ratio:3/4;object-fit:cover;cursor:pointer;max-height:none!important}
-#runwayGrid .fau-collection-card .fau-collection-details{margin-top:4px;border-top:1px solid rgba(200,171,137,.2);padding:8px 2px 2px;min-width:0}
-#runwayGrid .fau-collection-card .fau-collection-details summary{font-size:11px;letter-spacing:.08em;color:#d0b08a;cursor:pointer;list-style:none;padding:4px 0}
-#runwayGrid .fau-collection-card .fau-collection-details summary::-webkit-details-marker{display:none}
-#runwayGrid .fau-collection-card .fau-collection-details summary::after{content:'  +'}
-#runwayGrid .fau-collection-card .fau-collection-details[open] summary::after{content:'  −'}
-#runwayGrid .fau-collection-card .fau-collection-detailbody{display:grid;gap:10px;padding-top:10px}
-#runwayGrid .fau-collection-card .fau-collection-detailbody p{overflow-wrap:anywhere}
-#runwayGrid .fau-collection-card .fau-collection-photo{display:block;position:relative}
-#runwayGrid .fau-collection-card .fau-collection-photo:after{content:'VER STORY ↗';position:absolute;bottom:9px;right:9px;background:rgba(15,10,14,.82);border:1px solid rgba(210,176,138,.6);border-radius:5px;padding:5px 7px;font-size:9px;letter-spacing:.09em;color:#f3dfc8;pointer-events:none}
-#fauV83Premiere .fau-story-sheet{max-height:min(68dvh,680px)!important;overflow-y:auto!important;overscroll-behavior:contain}
-#fauV83Premiere .fau-story-sheet p{font-size:clamp(14px,3.7vw,17px)!important;line-height:1.65!important}
-#fauV83Premiere .fau-story-sheet h3{font-size:clamp(19px,5vw,25px)!important}
-@media(min-width:700px){#mainView:has(#runwayGrid) #runwayGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important}}
+#mainView:has(#runwayGrid) #runwayGrid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:18px!important}
+#runwayGrid .fau-collection-card{padding:0!important;overflow:hidden!important;border-radius:14px!important;min-width:0}
+#runwayGrid .fau-collection-card > .space-y-2{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important}
+#runwayGrid .fau-collection-photo{position:relative;overflow:hidden;background:#09080a;cursor:zoom-in}
+#runwayGrid .fau-collection-photo img.img-look{width:100%!important;max-height:620px!important;aspect-ratio:4/5;object-fit:contain!important;border:0!important;border-radius:0!important;display:block;cursor:zoom-in}
+#runwayGrid .fau-collection-photo:after{content:'↗ AMPLIAR EDITORIAL';position:absolute;right:12px;bottom:12px;background:#100c12df;border:1px solid #ad8b6d;border-radius:5px;color:#e9d3b4;font-size:10px;letter-spacing:.08em;padding:8px 10px;pointer-events:none}
+#runwayGrid .fau-collection-copy{padding:17px 17px 13px;min-width:0;display:flex;flex-direction:column;gap:9px}
+#runwayGrid .fau-collection-name{border:0!important;padding:0!important;min-width:0;display:flex!important;justify-content:flex-start!important}
+#runwayGrid .fau-collection-name button{font-size:14px!important;line-height:1.4!important;white-space:normal;text-align:left;overflow-wrap:anywhere}
+#runwayGrid .fau-collection-title{font-family:Georgia,serif;font-size:clamp(19px,4.7vw,25px);line-height:1.25;color:#f7eee8;overflow-wrap:anywhere}
+#runwayGrid .fau-collection-excerpt{font-size:13px;line-height:1.6;color:#c9bfc3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+#runwayGrid .fau-collection-details{margin-top:4px;border-top:1px solid #55414c;padding-top:9px;min-width:0}
+#runwayGrid .fau-collection-details summary{font-size:11px;letter-spacing:.08em;color:#d4b28d;cursor:pointer;list-style:none;padding:8px 0;min-height:38px}
+#runwayGrid .fau-collection-details summary::-webkit-details-marker{display:none}
+#runwayGrid .fau-collection-details summary:after{content:'  +'}
+#runwayGrid .fau-collection-details[open] summary:after{content:'  −'}
+#runwayGrid .fau-collection-details[open] ~ .fau-collection-excerpt{display:none}
+#runwayGrid .fau-collection-detailbody{display:grid;gap:10px;padding-top:9px}
+#runwayGrid .fau-collection-detailbody p{overflow-wrap:anywhere}
+#fauV83Premiere .fau-story-sheet{max-height:min(49dvh,440px)!important;overflow-y:auto!important;overscroll-behavior:contain;padding:14px 16px 18px!important;border-radius:15px 15px 8px 8px!important}
+#fauV83Premiere .fau-story-sheet p{font-size:clamp(13px,3.35vw,15px)!important;line-height:1.52!important}
+#fauV83Premiere .fau-story-sheet h3{font-size:clamp(17px,4.2vw,21px)!important;margin:7px 0 10px!important}
+#fauV83Premiere .fau-story-sheet-head{font-size:10px!important}
+@media(min-width:740px){#runwayGrid .fau-collection-card > .space-y-2{grid-template-columns:minmax(0,44%) minmax(0,56%)!important}#runwayGrid .fau-collection-photo img.img-look{height:410px!important;aspect-ratio:auto}#runwayGrid .fau-collection-copy{padding:24px!important}#fauV83Premiere .fau-story-sheet{max-height:42vh!important}}
+@media(max-width:500px){#runwayGrid .fau-collection-photo img.img-look{max-height:490px!important}#runwayGrid .fau-collection-copy{padding:15px!important}#fauV83Premiere .fau-story-sheet{max-height:46dvh!important}}
 </style>
-<script id="fau-runway-collection-v1">
+<script id="fau-runway-collection-v2">
 (()=>{
- const grid=()=>document.getElementById('runwayGrid');
  const enhance=()=>{
-  const root=grid();if(!root)return;
+  const root=document.getElementById('runwayGrid');if(!root)return;
   for(const card of root.querySelectorAll(':scope > .bg-fashion-900')){
    if(card.classList.contains('fau-collection-card'))continue;
    const content=card.querySelector(':scope > .space-y-2');
-   const img=content?.querySelector('img.img-look');
-   if(!content||!img)continue;
+   const img=content?.querySelector('img.img-look');if(!content||!img)continue;
    card.classList.add('fau-collection-card');
-   const name=content.querySelector(':scope > .flex');
-   if(name)name.classList.add('fau-collection-name');
+   const name=content.querySelector(':scope > .flex');if(name)name.classList.add('fau-collection-name');
+   const originalTitle=content.querySelector(':scope > .font-cinzel.text-fashion-gold.font-bold');
+   const originalConcept=content.querySelector(':scope > p.italic');
    const photo=document.createElement('div');photo.className='fau-collection-photo';
    img.parentNode.insertBefore(photo,img);photo.appendChild(img);
+   const copy=document.createElement('div');copy.className='fau-collection-copy';
+   const title=document.createElement('h3');title.className='fau-collection-title';title.textContent=originalTitle?.textContent?.trim()||'Editorial';
+   const excerpt=document.createElement('p');excerpt.className='fau-collection-excerpt';excerpt.textContent=originalConcept?.textContent?.trim()||'';
    const details=document.createElement('details');details.className='fau-collection-details';
-   const summary=document.createElement('summary');summary.textContent='VER DETALHES E INTERAÇÕES';
+   const summary=document.createElement('summary');summary.textContent='CONCEITO, REAÇÕES E COMENTÁRIOS';
    const body=document.createElement('div');body.className='fau-collection-detailbody';
-   // Preserve all original controls, reactions and comments within the card.
    for(const child of [...content.children])if(child!==name&&child!==photo)body.appendChild(child);
    for(const child of [...card.children])if(child!==content)body.appendChild(child);
-   details.append(summary,body);content.append(details);
-   img.setAttribute('aria-label','Abrir este look em Fashion Stories');
+   details.append(summary,body);
+   if(name)copy.append(name);copy.append(title);if(excerpt.textContent)copy.append(excerpt);copy.append(details);
+   content.append(copy);
+   img.setAttribute('aria-label','Ampliar fotografia e ler o editorial completo');
+   img.setAttribute('title','Ampliar fotografia');
   }
  };
  let pending=false;
  const observer=new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;enhance()})});
- const main=document.getElementById('mainView');
- if(main)observer.observe(main,{childList:true,subtree:true});
- document.addEventListener('click',e=>{
-  const img=e.target.closest('#runwayGrid .fau-collection-card img.img-look');
-  if(!img)return;
-  e.preventDefault();e.stopImmediatePropagation();
-  const photos=[...(grid()?.querySelectorAll('img.img-look')||[])];
-  const launch=document.getElementById('fauV83Launch');
-  if(!launch||launch.hidden)return;
-  launch.dataset.startIndex=String(Math.max(0,photos.indexOf(img)));
-  launch.click();
- },true);
+ const main=document.getElementById('mainView');if(main)observer.observe(main,{childList:true,subtree:true});
+ enhance();
+})();
+</script>
+
+<style id="fau-runway-two-column-gallery">
+/* Compact gallery, two photographs per row on phones. Stories unchanged. */
+#mainView:has(#runwayGrid) #runwayGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+#runwayGrid .fau-collection-card{min-width:0!important;display:block!important}
+#runwayGrid .fau-collection-card > .space-y-2{display:flex!important;flex-direction:column!important;gap:0!important}
+#runwayGrid .fau-collection-photo img.img-look{height:auto!important;max-height:none!important;aspect-ratio:3/4!important;object-fit:cover!important}
+#runwayGrid .fau-collection-photo:after{display:none!important}
+#runwayGrid .fau-collection-copy{padding:10px!important;gap:7px!important;min-width:0!important}
+#runwayGrid .fau-collection-name button{font-size:12px!important;line-height:1.25!important}
+#runwayGrid .fau-collection-title{font-size:14px!important;line-height:1.25!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#runwayGrid .fau-collection-excerpt,#runwayGrid .fau-collection-details{display:none!important}
+#runwayGrid .fau-gallery-view-photo{display:block;width:100%;border:1px solid #b79a75;border-radius:6px;background:#251b23;color:#e4c9a2;font-size:11px;font-weight:700;letter-spacing:.06em;padding:10px 5px;min-height:40px;cursor:pointer}
+#runwayGrid .fau-gallery-view-photo:focus-visible{outline:2px solid #e0bc8a;outline-offset:2px}
+@media(min-width:900px){#mainView:has(#runwayGrid) #runwayGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important}#runwayGrid .fau-collection-title{font-size:17px!important}}
+@media(max-width:370px){#mainView:has(#runwayGrid) #runwayGrid{gap:8px!important}#runwayGrid .fau-collection-copy{padding:8px!important}}
+</style>
+<script id="fau-runway-two-column-gallery">
+(()=>{
+ const enhance=()=>{
+  const root=document.getElementById('runwayGrid');if(!root)return;
+  root.querySelectorAll('.fau-collection-card').forEach(card=>{
+   if(card.querySelector('.fau-gallery-view-photo'))return;
+   const img=card.querySelector('.fau-collection-photo img.img-look');
+   const copy=card.querySelector('.fau-collection-copy');
+   if(!img||!copy)return;
+   const btn=document.createElement('button');btn.type='button';btn.className='fau-gallery-view-photo';btn.textContent='VER FOTO';
+   btn.addEventListener('click',()=>img.click());
+   copy.appendChild(btn);
+  });
+ };
+ let pending=false;
+ const main=document.getElementById('mainView')||document.body;
+ new MutationObserver(()=>{if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;enhance()})}).observe(main,{childList:true,subtree:true});
  enhance();
 })();
 </script>
