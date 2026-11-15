@@ -580,6 +580,22 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-workroom-overview-content #workroomThermometer h3{font-size:15px!important}
 @media(max-width:640px){.fau-workroom-overview-content{grid-template-columns:1fr;gap:10px}.fau-workroom-overview-content #fauWorkroomClock{display:grid;height:auto;grid-template-columns:minmax(0,1fr) auto}.fau-workroom-overview-content .fau-submission-board{padding:12px}.fau-workroom-overview-heading{margin-bottom:10px}}
 </style>
+
+<style id="fau-stories-responsive-fullscreen-fix">
+/* Full-screen on touch devices, including browsers using desktop-site viewport emulation. */
+@media (pointer:coarse), (max-width:599px){
+ #fauV83Premiere{inset:0!important;padding:0!important;align-items:stretch!important;justify-content:stretch!important}
+ #fauV83Premiere .fau-story-shell{box-sizing:border-box!important;width:100vw!important;max-width:none!important;min-width:0!important;height:100dvh!important;max-height:none!important;border:0!important;border-radius:0!important;margin:0!important;padding:max(8px,env(safe-area-inset-top)) 10px max(8px,env(safe-area-inset-bottom))!important}
+ #fauV83Premiere .fau-story-photo{min-height:0!important;flex:1 1 auto!important}
+ #fauV83Premiere #fauV83SlideImg{width:100%!important;height:100%!important;object-fit:contain!important}
+ #fauV83Premiere .fau-story-bottom{padding:5px 2px 0!important}
+ #fauV83Premiere .fau-story-bars{margin:2px 2px 7px!important}
+ #fauV83Premiere .fau-story-sheet{max-height:75dvh!important}
+}
+@media (min-width:600px) and (pointer:fine){
+ #fauV83Premiere .fau-story-shell{width:min(92vw,560px)!important;height:min(94dvh,940px)!important}
+}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
