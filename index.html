@@ -1041,6 +1041,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 extraField: null
             }
         };
+    // Campos descritivos redundantes pertencem ao conceito (até 500 caracteres).
+    // Preservar escolhas estruturadas que afetam a mecânica, como o anão escolhido.
+    Object.values(SEASON_THEMES).forEach(theme => {
+        if (theme.extraField && theme.extraField.type !== 'select') theme.extraField = null;
+    });
     // Rótulos editoriais: nunca usar o identificador técnico da rodada na interface.
     const fauRoundLabel = () => {
         const theme = SEASON_THEMES[globalState?.themeId];
@@ -2418,7 +2423,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     }
     // TEST LAB: admin-only, read-only preview using the same Workroom markup and mutation panel.
     // No globalState mutation, no Firebase writes, no impersonation of Designer accounts.
-    const fauTestLabState={themeId:'w01_first_garment',envelope:null,mutationIndex:null,draw:null,released:false,wedding:{},selectedEnvelope:null,phaseTwo:false};
+    const fauTestLabState={themeId:'w01_first_garment',envelope:null,mutationIndex:null,draw:null,released:false,wedding:{},selectedEnvelope:null,phaseTwo:false,restaVotes:[],restaTurn:0,supremeVotes:{},restChoice:null};
     // Conceito demonstrativo isolado: não expõe looks reais nem interfere no sorteio da produção.
     function fauLabBeautyConcept(){
       return {title:'O Peso do Invisível',concept:'Para mim, a beleza nasce do que permanece quando retiramos as aparências. A criação traduz memórias e marcas do tempo em uma presença que não pede permissão para existir.'};
@@ -2437,10 +2442,25 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-xs text-gray-400">ENVELOPE ABERTO · RESULTADO DO SORTEIO</p><strong class="text-fashion-gold">${esc(draw.value)}</strong></div><button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
       return `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">${extra}${slots}${control}</section>`;
     }
+    // Fases posteriores: prévias isoladas e interativas, sem consultas nem gravações no Firebase.
+    function fauLabSecondPhase(theme){
+      if(!fauTestLabState.phaseTwo)return '';
+      const people=['Aogust Flintherin','At’chim','Pabllah','Yvette Ferrete','Zé Ruella','Fio Robert'];
+      if(theme.id==='theme_plaid_bay'){
+        const saved=fauTestLabState.restaVotes;
+        const remaining=people.filter(n=>n!==people[0]&&!saved.includes(n));
+        const turn=saved.length? saved[saved.length-1]:people[0];
+        return `<section class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-5 space-y-4"><p class="text-[10px] tracking-widest text-fashion-gold">TWIST REVELADA · FASE 02</p><h3 class="font-cinzel text-2xl text-white">THE LAST ONE STANDING — RESTA UM</h3><p class="text-xs text-gray-300">O WIN inicia a corrente. Cada Designer salvo escolhe o próximo pelo desempenho na passarela. As escolhas são definitivas.</p><p class="text-sm text-fashion-gold">WIN: ${esc(people[0])}</p><p class="text-sm text-white">${remaining.length>2?`É a vez de ${esc(turn)} salvar alguém.`:'Corrente encerrada. A produção confere o Bottom 3.'}</p>${saved.length?`<div class="space-y-1 text-xs text-gray-300">${saved.map((n,i)=>`<p>${i+1}. ${esc(i?saved[i-1]:people[0])} salvou ${esc(n)}</p>`).join('')}</div>`:''}${remaining.length>2?`<div class="space-y-2"><label class="block text-xs text-fashion-gold">SALVE A MELHOR CRIAÇÃO AINDA DISPONÍVEL</label><div class="grid grid-cols-2 gap-2">${remaining.map(n=>`<button type="button" data-lab-resta="${esc(n)}" class="rounded-lg border px-3 py-3 text-xs ${fauTestLabState.restChoice===n?'border-fashion-gold bg-fashion-gold/20 text-white':'border-fashion-700 text-gray-300'}">${esc(n)}</button>`).join('')}</div><button type="button" id="fauLabRestaConfirm" class="w-full bg-fashion-gold text-black rounded p-3 text-xs font-bold">CONFIRMAR SALVAMENTO</button></div>`:''}<p class="text-[11px] text-gray-400">Designers fictícios · votação apenas demonstrativa</p></section>`;
+      }
+      if(theme.id==='theme_next_supreme')return `<section class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-5 space-y-4"><p class="text-[10px] tracking-widest text-fashion-gold">VOTAÇÃO SECRETA · APÓS OS DOIS ENVIOS</p><h3 class="font-cinzel text-2xl text-white">THE SUPREME VOTE</h3><p class="text-xs text-gray-300">Escolha UMA Suprema de cada Designer. Não é permitido votar em si mesmo. A seleção define qual look avança.</p>${people.slice(1,4).map((n,i)=>`<div class="border-t border-fashion-700 pt-3 space-y-2"><h4 class="font-cinzel text-white">${esc(n)}</h4><div class="grid grid-cols-2 gap-2">${['OLD SUPREME','NEXT SUPREME'].map((v,j)=>`<button type="button" data-lab-supreme="${i}|${j+1}" class="rounded-lg border p-4 text-xs ${fauTestLabState.supremeVotes[i]===j+1?'bg-fashion-gold/20 border-fashion-gold text-white':'border-fashion-700 text-gray-300'}"><span class="block text-2xl mb-2">${j?'⚡':'♛'}</span>${v}${fauTestLabState.supremeVotes[i]===j+1?'<span class="block mt-2 text-fashion-gold">✓ Voto registrado</span>':''}</button>`).join('')}</div></div>`).join('')}<p class="text-[11px] text-gray-400">Looks e Designers fictícios · votos não são gravados</p></section>`;
+      if(theme.id==='theme_rest_in_style')return `<section class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-5 space-y-3"><p class="text-[10px] tracking-widest text-fashion-gold">TWIST REVELADA · FASE 02</p><h3 class="font-cinzel text-2xl text-white">YOUR OWN FUNERAL</h3><p class="text-sm text-gray-300">A segunda parte é revelada após o ranking inicial. Os Designers do Elimination Pool recebem as instruções do próprio funeral. A salvação segue a votação prevista para a rodada.</p><p class="text-[11px] text-gray-400">Prévia de revelação; sem envios ou votos reais.</p></section>`;
+      if(theme.id==='theme_tarantino')return `<section class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-5 space-y-3"><p class="text-[10px] tracking-widest text-fashion-gold">TWIST REVELADA · FASE 02</p><h3 class="font-cinzel text-2xl text-white">DOUBLE KILL</h3><p class="text-sm text-gray-300">Uma eliminação pelo último lugar no ranking acumulado e outra pela votação de salvação do Elimination Pool.</p><p class="text-[11px] text-gray-400">Prévia da mecânica após a revelação, sem alterar resultados.</p></section>`;
+      return '';
+    }
     VIEWS.testlab=()=>{
       if(currentUser?.role!=='admin'){navigate('home');return;}
       const theme=SEASON_THEMES[fauTestLabState.themeId]||SEASON_THEMES.w01_first_garment;
-      const phased=['theme_beauty_eye','theme_rest_in_style','theme_tarantino','theme_plaid_bay'].includes(theme.id);
+      const phased=['theme_beauty_eye','theme_rest_in_style','theme_tarantino','theme_plaid_bay','theme_next_supreme'].includes(theme.id);
       const phaseOne=phased&&!fauTestLabState.phaseTwo;
       const count=phaseOne&&theme.id==='theme_beauty_eye'?1:Number(theme.numSubmissoes)||1;
       const visibleSlots=theme.id==='theme_beauty_eye'?[fauTestLabState.phaseTwo?2:1]:Array.from({length:count},(_,i)=>i+1);
@@ -2459,7 +2479,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="fau-workroom-overview-content"><div id="fauWorkroomClock" class="fau-clock rounded-xl px-4 py-3 text-center" role="timer"><span class="fau-clock-kicker block">⏱ PRAZO DE ENTREGA</span><div id="roundTimer" class="fau-clock-digits">23:59:59</div><div id="fauClockStatus" class="fau-clock-status">PRAZO SIMULADO</div><div class="fau-clock-track"><div id="fauClockProgress" class="fau-clock-fill" style="width:50%"></div></div><p id="fauClockDirection" class="fau-clock-direction">Make it work.</p></div>
             <div class="fau-submission-board"><div id="workroomThermometer" class="text-xs"><div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div><p class="text-xs text-gray-300">0 de 20 Designers enviaram · 20 faltam</p><p class="text-[10px] text-gray-500 mt-2">Dados fictícios para visualização</p></div></div></div>
           </section>
-          <div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
+          ${fauLabSecondPhase(theme)}<div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
           <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada"><details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${esc(phaseOne?({'theme_beauty_eye':'THE CHALLENGE — Apresente sua visão pessoal da beleza em um look autoral. Envie sua primeira criação. A produção anunciará os próximos acontecimentos no momento certo.','theme_rest_in_style':'THE CHALLENGE — Crie um look para um funeral sem utilizar preto. A produção anunciará os próximos acontecimentos no momento certo.','theme_tarantino':'THE CHALLENGE — Crie uma proposta autoral inspirada no universo cinematográfico de Tarantino. Aguarde novas instruções da produção.','theme_plaid_bay':'THE CHALLENGE — Reinvente o uniforme xadrez da Baia para um ex-participante de A Fazenda. Xadrez obrigatório. Aguarde novas instruções da produção.'}[theme.id]):theme.mandate||'Aguarde as instruções da produção.')}</div></details></section>
           <section class="fau-submission-suite" aria-label="Envio do desafio">
           <div id="personalTwistSlot">${fauLabTwist(theme)}</div>
@@ -2470,8 +2490,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           </section>
           <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4"><div class="flex justify-between items-center border-b border-fashion-700 pb-2"><h3 class="font-cinzel text-white text-base">Meus looks</h3><span class="text-xs text-fashion-gold font-mono">0 looks</span></div><p class="text-xs text-gray-400">Nenhuma criação anterior neste ambiente de teste.</p></div>
         </div></div>`);
-      document.getElementById('fauLabTheme').onchange=e=>{fauTestLabState.themeId=e.target.value;fauTestLabState.envelope=null;fauTestLabState.mutationIndex=null;fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};fauTestLabState.selectedEnvelope=null;fauTestLabState.phaseTwo=false;VIEWS.testlab();};
+      document.getElementById('fauLabTheme').onchange=e=>{fauTestLabState.themeId=e.target.value;fauTestLabState.envelope=null;fauTestLabState.mutationIndex=null;fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};fauTestLabState.selectedEnvelope=null;fauTestLabState.phaseTwo=false;fauTestLabState.restaVotes=[];fauTestLabState.restChoice=null;fauTestLabState.supremeVotes={};VIEWS.testlab();};
       const phaseToggle=document.getElementById('fauLabPhaseToggle');if(phaseToggle)phaseToggle.onclick=()=>{fauTestLabState.phaseTwo=!fauTestLabState.phaseTwo;VIEWS.testlab();};
+      document.querySelectorAll('[data-lab-resta]').forEach(b=>b.onclick=()=>{fauTestLabState.restChoice=b.dataset.labResta;VIEWS.testlab();});
+      const restaConfirm=document.getElementById('fauLabRestaConfirm');if(restaConfirm)restaConfirm.onclick=()=>{if(!fauTestLabState.restChoice){showToast('Escolha quem será salvo.');return;}fauTestLabState.restaVotes.push(fauTestLabState.restChoice);fauTestLabState.restChoice=null;VIEWS.testlab();};
+      document.querySelectorAll('[data-lab-supreme]').forEach(b=>b.onclick=()=>{const [i,slot]=b.dataset.labSupreme.split('|');fauTestLabState.supremeVotes[i]=Number(slot);VIEWS.testlab();});
       document.querySelectorAll('[data-lab-envelope]').forEach(b=>b.onclick=()=>{fauTestLabState.selectedEnvelope=Number(b.dataset.labEnvelope);VIEWS.testlab();});
       document.querySelectorAll('[data-lab-wedding]').forEach(b=>b.onclick=()=>{const [key,n]=b.dataset.labWedding.split('|');fauTestLabState.wedding[key]=Number(n);VIEWS.testlab();});
       const labConfirm=document.getElementById('fauLabDrawConfirm');if(labConfirm)labConfirm.onclick=()=>{
@@ -3026,8 +3049,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if (theme?.extraField && !document.getElementById('themeExtraInput')?.value.trim()) throw new Error('Preencha a exigência especial deste desafio.');
                 if(theme?.id==='theme_climate_chaos') {
                     if(!draw || draw.themeId!=='theme_climate_chaos' || !draw.value || !draw.value.includes(' + ')) throw new Error('Seu sorteio das duas estações está ausente ou inválido. Procure a produção.');
-                    const interpretation=document.getElementById('themeExtraInput')?.value.trim()||'';
-                    if(interpretation.length<20) throw new Error('Explique como as duas estações estão presentes visualmente no mesmo look (pelo menos 20 caracteres).');
                 }
                 let finaleMeta = null;
                 if (isFinalPhase) {
@@ -3716,7 +3737,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                                 <img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
                                 <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div><p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
                                 ${creativeDossier(look)}
-                                ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}<p class="text-xs text-gray-300">Elemento reinterpretado: ${esc(look.themeExtra||'Não informado')}</p></div>`;})() : ''}
+                                ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}</div>`;})() : ''}
                                 <details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700">
                                     <summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>LER CONCEITO · ${esc(look.titulo || 'Sem título')}</span><span class="fau-jury-chevron" aria-hidden="true">⌄</span></summary>
                                     <p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p>
