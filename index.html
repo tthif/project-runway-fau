@@ -3724,11 +3724,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-2 text-center">
                                 <img src="${esc(lookA.url)}" class="w-full img-look rounded border border-fashion-700">
-                                <span class="font-cinzel font-bold text-white text-xs">${esc(lookA.ate)}</span>
+                                <span class="font-cinzel font-bold text-white text-xs">${esc(runwayName(lookA))}</span>
                             </div>
                             <div class="space-y-2 text-center">
                                 <img src="${esc(lookB.url)}" class="w-full img-look rounded border border-fashion-700">
-                                <span class="font-cinzel font-bold text-white text-xs">${esc(lookB.ate)}</span>
+                                <span class="font-cinzel font-bold text-white text-xs">${esc(runwayName(lookB))}</span>
                             </div>
                         </div>
                     `;
@@ -3744,7 +3744,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     box.innerHTML=`<div class="border border-fashion-gold rounded-xl bg-fashion-950 p-5 space-y-5"><h3 class="font-cinzel text-fashion-gold text-xl">👑 THE SUPREME VOTE · THE PEOPLE DECIDE</h3><p class="text-xs text-gray-300">Escolha secretamente UMA Suprema por Designer. Não é permitido votar na próprio Designer.</p>${pairs.filter(p=>p.uid!==currentUser.uid).map(p=>{
                         const old=p.items.find(l=>l.slot===1),next=p.items.find(l=>l.slot===2);
                         const mine=supremeMyVotes.find(v=>v.targetUid===p.uid);
-                        return `<section class="border-t border-fashion-gold/30 pt-4 space-y-3"><h4 class="font-cinzel text-white">${esc(old?.ate||next?.ate)}</h4><div class="grid grid-cols-2 gap-3">${[old,next].map((l,i)=>`<div class="space-y-2"><img src="${esc(l?.url||'')}" class="w-full img-look rounded"><p class="text-xs text-fashion-gold">${i===0?'👑 OLD SUPREME':'⚡ NEXT SUPREME'}</p><button data-supreme-vote="${esc(p.uid)}|${i+1}" class="w-full rounded px-2 py-2 text-xs ${mine?.slot===i+1?'bg-fashion-gold text-black':'bg-fashion-800 text-white border border-fashion-gold/40'}">${mine?.slot===i+1?'✓ Seu voto':'Votar para salvar'}</button></div>`).join('')}</div></section>`;
+                        return `<section class="border-t border-fashion-gold/30 pt-4 space-y-3"><h4 class="font-cinzel text-white">${esc(runwayName(old||next))}</h4><div class="grid grid-cols-2 gap-3">${[old,next].map((l,i)=>`<div class="space-y-2"><img src="${esc(l?.url||'')}" class="w-full img-look rounded"><p class="text-xs text-fashion-gold">${i===0?'👑 OLD SUPREME':'⚡ NEXT SUPREME'}</p><button data-supreme-vote="${esc(p.uid)}|${i+1}" class="w-full rounded px-2 py-2 text-xs ${mine?.slot===i+1?'bg-fashion-gold text-black':'bg-fashion-800 text-white border border-fashion-gold/40'}">${mine?.slot===i+1?'✓ Seu voto':'Votar para salvar'}</button></div>`).join('')}</div></section>`;
                     }).join('')}</div>`;
                     $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML=''; return;
                 }
@@ -3783,12 +3783,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div class="bg-fashion-900 border border-fashion-700 rounded-lg overflow-hidden space-y-3 p-4 flex flex-col justify-between">
                         <div class="space-y-2">
                             <div class="flex justify-between items-center border-b border-fashion-700/60 pb-2">
-                                <button onclick="openAtelierHistory('${look.uid}', '${esc(look.ate)}')" class="font-cinzel font-bold text-fashion-gold hover:underline text-xs tracking-wider text-left flex items-center gap-1" title="Ver Histórico do Designer">
-                                    <i class="fa-solid fa-book-open text-[10px]"></i> ${esc(look.ate)}
+                                <button onclick="openAtelierHistory('${look.uid}', '${esc(runwayName(look))}')" class="font-cinzel font-bold text-fashion-gold hover:underline text-xs tracking-wider text-left flex items-center gap-1" title="Ver Histórico do Designer">
+                                    <i class="fa-solid fa-book-open text-[10px]"></i> ${esc(runwayName(look))}
                                 </button>
                                 ${currentUser.role==='plateia'||(isAdmin && !globalState.liberado)?'':`<label class="flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer"><input type="checkbox" data-faceoff="${look.id}" ${isChecked ? 'checked' : ''} class="accent-fashion-gold"><span>Face-Off</span></label>`}
                             </div>
-                            <img src="${esc(look.url)}" alt="Editorial ${esc(look.titulo||'sem título')} do Designer ${esc(look.ate)}" class="w-full img-look rounded border border-fashion-700 shadow" loading="lazy" tabindex="0" role="button" title="Abrir editorial em tela cheia">
+                            <img src="${esc(look.url)}" alt="Editorial ${esc(look.titulo||'sem título')} do Designer ${esc(runwayName(look))}" class="w-full img-look rounded border border-fashion-700 shadow" loading="lazy" tabindex="0" role="button" title="Abrir editorial em tela cheia">
                             <div class="font-cinzel text-fashion-gold font-bold text-xs">${esc(look.titulo || 'Look Sem Nome')}</div>
                             <p class="text-[11px] text-gray-300 italic leading-relaxed">${esc(look.mem)}</p>
                             ${creativeDossier(look)}
