@@ -1932,6 +1932,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const shortcuts=allowed.filter(t=>t!=='home'&&t!==cta?.[0]).slice(0,4);
         const roleNames={admin:'PRODUCTION HQ',estilista:'DESIGNER ACCESS',jurado:'JUDGES’ ACCESS',plateia:'FRONT ROW ACCESS'};
         renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">COMUNICADO OFICIAL DA PRODUÇÃO</p><p class="fau-hub-official-text">${esc(globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
+        // A próxima ação vem antes do comunicado longo, sobretudo no celular.
+        const hubRoot=document.querySelector('.fau-season-hub');
+        if(hubRoot){const hero=hubRoot.querySelector('.fau-hub-hero');const action=hero?.nextElementSibling;if(action&&action.querySelector('[data-hub-go]'))hubRoot.insertBefore(action,hero);}
         document.querySelectorAll('[data-hub-go]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.hubGo)));
     };
 
@@ -3535,7 +3538,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                   <p class="text-sm text-gray-300 leading-relaxed">${isAdmin && !globalState.liberado ? "Os envios aparecem aqui automaticamente, em ordem alfabética. Toque na fotografia para ampliar." : "Explore os looks publicados. Toque em uma fotografia para ampliar e ler o conceito."}</p>
                 </section>
                 <div id="runwayGroups"></div>
-                <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+                <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">${isAdmin && !globalState.liberado ? '<p class="col-span-full text-gray-300 text-sm">Carregando os looks recebidos…</p>' : ''}</div>
                 <div class="fau-runway-extras space-y-3 mt-7">
                   <section class="fau-runway-extra rounded-xl border border-fashion-700 bg-fashion-900/50 px-4 py-4" id="fauRunwayPressDetails" aria-label="The Fashion Press">
                     <div class="mb-3"><h3 class="text-sm text-fashion-gold font-medium">THE FASHION PRESS <span class="text-gray-400 text-xs">· Notícias da temporada</span></h3></div>
@@ -3801,10 +3804,20 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             }
         };
 
-        sub(db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada'), snap => {
-            looks = sortRunwayLooks(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        // Prévia administrativa: usa os documentos da rodada sem publicar o desfile.
+        // Erros de leitura precisam ser visíveis, em vez de uma galeria vazia silenciosa.
+        const runwayLooksQuery=db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada');
+        const runwayLooksUnsub=runwayLooksQuery.onSnapshot(snap=>{
+            looks=sortRunwayLooks(snap.docs.map(d=>({id:d.id,...d.data()})));
             refreshRunwayUI();
+        },err=>{
+            console.error('[runway preview]',err);
+            const grid=document.getElementById('runwayGrid');
+            if(grid && isAdmin && !globalState.liberado){
+                grid.innerHTML='<div class="col-span-full rounded-xl border border-red-500/40 bg-fashion-900 p-5 text-sm text-gray-200"><strong class="text-white">Não foi possível carregar os envios.</strong><p class="mt-2">'+(err.code==='permission-denied'?'O Firestore não autorizou a leitura dos looks pela conta ADM. Verifique as regras de leitura da coleção looks.':'Erro ao consultar os looks. Confira a conexão e a rodada ativa.')+'</p></div>';
+            }
         });
+        unsubsTab.push(runwayLooksUnsub);
         sub(db.collection('perfis').where('role','==','estilista'), snap => {
             runwayNamesByUid = new Map(snap.docs.map(d=>[String(d.id),d.data().ate||d.data().nome||d.data().name]).filter(x=>x[1]));
             looks=sortRunwayLooks(looks);
