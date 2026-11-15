@@ -3805,20 +3805,49 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             }
         };
 
-        // Prévia administrativa: usa os documentos da rodada sem publicar o desfile.
-        // Erros de leitura precisam ser visíveis, em vez de uma galeria vazia silenciosa.
-        const runwayLooksQuery=db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada');
-        const runwayLooksUnsub=runwayLooksQuery.onSnapshot(snap=>{
-            looks=sortRunwayLooks(snap.docs.map(d=>({id:d.id,...d.data()})));
-            refreshRunwayUI();
-        },err=>{
-            console.error('[runway preview]',err);
+        // Uma única consulta de looks, idêntica à utilizada pela bancada dos jurados.
+        // A prévia nunca altera a fase da rodada nem publica qualquer documento.
+        const runwayRound=globalState.rodada || '-';
+        const runwayLooksQuery=db.collection('looks').where('rodada','==',runwayRound);
+        let runwayReceived=false;
+        let runwayTimer=null;
+        const runwayMessage=(heading,body,retry=false)=>{
+            if(!isAdmin || globalState.liberado)return;
             const grid=document.getElementById('runwayGrid');
-            if(grid && isAdmin && !globalState.liberado){
-                grid.innerHTML='<div class="col-span-full rounded-xl border border-red-500/40 bg-fashion-900 p-5 text-sm text-gray-200"><strong class="text-white">Não foi possível carregar os envios.</strong><p class="mt-2">'+(err.code==='permission-denied'?'O Firestore não autorizou a leitura dos looks pela conta ADM. Verifique as regras de leitura da coleção looks.':'Erro ao consultar os looks. Confira a conexão e a rodada ativa.')+'</p></div>';
+            if(!grid)return;
+            grid.innerHTML=`<section class="col-span-full rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-3" role="status"><h3 class="font-semibold text-white">${esc(heading)}</h3><p class="text-sm text-gray-300">${esc(body)}</p>${retry?'<button type="button" id="fauRetryRunwayLooks" class="rounded-lg border border-fashion-gold/60 px-4 py-2 text-fashion-gold text-sm">Tentar novamente</button>':''}</section>`;
+            if(retry)document.getElementById('fauRetryRunwayLooks')?.addEventListener('click',()=>{runwayMessage('Consultando os envios','Atualizando a prévia privada…');fetchRunwayLooks();});
+        };
+        const applyRunwayLooks=snap=>{
+            if(!document.getElementById('runwayGrid'))return;
+            runwayReceived=true;
+            if(runwayTimer){clearTimeout(runwayTimer);runwayTimer=null;}
+            looks=sortRunwayLooks(snap.docs.map(d=>({id:d.id,...d.data()})));
+            try{refreshRunwayUI();}catch(err){
+                console.error('[FAU Runway: render]',err);
+                runwayMessage('Erro ao montar a galeria',err.message||'Falha ao exibir os looks.',true);
             }
-        });
-        unsubsTab.push(runwayLooksUnsub);
+        };
+        const runwayError=err=>{
+            console.error('[FAU Runway: Firestore]',err);
+            if(!runwayReceived)runwayMessage('Não foi possível consultar os envios',err?.code==='permission-denied'?'O Firebase recusou a leitura dos looks para esta conta. Confira as regras da coleção looks.':(err?.message||'Verifique sua conexão e tente novamente.'),true);
+        };
+        const fetchRunwayLooks=()=>{
+            // A consulta explícita oferece uma segunda via quando o listener não responde.
+            runwayLooksQuery.get({source:'server'}).then(applyRunwayLooks).catch(runwayError);
+        };
+        const runwayLooksUnsub=runwayLooksQuery.onSnapshot(applyRunwayLooks,runwayError);
+        unsubsTab.push(()=>{runwayLooksUnsub();if(runwayTimer)clearTimeout(runwayTimer);});
+        if(isAdmin && !globalState.liberado){
+            // Exibe dados do cache, se houver, sem aguardar a rede.
+            runwayLooksQuery.get({source:'cache'}).then(snap=>{if(!runwayReceived && !snap.empty)applyRunwayLooks(snap);}).catch(()=>{});
+            runwayTimer=setTimeout(()=>{
+                if(!runwayReceived){
+                    runwayMessage('A prévia ainda não respondeu','A consulta está demorando. Você pode tentar novamente sem abrir o desfile.',true);
+                    fetchRunwayLooks();
+                }
+            },9000);
+        }
         sub(db.collection('perfis').where('role','==','estilista'), snap => {
             runwayNamesByUid = new Map(snap.docs.map(d=>[String(d.id),d.data().ate||d.data().nome||d.data().name]).filter(x=>x[1]));
             looks=sortRunwayLooks(looks);
