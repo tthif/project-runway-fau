@@ -431,7 +431,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #mainView .fau-workroom-personal{display:none!important}
 @media(max-width:640px){#lookMemorialText{min-height:260px!important;height:260px}#fauWorkroomClock{grid-template-columns:minmax(0,1fr) auto!important}#fauWorkroomClock .fau-clock-digits{font-size:clamp(19px,5.5vw,25px)!important}#fauBriefingCard{padding:15px!important}}
 </style>
-</head>
+<style id="fau-conf-portraits-style">.fau-conf-avatar{width:46px;height:54px;flex:0 0 46px;object-fit:cover;object-position:center top;border:1px solid rgba(207,176,127,.55);border-radius:7px;background:#171219}.fau-conf-avatar-empty{display:flex;align-items:center;justify-content:center;color:#a58c6e}.conf-entry .fau-conf-avatar{filter:none}</style><style id="fau-results-portraits-2026">
+.fau-result-portrait{width:76px;height:92px;object-fit:cover;object-position:center top;border-radius:10px;border:1px solid rgba(204,170,112,.65);background:#171217;flex-shrink:0}
+.fau-result-portrait-small{width:42px;height:52px;object-fit:cover;object-position:center top;border-radius:7px;border:1px solid rgba(204,170,112,.45);background:#171217;flex-shrink:0}
+.fau-result-portrait-placeholder{display:inline-flex;align-items:center;justify-content:center;color:#c4a875}
+</style></head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -1829,9 +1833,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(data.length>140000)data=canvas.toDataURL('image/jpeg',.65);
             if(data.length>180000)throw new Error('A imagem ficou grande demais. Tente outra foto.');
             const ref=db.doc(`perfis/${uid}`),snap=await ref.get();
-            if(!snap.exists||snap.data().role!=='estilista')throw new Error('Perfil de Designer não encontrado.');
+            if(!snap.exists||!['estilista','jurado'].includes(snap.data().role))throw new Error('Perfil de Designer ou jurado não encontrado.');
             await ref.update({fotoElenco:data});
-            showToast('Foto do Designer atualizada no elenco.');
+            showToast('Fotografia do perfil atualizada.');
         } catch(err){console.error('Foto do elenco:',err);showToast('Não foi possível salvar a foto: '+(err.message||err.code||'erro'));}
         finally{input.disabled=false;input.value='';}
     });
@@ -2095,6 +2099,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(opening)$('#chatInput')?.focus();
           });
         }
+        // Resolve photographs by stable user ID, so old confessionals also gain portraits.
+        let confProfiles=new Map();
+        sub(db.collection('perfis'),snap=>{
+            confProfiles=new Map(snap.docs.map(d=>[d.id,d.data()]));
+            paint();
+        });
         let messages=[],visibleCount=8;
         const feed=$('#chatFeed'),filter=$('#confFilter');
         const paint=()=>{
@@ -2104,10 +2114,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             $('#confFeedCount').textContent=`${selected.length} depoimento${selected.length===1?'':'s'} ${mode==='round'?'nesta rodada':mode==='mine'?'seu(s)':'publicado(s)'}`;
             feed.innerHTML=selected.slice(0,visibleCount).map(m=>{
                 const isSelf=m.uid===currentUser.uid;
+                const portrait=confProfiles.get(m.uid)?.fotoElenco||'';
+                const avatar=portrait?`<img src="${esc(portrait)}" alt="Retrato de ${esc(m.ate||'Designer')}" class="fau-conf-avatar" loading="lazy">`:`<span class="fau-conf-avatar fau-conf-avatar-empty" aria-hidden="true"><i class="fa-solid fa-user"></i></span>`;
                 const stamp=Number(m.t)||0;
                 const date=stamp?new Date(stamp).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Data não informada';
                 const fresh=stamp>0 && Date.now()-stamp<24*60*60*1000;
-                return `<article class="conf-entry rounded-xl border ${isSelf?'border-fashion-gold/40 bg-fashion-900':'border-fashion-700 bg-fashion-950'} p-4 space-y-3"><div class="flex items-start justify-between gap-3"><div><span class="text-[10px] text-fashion-gold tracking-widest">${m.role==='admin'?'PRODUÇÃO':'DESIGNER'}</span><h4 class="font-cinzel text-fashion-gold text-base break-words">${esc(m.ate||'Designer')}</h4></div><div class="flex flex-col items-end gap-2"><div class="flex items-center gap-2">${fresh?'<span class="text-[10px] text-fashion-gold border border-fashion-gold/40 rounded px-2 py-0.5">NOVO</span>':''}<time class="text-[11px] text-gray-400">${esc(date)}</time></div>${isAdmin?`<button type="button" data-conf-delete="${esc(m.id)}" aria-label="Excluir depoimento de ${esc(m.ate||'Designer')}" class="text-red-300 border border-red-500/40 rounded px-3 py-2 text-xs">Excluir</button>`:''}</div></div><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap break-words">${esc(m.txt||'')}</p><span class="text-[10px] text-gray-500 uppercase tracking-wider">${esc(m.rodada ? fauRoundDisplayName(m.rodada) : 'Temporada')}</span></article>`;
+                return `<article class="conf-entry rounded-xl border ${isSelf?'border-fashion-gold/40 bg-fashion-900':'border-fashion-700 bg-fashion-950'} p-4 space-y-3"><div class="flex items-start justify-between gap-3"><div class="flex items-center gap-3 min-w-0">${avatar}<div class="min-w-0"><span class="text-[10px] text-fashion-gold tracking-widest">${m.role==='admin'?'PRODUÇÃO':'DESIGNER'}</span><h4 class="font-cinzel text-fashion-gold text-base break-words">${esc(m.ate||'Designer')}</h4></div></div><div class="flex flex-col items-end gap-2"><div class="flex items-center gap-2">${fresh?'<span class="text-[10px] text-fashion-gold border border-fashion-gold/40 rounded px-2 py-0.5">NOVO</span>':''}<time class="text-[11px] text-gray-400">${esc(date)}</time></div>${isAdmin?`<button type="button" data-conf-delete="${esc(m.id)}" aria-label="Excluir depoimento de ${esc(m.ate||'Designer')}" class="text-red-300 border border-red-500/40 rounded px-3 py-2 text-xs">Excluir</button>`:''}</div></div><p class="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap break-words">${esc(m.txt||'')}</p><span class="text-[10px] text-gray-500 uppercase tracking-wider">${esc(m.rodada ? fauRoundDisplayName(m.rodada) : 'Temporada')}</span></article>`;
             }).join('')||'<div class="rounded-xl border border-fashion-700 bg-fashion-900 p-8 text-center"><p class="font-cinzel text-fashion-gold">The cameras are waiting.</p><p class="text-xs text-gray-400 mt-2">Nenhum depoimento encontrado neste filtro.</p></div>';
             const more=$('#confShowMore');more.classList.toggle('hidden',selected.length<=visibleCount);
         };
@@ -3923,11 +3935,22 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
     };
 
+    // Portraits used only for identities already revealed in this stage.
+    async function fauPortraitDirectory(){
+      const snap=await db.collection('perfis').where('role','==','estilista').get();
+      return new Map(snap.docs.map(d=>[d.id,d.data().fotoElenco||'']));
+    }
+    function fauPortraitMarkup(uid,photos,small=false){
+      const src=photos.get(uid);
+      const size=small?'fau-result-portrait-small':'fau-result-portrait';
+      return src?`<img class="${size}" src="${esc(src)}" alt="Retrato do Designer" loading="lazy">`:`<span class="${size} fau-result-portrait-placeholder" aria-hidden="true"><i class="fa-solid fa-user"></i></span>`;
+    }
     // 7. THE ELIMINATION POOL — voto secreto e definitivo
     VIEWS.berlinda = async () => {
         if (!isCastVoter()) { renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 border border-fashion-gold/30 p-10 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">🔒 THE ELIMINATION POOL</h2><p class="text-gray-300 text-sm mt-3">A votação para salvar é exclusiva dos estilistas elegíveis.</p></div>');return; }
         if(globalState.themeId==='theme_rest_in_style'){renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 p-8 text-center"><h2 class="font-cinzel text-fashion-gold">🕯️ THE LAST JUDGMENT</h2><p class="text-sm text-gray-300 mt-3">Esta dinâmica utiliza a avaliação especial dos looks, não o voto de salvação.</p></div>');return;}
         const pool=globalState.berlinda||[], round=globalState.rodada;
+        const poolPhotos=pool.length?await fauPortraitDirectory():new Map();
         if(!globalState.urna||!pool.length){renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 border border-fashion-gold/30 p-10 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">🔒 THE ELIMINATION POOL</h2><p class="text-sm text-gray-300 mt-3">A produção ainda não abriu a votação de salvação.</p></div>');return;}
         if(pool.some(x=>x.uid===currentUser.uid)){
           renderView(`<div class="max-w-2xl mx-auto py-8 space-y-6 fau-elimination-enter">
@@ -3941,7 +3964,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             </div>
             <section class="rounded-2xl bg-fashion-900 border border-fashion-700 p-6 space-y-3">
               <p class="text-[10px] tracking-[.3em] text-fashion-gold">THE THREE NOMINEES</p>
-              ${pool.map((b,i)=>`<div class="flex items-center gap-4 border-b border-fashion-700/60 py-3 last:border-0"><span class="font-cinzel text-fashion-red text-xl">${String(i+1).padStart(2,'0')}</span><span class="font-cinzel text-white">${esc(b.ate)}</span>${b.uid===currentUser.uid?'<span class="ml-auto text-[10px] text-red-300 uppercase">You</span>':''}</div>`).join('')}
+              ${pool.map((b,i)=>`<div class="flex items-center gap-4 border-b border-fashion-700/60 py-3 last:border-0"><span class="font-cinzel text-fashion-red text-xl">${String(i+1).padStart(2,'0')}</span>${fauPortraitMarkup(b.uid,poolPhotos,true)}<span class="font-cinzel text-white">${esc(b.ate)}</span>${b.uid===currentUser.uid?'<span class="ml-auto text-[10px] text-red-300 uppercase">You</span>':''}</div>`).join('')}
               <p class="text-xs text-gray-400 pt-2">O veredito será divulgado no Results Show. Nenhum voto ou contagem é exibido aqui.</p>
             </section>
           </div>`);return;}
@@ -3949,7 +3972,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         renderView(`<div class="max-w-2xl mx-auto space-y-6 pb-12">
           <header class="rounded-2xl bg-fashion-900 border border-fashion-red/40 p-8 text-center space-y-3"><div class="text-4xl">⚖️</div><p class="text-fashion-red text-xs tracking-[.25em]">THE FINAL SAY · SECRET BALLOT</p><h2 class="font-cinzel text-3xl text-white">THE ELIMINATION POOL</h2><p class="text-gray-300 text-sm">${globalState.themeId==='theme_tarantino'?'THE LAST STAND · ':''}Uma decisão pode mudar o destino de um Designer. Escolha quem merece continuar.</p><p class="text-xs text-gray-400">Seu voto é secreto e definitivo. Confira sua escolha antes de confirmar.</p></header>
           <section class="bg-fashion-900 border border-fashion-700 rounded-2xl p-5 md:p-7 space-y-4"><p class="text-xs uppercase tracking-widest text-fashion-gold">SELECT ONE DESIGNER TO SAVE</p><button type="button" id="saveVoteRunway" class="text-xs text-fashion-gold underline underline-offset-4">Rever os editoriais no desfile</button>
-          <div class="space-y-3">${pool.map((b,i)=>`<label class="fau-save-option flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-5 cursor-pointer hover:border-fashion-gold transition"><input type="radio" name="salvationVote" value="${esc(b.uid)}" ${previous.exists?'disabled':''} class="accent-yellow-500 w-5 h-5"><div class="flex-1"><div class="text-[10px] text-gray-500 tracking-[.2em]">NOMINEE ${String(i+1).padStart(2,'0')}</div><div class="font-cinzel text-white text-lg">${esc(b.ate)}</div><p class="text-[11px] text-gray-400 mt-1">I want this Designer to stay.</p></div><span class="text-fashion-gold text-xl" aria-hidden="true">✦</span></label>`).join('')}</div>
+          <div class="space-y-3">${pool.map((b,i)=>`<label class="fau-save-option flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-5 cursor-pointer hover:border-fashion-gold transition"><input type="radio" name="salvationVote" value="${esc(b.uid)}" ${previous.exists?'disabled':''} class="accent-yellow-500 w-5 h-5">${fauPortraitMarkup(b.uid,poolPhotos,true)}<div class="flex-1"><div class="text-[10px] text-gray-500 tracking-[.2em]">NOMINEE ${String(i+1).padStart(2,'0')}</div><div class="font-cinzel text-white text-lg">${esc(b.ate)}</div><p class="text-[11px] text-gray-400 mt-1">I want this Designer to stay.</p></div><span class="text-fashion-gold text-xl" aria-hidden="true">✦</span></label>`).join('')}</div>
           <p id="saveBallotStatus" class="text-xs text-gray-300" aria-live="polite">${previous.exists?`🔒 ENVELOPE LACRADO · Sua escolha: ${esc(pool.find(b=>b.uid===previous.data()?.alvo)?.ate||'Designer')}. Resultado oculto até o anúncio oficial.`:'Selecione o Designer que deseja salvar. Seu voto só será registrado após a confirmação.'}</p>
           <button id="btnSaveAtelier" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-bold py-4 rounded-lg uppercase tracking-widest text-xs">${previous.exists?'VOTO REGISTRADO ✓':'CONFIRMAR VOTO PARA SALVAR'}</button></section>
           <div class="rounded-xl border border-fashion-700/70 p-5 text-center space-y-2"><p class="font-cinzel text-fashion-gold">One choice. One chance to save.</p><p class="text-xs text-gray-400">Você está votando para <strong>salvar</strong>, não para eliminar. As duas Designers mais salvas continuam; a menos votada corre o risco de deixar a competição, respeitando os desempates oficiais.</p></div><p class="text-center text-xs text-gray-400">🔒 O voto fica lacrado. Nem a escolha registrada nem a contagem ou o resultado são exibidos antes da revelação oficial.</p></div>`);
@@ -4589,7 +4612,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         sub(db.collection('perfis'), snap => {
             const container = $('#profileManagerContainer');
             if (!container) return;
-            const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const docs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'}));
 
             container.innerHTML = `
                 <p class="text-xs text-gray-400 mb-3">Gerencie nomes, biografias, funções e acesso. Excluir perfil não apaga a conta do Firebase Authentication nem o histórico da temporada. A função ADM é definida pela coleção protegida admins, não pelo seletor de cargos.</p>
@@ -4599,11 +4622,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         const isDisabled = p.disabled === true;
                         return `<article class="fau-profile-card">
                             <div class="fau-profile-top">
-                                ${p.role==='estilista'?(p.fotoElenco?`<img class="fau-admin-cast-thumb" src="${esc(p.fotoElenco)}" alt="Foto de ${esc(p.ate||'Designer')}">`:'<div class="fau-admin-cast-thumb fau-cast-placeholder"><i class="fa-solid fa-user"></i></div>'):''}
+                                ${['estilista','jurado'].includes(p.role)?(p.fotoElenco?`<img class="fau-admin-cast-thumb" src="${esc(p.fotoElenco)}" alt="Foto de ${esc(p.ate||'Designer')}">`:'<div class="fau-admin-cast-thumb fau-cast-placeholder"><i class="fa-solid fa-user"></i></div>'):''}
                                 <div class="min-w-0"><h4 class="fau-profile-name">${esc(p.ate || 'Sem nome')}</h4><p class="fau-profile-sub">${esc(p.manifesto ? 'Manifesto cadastrado' : 'Sem manifesto')}</p></div>
                                 <span class="fau-profile-status ${isDisabled?'is-disabled':'is-active'}">${isDisabled?'Desativado':'Ativo'}</span>
                             </div>
-                            ${p.role==='estilista'?`<label class="fau-admin-photo-label"> <i class="fa-solid fa-camera"></i> ${p.fotoElenco?'Trocar foto do Designer':'Adicionar foto do Designer'}<input type="file" accept="image/jpeg,image/png,image/webp" data-cast-upload="${esc(p.id)}" aria-label="Selecionar foto de ${esc(p.ate||'Designer')}"></label>`:''}
+                            ${['estilista','jurado'].includes(p.role)?`<label class="fau-admin-photo-label"> <i class="fa-solid fa-camera"></i> ${p.fotoElenco?'Trocar fotografia':'Adicionar fotografia'}<input type="file" accept="image/jpeg,image/png,image/webp" data-cast-upload="${esc(p.id)}" aria-label="Selecionar foto de ${esc(p.ate||'Participante')}"></label>`:''}
                             <div class="fau-profile-meta"><span>Função atual: <strong>${esc(p.role || 'plateia')}</strong></span>${isSelf?'<span>Seu perfil</span>':''}</div>
                             <div class="fau-profile-primary">
                                 <button data-act="edit-profile" data-uid="${p.id}" class="fau-profile-btn fau-profile-edit">Editar perfil</button>
@@ -5953,13 +5976,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         $('#btnLiveBroadcast').onclick = safeExec(async () => {
             const standings = (await computeSeasonStandings()).sort((a, b) => b.rd - a.rd);
             const winner = standings[0];
+            const resultPhotos=await fauPortraitDirectory();
             const modal = $('#broadcastModal');
             const stage = $('#broadcastStage');
 
             stage.innerHTML = `
                 <div class="space-y-3">
                     <span class="text-xs uppercase tracking-[0.3em] text-fashion-gold font-bold font-cinzel">Vencedor(a) da Rodada</span>
-                    <h1 class="font-cinzel text-4xl text-white font-bold tracking-wider">${winner ? esc(winner.ate) : 'Calculando...'}</h1>
+                    <div class="flex justify-center">${winner?fauPortraitMarkup(winner.uid,resultPhotos):''}</div><h1 class="font-cinzel text-4xl text-white font-bold tracking-wider">${winner ? esc(winner.ate) : 'Calculando...'}</h1>
                     <p class="text-sm text-fashion-gold uppercase tracking-widest font-mono">You are the WINNER of this challenge. Imunidade garantida.</p>
                 </div>
 
@@ -5967,7 +5991,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     ${standings.slice(0, 3).map((s, idx) => `
                         <div class="bg-fashion-900 border border-fashion-700 p-3 rounded-lg space-y-1">
                             <span class="text-xs font-cinzel text-fashion-gold font-bold">TOP #${idx + 1}</span>
-                            <div class="text-base font-bold text-white">${esc(s.ate)}</div>
+                            <div class="flex items-center gap-2">${fauPortraitMarkup(s.uid,resultPhotos,true)}<div class="text-base font-bold text-white">${esc(s.ate)}</div></div>
                             <div class="text-xs text-gray-400 font-mono">Nota: ${s.rd} (Total: ${s.tot})</div>
                         </div>
                     `).join('')}
@@ -5976,7 +6000,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 ${globalState.berlinda?.length ? `
                     <div class="bg-fashion-red/20 border border-fashion-red/50 p-4 rounded-lg text-center space-y-1">
                         <span class="text-xs font-bold text-fashion-red uppercase font-mono tracking-wider">No The Elimination Pool</span>
-                        <div class="text-lg font-cinzel text-white font-bold">${globalState.berlinda.map(b => esc(b.ate)).join('  vs  ')}</div>
+                        <div class="flex flex-wrap justify-center gap-4 mt-3">${globalState.berlinda.map(b=>`<div class="flex flex-col items-center gap-2">${fauPortraitMarkup(b.uid,resultPhotos)}<span class="text-sm font-cinzel text-white">${esc(b.ate)}</span></div>`).join('')}</div>
                     </div>
                 ` : ''}
             `;
