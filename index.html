@@ -2375,10 +2375,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
         renderView(`
             <div class="space-y-6">
-                <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="bg-fashion-900 border border-fashion-700 p-4 md:p-5 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                     <div class="space-y-1">
                         <h2 class="font-cinzel text-2xl text-white font-normal">Seu espaço de criação</h2>
-                        <p class="text-xs text-gray-400">${requiredLooks} ${requiredLooks===1?'look para enviar':'looks para enviar'} · Confira o prazo e prepare sua entrega.</p>
+                        <p class="text-xs text-gray-400">Confira o prazo e prepare sua entrega.</p>
                     </div>
                     <div id="fauWorkroomClock" class="fau-clock rounded-xl px-6 py-4 text-center" role="timer" aria-label="Prazo de entrega da rodada">
                         <span class="fau-clock-kicker block">⏱ PRAZO DE ENTREGA</span>
@@ -2390,11 +2390,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 </div>
 
                 <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
+                <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
+                    <details open class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold">Briefing do desafio <span class="text-gray-400 font-normal">· toque para recolher</span></summary><p class="text-sm text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
+                </section>
                 <section class="fau-submission-board rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4" aria-label="Progresso anônimo das entregas"><div id="workroomThermometer" class="text-xs" aria-live="polite"><p class="text-fashion-gold">THE SUBMISSION BOARD · Sincronizando entregas...</p></div></section>
                 <div id="workroomFormModule"></div>
-                <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
-                    <details open class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold">Briefing do desafio <span class="text-gray-400 font-normal">· toque para recolher</span></summary><div class="flex flex-wrap gap-2 text-[11px] text-fashion-gold mt-3"><span class="border border-fashion-700 rounded px-3 py-1">${requiredLooks} look(s)</span><span class="border border-fashion-700 rounded px-3 py-1">JPG, PNG ou WebP · até 5 MB</span><span class="border border-fashion-700 rounded px-3 py-1">Conceito · até 500 caracteres</span></div><p class="text-xs text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
-                </section>
+
 
 
                 <!-- PORTFÓLIO DE CRIAÇÕES ANTERIORES -->
@@ -2559,18 +2560,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 fileInput.setAttribute('aria-describedby','fauFileHint');
                 fileInput.insertAdjacentHTML('afterend', '<p id="fauFileHint" class="text-[11px] text-gray-400 mt-2">Selecione uma imagem JPG, PNG ou WebP com até 5 MB. Você poderá conferir a prévia antes de entregar.</p>');
                 const submit=$('#btnSubmitLook');
-                submit.insertAdjacentHTML('beforebegin', '<div id="fauDeliveryReview" class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-2" aria-live="polite"><p class="text-[10px] tracking-widest text-fashion-gold">03 · FINAL CHECK</p><p class="text-xs text-gray-300">Adicione sua fotografia, título e conceito para preparar a entrega.</p></div>');
-                const updateReview=()=>{
-                    const file=$('#lookFileInput')?.files?.[0],title=$('#lookTitleInput')?.value.trim(),concept=$('#lookMemorialText')?.value.trim();
-                    const validFile=file&&['image/jpeg','image/png','image/webp'].includes(file.type)&&file.size<=5*1024*1024;
-                    const review=$('#fauDeliveryReview');if(!review)return;
-                    review.innerHTML='<p class="text-[10px] tracking-widest text-fashion-gold">03 · FINAL CHECK</p>'+[
-                        [validFile,'Fotografia selecionada (até 5 MB)'],[!!title,'Título da criação'],[!!concept,'Conceito da criação']
-                    ].map(([ok,label])=>'<p class="text-xs '+(ok?'text-green-300':'text-gray-400')+'">'+(ok?'✓ ':'○ ')+label+'</p>').join('')+'<p class="text-[11px] text-gray-400">A entrega só será oficial após a confirmação do servidor.</p>';
-                };
-                ['lookFileInput','lookTitleInput','lookMemorialText'].forEach(id=>document.getElementById(id)?.addEventListener('input',updateReview));
-                fileInput.addEventListener('change',updateReview);
-                updateReview();
                 if (isFinalPhase) {
                     const actIndex = currentRoundLooks.length;
                     const actTitles = ['🌍 ACT I — THE ORIGIN','♻️ ACT II — THE REINVENTION','⚔️ ACT III — THE CONFRONTATION','👑 ACT IV — THE LEGEND'];
