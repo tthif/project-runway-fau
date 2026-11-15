@@ -1833,7 +1833,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(data.length>140000)data=canvas.toDataURL('image/jpeg',.65);
             if(data.length>180000)throw new Error('A imagem ficou grande demais. Tente outra foto.');
             const ref=db.doc(`perfis/${uid}`),snap=await ref.get();
-            if(!snap.exists||!['estilista','jurado'].includes(snap.data().role))throw new Error('Perfil de Designer ou jurado não encontrado.');
+            if(!snap.exists||(!['estilista','jurado'].includes(snap.data().role)&&uid!==auth.currentUser.uid))throw new Error('Perfil não autorizado para fotografia.');
             await ref.update({fotoElenco:data});
             showToast('Fotografia do perfil atualizada.');
         } catch(err){console.error('Foto do elenco:',err);showToast('Não foi possível salvar a foto: '+(err.message||err.code||'erro'));}
@@ -3080,7 +3080,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const i=Number(b.dataset.critiqueSend),t=targets[i];const val=root.querySelector(`[data-critique-text="${i}"]`)?.value.trim();
                 if(!val)throw new Error('Escreva a crítica antes de enviar.');
                 if(globalState.criticasEncerradas)throw new Error('O prazo de críticas foi encerrado pela produção.');
-                await db.collection('criticas_solicitadas').doc(fauCritiqueKey(round,currentUser.uid,t.ate)).set({round,juror:currentUser.uid,jurorNome:currentUser.ate,maison:t.ate,text:val,source:'site',received:true,updatedAt:now()},{merge:true});
+                await db.collection('criticas_solicitadas').doc(fauCritiqueKey(round,currentUser.uid,t.ate)).set({round,juror:currentUser.uid,jurorNome:currentUser.nomeJurado||currentUser.ate,maison:t.ate,text:val,source:'site',received:true,updatedAt:now()},{merge:true});
                 showToast('Crítica enviada à produção.');await fauCritiqueJuryMount();
             }));
         }catch(e){if(root.isConnected)root.innerHTML=`<p class="text-xs text-amber-300">Críticas indisponíveis: ${esc(e.message)}</p>`;}
@@ -3091,13 +3091,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const round=String(globalState.rodada||'');const targets=await fauCritiqueTargets();if(!root.isConnected)return;
             if(!targets.length){root.innerHTML='<p class="text-xs text-gray-400">A lista será gerada quando o ranking oficial da rodada estiver publicado. Não é necessário solicitar críticas antes das notas.</p>';return;}
             const profiles=await db.collection('perfis').where('role','==','jurado').get();
-            const jurors=profiles.docs.filter(d=>!d.data().disabled).map(d=>({uid:d.id,name:d.data().ate||d.id}));
+            const jurors=profiles.docs.filter(d=>!d.data().disabled).map(d=>({uid:d.id,name:d.data().nomeJurado||d.data().nome||d.data().name||d.data().ate||'Jurado',photo:d.data().fotoElenco||''})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
             const all=await db.collection('criticas_solicitadas').where('round','==',round).get();
             const found=new Map(all.docs.map(d=>[d.id,d.data()]));
             if(!root.isConnected)return;
             const tasks=jurors.flatMap(j=>targets.map(t=>({j,t,id:fauCritiqueKey(round,j.uid,t.ate)})));
             const received=tasks.filter(x=>found.get(x.id)?.received).length;
-            root.innerHTML=`<div class="flex flex-wrap justify-between gap-2 items-center"><strong class="text-fashion-gold">${received}/${tasks.length} críticas recebidas</strong><button id="fauCritiqueCopy" class="border border-fashion-gold/50 rounded px-3 py-2 text-xs">📋 Copiar pendências</button></div><div class="h-2 bg-fashion-950 rounded-full overflow-hidden"><div class="h-full bg-fashion-gold" style="width:${tasks.length?received/tasks.length*100:0}%"></div></div><p class="text-[11px] text-gray-400">${tasks.length-received} pendentes · ${targets.length} Designer(s) convocadas · ${jurors.length} jurado(s)</p>${jurors.map(j=>{const own=tasks.filter(x=>x.j.uid===j.uid);return `<details class="bg-fashion-950 border border-fashion-700 rounded p-3" ${own.some(x=>!found.get(x.id)?.received)?'open':''}><summary class="cursor-pointer font-semibold text-sm">${esc(j.name)} · ${own.filter(x=>found.get(x.id)?.received).length}/${own.length}</summary><div class="mt-3 space-y-2">${own.map(x=>{const d=found.get(x.id)||{};return `<div class="flex flex-wrap justify-between items-center gap-2 border-t border-fashion-700 pt-2"><div class="text-xs"><strong>${esc(x.t.ate)}</strong> <span class="text-gray-400">${esc(x.t.reason)}</span><p class="text-[11px] ${d.received?'text-green-300':'text-amber-300'}">${d.received?(d.source==='whatsapp'?'✓ Áudio pelo WhatsApp':'✓ Texto enviado no site'):'○ Pendente'}</p>${d.text?`<p class="text-gray-300 mt-1 max-w-xl">${esc(d.text)}</p>`:''}</div><button data-critique-transcribe="${esc(x.id)}" class="border border-fashion-700 rounded px-3 py-2 text-xs">📝 ${d.text?'Editar texto':'Registrar texto'}</button><button data-critique-audio="${esc(x.id)}" data-critique-juror="${esc(j.uid)}" data-critique-name="${esc(j.name)}" data-critique-maison="${esc(x.t.ate)}" class="border border-fashion-gold/40 rounded px-3 py-2 text-xs">${d.source==='whatsapp'?'↩ Desfazer áudio':'🎙️ Recebi áudio'}</button></div>`}).join('')}</div></details>`}).join('')}<button id="fauCritiqueRefresh" class="border border-fashion-700 rounded px-3 py-2 text-xs">↻ Atualizar lista</button>`;
+            root.innerHTML=`<div class="flex flex-wrap justify-between gap-2 items-center"><strong class="text-fashion-gold">${received}/${tasks.length} críticas recebidas</strong><button id="fauCritiqueCopy" class="border border-fashion-gold/50 rounded px-3 py-2 text-xs">📋 Copiar pendências</button></div><div class="h-2 bg-fashion-950 rounded-full overflow-hidden"><div class="h-full bg-fashion-gold" style="width:${tasks.length?received/tasks.length*100:0}%"></div></div><p class="text-[11px] text-gray-400">${tasks.length-received} pendentes · ${targets.length} Designer(s) convocadas · ${jurors.length} jurado(s)</p>${jurors.map(j=>{const own=tasks.filter(x=>x.j.uid===j.uid);return `<details class="bg-fashion-950 border border-fashion-700 rounded p-3" ${own.some(x=>!found.get(x.id)?.received)?'open':''}><summary class="cursor-pointer font-semibold text-sm"><span class="inline-flex items-center gap-2">${j.photo?`<img src="${esc(j.photo)}" alt="" class="fau-admin-cast-thumb" style="width:36px;height:42px;object-fit:cover">`:''}<span>${esc(j.name)}</span></span> · ${own.filter(x=>found.get(x.id)?.received).length}/${own.length}</summary><div class="mt-3 space-y-2">${own.map(x=>{const d=found.get(x.id)||{};return `<div class="flex flex-wrap justify-between items-center gap-2 border-t border-fashion-700 pt-2"><div class="text-xs"><strong>${esc(x.t.ate)}</strong> <span class="text-gray-400">${esc(x.t.reason)}</span><p class="text-[11px] ${d.received?'text-green-300':'text-amber-300'}">${d.received?(d.source==='whatsapp'?'✓ Áudio pelo WhatsApp':'✓ Texto enviado no site'):'○ Pendente'}</p>${d.text?`<p class="text-gray-300 mt-1 max-w-xl">${esc(d.text)}</p>`:''}</div><button data-critique-transcribe="${esc(x.id)}" class="border border-fashion-700 rounded px-3 py-2 text-xs">📝 ${d.text?'Editar texto':'Registrar texto'}</button><button data-critique-audio="${esc(x.id)}" data-critique-juror="${esc(j.uid)}" data-critique-name="${esc(j.name)}" data-critique-maison="${esc(x.t.ate)}" class="border border-fashion-gold/40 rounded px-3 py-2 text-xs">${d.source==='whatsapp'?'↩ Desfazer áudio':'🎙️ Recebi áudio'}</button></div>`}).join('')}</div></details>`}).join('')}<button id="fauCritiqueRefresh" class="border border-fashion-700 rounded px-3 py-2 text-xs">↻ Atualizar lista</button>`;
             const publicSnap=await fauPublicCritiquesRef(round).get();
             const publishStatus=document.getElementById('fauCritiquePublishStatus');
             if(publishStatus)publishStatus.textContent=publicSnap.data()?.published?`✓ ${publicSnap.data()?.entries?.length||0} críticas escritas publicadas. Alterações posteriores exigem republicação.`:'Críticas ainda não publicadas. Áudios sem transcrição permanecem privados.';
@@ -3339,7 +3339,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 alvoAte: targetLook.ate,
                 rodada: targetLook.rodada,
                 jurado: currentUser.uid,
-                juradoNome: currentUser.ate,
+                juradoNome: currentUser.nomeJurado||currentUser.ate,
                 nota: scores,
                 total: totalSum,
                 t: now()
@@ -4634,11 +4634,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         const isDisabled = p.disabled === true;
                         return `<article class="fau-profile-card">
                             <div class="fau-profile-top">
-                                ${['estilista','jurado'].includes(p.role)?(p.fotoElenco?`<img class="fau-admin-cast-thumb" src="${esc(p.fotoElenco)}" alt="Foto de ${esc(p.ate||'Designer')}">`:'<div class="fau-admin-cast-thumb fau-cast-placeholder"><i class="fa-solid fa-user"></i></div>'):''}
-                                <div class="min-w-0"><h4 class="fau-profile-name">${esc(p.ate || 'Sem nome')}</h4><p class="fau-profile-sub">${esc(p.manifesto ? 'Manifesto cadastrado' : 'Sem manifesto')}</p></div>
+                                ${(['estilista','jurado'].includes(p.role)||isSelf)?(p.fotoElenco?`<img class="fau-admin-cast-thumb" src="${esc(p.fotoElenco)}" alt="Foto de ${esc(p.ate||'Designer')}">`:'<div class="fau-admin-cast-thumb fau-cast-placeholder"><i class="fa-solid fa-user"></i></div>'):''}
+                                <div class="min-w-0"><h4 class="fau-profile-name">${esc(p.role==='jurado'?(p.nomeJurado||p.ate||'Sem nome'):(p.ate||'Sem nome'))}</h4><p class="fau-profile-sub">${esc(p.role==='jurado'?'Jurado · nome público':(p.manifesto ? 'Manifesto cadastrado' : 'Sem manifesto'))}</p></div>
                                 <span class="fau-profile-status ${isDisabled?'is-disabled':'is-active'}">${isDisabled?'Desativado':'Ativo'}</span>
                             </div>
-                            ${['estilista','jurado'].includes(p.role)?`<label class="fau-admin-photo-label"> <i class="fa-solid fa-camera"></i> ${p.fotoElenco?'Trocar fotografia':'Adicionar fotografia'}<input type="file" accept="image/jpeg,image/png,image/webp" data-cast-upload="${esc(p.id)}" aria-label="Selecionar foto de ${esc(p.ate||'Participante')}"></label>`:''}
+                            ${(['estilista','jurado'].includes(p.role)||isSelf)?`<label class="fau-admin-photo-label"> <i class="fa-solid fa-camera"></i> ${p.fotoElenco?'Trocar fotografia':'Adicionar fotografia'}<input type="file" accept="image/jpeg,image/png,image/webp" data-cast-upload="${esc(p.id)}" aria-label="Selecionar foto de ${esc(p.ate||'Participante')}"></label>`:''}
                             <div class="fau-profile-meta"><span>Função atual: <strong>${esc(p.role || 'plateia')}</strong></span>${isSelf?'<span>Seu perfil</span>':''}</div>
                             <div class="fau-profile-primary">
                                 <button data-act="edit-profile" data-uid="${p.id}" class="fau-profile-btn fau-profile-edit">Editar perfil</button>
@@ -6080,11 +6080,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if (newName === null) return;
                 const ate = newName.trim();
                 if (!ate || ate.length > 70 || /[<>]/.test(ate)) throw new Error('Informe um nome válido de até 70 caracteres, sem < ou >.');
+                const newJurorName = p.role==='jurado' ? prompt('Nome do jurado para a bancada (não o usuário/login):', p.nomeJurado || p.nome || p.ate || '') : null;
+                if(p.role==='jurado' && newJurorName===null)return;
+                if(p.role==='jurado' && (!newJurorName.trim()||newJurorName.trim().length>70||/[<>]/.test(newJurorName)))throw new Error('Informe o nome do jurado (até 70 caracteres).');
                 const newBio = prompt('Manifesto / biografia (até 300 caracteres):', p.bio || '');
                 if (newBio === null) return;
                 const bio = newBio.trim();
                 if (bio.length > 300) throw new Error('A biografia deve ter até 300 caracteres.');
-                await ref.update({ate, bio});
+                await ref.update({ate, bio, ...(p.role==='jurado'?{nomeJurado:newJurorName.trim()}:{})});
                 // Identidades reais são documentos separados e não são alteradas automaticamente.
                 showToast('Perfil atualizado.');
             }
