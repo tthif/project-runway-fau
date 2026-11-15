@@ -462,7 +462,32 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #fauWorkroomClock .fau-clock-digits{font-variant-numeric:tabular-nums}
 #fauProductionPulse strong{font-variant-numeric:tabular-nums}
 @media(max-width:640px){#mainView{min-width:0}#lookMemorialText{min-height:280px!important;height:280px!important}#fauProductionPulse{padding:14px}#navContainer{overscroll-behavior-x:contain}#fauRunwayOpening{padding:26px 16px!important}}
-</style></head>
+</style>
+<style id="fau-runway-polish-final">
+/* Editorial: o desfile é o foco, não o cabeçalho. */
+#fauV83Premiere{padding:10px!important;z-index:10020!important}
+#fauV83Premiere .fau-stage{width:min(100%,680px);height:min(100dvh - 20px,950px);max-height:none;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:8px 4px}
+#fauV83Premiere .fau-premiere-eyebrow{font-size:10px;color:#d1b38b;letter-spacing:.2em;margin:0}
+#fauV83SlideTitle{font-family:Cinzel,serif;color:#f4e9dd;font-size:clamp(15px,3.5vw,21px);line-height:1.25;margin:0;max-width:100%;overflow-wrap:break-word}
+#fauV83SlideCounter{font-size:11px;color:#d1b38b;margin:0}
+#fauV83Premiere img{width:auto;max-width:100%;height:auto;max-height:min(67dvh,680px);min-height:0;object-fit:contain;margin:0 auto;flex-shrink:1}
+#fauV83Premiere .fau-stage>div:last-child{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;width:100%;margin-top:5px}
+#fauV83Premiere button{font-size:12px;padding:11px 12px;margin:0;min-width:0}
+#fauV83Next{background:#d1b38b!important;color:#171116!important}
+/* Foto ampliada: conceito rolável e sem repetição do nome do Designer. */
+.fau-runway-viewer{justify-content:flex-start!important;gap:9px!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:12px 12px 24px!important}
+.fau-runway-viewer .fau-viewer-top{flex:0 0 auto}
+.fau-runway-viewer .fau-viewer-stage{flex:0 0 auto!important;width:min(100%,780px)!important}
+.fau-runway-viewer .fau-viewer-stage img{height:auto!important;max-height:48dvh!important;width:100%!important;object-fit:contain!important}
+.fau-runway-viewer .fau-viewer-info{flex:0 0 auto!important;gap:8px!important;width:min(100%,720px)!important;padding-bottom:20px!important}
+.fau-runway-viewer .fau-viewer-info strong{font-family:Cinzel,serif;font-size:clamp(16px,4vw,22px);color:#f4e9dd}
+.fau-runway-viewer .fau-viewer-info p{max-height:none!important;overflow:visible!important;line-height:1.65!important;font-size:clamp(13px,3.3vw,16px);color:#ddd3d3;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
+.fau-runway-viewer .fau-viewer-stage button{min-height:44px;font-size:26px}
+#fauV83Launch{display:block;margin:12px 0 18px!important;border-color:#d1b38b!important;border-radius:10px;padding:13px 18px!important;letter-spacing:.1em}
+#fauV83Launch[hidden]{display:none!important}
+@media(max-width:640px){#fauV83Premiere .fau-stage{height:calc(100dvh - 20px)}#fauV83Premiere img{max-height:64dvh}#fauV83Premiere button{font-size:12px} .fau-runway-viewer .fau-viewer-stage{grid-template-columns:32px minmax(0,1fr) 32px;gap:3px}.fau-runway-viewer .fau-viewer-stage img{max-height:43dvh!important}.fau-runway-viewer .fau-viewer-top span{font-size:9px;letter-spacing:.08em}}
+</style>
+</head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -3538,7 +3563,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 <section class="fau-runway-editorial rounded-xl border border-fashion-gold/25 bg-fashion-900/40 px-4 py-4 md:px-6 md:py-5 space-y-2">
                   <p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL RUNWAY</p>
                   <h3 class="font-cinzel text-xl md:text-2xl text-white">${isAdmin && !globalState.liberado ? "Looks recebidos" : "Every Look Tells a Story."}</h3>
-                  <p class="text-sm text-gray-300 leading-relaxed">${isAdmin && !globalState.liberado ? "Os envios aparecem aqui automaticamente, em ordem alfabética. Toque na fotografia para ampliar." : "Explore os looks publicados. Toque em uma fotografia para ampliar e ler o conceito."}</p>
+                  <p class="text-sm text-gray-300 leading-relaxed">${isAdmin && !globalState.liberado ? "Explore as criações recebidas. Toque em um look para ver o editorial e seu conceito." : "Explore os looks publicados. Toque em uma fotografia para ampliar e ler o conceito."}</p>
                 </section>
                 <div id="runwayGroups"></div>
                 <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">${isAdmin && !globalState.liberado ? '<p class="col-span-full text-gray-300 text-sm">Carregando os looks recebidos…</p>' : ''}</div>
@@ -3574,18 +3599,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const viewer=document.createElement('div');
           viewer.className='fau-runway-lightbox fau-runway-viewer fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-3 md:p-8';
           viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Editorial da passarela');
-          viewer.innerHTML=`<div class="fau-viewer-top"><span>PROJECT RUNWAY: FAU · THE RUNWAY</span><button type="button" data-viewer-close aria-label="Fechar editorial">✕ FECHAR</button></div><div class="fau-viewer-stage"><button type="button" data-viewer-prev aria-label="Look anterior">‹</button><img alt=""><button type="button" data-viewer-next aria-label="Próximo look">›</button></div><div class="fau-viewer-info" aria-live="polite"><span data-viewer-count></span><strong data-viewer-title></strong><p data-viewer-concept></p><span data-viewer-maison></span></div>`;
+          viewer.innerHTML=`<div class="fau-viewer-top"><span>PROJECT RUNWAY: FAU · THE RUNWAY</span><button type="button" data-viewer-close aria-label="Fechar editorial">✕ FECHAR</button></div><div class="fau-viewer-stage"><button type="button" data-viewer-prev aria-label="Look anterior">‹</button><img alt=""><button type="button" data-viewer-next aria-label="Próximo look">›</button></div><div class="fau-viewer-info" aria-live="polite"><span data-viewer-count></span><strong data-viewer-title></strong><p data-viewer-concept></p></div>`;
           const picture=viewer.querySelector('img');
           const update=()=>{
             const active=images[index],card=active.closest('.bg-fashion-900')||active.closest('section');
             picture.src=active.src;picture.alt=active.alt||'Look da passarela ampliado';
             const title=card?.querySelector('.font-cinzel.text-fashion-gold.font-bold')?.textContent?.trim()||active.alt||'Editorial';
             const concept=card?.querySelector('p.italic')?.textContent?.trim()||'';
-            const maison=card?.querySelector('button[onclick^="openAtelierHistory"]')?.textContent?.trim()||'';
+
             viewer.querySelector('[data-viewer-count]').textContent=`LOOK ${index+1} / ${images.length}`;
             viewer.querySelector('[data-viewer-title]').textContent=title;
             viewer.querySelector('[data-viewer-concept]').textContent=concept;
-            viewer.querySelector('[data-viewer-maison]').textContent=maison;
+
             viewer.querySelector('[data-viewer-prev]').disabled=images.length<2;
             viewer.querySelector('[data-viewer-next]').disabled=images.length<2;
           };
@@ -6846,23 +6871,23 @@ body[data-fau-theme="theme_mathematics"] .fau-archive-head{background:linear-gra
  const $=s=>document.querySelector(s);
  const overlay=document.createElement('div');overlay.id='fauV83Premiere';overlay.hidden=true;
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Runway Premiere');
- overlay.innerHTML='<div class="fau-stage"><p style="font-size:11px;color:#d1b38b;letter-spacing:.3em">PROJECT RUNWAY: FAU</p><h2 id="fauV83SlideTitle" style="font-family:Cinzel,serif;font-size:24px;color:#fff;margin:16px 0">THE RUNWAY PREMIERE</h2><p id="fauV83SlideCounter" style="color:#d1b38b;font-size:12px"></p><img id="fauV83SlideImg" alt="Look na passarela"><div><button id="fauV83Prev">Anterior</button><button id="fauV83Next">Próximo look</button><button id="fauV83Close">Fechar</button></div></div>';
+ overlay.innerHTML='<div class="fau-stage"><p class="fau-premiere-eyebrow">THE RUNWAY · FAU</p><h2 id="fauV83SlideTitle">THE RUNWAY PREMIERE</h2><p id="fauV83SlideCounter" style="color:#d1b38b;font-size:12px"></p><img id="fauV83SlideImg" alt="Look na passarela"><div><button id="fauV83Prev">Anterior</button><button id="fauV83Next">Próximo look</button><button id="fauV83Close">Fechar</button></div></div>';
  document.body.appendChild(overlay);
  let slides=[],idx=0;
  const close=()=>{overlay.hidden=true;document.body.style.overflow='';};
- const show=()=>{const x=slides[idx];if(!x)return;$('#fauV83SlideImg').src=x.src;$('#fauV83SlideImg').alt=x.alt;$('#fauV83SlideTitle').textContent=x.alt;$('#fauV83SlideCounter').textContent=`LOOK ${idx+1} / ${slides.length}`;$('#fauV83Prev').disabled=idx===0;$('#fauV83Next').disabled=idx===slides.length-1;};
+ const show=()=>{const x=slides[idx];if(!x)return;$('#fauV83SlideImg').src=x.src;$('#fauV83SlideImg').alt=x.alt;$('#fauV83SlideTitle').textContent=x.title||'THE RUNWAY';$('#fauV83SlideCounter').textContent=`LOOK ${idx+1} / ${slides.length}`;$('#fauV83Prev').disabled=idx===0;$('#fauV83Next').disabled=idx===slides.length-1;};
  $('#fauV83Prev').onclick=()=>{idx=Math.max(0,idx-1);show();};
  $('#fauV83Next').onclick=()=>{idx=Math.min(slides.length-1,idx+1);show();};
  $('#fauV83Close').onclick=close;
  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
  document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')close();if(e.key==='ArrowRight')$('#fauV83Next').click();if(e.key==='ArrowLeft')$('#fauV83Prev').click();});
- const launch=document.createElement('button');launch.type='button';launch.id='fauV83Launch';launch.textContent='▶ RUNWAY PREMIERE';
+ const launch=document.createElement('button');launch.type='button';launch.id='fauV83Launch';launch.textContent='▶ ASSISTIR AO DESFILE';
  launch.className='border border-fashion-gold/60 text-fashion-gold rounded px-4 py-2 text-xs my-3';launch.hidden=true;
  launch.onclick=()=>{
   const grid=$('#runwayGrid');
   // Somente os looks do desfile principal, nunca os grupos de votações/twists.
   const candidates=[...(grid?.querySelectorAll('img.img-look')||[])].filter(el=>el.getAttribute('src')&&el.getBoundingClientRect().width>0);
-  slides=candidates.map(el=>({src:el.getAttribute('src'),alt:el.getAttribute('alt')||'Look da passarela'}));
+  slides=candidates.map(el=>({src:el.getAttribute('src'),alt:el.getAttribute('alt')||'Look da passarela',title:el.closest('.bg-fashion-900')?.querySelector('button[onclick^="openAtelierHistory"]')?.textContent?.trim()||'THE RUNWAY'}));
   if(!slides.length)return;idx=0;show();overlay.hidden=false;document.body.style.overflow='hidden';$('#fauV83Close').focus();
  };
  const update=()=>{
