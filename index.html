@@ -421,6 +421,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-cast-manifesto p:not(.fau-cast-manifesto-label){font:400 14px/1.75 Inter,system-ui,sans-serif!important;white-space:pre-wrap;overflow-wrap:break-word;color:#e9e2e8!important;padding:0!important;margin:0!important}
 @media(max-width:480px){.fau-cast-manifesto p:not(.fau-cast-manifesto-label){font-size:14px!important;line-height:1.7!important}}
 </style>
+
+<style id="fau-workroom-visual-fix-nov2026">
+/* Formulário de conceito legível e responsivo inclusive com teclado aberto. */
+#workroomFormModule,#fauWorkroomClock,#fauBriefingCard{min-width:0;max-width:100%;box-sizing:border-box}
+#lookMemorialText{display:block;width:100%;min-height:230px!important;height:230px;resize:vertical;padding:15px!important;font-size:16px!important;line-height:1.55!important;box-sizing:border-box;overflow-y:auto}
+#lookMemorialText::placeholder{font-size:15px;line-height:1.5}
+#fauWorkroomClock .fau-clock-digits{white-space:nowrap}
+#mainView .fau-workroom-personal{display:none!important}
+@media(max-width:640px){#lookMemorialText{min-height:260px!important;height:260px}#fauWorkroomClock{grid-template-columns:minmax(0,1fr) auto!important}#fauWorkroomClock .fau-clock-digits{font-size:clamp(19px,5.5vw,25px)!important}#fauBriefingCard{padding:15px!important}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -889,11 +899,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const [draw,gate]=await Promise.all([getPersonalTwist(),getDrawGate()]);
         const released=gate.phase==='released';
         const isDraw=themeHasDraw(t);
+        if(!t.extraField && !t.slotLabels && !isDraw && t.drawType!=='faction_choice' && !draw){slot.innerHTML='';return;}
         const envelopeOptions=Array.from({length:12},(_,i)=>`<option value="${i+1}">Envelope ${String(i+1).padStart(2,'0')}</option>`).join('');
         slot.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
-          <div class="text-fashion-gold font-cinzel tracking-widest text-xs">✦ THE CHALLENGE — ${esc(t.title)}</div>
-          <p class="text-xs text-gray-300">${esc(t.subtitle)}</p>
-          <p class="text-xs text-white">${esc(t.mandate)}</p>
           ${t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
           ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
           ${isDraw?`<p class="text-xs text-amber-200">${t.drawType==='invitation_box_3d'?'💌 Abra sua Invitation Box e escolha um dos cinco envelopes lacrados em cada categoria. O conteúdo permanece secreto até a produção liberar a revelação.':'🎁 Escolha um dos 12 envelopes sem conhecer o conteúdo. Sua escolha será definitiva. Apenas a produção decide quando os resultados serão revelados.'}</p>`:''}
@@ -1055,7 +1063,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     };
     const ROTULOS_ABAS = {
         home: 'Season Hub',
-        cast: 'THE DESIGNERS',
+        cast: 'The Designers',
         meu_perfil: 'My Profile',
         work: 'The Workroom',
         runway: 'The Runway',
@@ -1831,7 +1839,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     // THE CAST: editorial public roster, separate from submission flow.
     VIEWS.cast = () => {
         renderView(`<section class="fau-cast-page space-y-5">
-            <header class="fau-cast-hero"><p class="fau-cast-kicker">PROJECT RUNWAY: FAU · SEASON ONE</p><h2>THE DESIGNERS</h2><p>Conheça o elenco da temporada.</p><div class="fau-cast-tools"><label class="sr-only" for="fauCastSearch">Buscar Designer</label><input id="fauCastSearch" type="search" placeholder="Buscar Designer..." autocomplete="off"><span id="fauCastCount" aria-live="polite">Carregando elenco...</span></div></header>
+            <header class="fau-cast-hero"><p class="fau-cast-kicker">PROJECT RUNWAY: FAU · SEASON ONE</p><h2>The Designers</h2><p>Conheça o elenco da temporada.</p><div class="fau-cast-tools"><label class="sr-only" for="fauCastSearch">Buscar Designer</label><input id="fauCastSearch" type="search" placeholder="Buscar Designer..." autocomplete="off"><span id="fauCastCount" aria-live="polite">Carregando elenco...</span></div></header>
             <div id="fauCastGrid" class="fau-cast-grid" aria-live="polite"><p>Carregando Designers...</p></div>
         </section>`);
         let cast=[];
@@ -2165,16 +2173,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     </div>
                 </div>
 
-                <div class="fau-workroom-personal text-xs text-gray-300">DESIGNER · <strong class="text-fashion-gold">${esc(currentUser.ate || 'FAU')}</strong> <span class="text-gray-500">· ${esc(fauRoundCode())}</span></div>
                 <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
+                <section class="fau-submission-board rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4" aria-label="Progresso anônimo das entregas"><div id="workroomThermometer" class="text-xs" aria-live="polite"><p class="text-fashion-gold">THE SUBMISSION BOARD · Sincronizando entregas...</p></div></section>
+                <div id="workroomFormModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
                     <div class="flex items-center justify-between gap-2"><span class="text-[10px] tracking-[.25em] text-fashion-gold">01 · THE BRIEF</span><span class="text-[10px] text-gray-400">YOUR NEXT CHALLENGE</span></div>
-                    <h3 class="font-cinzel text-xl text-white">${esc(getTheme()?.title || 'Aguardando o desafio')}</h3>
-                    <p class="text-sm text-gray-300">${esc(getTheme()?.subtitle || 'A produção anunciará o briefing em breve.')}</p>
                     <details class="border-t border-fashion-700 pt-3"><summary class="cursor-pointer text-xs text-fashion-gold">Ler briefing completo e regras de envio</summary><div class="flex flex-wrap gap-2 text-[11px] text-fashion-gold mt-3"><span class="border border-fashion-700 rounded px-3 py-1">${requiredLooks} look(s)</span><span class="border border-fashion-700 rounded px-3 py-1">JPG, PNG ou WebP · até 5 MB</span><span class="border border-fashion-700 rounded px-3 py-1">Conceito · até 500 caracteres</span></div><p class="text-xs text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
                 </section>
-                <div id="workroomFormModule"></div>
-                <details class="fau-workroom-secondary rounded-xl border border-fashion-700 bg-fashion-900 p-4"><summary class="cursor-pointer text-xs text-fashion-gold tracking-wider font-semibold">THE SUBMISSION BOARD · Progresso dos Designers</summary><section id="workroomThermometer" class="mt-3 text-xs" aria-label="Progresso das entregas" aria-live="polite"></section></details>
+
 
                 <!-- PORTFÓLIO DE CRIAÇÕES ANTERIORES -->
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
@@ -2225,18 +2231,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 $('#workroomFormModule').innerHTML = '';
                 return;
             } else {
-                $('#atelierSetupModule').innerHTML = `
-                    <div class="bg-fashion-900 border border-fashion-gold/40 p-4 rounded-lg space-y-2">
-                        <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
-                            <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-crown text-fashion-gold text-sm"></i>
-                                <span class="font-cinzel text-xs text-white font-bold tracking-wider">THE DESIGNER · ${esc(maisonName)}</span>
-                            </div>
-
-                        </div>
-                        ${myBio ? `<p class="text-[11px] text-gray-300 italic"><strong class="text-fashion-gold font-cinzel">Manifesto:</strong> "${esc(myBio)}"</p>` : ''}
-                    </div>
-                `;
+                $('#atelierSetupModule').innerHTML = '';
             }
 
             const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada);
@@ -2334,11 +2329,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                             </div>
 
                             <div>
-                                <div class="flex justify-between items-center mb-1">
+                                <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
                                     <label class="uppercase tracking-wider font-semibold text-gray-300">Conceito (até 500 caracteres)</label>
-                                    <span id="charCounter" class="text-gray-500 font-mono text-[10px]">0 / 500 letras</span>
+                                    <span id="charCounter" class="text-gray-500 font-mono text-xs whitespace-nowrap">0 / 500</span>
                                 </div>
-                                <textarea id="lookMemorialText" maxlength="500" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white focus:outline-none focus:border-fashion-gold" placeholder="Explique a inspiração, a narrativa e a conexão com a assinatura da seu Designer..."></textarea>
+                                <textarea id="lookMemorialText" maxlength="500" rows="9" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-white focus:outline-none focus:border-fashion-gold" placeholder="Explique a inspiração, a narrativa e a conexão com a assinatura da seu Designer..."></textarea>
                             </div>
 
                             <button id="btnSubmitLook" type="button" class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-widest text-xs transition">Enviar Look Oficial para a Passarela</button>
