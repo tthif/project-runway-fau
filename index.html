@@ -1890,18 +1890,48 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const theme=SEASON_THEMES[globalState.themeId]||{};
         const title=flow.configured?(theme.title||theme.nome||globalState.themeId):'THE CASTING EXPERIENCE';
         const deadline=flow.deadline?new Date(flow.deadline).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}):null;
-        const candidates={
-          admin:[['direcao','OPEN THE CONTROL ROOM','Organize a rodada, autorize cada etapa e conduza a produção.'],['runway','PREVIEW THE RUNWAY','Confira o desfile já liberado.']],
-          estilista: !hasMaisonIdentity()?[['meu_perfil','CREATE YOUR DESIGNER IDENTITY','Defina seu nome e manifesto no perfil antes da estreia.']]:flow.submissionsOpen?[['work','ENTER THE WORKROOM','Crie, envie ou revise suas entregas antes do encerramento.']]:flow.ballotOpen?[['tribunal','ENTER THE VOTING ROOM','Confira as opções e registre seus votos secretos.']]:flow.runwayOpen?[['runway','WATCH THE RUNWAY','Explore os looks oficialmente liberados.']]:[['work','CHECK YOUR WORKROOM','Acompanhe sua participação e aguarde a próxima etapa.']],
-          jurado: [['bancada','ENTER THE JUDGES’ PANEL','Confira as avaliações e críticas disponíveis.']],
-          plateia: flow.runwayOpen?[['runway','TAKE YOUR FRONT-ROW SEAT','A passarela está aberta para a plateia.']]:[['conf','BEHIND THE SEAMS','Conheça os bastidores disponíveis ao público.']]
-        };
+        // A chamada principal do Hub segue as permissões e o estado publicado.
+        // Não antecipar acesso de jurados, plateia ou Designers a fases fechadas.
+        const poolOpen=!!globalState.urna && Array.isArray(globalState.berlinda) && globalState.berlinda.length>0;
+        const castVotingOpen=flow.runwayOpen && !poolOpen && !!globalState.urna;
+        const eligibleDesigner=role==='estilista' && !currentUser.out && !currentUser.disabled && hasMaisonIdentity();
+        const isInPool=poolOpen && globalState.berlinda.some(p=>p.uid===currentUser.uid);
+        const choices=[];
+        if(role==='admin') {
+            if(flow.submissionsOpen) choices.push(['direcao','ACOMPANHAR AS ENTREGAS','Veja os envios, os prazos e o andamento da rodada no Control Room.']);
+            if(!flow.runwayOpen && flow.configured) choices.push(['runway','VER A PRÉVIA PRIVADA','Confira os looks recebidos antes de abrir o desfile para o público.']);
+            if(flow.runwayOpen) choices.push(['runway','ACOMPANHAR O DESFILE','Veja a passarela publicada e acompanhe a apresentação.']);
+            if(poolOpen) choices.push(['direcao','ACOMPANHAR O ELIMINATION POOL','Acompanhe a votação de salvação e conduza a próxima etapa.']);
+            else if(castVotingOpen) choices.push(['direcao','ACOMPANHAR A VOTAÇÃO','Monitore a votação secreta no Control Room.']);
+            choices.push(['direcao','ABRIR THE CONTROL ROOM','Gerencie as etapas da competição e as decisões da produção.']);
+        } else if(role==='estilista') {
+            if(!hasMaisonIdentity()) choices.push(['meu_perfil','COMPLETE SEU PERFIL','Defina seu nome de Designer e manifesto.']);
+            else if(currentUser.out) {
+                if(flow.runwayOpen) choices.push(['runway','ASSISTIR AO DESFILE','Acompanhe a passarela publicada.']);
+                choices.push(['cast','ACOMPANHAR O ELENCO','Veja quem continua na competição.']);
+            } else {
+                if(flow.submissionsOpen) choices.push(['work','ENVIAR SUA CRIAÇÃO','Entre no Workroom para enviar ou editar seu look antes do prazo.']);
+                if(poolOpen && !isInPool) choices.push(['berlinda','VOTAR PARA SALVAR','O Elimination Pool está aberto. Registre seu voto secreto.']);
+                else if(poolOpen && isInPool) choices.push(['tribunal','ACOMPANHAR A VOTAÇÃO','Você está no Elimination Pool e não pode votar na própria salvação.']);
+                else if(castVotingOpen) choices.push(['tribunal','REGISTRAR SEUS VOTOS','Entre na Voting Room e participe da votação secreta.']);
+                if(flow.runwayOpen) choices.push(['runway','ASSISTIR AO DESFILE','Veja as criações publicadas e seus conceitos.']);
+                if(!flow.submissionsOpen && !flow.runwayOpen) choices.push(['work','ACOMPANHAR O WORKROOM','As entregas encerraram. Aguarde a abertura oficial da passarela.']);
+            }
+        } else if(role==='jurado') {
+            if(flow.runwayOpen) choices.push(['bancada','AVALIAR AS CRIAÇÕES','Entre no Judges’ Panel para registrar notas e críticas quando a avaliação estiver liberada.']);
+            if(flow.runwayOpen) choices.push(['runway','VER O DESFILE','Acompanhe os looks oficialmente publicados.']);
+            if(!flow.runwayOpen) choices.push(['bancada','ACOMPANHAR A BANCADA','Consulte o painel; as criações só ficam disponíveis quando a produção liberar.']);
+        } else {
+            if(flow.runwayOpen) choices.push(['runway','ASSISTIR AO DESFILE','A passarela está aberta. Veja os looks e seus conceitos.']);
+            else choices.push(['conf','ACOMPANHAR OS BASTIDORES','O desfile ainda não foi liberado. Explore o conteúdo disponível.']);
+        }
+        const candidates={[role]:choices};
         const available=(candidates[role]||candidates.plateia).filter(x=>allowed.includes(x[0]));
         const fallback=allowed.filter(t=>t!=='home').slice(0,1).map(t=>[t,'EXPLORE '+ROTULOS_ABAS[t],'Veja o que já está disponível.']);
         const [cta,...others]=available.length?available:fallback;
         const shortcuts=allowed.filter(t=>t!=='home'&&t!==cta?.[0]).slice(0,4);
         const roleNames={admin:'PRODUCTION HQ',estilista:'DESIGNER ACCESS',jurado:'JUDGES’ ACCESS',plateia:'FRONT ROW ACCESS'};
-        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">COMUNICADO OFICIAL DA PRODUÇÃO</p><p class="fau-hub-official-text">${esc(globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
+        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">COMUNICADO OFICIAL DA PRODUÇÃO</p><p class="fau-hub-official-text">${esc(globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
         document.querySelectorAll('[data-hub-go]').forEach(b=>b.addEventListener('click',()=>navigate(b.dataset.hubGo)));
     };
 
@@ -3493,16 +3523,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 </div>
 
                 ${currentUser.role==='plateia'?`<section class="fau-frontrow-welcome rounded-2xl border border-fashion-gold/40 p-5 md:p-8 space-y-4" aria-label="Sua primeira fila"><p class="text-[10px] tracking-[.28em] text-fashion-gold">YOUR FRONT-ROW PASS · ${esc(fauRoundDisplayName())}</p><h3 class="font-cinzel text-3xl text-white">Welcome to the Front Row.</h3><p class="text-sm text-gray-300">Acompanhe os editoriais, descubra as histórias por trás das criações e reaja aos seus looks favoritos. Os resultados só aparecem quando a produção revelar.</p><div class="flex flex-wrap gap-2"><button type="button" data-frontrow-jump="runwayGroups" class="fau-frontrow-primary px-4 py-3 rounded-lg text-xs font-bold">EXPLORAR OS LOOKS ↓</button><button type="button" data-frontrow-jump="fauPressFeed" class="border border-fashion-gold/40 px-4 py-3 rounded-lg text-xs text-fashion-gold">ÚLTIMAS NOTÍCIAS</button><button type="button" data-frontrow-jump="fauPublicArchive" class="border border-fashion-700 px-4 py-3 rounded-lg text-xs">ARQUIVO</button></div><p class="text-[11px] text-gray-400">Sua participação é livre: reações e comentários não alteram notas, votos oficiais ou eliminações.</p></section>`:''}
-                ${isAdmin && !globalState.liberado ? `<section id="fauAdminRunwayPreview" class="rounded-xl border border-fashion-gold/60 bg-fashion-900/80 px-4 py-4 md:px-6" role="status"><p class="text-[10px] font-bold tracking-[.24em] text-fashion-gold">PREVIEW · ADMIN ONLY</p><p class="text-sm text-gray-200 mt-2">Você está vendo os looks recebidos antes da abertura oficial da passarela. Esta visualização não publica o desfile nem libera o acesso para os outros perfis.</p></section>` : ''}
-                ${runwayOpening()}
+                ${isAdmin && !globalState.liberado ? `<section id="fauAdminRunwayPreview" class="rounded-xl border border-fashion-gold/60 bg-fashion-900/80 px-4 py-4 md:px-6" role="status"><p class="text-[10px] font-bold tracking-[.24em] text-fashion-gold">PREVIEW · ADMIN ONLY</p><p class="text-sm text-gray-200 mt-2">Prévia privada dos looks enviados. A passarela continua fechada para os demais perfis.</p></section>` : ''}
+                ${isAdmin && !globalState.liberado ? '' : runwayOpening()}
                 <section id="fauReunionPublic" class="hidden rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE REUNION · SEASON SECRETS</p><h3 class="font-cinzel text-xl">The Final Reveal</h3><div id="fauReunionCards" class="grid md:grid-cols-2 gap-3"></div></section>
                 <div id="supremeVotingBox"></div>
                 <section id="fauCeremonyPublic" class="hidden rounded-2xl border border-fashion-gold/60 bg-gradient-to-b from-fashion-900 to-black p-6 text-center space-y-4" aria-live="polite"><p class="text-[10px] tracking-[.35em] text-fashion-gold">🎬 THE RESULTS SHOW · LIVE REVEAL</p><h3 id="fauCeremonyTitle" class="font-cinzel text-2xl text-white"></h3><p id="fauCeremonyMessage" class="text-gray-300"></p><p id="fauCeremonyStep" class="text-[10px] text-fashion-gold"></p></section><div id="publishedRankingBox"></div><div id="fauCritiquePublic" class="mt-5"></div>
                 <div id="faceOffComparisonBox" class="hidden bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg space-y-4"></div>
                 <section class="fau-runway-editorial rounded-xl border border-fashion-gold/25 bg-fashion-900/40 px-4 py-4 md:px-6 md:py-5 space-y-2">
                   <p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL RUNWAY</p>
-                  <h3 class="font-cinzel text-xl md:text-2xl text-white">Every Look Tells a Story.</h3>
-                  <p class="text-sm text-gray-300 leading-relaxed">Explore os looks publicados. Toque em uma fotografia para ampliar e ler o conceito.</p>
+                  <h3 class="font-cinzel text-xl md:text-2xl text-white">${isAdmin && !globalState.liberado ? "Looks recebidos" : "Every Look Tells a Story."}</h3>
+                  <p class="text-sm text-gray-300 leading-relaxed">${isAdmin && !globalState.liberado ? "Os envios aparecem aqui automaticamente, em ordem alfabética. Toque na fotografia para ampliar." : "Explore os looks publicados. Toque em uma fotografia para ampliar e ler o conceito."}</p>
                 </section>
                 <div id="runwayGroups"></div>
                 <div id="runwayGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
@@ -3667,7 +3697,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                                 <button onclick="openAtelierHistory('${look.uid}', '${esc(look.ate)}')" class="font-cinzel font-bold text-fashion-gold hover:underline text-xs tracking-wider text-left flex items-center gap-1" title="Ver Histórico do Designer">
                                     <i class="fa-solid fa-book-open text-[10px]"></i> ${esc(look.ate)}
                                 </button>
-                                ${currentUser.role==='plateia'?'':`<label class="flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer"><input type="checkbox" data-faceoff="${look.id}" ${isChecked ? 'checked' : ''} class="accent-fashion-gold"><span>Face-Off</span></label>`}
+                                ${currentUser.role==='plateia'||(isAdmin && !globalState.liberado)?'':`<label class="flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer"><input type="checkbox" data-faceoff="${look.id}" ${isChecked ? 'checked' : ''} class="accent-fashion-gold"><span>Face-Off</span></label>`}
                             </div>
                             <img src="${esc(look.url)}" alt="Editorial ${esc(look.titulo||'sem título')} do Designer ${esc(look.ate)}" class="w-full img-look rounded border border-fashion-700 shadow" loading="lazy" tabindex="0" role="button" title="Abrir editorial em tela cheia">
                             <div class="font-cinzel text-fashion-gold font-bold text-xs">${esc(look.titulo || 'Look Sem Nome')}</div>
@@ -3675,7 +3705,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                             ${creativeDossier(look)}
                         </div>
 
-                        <div class="space-y-2 pt-2 border-t border-fashion-700/60">
+                        ${isAdmin && !globalState.liberado ? '' : `<div class="space-y-2 pt-2 border-t border-fashion-700/60">
                             <div class="flex justify-between gap-1">
                                 ${['👍', '❤️', '👎', '💣', '✂️'].map(emoji => `
                                     <button type="button" data-react="${look.id}|${emoji}" aria-label="Reagir com ${emoji} ao look ${esc(look.titulo||'sem título')}" title="Sua reação pode ser alterada" class="flex-1 bg-fashion-950 hover:bg-fashion-800 border border-fashion-700 py-2 rounded text-xs transition">
@@ -3697,7 +3727,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                                     `).join('')}
                                 </div>
                             </div>
-                        </div>
+                        </div>`}
                     </div>
                 `;
             };
@@ -3716,7 +3746,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 $('#runwayGrid').innerHTML = '';
             } else {
                 groupsBox.innerHTML = '';
-                $('#runwayGrid').innerHTML = looks.map(renderLook).join('');
+                $('#runwayGrid').innerHTML = looks.length ? looks.map(renderLook).join('') : (isAdmin && !globalState.liberado ? '<div class="col-span-full rounded-xl border border-fashion-700 bg-fashion-900/40 p-6 text-center text-sm text-gray-300">Nenhum look recebido nesta rodada até o momento. Os envios aparecerão aqui automaticamente.</div>' : '');
             }
         };
 
