@@ -623,6 +623,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #mainView:has(#juryCardsContainer) .fau-jury-scoring .space-y-3{margin-top:10px}
 }
 </style>
+<style id="fau-runway-viewer-look-title-fix">
+.fau-runway-viewer .fau-viewer-look-title{margin:0!important;color:#d1b38b;font:600 clamp(17px,4.5vw,24px)/1.3 'Cormorant Garamond',Georgia,serif;text-align:center;overflow-wrap:anywhere}
+.fau-runway-viewer .fau-viewer-look-title[hidden]{display:none!important}
+.fau-runway-viewer .fau-viewer-info{gap:5px!important}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3762,7 +3767,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const viewer=document.createElement('div');
           viewer.className='fau-runway-lightbox fau-runway-viewer fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center p-3 md:p-8';
           viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Editorial da passarela');
-          viewer.innerHTML=`<div class="fau-viewer-top"><span>PROJECT RUNWAY: FAU · THE RUNWAY</span><button type="button" data-viewer-close aria-label="Fechar editorial">✕ FECHAR</button></div><div class="fau-viewer-stage"><button type="button" data-viewer-prev aria-label="Look anterior">‹</button><img alt=""><button type="button" data-viewer-next aria-label="Próximo look">›</button></div><div class="fau-viewer-info" aria-live="polite"><span data-viewer-count></span><strong data-viewer-title></strong><p data-viewer-concept></p></div>`;
+          viewer.innerHTML=`<div class="fau-viewer-top"><span>PROJECT RUNWAY: FAU · THE RUNWAY</span><button type="button" data-viewer-close aria-label="Fechar editorial">✕ FECHAR</button></div><div class="fau-viewer-stage"><button type="button" data-viewer-prev aria-label="Look anterior">‹</button><img alt=""><button type="button" data-viewer-next aria-label="Próximo look">›</button></div><div class="fau-viewer-info" aria-live="polite"><span data-viewer-count></span><strong data-viewer-title></strong><h3 class="fau-viewer-look-title" data-viewer-look-title></h3><p data-viewer-concept></p></div>`;
           const picture=viewer.querySelector('img');
           const update=()=>{
             const active=images[index],card=active.closest('.bg-fashion-900')||active.closest('section');
@@ -3772,6 +3777,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
             viewer.querySelector('[data-viewer-count]').textContent=`LOOK ${index+1} / ${images.length}`;
             viewer.querySelector('[data-viewer-title]').textContent=title;
+            const lookTitle=card?.querySelector('.fau-collection-title')?.textContent?.trim()||card?.querySelector('.font-cinzel.text-fashion-gold.font-bold')?.textContent?.trim()||'';
+            const lookTitleNode=viewer.querySelector('[data-viewer-look-title]');
+            lookTitleNode.textContent=lookTitle;lookTitleNode.hidden=!lookTitle;
             viewer.querySelector('[data-viewer-concept]').textContent=concept;
 
             viewer.querySelector('[data-viewer-prev]').disabled=images.length<2;
