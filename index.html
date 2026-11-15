@@ -382,6 +382,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-profile-card button:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:420px){.fau-profile-card{padding:12px}.fau-profile-name{font-size:14px}}
 </style>
+<style id="fau-workroom-focus-ux">
+@media(max-width:640px){#fauWorkroomClock{width:100%;min-width:0;padding:10px 14px!important;display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;column-gap:10px}#fauWorkroomClock .fau-clock-kicker{font-size:9px}#fauWorkroomClock .fau-clock-digits{font-size:23px;margin:0;grid-column:2;grid-row:1/3}#fauWorkroomClock .fau-clock-status{font-size:9px;grid-column:1;grid-row:2}#fauWorkroomClock .fau-clock-track{grid-column:1/-1;margin:6px 0 0}#fauWorkroomClock .fau-clock-direction{display:none}#mainView .fau-workroom-personal{margin-top:-10px!important}}
+#atelierSetupModule>div{padding:8px 12px!important;border-color:rgba(209,179,139,.18)!important}#atelierSetupModule p.italic{display:none}#workroomFormModule{scroll-margin-top:90px}#workroomFormModule:empty{display:none}#fauPublicManifestos{margin-bottom:0}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -2060,8 +2064,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         }
         queueMicrotask(()=>{
             const host=$('#mainView');if(!host||$('#fauPublicManifestos'))return;
-            const panel=document.createElement('section');panel.id='fauPublicManifestos';panel.className='rounded-xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-3 mb-6';
-            panel.innerHTML='<h3 class="font-cinzel text-fashion-gold">THE DESIGNER ROSTER · MANIFESTOS</h3><p class="text-xs text-gray-300">Conheça a visão criativa de cada Designer da temporada.</p><div id="fauPublicManifestosList" class="grid gap-3">Carregando manifestos…</div>';
+            const panel=document.createElement('section');panel.id='fauPublicManifestos';panel.className='rounded-xl border border-fashion-700 bg-fashion-950 p-4 mt-5';
+            panel.innerHTML='<details><summary class="cursor-pointer text-xs font-semibold tracking-wider text-fashion-gold py-2">THE DESIGNER ROSTER · Conhecer os outros Designers</summary><p class="text-xs text-gray-300 my-3">Manifestos do elenco da temporada.</p><div id="fauPublicManifestosList" class="grid gap-3">Carregando manifestos…</div></details>';
             host.appendChild(panel);
             sub(db.collection('perfis').where('role','==','estilista'),snap=>{
                 const target=panel.querySelector('#fauPublicManifestosList');if(!target)return;
@@ -2091,26 +2095,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     </div>
                 </div>
 
-                <section class="fau-atelier-identity rounded-2xl border border-fashion-gold/30 bg-gradient-to-r from-fashion-950 via-fashion-900 to-fashion-950 p-5 md:p-7 space-y-4" aria-label="Identidade do Designer e espaço de criação">
-                    <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] uppercase tracking-[.3em] text-fashion-gold">THE DESIGNER · ${esc(currentUser.ate || 'FAU')}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">YOUR NAME. YOUR VISION.</h3><p class="text-[11px] text-gray-300 mt-1">DESIGNER · Sua identidade na competição. ATELIER · Seu espaço de criação.</p></div><span class="text-[10px] text-gray-400 tracking-widest">${esc(fauRoundCode())}</span></div>
-                    ${currentUser.bio ? `<p class="text-sm italic text-gray-300 border-l-2 border-fashion-gold/50 pl-4">${esc(currentUser.bio)}</p>` : '<p class="text-xs text-gray-400">Cada criação é uma assinatura. Faça desta rodada a sua declaração de moda.</p>'}
-                    <div class="grid grid-cols-3 gap-2 text-center text-[10px] uppercase tracking-wider">
-                        <div class="rounded-lg border border-fashion-700 p-3"><span class="block text-fashion-gold text-lg mb-1">01</span>Read the Brief</div>
-                        <div class="rounded-lg border border-fashion-700 p-3"><span class="block text-fashion-gold text-lg mb-1">02</span>Create the Looks</div>
-                        <div class="rounded-lg border border-fashion-700 p-3"><span class="block text-fashion-gold text-lg mb-1">03</span>Submit to Runway</div>
-                    </div>
-                    <p class="text-[11px] text-gray-400">Você pode corrigir imagem, título e conceito dos looks enviados enquanto a rodada estiver aberta. Depois do prazo, a entrega fica bloqueada.</p>
-                </section>
+                <div class="fau-workroom-personal text-xs text-gray-300">DESIGNER · <strong class="text-fashion-gold">${esc(currentUser.ate || 'FAU')}</strong> <span class="text-gray-500">· ${esc(fauRoundCode())}</span></div>
                 <div id="personalTwistSlot" class="mb-5"></div><div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
-                <section id="workroomThermometer" class="bg-fashion-900 border border-fashion-gold/30 p-4 rounded-xl text-xs" aria-label="Progresso das entregas" aria-live="polite"></section>
-                <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-3" aria-label="Briefing da rodada">
+                <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
                     <div class="flex items-center justify-between gap-2"><span class="text-[10px] tracking-[.25em] text-fashion-gold">01 · THE BRIEF</span><span class="text-[10px] text-gray-400">YOUR NEXT CHALLENGE</span></div>
                     <h3 class="font-cinzel text-xl text-white">${esc(getTheme()?.title || 'Aguardando o desafio')}</h3>
                     <p class="text-sm text-gray-300">${esc(getTheme()?.subtitle || 'A produção anunciará o briefing em breve.')}</p>
-                    <div class="flex flex-wrap gap-2 text-[11px] text-fashion-gold"><span class="border border-fashion-700 rounded px-3 py-1">${requiredLooks} look(s)</span><span class="border border-fashion-700 rounded px-3 py-1">JPG, PNG ou WebP · até 5 MB</span><span class="border border-fashion-700 rounded px-3 py-1">Conceito · até 500 caracteres</span></div>
-                    <details class="border-t border-fashion-700 pt-3"><summary class="cursor-pointer text-xs text-fashion-gold">Ler briefing e regras completas</summary><p class="text-xs text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
+                    <details class="border-t border-fashion-700 pt-3"><summary class="cursor-pointer text-xs text-fashion-gold">Ler briefing completo e regras de envio</summary><div class="flex flex-wrap gap-2 text-[11px] text-fashion-gold mt-3"><span class="border border-fashion-700 rounded px-3 py-1">${requiredLooks} look(s)</span><span class="border border-fashion-700 rounded px-3 py-1">JPG, PNG ou WebP · até 5 MB</span><span class="border border-fashion-700 rounded px-3 py-1">Conceito · até 500 caracteres</span></div><p class="text-xs text-gray-300 leading-relaxed mt-3 whitespace-pre-line">${esc(getTheme()?.mandate || 'Aguarde as instruções da produção.')}</p></details>
                 </section>
                 <div id="workroomFormModule"></div>
+                <details class="fau-workroom-secondary rounded-xl border border-fashion-700 bg-fashion-900 p-4"><summary class="cursor-pointer text-xs text-fashion-gold tracking-wider font-semibold">THE SUBMISSION BOARD · Progresso dos Designers</summary><section id="workroomThermometer" class="mt-3 text-xs" aria-label="Progresso das entregas" aria-live="polite"></section></details>
 
                 <!-- PORTFÓLIO DE CRIAÇÕES ANTERIORES -->
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
