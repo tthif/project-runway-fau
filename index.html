@@ -3143,6 +3143,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         // O nome exibido vem do cadastro atual, nunca do snapshot do envio.
         let juryNamesByUid = new Map();
         const juryLiveName = look => juryNamesByUid.get(String(look.uid)) || look.ate || 'Designer';
+        const sortJuryLooks = items => [...items].sort((a,b)=>juryLiveName(a).localeCompare(juryLiveName(b),'pt-BR',{sensitivity:'base',numeric:true}) || (Number(a.slot)||0)-(Number(b.slot)||0) || String(a.id).localeCompare(String(b.id)));
         const juryStageOpen = () => !!globalState.rodada && !!globalState.themeId && stageAtLeast('judging');
         const juryCanViewLooks = () => isAdmin || juryStageOpen();
         const scoresClosed = () => !juryStageOpen() || !!globalState.notasEncerradas;
@@ -3371,12 +3372,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             looks=globalState.themeId==='theme_next_supreme'
                 ? (supremeJuryState?.phase==='selected' ? supremeAllJuryLooks.filter(l=>supremeJuryState.winners?.some(w=>w.uid===l.uid&&w.slot===l.slot)) : [])
                 : supremeAllJuryLooks;
+            looks=sortJuryLooks(looks);
             refreshJuryUI();
         };
         // Sincroniza renomeações do ADM em tempo real, inclusive em looks antigos.
         // O UID permanece a chave de relacionamento de notas e submissões.
         if(juryCanViewLooks()) sub(db.collection('perfis').where('role','==','estilista'), snap => {
             juryNamesByUid = new Map(snap.docs.map(d => [String(d.id), d.data().ate || d.data().nome || d.data().name]).filter(x => x[1]));
+            looks=sortJuryLooks(looks);
             refreshJuryUI();
         });
         if(juryCanViewLooks() && globalState.themeId==='w02_new_form') sub(db.collection('looks').where('themeId','==','w01_first_garment'),snap=>{
@@ -3450,6 +3453,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         let beautyBroadcast = null;
         let supremeBroadcast = null;
         let supremeMyVotes = [];
+        let runwayNamesByUid = new Map();
+        const runwayName = look => runwayNamesByUid.get(String(look.uid)) || look.ate || 'Designer';
+        const sortRunwayLooks = items => [...items].sort((a,b)=>runwayName(a).localeCompare(runwayName(b),'pt-BR',{sensitivity:'base',numeric:true}) || (Number(a.slot)||0)-(Number(b.slot)||0) || String(a.id).localeCompare(String(b.id)));
 
         renderView(`
             <div class="space-y-8">
@@ -3550,6 +3556,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         sub(db.doc('fau_public/reunion'),snap=>{const d=snap.data()||{},section=$('#fauReunionPublic'),cards=$('#fauReunionCards');if(!section||!cards)return;section.classList.toggle('hidden',d.published!==true);if(d.published===true)cards.innerHTML=(d.cards||[]).map(c=>`<article class="border border-fashion-gold/30 rounded-lg p-4"><p class="text-fashion-gold font-cinzel text-xs">${esc(c.title)}</p><p class="text-white text-lg mt-2">${esc(c.value)}</p></article>`).join('')||'<p class="text-gray-400">Aguarde as revelações.</p>';});
 
         const refreshRunwayUI = () => {
+            looks=sortRunwayLooks(looks);
             const foBox = $('#faceOffComparisonBox');
             if (selectedFaceOff.length === 2) {
                 const [lookA, lookB] = selectedFaceOff.map(id => looks.find(l => l.id === id)).filter(Boolean);
@@ -3730,7 +3737,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         };
 
         sub(db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada'), snap => {
-            looks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            looks = sortRunwayLooks(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            refreshRunwayUI();
+        });
+        sub(db.collection('perfis').where('role','==','estilista'), snap => {
+            runwayNamesByUid = new Map(snap.docs.map(d=>[String(d.id),d.data().ate||d.data().nome||d.data().name]).filter(x=>x[1]));
+            looks=sortRunwayLooks(looks);
             refreshRunwayUI();
         });
         if(globalState.themeId==='theme_next_supreme') {
