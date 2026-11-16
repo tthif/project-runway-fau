@@ -3337,6 +3337,34 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             }
         });
 
+        // Prefer the immutable, official classification for each round. Never derive
+        // WIN/TOP/BOTTOM from absolute score thresholds.
+        const historySnap = await db.collection('ranking_historico').get();
+        const officialByRound = new Map();
+        historySnap.docs.forEach(doc => {
+            const data = doc.data();
+            const key = String(data.rodada ?? doc.id);
+            officialByRound.set(key, data);
+        });
+        const resolveHistory = (round, index) => {
+            const raw = String(round);
+            const number = raw.match(/(?:W(?:EEK)?\s*0*|^)(\d+)$/i)?.[1];
+            return officialByRound.get(raw) || (number ? officialByRound.get(String(Number(number))) : null)
+                || (rodadas.length === 1 && officialByRound.size === 1 ? [...officialByRound.values()][0] : null);
+        };
+        const officialStatuses = new Map();
+        rodadas.forEach((r,i) => {
+            const history = resolveHistory(r,i);
+            if (!history || !Array.isArray(history.rows)) return;
+            const byUid = new Map();
+            history.rows.forEach(entry => {
+                if (!entry.uid) return;
+                const status = String(entry.status || '').toUpperCase();
+                byUid.set(entry.uid, /WINNER|\bWIN\b/.test(status) ? 'WIN' : /\b(TOP|HIGH)\b/.test(status) ? 'TOP' : /\b(BOTTOM|LOW)\b/.test(status) ? 'BOTTOM' : /\bOUT\b/.test(status) ? 'OUT' : 'SAFE');
+            });
+            officialStatuses.set(r,byUid);
+        });
+
         const rowsData = stylists.map(s => {
             const sObj = statsByStylist[s.id];
             const totalScores = sObj.scores;
@@ -3372,8 +3400,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     badgeText = 'OUT';
                     badgeClass = 'bg-red-950 text-red-400 font-bold';
                 } else if (rData) {
-                    badgeText = `${rData.avg.toFixed(1)}p`;
-                    badgeClass = rData.avg >= 42.0 ? 'bg-blue-900 text-blue-200 font-bold' : rData.avg >= 35.0 ? 'bg-fashion-800 text-gray-200' : 'bg-red-950 text-red-300';
+                    const classification = officialStatuses.get(r)?.get(row.uid);
+                    badgeText = classification || 'PENDENTE';
+                    const classes = {
+                        WIN:'bg-amber-700 text-amber-50 font-bold',
+                        TOP:'bg-yellow-900 text-yellow-100 font-bold',
+                        SAFE:'bg-fashion-800 text-gray-200',
+                        BOTTOM:'bg-rose-950 text-rose-200 font-bold',
+                        OUT:'bg-red-950 text-red-300 font-bold',
+                        PENDENTE:'bg-fashion-800 text-gray-400'
+                    };
+                    badgeClass = classes[badgeText] || classes.PENDENTE;
                 }
 
                 html += `<td class="p-2 border-r border-fashion-800"><span class="px-2 py-1 rounded text-[10px] inline-block uppercase ${badgeClass}">${badgeText}</span></td>`;
@@ -3580,8 +3617,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             }
         });
         // Optional explicit top/bottom slots use the ranking's existing order.
-        // WIN is not counted as a TOP slot; no classification is exposed to jurors.
-        if(topCount>0){currentRows.filter(r=>!(/\bWIN\b/i.test(r.status||''))).slice(0,topCount).forEach(r=>selected.set(r.ate,{ate:r.ate}));}
+        // WIN occupies one of the configured TOP slots; no classification is exposed to jurors.
+        if(topCount>0){currentRows.slice(0,topCount).forEach(r=>selected.set(r.ate,{ate:r.ate}));}
         if(bottomCount>0){currentRows.slice(-bottomCount).forEach(r=>selected.set(r.ate,{ate:r.ate}));}
         return [...selected.values()].filter(t=>t.ate).sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
     };
@@ -5076,7 +5113,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               const officialStatus=id=>String(official.find(r=>r.ate===label(id)||r.ate===id)?.status||'').toUpperCase();
               const topSlots=configuredTop||official.filter(r=>/\b(TOP|HIGH)\b/i.test(r.status||'')).length;
               const bottomSlots=configuredBottom||official.filter(r=>/\b(BOTTOM|LOW)\b/i.test(r.status||'')).length;
-              const topEnd=Math.min(ordered.length,1+topSlots);
+              const topEnd=Math.min(ordered.length,Math.max(1,topSlots));
               const bottomStart=Math.max(topEnd,ordered.length-bottomSlots);
               const classifications=ordered.map((x,i)=>{
                 const status=i===0?'WIN':i<topEnd?'TOP':i>=bottomStart?'BOTTOM':'SAFE';
@@ -6427,8 +6464,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if (isFinal) return {top:0, bottom:0};
                 if (globalState.fase === 'top5') return {top:4, bottom:1}; // Semifinal: eliminação segue o acumulado.
                 const desiredTop = count >= 16 ? 5 : count >= 11 ? 4 : count >= 7 ? 3 : count === 6 ? 2 : Math.min(2,count);
-                const bottom = Math.min(3, Math.max(0, count - 1));
-                const top = Math.min(desiredTop, Math.max(1, count - bottom));
+                const configuredBottom = Math.max(0, Number(globalState.critiqueBottomCount||0));
+                const configuredTop = Math.max(0, Number(globalState.critiqueTopCount||0));
+                const bottom = Math.min(configuredBottom || 3, Math.max(0, count - 1));
+                const top = Math.min(configuredTop || desiredTop, Math.max(1, count - bottom));
                 return {top, bottom:Math.min(bottom, count-top)};
             })();
             const statuses = standings.map((item, idx) => {
@@ -6486,7 +6525,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
             const proposedRanking = {
                 rodada: globalState.rodada,
-                rows: standings.map((x, i) => ({ uid: x.uid, ate: x.ate, status: statuses[i] }))
+                rows: standings.map((x, i) => ({ uid: x.uid, ate: x.ate, status: statuses[i] })),
+                classificationSlots: {...weeklyGroups}
             };
             await saveProductionDraft('ranking', {ranking: proposedRanking, stateUpdate});
             $('#adminOutput').innerHTML = '<p class="text-fashion-gold font-bold">🔒 Ranking preparado e salvo nos bastidores. Nenhum resultado foi divulgado.</p>' + printTable(standings);
