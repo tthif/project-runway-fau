@@ -4075,6 +4075,41 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         });
         sub(db.doc('fau_public/reunion'),snap=>{const d=snap.data()||{},section=$('#fauReunionPublic'),cards=$('#fauReunionCards');if(!section||!cards)return;section.classList.toggle('hidden',d.published!==true);if(d.published===true)cards.innerHTML=(d.cards||[]).map(c=>`<article class="border border-fashion-gold/30 rounded-lg p-4"><p class="text-fashion-gold font-cinzel text-xs">${esc(c.title)}</p><p class="text-white text-lg mt-2">${esc(c.value)}</p></article>`).join('')||'<p class="text-gray-400">Aguarde as revelações.</p>';});
 
+        // Compartilhamento de produção: arquivo original e legenda, somente Admin.
+        const fauShareHandler = async event => {
+            const button=event.target.closest('[data-fau-whatsapp]');
+            if(!button || !isAdmin || !runwayRoot?.contains(button))return;
+            const look=looks.find(item=>String(item.id)===button.dataset.fauWhatsapp);
+            if(!look)return;
+            const caption=`*${runwayName(look)}*\n\n${look.titulo||'Look Sem Nome'}\n\n${look.mem||''}`;
+            const original=button.innerHTML;
+            button.disabled=true;button.textContent='PREPARANDO FOTO…';
+            const copyCaption=async()=>{
+                try{await navigator.clipboard.writeText(caption);return true;}
+                catch(e){const input=document.createElement('textarea');input.value=caption;input.style.position='fixed';input.style.opacity='0';document.body.appendChild(input);input.select();const ok=document.execCommand('copy');input.remove();return ok;}
+            };
+            try{
+                const response=await fetch(look.url);
+                if(!response.ok)throw new Error('Foto indisponível');
+                const blob=await response.blob();
+                const type=blob.type||'image/jpeg';
+                const ext=type.includes('png')?'png':type.includes('webp')?'webp':'jpg';
+                const file=new File([blob],`FAU-${String(runwayName(look)).replace(/[^a-z0-9_-]/gi,'-')}.${ext}`,{type});
+                if(navigator.share && navigator.canShare?.({files:[file]})){
+                    try{await navigator.share({files:[file],text:caption});return;}
+                    catch(error){if(error.name==='AbortError')return;}
+                }
+                await copyCaption();
+                const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+                showToast('Foto baixada e legenda copiada. Anexe a foto no WhatsApp e cole a legenda.');
+            }catch(error){
+                const copied=await copyCaption();
+                showToast(copied?'Legenda copiada. Abra a foto para salvá-la e enviar no WhatsApp.':'Não foi possível compartilhar. Tente novamente.');
+            }finally{button.disabled=false;button.innerHTML=original;}
+        };
+        runwayRoot?.addEventListener('click',fauShareHandler);
+        unsubsTab.push(()=>runwayRoot?.removeEventListener('click',fauShareHandler));
+
         const refreshRunwayUI = () => {
             looks=sortRunwayLooks(looks);
             const foBox = $('#faceOffComparisonBox');
@@ -4158,6 +4193,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                             <div class="font-cinzel text-fashion-gold font-bold text-xs">${esc(look.titulo || 'Look Sem Nome')}</div>
                             <p class="text-[11px] text-gray-300 italic leading-relaxed">${esc(look.mem)}</p>
                             ${creativeDossier(look)}
+                            ${isAdmin ? `<button type="button" data-fau-whatsapp="${esc(look.id)}" class="fau-whatsapp-share w-full rounded-lg border border-fashion-gold/60 bg-fashion-950 px-3 py-3 text-xs font-bold text-fashion-gold"><i class="fa-brands fa-whatsapp"></i> SHARE ON WHATSAPP</button>` : ''}
                         </div>
 
                         ${isAdmin && !globalState.liberado ? '' : `<div class="space-y-2 pt-2 border-t border-fashion-700/60">
