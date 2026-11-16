@@ -7593,6 +7593,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 #fauV83Premiere .fau-story-sheet-head{font-size:10px!important}
 @media(min-width:740px){#runwayGrid .fau-collection-card > .space-y-2{grid-template-columns:minmax(0,44%) minmax(0,56%)!important}#runwayGrid .fau-collection-photo img.img-look{height:410px!important;aspect-ratio:auto}#runwayGrid .fau-collection-copy{padding:24px!important}#fauV83Premiere .fau-story-sheet{max-height:42vh!important}}
 @media(max-width:500px){#runwayGrid .fau-collection-photo img.img-look{max-height:490px!important}#runwayGrid .fau-collection-copy{padding:15px!important}#fauV83Premiere .fau-story-sheet{max-height:46dvh!important}}
+#runwayGrid .fau-gallery-share-visible{display:flex!important;align-items:center;justify-content:center;gap:8px;margin:0!important;border-radius:0 0 12px 12px!important;min-height:44px!important;position:relative;z-index:2}
 </style>
 <script id="fau-runway-collection-v2">
 (()=>{
@@ -7618,6 +7619,10 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    for(const child of [...card.children])if(child!==content)body.appendChild(child);
    details.append(summary,body);
    if(name)copy.append(name);copy.append(title);if(excerpt.textContent)copy.append(excerpt);copy.append(details);
+   // Production sharing stays visible even when the editorial details are collapsed.
+   const share=details.querySelector('[data-fau-whatsapp]');
+   if(share){share.classList.add('fau-gallery-share-visible');content.append(share);}
+
    content.append(copy);
    img.setAttribute('aria-label','Ampliar fotografia e ler o editorial completo');
    img.setAttribute('title','Ampliar fotografia');
