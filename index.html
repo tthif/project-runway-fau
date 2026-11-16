@@ -2421,23 +2421,23 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
     // WEEK 02 — FASHION MUTATION: one immutable assignment per Designer.
     const FAU_MUTATIONS = [
-      ['MORE IS MORE','Transforme sua criação através do maximalismo.'],
-      ['LESS IS MORE','Explore o minimalismo e encontre impacto na simplicidade.'],
-      ['INSIDE OUT','Transforme o interior da roupa em protagonista.'],
-      ['SHAPE SHIFT','Reinvente radicalmente a silhueta original.'],
-      ['MATERIAL REVOLUTION','Transforme a aparência ou a função dos materiais.'],
-      ['THE OPPOSITE','Explore o oposto da identidade estética original.']
+      ['MORE IS MORE','Transforme sua criação através do maximalismo. Amplie volumes, detalhes e proporções.'],
+      ['LESS IS MORE','Explore o minimalismo. Elimine excessos e encontre impacto na simplicidade.'],
+      ['SHAPE SHIFT','Transforme radicalmente o formato da roupa. Altere a silhueta, os volumes e as proporções, mudando a maneira como ela envolve e ocupa o espaço ao redor do corpo.'],
+      ['MATERIAL REVOLUTION','Reinvente os materiais da criação. Transforme suas texturas, aparência, propriedades ou formas de utilização.']
     ];
+    const FAU_MUTATIONS_LEGACY = [FAU_MUTATIONS[0],FAU_MUTATIONS[1],['INSIDE OUT','Transforme o interior da roupa em protagonista.'],FAU_MUTATIONS[2],FAU_MUTATIONS[3],['THE OPPOSITE','Explore o oposto da identidade estética original.']];
+    const fauMutationResult = data => (data?.mutationVersion===2 ? FAU_MUTATIONS : FAU_MUTATIONS_LEGACY)[data?.mutationIndex];
     const fauMutationRef = (round,uid) => db.collection('fashion_mutations').doc(`${String(round)}_${uid}`);
     function fauMutationShuffle(){
-      const a=[0,1,2,3,4,5];
+      const a=[0,1,2,3];
       for(let i=a.length-1;i>0;i--){const r=new Uint32Array(1);crypto.getRandomValues(r);const j=r[0]%(i+1);[a[i],a[j]]=[a[j],a[i]];}
       return a;
     }
     function fauMutationPanel(data, locked){
-      if(data){const m=FAU_MUTATIONS[data.mutationIndex];return `<section class="fau-mutation-card rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-[.22em] text-fashion-gold">THE MUTATION MACHINE · ENVELOPE ${String(data.envelope).padStart(2,'0')}</p><h3 class="font-cinzel text-2xl text-white">${esc(m?.[0]||'MUTATION')}</h3><p class="text-sm text-gray-300">${esc(m?.[1]||'')}</p><p class="text-xs text-fashion-gold">YOUR FATE IS SEALED · Escolha livremente qual elemento visual da Week 01 preservar.</p></section>`;}
+      if(data){const m=fauMutationResult(data);return `<section class="fau-mutation-card rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-[.22em] text-fashion-gold">THE MUTATION MACHINE · ENVELOPE ${String(data.envelope).padStart(2,'0')}</p><h3 class="font-cinzel text-2xl text-white">${esc(m?.[0]||'MUTATION')}</h3><p class="text-sm text-gray-300">${esc(m?.[1]||'')}</p><p class="text-xs text-fashion-gold">YOUR FATE IS SEALED · Escolha livremente qual elemento visual da Week 01 preservar.</p></section>`;}
       if(locked)return `<section class="rounded-xl border border-fashion-700 bg-fashion-900 p-5 text-sm text-gray-300">THE MUTATION MACHINE · O prazo de escolha foi encerrado.</section>`;
-      return `<section class="fau-mutation-card rounded-xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-4"><div class="text-center"><p class="text-[10px] tracking-[.22em] text-fashion-gold">WEEK 02 · THE TWIST</p><h3 class="font-cinzel text-3xl text-white mt-2">THE MUTATION MACHINE</h3><p class="text-xs text-gray-300 mt-2">SIX ENVELOPES. SIX POSSIBILITIES. ONE NEW FORM.</p><p class="text-xs text-gray-300 mt-2">Escolha um envelope. Sua mutação será definitiva.</p></div><div class="grid grid-cols-3 gap-3">${[1,2,3,4,5,6].map(n=>`<button type="button" data-mutation-envelope="${n}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold focus-visible:outline"><span class="block text-4xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><p id="fauMutationStatus" class="text-xs text-gray-400 text-center" role="status">O conteúdo só será revelado após confirmar sua escolha.</p></section>`;
+      return `<section class="fau-mutation-card rounded-xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-4"><div class="text-center"><p class="text-[10px] tracking-[.22em] text-fashion-gold">WEEK 02 · THE TWIST</p><h3 class="font-cinzel text-3xl text-white mt-2">THE MUTATION MACHINE</h3><p class="text-xs text-gray-300 mt-2">FOUR ENVELOPES. FOUR MUTATIONS. ONE NEW FORM.</p><p class="text-xs text-gray-300 mt-2">Escolha um envelope. Sua mutação será definitiva.</p></div><div class="grid grid-cols-2 sm:grid-cols-4 gap-3">${[1,2,3,4].map(n=>`<button type="button" data-mutation-envelope="${n}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold focus-visible:outline"><span class="block text-4xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><p id="fauMutationStatus" class="text-xs text-gray-400 text-center" role="status">O conteúdo só será revelado após confirmar sua escolha.</p></section>`;
     }
     // TEST LAB: admin-only, read-only preview using the same Workroom markup and mutation panel.
     // No globalState mutation, no Firebase writes, no impersonation of Designer accounts.
@@ -2555,7 +2555,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 sub(db.collection('fashion_mutations').where('round','==',String(round)),snap=>{
                     const host=document.getElementById('fauAdminMutationSummary');if(!host)return;
                     const rows=snap.docs.map(d=>d.data()).sort((a,b)=>String(a.uid).localeCompare(String(b.uid)));
-                    host.innerHTML=`<p class="text-fashion-gold font-semibold mb-2">THE MUTATION MACHINE · ${rows.length} envelope(s) aberto(s)</p><div class="space-y-1">${rows.map(r=>`<p>Designer ${esc(r.uid)} · Envelope ${esc(r.envelope)} · <strong>${esc(FAU_MUTATIONS[r.mutationIndex]?.[0]||'—')}</strong></p>`).join('')||'<p>Nenhum envelope aberto ainda.</p>'}</div>`;
+                    host.innerHTML=`<p class="text-fashion-gold font-semibold mb-2">THE MUTATION MACHINE · ${rows.length} envelope(s) aberto(s)</p><div class="space-y-1">${rows.map(r=>`<p>Designer ${esc(r.uid)} · Envelope ${esc(r.envelope)} · <strong>${esc(fauMutationResult(r)?.[0]||'—')}</strong></p>`).join('')||'<p>Nenhum envelope aberto ainda.</p>'}</div>`;
                 });
             }
             let designers=[],looks=[],readyProfiles=false,readyLooks=false;
@@ -2663,7 +2663,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                             if(existing.exists)return existing.data();
                             if(!globalState.prazo||now()>=Number(globalState.prazo))throw new Error('O prazo da rodada está encerrado.');
                             const order=fauMutationShuffle();
-                            const record={uid,round,themeId:'w02_new_form',envelope,mutationIndex:order[envelope-1],createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+                            const record={uid,round,themeId:'w02_new_form',envelope,mutationIndex:order[envelope-1],mutationVersion:2,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
                             tx.set(ref,record);return record;
                         });
                         mutation=result;paintMutation();showToast('Seu envelope foi revelado!');
@@ -7361,9 +7361,9 @@ const names=['ATELIER NOIR','STUDIO RUBI','CASA ÍRIS','ATELIER VÊNUS','STUDIO 
 const judgeNames=['JURADO A','JURADO B','JURADO C'];
 const colors=['#7d2535','#a38b69','#4c6680','#93669d','#c07645','#436f62','#8c8895','#bc7486'];
 let sim=null,overlay=null,role='admin',tab='overview',person=1,judge=0;
-const labMutations=[['MORE IS MORE','Transforme sua criação através do maximalismo.'],['LESS IS MORE','Explore o minimalismo e encontre impacto na simplicidade.'],['INSIDE OUT','Transforme o interior da roupa em protagonista.'],['SHAPE SHIFT','Reinvente radicalmente a silhueta original.'],['MATERIAL REVOLUTION','Transforme a aparência ou a função dos materiais.'],['THE OPPOSITE','Explore o oposto da identidade estética original.']];
-function labShuffle(){const a=[0,1,2,3,4,5];for(let i=5;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function labMutation(r){if(current()?.key!=='w02_new_form')return '';if(!r)return '';const chosen=r.labMutation;return `<section class="fau92-panel"><div class="fau92-kicker">WEEK 02 · THE MUTATION MACHINE</div><h4>${chosen?'YOUR FATE IS SEALED':'SIX ENVELOPES. ONE NEW FORM.'}</h4>${chosen?`<div class="fau92-notice"><strong>ENVELOPE ${String(chosen.envelope).padStart(2,'0')} · ${escape(labMutations[chosen.index][0])}</strong><p>${escape(labMutations[chosen.index][1])}</p><p>Preserve um elemento visual da Week 01.</p></div><div class="fau92-actions"><button data-lab-reset="${r.id}">REINICIAR ENVELOPES (TESTE)</button></div>`:`<p>Escolha um envelope. O resultado é definitivo na rodada real, mas pode ser reiniciado aqui.</p><div class="fau92-envelopes">${[1,2,3,4,5,6].map(n=>`<button data-lab-envelope="${r.id}|${n}" aria-label="Abrir envelope ${n}"><span>✉</span><small>${String(n).padStart(2,'0')}</small></button>`).join('')}</div>`}</section>`;}
+const labMutations=FAU_MUTATIONS;
+function labShuffle(){const a=[0,1,2,3];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function labMutation(r){if(current()?.key!=='w02_new_form')return '';if(!r)return '';const chosen=r.labMutation;return `<section class="fau92-panel"><div class="fau92-kicker">WEEK 02 · THE MUTATION MACHINE</div><h4>${chosen?'YOUR FATE IS SEALED':'FOUR ENVELOPES. ONE NEW FORM.'}</h4>${chosen?`<div class="fau92-notice"><strong>ENVELOPE ${String(chosen.envelope).padStart(2,'0')} · ${escape(labMutations[chosen.index][0])}</strong><p>${escape(labMutations[chosen.index][1])}</p><p>Preserve um elemento visual da Week 01.</p></div><div class="fau92-actions"><button data-lab-reset="${r.id}">REINICIAR ENVELOPES (TESTE)</button></div>`:`<p>Escolha um envelope. O resultado é definitivo na rodada real, mas pode ser reiniciado aqui.</p><div class="fau92-envelopes">${[1,2,3,4].map(n=>`<button data-lab-envelope="${r.id}|${n}" aria-label="Abrir envelope ${n}"><span>✉</span><small>${String(n).padStart(2,'0')}</small></button>`).join('')}</div>`}</section>`;}
 
 const escape=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rnd=()=>{sim.seed=(Math.imul(sim.seed,1664525)+1013904223)>>>0;return sim.seed/4294967296};
