@@ -3730,7 +3730,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 </div>
 
                 <section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-4 space-y-2" aria-label="Progresso de avaliação"><div class="flex justify-between items-center gap-2"><span class="text-xs uppercase tracking-widest text-fashion-gold">⚖️ YOUR JUDGING DESK</span><span id="fauJuryProgressText" class="text-xs text-gray-300">Preparando avaliações...</span></div><div class="h-2 rounded-full bg-fashion-950 overflow-hidden"><div id="fauJuryProgressBar" class="h-full bg-fashion-gold transition-all duration-500" style="width:0%"></div></div><p class="text-[11px] text-gray-400">Avalie cada criação e salve suas notas antes de sair.</p></section>
-                <div id="juryCardsContainer" class="space-y-8"></div><section id="fauCritiqueJury" class="mt-6"></section>
+                <div id="juryCardsContainer" class="space-y-8"></div>
+                <div class="mt-6 rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Salvar avaliações da rodada">
+                    <p class="text-xs text-gray-300 text-center">Terminou de avaliar todas as fotos? Salve as notas da rodada de uma só vez.</p>
+                    <button id="btnSubmitAllEvaluationsBottom" ${scoresClosed()?'disabled':''} class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-wider">Salvar Todas as Notas</button>
+                </div><section id="fauCritiqueJury" class="mt-6"></section>
             </div>
         `);
 
@@ -3742,7 +3746,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const matrix=$('#juryMatrixGrid');if(matrix)matrix.innerHTML='';
                 const progress=$('#fauJuryProgressText');if(progress)progress.textContent='Aguardando liberação';
                 const bar=$('#fauJuryProgressBar');if(bar)bar.style.width='0%';
-                const button=$('#btnSubmitAllEvaluations');if(button)button.disabled=true;
+                for(const button of [$('#btnSubmitAllEvaluations'),$('#btnSubmitAllEvaluationsBottom')])if(button)button.disabled=true;
                 return;
             }
             const container = $('#juryCardsContainer');
@@ -3751,7 +3755,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(progressText)progressText.textContent=`${completed}/${looks.length} avaliados`;
             if(progressBar)progressBar.style.width=(looks.length?Math.round(completed/looks.length*100):0)+'%';
             const allButton=$('#btnSubmitAllEvaluations');
-            if(allButton)allButton.disabled=scoresClosed()||savingAll||!looks.length;
+            for(const button of [allButton,$('#btnSubmitAllEvaluationsBottom')])if(button)button.disabled=scoresClosed()||savingAll||!looks.length;
             if (!looks.length) {
                 $('#juryMatrixGrid').innerHTML='<p class="text-xs text-gray-400 col-span-full">Nenhuma avaliação disponível para comparar.</p>';
                 container.innerHTML = `<div class="bg-fashion-900 border border-fashion-700 p-8 rounded-lg text-center text-gray-500 text-xs">Aguardando as designers enviarem suas criações geradas por IA.</div>`;
@@ -3888,17 +3892,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             refreshJuryUI();
         };
 
+        $('#btnSubmitAllEvaluationsBottom').onclick = () => $('#btnSubmitAllEvaluations').click();
         $('#btnSubmitAllEvaluations').onclick = safeExec(async () => {
             if(scoresClosed())throw new Error(juryStatus());
             if(savingAll)return;
             if(!looks.length)throw new Error('Não há looks disponíveis para avaliar.');
-            savingAll=true;const button=$('#btnSubmitAllEvaluations');if(button){button.disabled=true;button.textContent='SALVANDO...';}
+            savingAll=true;const button=$('#btnSubmitAllEvaluations');if(button){button.disabled=true;button.textContent='SALVANDO...';}const bottomButton=$('#btnSubmitAllEvaluationsBottom');if(bottomButton){bottomButton.disabled=true;bottomButton.textContent='SALVANDO...';}
             let done=0;
             try{
                 for(const look of looks){await saveSingleEvaluation(look.id);done++;}
                 showToast(`${done} avaliações salvas com sucesso.`);
             }catch(e){throw new Error(`${done} de ${looks.length} avaliações salvas. ${e.message}`);}
-            finally{savingAll=false;if(button){button.textContent='Salvar Todas as Notas';button.disabled=scoresClosed()||!looks.length;}}
+            finally{savingAll=false;if(button){button.textContent='Salvar Todas as Notas';button.disabled=scoresClosed()||!looks.length;}if(bottomButton){bottomButton.textContent='Salvar Todas as Notas';bottomButton.disabled=scoresClosed()||!looks.length;}}
         });
 
         let supremeAllJuryLooks=[];
