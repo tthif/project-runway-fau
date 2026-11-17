@@ -3642,7 +3642,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           grouped.get(k).types.add(a.type);
         });
         const hall=[...grouped.values()].sort((a,b)=>fauArchiveSort(b.round,a.round)).map(a=>{
-          const pub=findImage(a.round,a.uid),types=[...a.types].join(' + ');
+          const pub=findImage(a.round,a.uid),types=[...a.types].map(t=>/^WIN$/i.test(t)?'Winner da Rodada':t).join(' + ');
           return `<article class="rounded-xl border border-fashion-gold/25 bg-fashion-950 overflow-hidden">
             ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
             <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
@@ -3665,7 +3665,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           ].filter(Boolean);
           return `<article class="fau-archive-chapter">
             <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'LATEST CHAPTER · ':''}${esc(weekLabel(round))}</p>
-            <h4 class="font-cinzel text-white mt-2">The Week ${esc(round)} Story</h4>
+            <h4 class="font-cinzel text-white mt-2">${esc(weekLabel(round))}</h4>
             ${lines.length?lines.map(l=>`<p class="text-gray-300 text-sm mt-1">${l}</p>`).join(''):'<p class="text-gray-400 text-sm mt-1">Aguardando resultados oficiais.</p>'}
           </article>`;
         }).join('');
@@ -3696,8 +3696,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div id="fauArchiveGallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${gallery||'<p class="col-span-full text-sm text-gray-400 py-8 text-center">The runway is still waiting. Os looks aparecerão aqui após a publicação oficial.</p>'}</div>
             <p id="fauArchiveEmpty" class="hidden text-sm text-gray-400 text-center py-8">Nenhum look corresponde à sua busca. Experimente outra palavra ou semana.</p>
           </section>
-          <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">The WINs & The Icons</h3>
-          <p class="text-gray-400 text-sm">WIN é a vitória de uma rodada, decidida pelos jurados. WINNER é o título exclusivo de quem vence a temporada. Ícone da Moda é uma distinção separada, decidida pelos participantes.</p>
+          <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">Os destaques da passarela</h3>
+          <p class="text-gray-400 text-sm">A cada rodada, dois nomes entram para a história: o <strong>Winner da Rodada</strong>, escolhido pelos jurados, e o <strong>Ícone da Moda</strong>, eleito pelos próprios Designers.</p>
           ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm py-6">O Hall abrirá após as primeiras conquistas oficiais.</p>'}</section>
           <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">THE RUNWAY IS STILL OPEN</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>'}</section>
           <section data-archive-panel="track" class="space-y-4 hidden" role="tabpanel"><p class="text-gray-400 text-sm py-6 text-center">Abra o Track Record para consultar o histórico da temporada.</p></section>
