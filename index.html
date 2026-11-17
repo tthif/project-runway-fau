@@ -5115,7 +5115,19 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const showPanel=panels.querySelector('#fau-panel-show');
           ['Live Show Director','The Results Show Director','Official Reveal Assistant'].forEach(label=>{const section=root.querySelector('[aria-label="'+label+'"]');if(section)showPanel.append(section);});
           const judgingPanel=panels.querySelector('#fau-panel-judging');
-          const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);const castControls=root.querySelector('#fauCastVotingControls');if(castControls)judgingPanel.prepend(castControls);
+          const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);const castControls=root.querySelector('#fauCastVotingControls');
+          if(castControls){
+            judgingPanel.prepend(castControls);
+            const urnButton=root.querySelector('#btnToggleUrn');
+            const urnCard=urnButton?.closest('.rounded-lg')||urnButton?.closest('.rounded');
+            if(urnCard){urnCard.classList.add('fau-salvation-control');castControls.querySelector('.grid')?.append(urnCard);}
+            const quick=document.createElement('div');
+            quick.className='flex flex-wrap gap-2 pt-3 border-t border-fashion-700';
+            quick.innerHTML='<button type="button" id="fauUnifiedPreview" class="rounded border border-fashion-gold text-fashion-gold px-4 py-3 text-xs font-semibold">VER APURAÇÃO PRIVADA · NOTAS E VOTOS</button><button type="button" id="fauUnifiedTitles" class="rounded border border-fashion-700 text-white px-4 py-3 text-xs">CONFERIR TÍTULOS</button><p class="w-full text-xs text-gray-400">As três urnas estão aqui. A prévia não publica resultados nem altera votos.</p>';
+            castControls.append(quick);
+            quick.querySelector('#fauUnifiedPreview').onclick=()=>root.querySelector('#btnLiveVoting')?.click();
+            quick.querySelector('#fauUnifiedTitles').onclick=()=>root.querySelector('#fauOfficialLoad')?.click();
+          }
           const critique=root.querySelector('#fauCritiqueAdmin')?.closest('section');if(critique)judgingPanel.append(critique);
           const episodePanel=panels.querySelector('#fau-panel-episode');
           const status=root.querySelector('[aria-label="Production Status"]');if(status)episodePanel.append(status);
@@ -5874,42 +5886,57 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         // Sem dados completos ou empate persistente, não atribuir o título.
         const fauResolveIcon = async (round) => {
           const counts=await tallyVotes('veto');
-          const entries=Object.entries(counts).filter(([,v])=>Number(v)>0);
-          if(!entries.length)return {uid:null,reason:'Nenhum voto registrado',tied:[],votes:0};
-          const max=Math.max(...entries.map(([,v])=>Number(v)));
-          const tied=entries.filter(([,v])=>Number(v)===max).map(([uid])=>uid);
+          const entries=Object.entries(counts).filter(([,n])=>Number(n)>0);
+          if(!entries.length)return {uid:null,reason:'Nenhum voto registrado',tied:[],votes:0,pending:true};
+          const max=Math.max(...entries.map(([,n])=>Number(n)));
+          const tied=entries.filter(([,n])=>Number(n)===max).map(([uid])=>uid);
           if(tied.length===1)return {uid:tied[0],reason:'Maior número de votos',tied,votes:max};
-          const [rankDoc,standings]=await Promise.all([
-            db.collection('ranking_historico').doc(String(round)).get(),
-            computeSeasonStandings()
+          // A prévia usa as avaliações efetivamente salvas, sem exigir publicação do ranking.
+          const [evalSnap,historySnap]=await Promise.all([
+            db.collection('avaliacoes').where('rodada','==',round).get(),
+            db.collection('avaliacoes').get()
           ]);
-          const rows=rankDoc.exists?(rankDoc.data().rows||[]):[];
-          const candidates=tied.map(uid=>{
-            const row=rows.find(r=>r.uid===uid);
-            const season=standings.find(r=>r.uid===uid);
-            const pos=Number(row?.pos??row?.posicao);
-            return {uid,pos:Number.isFinite(pos)&&pos>0?pos:null,rd:Number(season?.rd),tot:Number(season?.tot)};
-          });
-          if(candidates.some(c=>c.pos===null))return {uid:null,reason:'Ranking oficial da rodada indisponível para desempate',tied,votes:max,pending:true};
-          const bestPos=Math.min(...candidates.map(c=>c.pos));
-          const bestRound=candidates.filter(c=>c.pos===bestPos);
-          if(bestRound.length===1)return {uid:bestRound[0].uid,reason:'Melhor classificação dos jurados na rodada',tied,votes:max};
-          if(bestRound.some(c=>!Number.isFinite(c.tot)))return {uid:null,reason:'Acumulado indisponível para desempate',tied,votes:max,pending:true};
-          const bestTotal=Math.max(...bestRound.map(c=>c.tot));
-          const finalists=bestRound.filter(c=>c.tot===bestTotal);
+          const sumScores=docs=>{
+            const byUid=new Map();
+            docs.forEach(doc=>{
+              const d=doc.data(),uid=d.alvo;
+              if(!tied.includes(uid))return;
+              const n=Number(d.total);
+              if(!Number.isFinite(n))return;
+              const look=d.look||uid;
+              if(!byUid.has(uid))byUid.set(uid,new Map());
+              const byLook=byUid.get(uid);
+              if(!byLook.has(look))byLook.set(look,[]);
+              byLook.get(look).push(n);
+            });
+            const result=new Map();
+            byUid.forEach((looks,uid)=>{
+              result.set(uid,[...looks.values()].reduce((sum,arr)=>sum+arr.reduce((a,b)=>a+b,0)/arr.length,0));
+            });
+            return result;
+          };
+          const current=sumScores(evalSnap.docs);
+          if(tied.some(uid=>!current.has(uid)))
+            return {uid:null,reason:'Aguardando notas dos jurados para todos os empatados',tied,votes:max,pending:true};
+          const best=Math.max(...tied.map(uid=>current.get(uid)));
+          const leaders=tied.filter(uid=>Math.abs(current.get(uid)-best)<0.000001);
+          if(leaders.length===1)return {uid:leaders[0],reason:'Melhor média dos jurados nesta rodada (prévia)',tied,votes:max,provisional:true};
+          const previous=historySnap.docs.filter(doc=>String(doc.data().rodada)!==String(round));
+          const previousScores=sumScores(previous);
+          const bestAccum=Math.max(...leaders.map(uid=>previousScores.get(uid)||0));
+          const finalists=leaders.filter(uid=>Math.abs((previousScores.get(uid)||0)-bestAccum)<0.000001);
           return finalists.length===1
-            ? {uid:finalists[0].uid,reason:'Melhor ranking acumulado',tied,votes:max}
-            : {uid:null,reason:'Empate persistente: sem Ícone da Moda nesta rodada',tied,votes:max};
+            ? {uid:finalists[0],reason:'Melhor acumulado anterior à rodada (prévia)',tied,votes:max,provisional:true}
+            : {uid:null,reason:'Empate persistente nas notas disponíveis; sem Ícone até nova avaliação',tied,votes:max,pending:true};
         };
         // Títulos oficiais: registro explícito pós-WhatsApp; nunca apurar votos pela interface pública.
         const fauOfficialIds=['fauOfficialIcon','fauOfficialFora','fauOfficialSaved'];
         const fauOfficialGet=()=>({icon:$('#fauOfficialIcon')?.value||'',fora:$('#fauOfficialFora')?.value||'',saved:Array.from($('#fauOfficialSaved')?.selectedOptions||[]).map(o=>o.value)});
         if ($('#fauOfficialLoad')) $('#fauOfficialLoad').onclick=safeExec(async()=>{
           const round=String(globalState.rodada||'');if(!round)throw new Error('Selecione uma rodada.');
-          const snap=await db.collection('ranking_historico').doc(round).get();
-          if(!snap.exists)throw new Error('Publique primeiro o resultado oficial da rodada.');
-          const rows=(snap.data().rows||[]).filter(x=>x.uid&&x.ate);
-          if(!rows.length)throw new Error('Nenhum Designer encontrado no resultado publicado.');
+          const [snap,profiles]=await Promise.all([db.collection('ranking_historico').doc(round).get(),getAtelierNamesMap()]);
+          const rows=snap.exists?(snap.data().rows||[]).filter(x=>x.uid&&x.ate):Object.entries(profiles).map(([uid,ate])=>({uid,ate}));
+          if(!rows.length)throw new Error('Nenhum Designer encontrado. Confira os perfis cadastrados.');
           const options=rows.map(x=>`<option value="${esc(x.uid)}">${esc(x.ate)}</option>`).join('');
           $('#fauOfficialIcon').innerHTML='<option value="">Sem título / não apurado</option>'+options;
           $('#fauOfficialFora').innerHTML='<option value="">Sem título / não apurado</option>'+options;
@@ -5920,7 +5947,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           $('#fauOfficialIcon').value=resolved.uid||'';
           $('#fauOfficialIcon').disabled=true;
           const names=uid=>rows.find(r=>r.uid===uid)?.ate||uid;
-          $('#fauOfficialStatus').textContent='Ícone apurado automaticamente: '+(resolved.uid?names(resolved.uid):'Sem título')+' — '+resolved.reason+(resolved.tied.length>1?' · Empatados em votos: '+resolved.tied.map(names).join(', '):'')+'.';
+          $('#fauOfficialStatus').textContent=(resolved.provisional?'PRÉVIA CONFIDENCIAL · ':'')+'Ícone apurado automaticamente: '+(resolved.uid?names(resolved.uid):'Sem título')+' — '+resolved.reason+(resolved.tied.length>1?' · Empatados em votos: '+resolved.tied.map(names).join(', '):'')+'.';
         });
         if ($('#fauOfficialCopy')) $('#fauOfficialCopy').onclick=safeExec(async()=>{
           const d=fauOfficialGet();const label=id=>Array.from($('#fauOfficialIcon')?.options||[]).find(o=>o.value===id)?.textContent||'Não atribuído';
@@ -5933,6 +5960,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const round=String(globalState.rodada),d=fauOfficialGet();
           const resolved=await fauResolveIcon(round);
           if(resolved.pending)throw new Error(resolved.reason+'. Aguarde a apuração oficial.');
+          if(resolved.provisional&&!globalState.notasEncerradas)throw new Error('Encerre as notas dos jurados antes de registrar o Ícone. A prévia já está disponível.');
           if(d.icon!==(resolved.uid||''))throw new Error('Ícone divergente da apuração automática. Recarregue os títulos.');
           if(d.saved.length>2)throw new Error('Selecione no máximo dois Designers salvos.');
           if(d.saved.length!==new Set(d.saved).size)throw new Error('Seleção duplicada.');
@@ -6981,7 +7009,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             };
             const votes = await Promise.all([voteSection('veto','Ícone da Moda'),voteSection('fdm','Fora de Moda'),voteSection('ber','Votos de salvamento')]);
             const iconResult=await fauResolveIcon(round);
-            const iconPreview=`<section class="rounded-xl border border-fashion-gold/60 bg-fashion-950 p-4 space-y-2"><h4 class="font-cinzel text-fashion-gold">DESEMPATE OFICIAL · ÍCONE DA MODA</h4><p class="text-sm">${iconResult.uid?'Resultado: <strong>'+name(iconResult.uid)+'</strong>':'Resultado: <strong>Sem título definido</strong>'}</p><p class="text-xs text-gray-300">${esc(iconResult.reason)}</p>${iconResult.tied.length>1?`<p class="text-xs text-gray-400">Empatados nos votos: ${iconResult.tied.map(name).join(' · ')}</p>`:''}</section>`;
+            const iconPreview=`<section class="rounded-xl border border-fashion-gold/60 bg-fashion-950 p-4 space-y-2"><h4 class="font-cinzel text-fashion-gold">DESEMPATE OFICIAL · ÍCONE DA MODA</h4><p class="text-sm">${iconResult.uid?'Resultado: <strong>'+name(iconResult.uid)+'</strong>':'Resultado: <strong>Em apuração / sem título</strong>'}</p><p class="text-xs text-gray-300">${esc(iconResult.reason)}</p>${iconResult.tied.length>1?`<p class="text-xs text-gray-400">Empatados nos votos: ${iconResult.tied.map(name).join(' · ')}</p>`:''}</section>`;
             const byDesigner = new Map();
             jurySnap.docs.forEach(doc=>{
                 const a=doc.data();
@@ -6996,7 +7024,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const juryItems=[...byDesigner.values()].map(x=>({uid:x.uid,value:x.totals.reduce((a,b)=>a+b,0)/x.totals.length,judges:x.totals.length,criteria:x.criteria.map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length)}));
             const fmt=n=>n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
             const juryHtml=`<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><h4 class="font-cinzel text-fashion-gold">Judges' Scores · Ranking provisório</h4><p class="text-xs text-gray-400">Média das avaliações válidas por Designer. O ranking pode mudar enquanto houver notas pendentes.</p>${renderRanking(juryItems,'pontos','Nenhuma avaliação completa registrada.')}${juryItems.length?`<details class="border border-fashion-700 rounded-lg p-3"><summary class="cursor-pointer text-fashion-gold text-sm">Ver médias por critério e quantidade de jurados</summary><div class="space-y-3 mt-3">${juryItems.sort((a,b)=>b.value-a.value).map(x=>`<div class="border-b border-fashion-700 pb-2 text-sm"><strong>${name(x.uid)}</strong><p class="text-xs text-gray-400">${x.judges} avaliação(ões) · ${CRITERIOS.map((c,i)=>`${esc(c)}: ${fmt(x.criteria[i])}`).join(' · ')}</p></div>`).join('')}</div></details>`:''}</section>`;
-            $('#adminOutput').innerHTML=`<section class="space-y-4"><div><h3 class="font-cinzel text-fashion-gold text-xl">LIVE RESULTS · Central de Apuração</h3><p class="text-xs text-gray-400 mt-1">Rodada ${esc(String(round))} · Consulta confidencial, somente leitura. O Ícone da Moda é desempatado automaticamente conforme o Rulebook.</p></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${iconPreview}${votes[0]}${votes[1]}${juryHtml}${votes[2]}</div><p class="text-xs text-gray-400">Os votos de salvamento aparecem quando o Elimination Pool estiver aberto e houver votos registrados.</p><button id="btnRefreshLiveVoting" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar resultados</button></section>`;
+            $('#adminOutput').innerHTML=`<section class="space-y-4"><div><h3 class="font-cinzel text-fashion-gold text-xl">LIVE RESULTS · Central de Apuração</h3><p class="text-xs text-gray-400 mt-1">Rodada ${esc(String(round))} · Consulta confidencial, somente leitura. O Ícone é desempatado com as notas já salvas, mesmo antes da publicação. Prévias podem mudar.</p></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${iconPreview}${votes[0]}${votes[1]}${juryHtml}${votes[2]}</div><p class="text-xs text-gray-400">Os votos de salvamento aparecem quando o Elimination Pool estiver aberto e houver votos registrados.</p><button id="btnRefreshLiveVoting" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar resultados</button></section>`;
             $('#btnRefreshLiveVoting').onclick=()=>$('#btnLiveVoting').click();
         });
 
