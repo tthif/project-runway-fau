@@ -5859,6 +5859,37 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           await productionLog('round_results_announced_whatsapp',{round});
           $('#fauDeskStatus').textContent='Anúncio confirmado no registro da rodada. Confira se a visibilidade do ranking está liberada no controle de publicação existente.';
         });
+        // Desempate oficial do Ícone: votos > ranking da rodada > acumulado.
+        // Sem dados completos ou empate persistente, não atribuir o título.
+        const fauResolveIcon = async (round) => {
+          const counts=await tallyVotes('veto');
+          const entries=Object.entries(counts).filter(([,v])=>Number(v)>0);
+          if(!entries.length)return {uid:null,reason:'Nenhum voto registrado',tied:[],votes:0};
+          const max=Math.max(...entries.map(([,v])=>Number(v)));
+          const tied=entries.filter(([,v])=>Number(v)===max).map(([uid])=>uid);
+          if(tied.length===1)return {uid:tied[0],reason:'Maior número de votos',tied,votes:max};
+          const [rankDoc,standings]=await Promise.all([
+            db.collection('ranking_historico').doc(String(round)).get(),
+            computeSeasonStandings()
+          ]);
+          const rows=rankDoc.exists?(rankDoc.data().rows||[]):[];
+          const candidates=tied.map(uid=>{
+            const row=rows.find(r=>r.uid===uid);
+            const season=standings.find(r=>r.uid===uid);
+            const pos=Number(row?.pos??row?.posicao);
+            return {uid,pos:Number.isFinite(pos)&&pos>0?pos:null,rd:Number(season?.rd),tot:Number(season?.tot)};
+          });
+          if(candidates.some(c=>c.pos===null))return {uid:null,reason:'Ranking oficial da rodada indisponível para desempate',tied,votes:max,pending:true};
+          const bestPos=Math.min(...candidates.map(c=>c.pos));
+          const bestRound=candidates.filter(c=>c.pos===bestPos);
+          if(bestRound.length===1)return {uid:bestRound[0].uid,reason:'Melhor classificação dos jurados na rodada',tied,votes:max};
+          if(bestRound.some(c=>!Number.isFinite(c.tot)))return {uid:null,reason:'Acumulado indisponível para desempate',tied,votes:max,pending:true};
+          const bestTotal=Math.max(...bestRound.map(c=>c.tot));
+          const finalists=bestRound.filter(c=>c.tot===bestTotal);
+          return finalists.length===1
+            ? {uid:finalists[0].uid,reason:'Melhor ranking acumulado',tied,votes:max}
+            : {uid:null,reason:'Empate persistente: sem Ícone da Moda nesta rodada',tied,votes:max};
+        };
         // Títulos oficiais: registro explícito pós-WhatsApp; nunca apurar votos pela interface pública.
         const fauOfficialIds=['fauOfficialIcon','fauOfficialFora','fauOfficialSaved'];
         const fauOfficialGet=()=>({icon:$('#fauOfficialIcon')?.value||'',fora:$('#fauOfficialFora')?.value||'',saved:Array.from($('#fauOfficialSaved')?.selectedOptions||[]).map(o=>o.value)});
@@ -5874,7 +5905,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           $('#fauOfficialSaved').innerHTML=options;
           const old=await db.collection('fau_titulos_publicos').doc(round).get();
           if(old.exists){const d=old.data();$('#fauOfficialIcon').value=d.icon||'';$('#fauOfficialFora').value=d.fora||'';Array.from($('#fauOfficialSaved').options).forEach(o=>o.selected=(d.saved||[]).includes(o.value));}
-          $('#fauOfficialStatus').textContent='Designers carregados. Confira a apuração oficial antes de publicar.';
+          const resolved=await fauResolveIcon(round);
+          $('#fauOfficialIcon').value=resolved.uid||'';
+          $('#fauOfficialIcon').disabled=true;
+          const names=uid=>rows.find(r=>r.uid===uid)?.ate||uid;
+          $('#fauOfficialStatus').textContent='Ícone apurado automaticamente: '+(resolved.uid?names(resolved.uid):'Sem título')+' — '+resolved.reason+(resolved.tied.length>1?' · Empatados em votos: '+resolved.tied.map(names).join(', '):'')+'.';
         });
         if ($('#fauOfficialCopy')) $('#fauOfficialCopy').onclick=safeExec(async()=>{
           const d=fauOfficialGet();const label=id=>Array.from($('#fauOfficialIcon')?.options||[]).find(o=>o.value===id)?.textContent||'Não atribuído';
@@ -5885,6 +5920,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(!isAdmin||!globalState.rodada)throw new Error('Acesso exclusivo da produção.');
           if(!getSeasonFlow().rankingVisible)throw new Error('Publique o ranking oficial antes de registrar os títulos.');
           const round=String(globalState.rodada),d=fauOfficialGet();
+          const resolved=await fauResolveIcon(round);
+          if(resolved.pending)throw new Error(resolved.reason+'. Aguarde a apuração oficial.');
+          if(d.icon!==(resolved.uid||''))throw new Error('Ícone divergente da apuração automática. Recarregue os títulos.');
           if(d.saved.length>2)throw new Error('Selecione no máximo dois Designers salvos.');
           if(d.saved.length!==new Set(d.saved).size)throw new Error('Seleção duplicada.');
           if(!productionConfirm('Você já anunciou os títulos no WhatsApp e conferiu os desempates? Eles ficarão visíveis no After Show.'))return;
@@ -6914,6 +6952,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 return `<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><div class="flex justify-between gap-2 items-center"><h4 class="font-cinzel text-fashion-gold">${title}</h4><span class="text-xs text-gray-400">${total} votos</span></div>${renderRanking(items,'votos','Nenhum voto registrado.')}</section>`;
             };
             const votes = await Promise.all([voteSection('veto','Ícone da Moda'),voteSection('fdm','Fora de Moda'),voteSection('ber','Votos de salvamento')]);
+            const iconResult=await fauResolveIcon(round);
+            const iconPreview=`<section class="rounded-xl border border-fashion-gold/60 bg-fashion-950 p-4 space-y-2"><h4 class="font-cinzel text-fashion-gold">DESEMPATE OFICIAL · ÍCONE DA MODA</h4><p class="text-sm">${iconResult.uid?'Resultado: <strong>'+name(iconResult.uid)+'</strong>':'Resultado: <strong>Sem título definido</strong>'}</p><p class="text-xs text-gray-300">${esc(iconResult.reason)}</p>${iconResult.tied.length>1?`<p class="text-xs text-gray-400">Empatados nos votos: ${iconResult.tied.map(name).join(' · ')}</p>`:''}</section>`;
             const byDesigner = new Map();
             jurySnap.docs.forEach(doc=>{
                 const a=doc.data();
@@ -6928,7 +6968,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const juryItems=[...byDesigner.values()].map(x=>({uid:x.uid,value:x.totals.reduce((a,b)=>a+b,0)/x.totals.length,judges:x.totals.length,criteria:x.criteria.map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length)}));
             const fmt=n=>n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
             const juryHtml=`<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><h4 class="font-cinzel text-fashion-gold">Judges' Scores · Ranking provisório</h4><p class="text-xs text-gray-400">Média das avaliações válidas por Designer. O ranking pode mudar enquanto houver notas pendentes.</p>${renderRanking(juryItems,'pontos','Nenhuma avaliação completa registrada.')}${juryItems.length?`<details class="border border-fashion-700 rounded-lg p-3"><summary class="cursor-pointer text-fashion-gold text-sm">Ver médias por critério e quantidade de jurados</summary><div class="space-y-3 mt-3">${juryItems.sort((a,b)=>b.value-a.value).map(x=>`<div class="border-b border-fashion-700 pb-2 text-sm"><strong>${name(x.uid)}</strong><p class="text-xs text-gray-400">${x.judges} avaliação(ões) · ${CRITERIOS.map((c,i)=>`${esc(c)}: ${fmt(x.criteria[i])}`).join(' · ')}</p></div>`).join('')}</div></details>`:''}</section>`;
-            $('#adminOutput').innerHTML=`<section class="space-y-4"><div><h3 class="font-cinzel text-fashion-gold text-xl">LIVE RESULTS · Central de Apuração</h3><p class="text-xs text-gray-400 mt-1">Rodada ${esc(String(round))} · Consulta confidencial, somente leitura. Empates são exibidos sem desempate automático.</p></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${votes[0]}${votes[1]}${juryHtml}${votes[2]}</div><p class="text-xs text-gray-400">Os votos de salvamento aparecem quando o Elimination Pool estiver aberto e houver votos registrados.</p><button id="btnRefreshLiveVoting" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar resultados</button></section>`;
+            $('#adminOutput').innerHTML=`<section class="space-y-4"><div><h3 class="font-cinzel text-fashion-gold text-xl">LIVE RESULTS · Central de Apuração</h3><p class="text-xs text-gray-400 mt-1">Rodada ${esc(String(round))} · Consulta confidencial, somente leitura. O Ícone da Moda é desempatado automaticamente conforme o Rulebook.</p></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${iconPreview}${votes[0]}${votes[1]}${juryHtml}${votes[2]}</div><p class="text-xs text-gray-400">Os votos de salvamento aparecem quando o Elimination Pool estiver aberto e houver votos registrados.</p><button id="btnRefreshLiveVoting" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar resultados</button></section>`;
             $('#btnRefreshLiveVoting').onclick=()=>$('#btnLiveVoting').click();
         });
 
