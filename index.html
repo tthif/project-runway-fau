@@ -5689,10 +5689,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const name=String(r.ate||r.nome||'Designer');
             const position=Number(r.pos||r.posicao)||index+1;
             const status=String(r.status||'').toUpperCase();
-            const caption=`*${position}º LUGAR — ${name.replace(/[*~_`]/g,' ')}*${status?`\n*${status}*`:''}`;
             const matching=looks.filter(l=>String(l.uid||'')===String(r.uid||'__sem_uid__') || String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'));
             const look=matching.find(l=>l.url||l.image||l.img||l.foto);
             const photo=look&&(look.url||look.image||look.img||look.foto)||'';
+            const caption=`*${position}º LUGAR — ${name.replace(/[*~_`]/g,' ')}*\n${String(look?.titulo||'Criação sem título').trim()}${status?`\n*${status}*`:''}`;
             const related=critiques.filter(c=>c.maison===name);
             const sorted=related.slice().sort((a,b)=>{
               const ai=judges.findIndex(j=>j.uid===a.juror),bi=judges.findIndex(j=>j.uid===b.juror);
@@ -5705,7 +5705,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               <div class="border border-fashion-700 rounded-lg p-3 space-y-2">
                 <p class="text-xs text-fashion-gold">01 · CRIAÇÃO ENVIADA PELO DESIGNER + LEGENDA</p>
                 ${photo?`<img src="${escAttr(photo)}" alt="Look de ${escAttr(name)}" loading="lazy" class="max-h-72 w-full object-contain rounded bg-black">`:'<p class="text-xs text-amber-200">Criação não encontrada nos envios desta rodada. Nenhuma foto de perfil será usada como substituta.</p>'}
-                <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
+                <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-sm italic text-gray-200">${escAttr(look?.titulo||'Criação sem título')}</p><p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
                 <div class="flex flex-wrap gap-2"><button type="button" data-broadcast-copy="${index}" class="border border-fashion-gold rounded px-3 py-2 text-xs">Copiar legenda</button>${photo?`<button type="button" data-broadcast-photo="${index}" class="border border-fashion-700 rounded px-3 py-2 text-xs">Compartilhar / baixar foto</button>`:''}<label class="text-xs flex items-center gap-2"><input type="checkbox" data-broadcast-done="${index}:foto" ${progress[`${index}:foto`]?'checked':''}> Enviado</label></div>
               </div>
               ${sorted.length?sorted.map((c,j)=>{
@@ -5725,7 +5725,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           rank.forEach((r,i)=>{
             const name=String(r.ate||r.nome||'Designer');
             const position=i+1,status=String(r.status||'').toUpperCase();
-            messages.push({key:`${i}:foto`,text:`*${position}º LUGAR — ${name.replace(/[*~_`]/g,' ')}*${status?`\n*${status}*`:''}`});
+            const matchingLook=looks.find(l=>(String(l.uid||'')===String(r.uid||'__sem_uid__')||String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(l.url||l.image||l.img||l.foto));
+            messages.push({key:`${i}:foto`,text:`*${position}º LUGAR — ${name.replace(/[*~_`]/g,' ')}*\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n*${status}*`:''}`});
             const related=critiques.filter(c=>c.maison===name).sort((a,b)=>{
               const ai=judges.findIndex(x=>x.uid===a.juror),bi=judges.findIndex(x=>x.uid===b.juror);
               return (ai<0?999:ai)-(bi<0?999:bi)||byName(a.jurorNome,b.jurorNome);
