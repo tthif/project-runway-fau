@@ -3371,7 +3371,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                                 <span class="text-[10px] tracking-widest text-gray-400">RANKING OFICIAL</span>
                             </div>
                             <div class="divide-y divide-fashion-700">${r.rows.map((x,rank)=>`<div class="flex items-center gap-3 px-3 sm:px-4 py-3 ${rank===0?'bg-amber-900/10':''}">
-                                <span class="w-8 shrink-0 text-center font-semibold text-fashion-gold tabular-nums">${String(rank+1).padStart(2,'0')}</span>
+                                <span class="w-8 shrink-0 text-center font-semibold text-fashion-gold tabular-nums">${statusLabel(x.status)==='OUT'?'—':String(rank+1).padStart(2,'0')}</span>
                                 <span class="min-w-0 flex-1 text-sm text-white font-medium break-words">${esc(x.ate||'Designer')}</span>
                                 <span class="shrink-0 text-xs font-bold tracking-wide ${statusClass(x.status)}">${esc(statusLabel(x.status))}</span>
                             </div>`).join('')}</div>
@@ -5977,6 +5977,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(!productionConfirm(`PUBLICAR TUDO DA RODADA ${round}?\nWIN: ${label(winner.uid)}\nÍcone da Moda: ${label(iconResult.uid)}\nFora de Moda: ${label(fora)}\nRanking: ${rows.length} Designers\n\nO site exibirá classificações, sem notas individuais.`))return;
           const stamp=now(),batch=db.batch();
           const publicRows=rows.map(({uid,ate,status})=>({uid,ate,status}));
+          // Non-submitters explicitly marked OUT must appear after the ranked looks.
+          // Never treat an absent submission alone as an automatic elimination.
+          const outProfiles=await db.collection('perfis').where('role','==','estilista').get();
+          outProfiles.docs.forEach(doc=>{
+            const p=doc.data();
+            if(p.out===true && !publicRows.some(r=>r.uid===doc.id))
+              publicRows.push({uid:doc.id,ate:p.ate||'Designer',status:'OUT'});
+          });
           batch.set(db.doc('ranking/atual'),{rodada:globalState.rodada,rows,classificationSlots});
           batch.set(db.collection('ranking_historico').doc(round),{rodada:globalState.rodada,rows,classificationSlots,published:true,announcedWhatsApp:true,announcedAt:stamp,announcedBy:currentUser.uid},{merge:true});
           batch.set(db.doc('ranking_publico/atual'),{rodada:globalState.rodada,rows:publicRows});
