@@ -2629,10 +2629,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             </section>`);
             if(!round){$('#fauAdminWorkroomCount').textContent='Nenhuma rodada ativa.';$('#fauAdminWorkroomList').innerHTML='';return;}
             if(globalState.themeId==='w02_new_form'){
-                sub(db.collection('fashion_mutations').where('round','==',String(round)),snap=>{
+                let mutationRows=[], mutationProfiles=[];
+                const paintMutations=()=>{
                     const host=document.getElementById('fauAdminMutationSummary');if(!host)return;
-                    const rows=snap.docs.map(d=>d.data()).sort((a,b)=>String(a.uid).localeCompare(String(b.uid)));
-                    host.innerHTML=`<p class="text-fashion-gold font-semibold mb-2">THE MUTATION MACHINE · ${rows.length} envelope(s) aberto(s)</p><div class="space-y-1">${rows.map(r=>`<p>Designer ${esc(r.uid)} · Envelope ${esc(r.envelope)} · <strong>${esc(fauMutationResult(r)?.[0]||'—')}</strong></p>`).join('')||'<p>Nenhum envelope aberto ainda.</p>'}</div>`;
+                    const names=new Map(mutationProfiles.map(p=>[String(p.uid),p.ate||p.nome||'Designer sem nome']));
+                    const sorted=[...mutationRows].sort((a,b)=>String(names.get(String(a.uid))||a.uid).localeCompare(String(names.get(String(b.uid))||b.uid),'pt-BR'));
+                    host.innerHTML=`<p class="text-fashion-gold font-semibold mb-2">THE MUTATION MACHINE · ${sorted.length} envelope(s) aberto(s)</p><div class="space-y-2">${sorted.map(r=>`<p><strong class="text-fashion-gold">${esc(names.get(String(r.uid))||'Designer não identificado')}</strong> · Envelope ${esc(r.envelope)} · <strong>${esc(fauMutationResult(r)?.[0]||'—')}</strong></p>`).join('')||'<p>Nenhum envelope aberto ainda.</p>'}</div>`;
+                };
+                sub(db.collection('fashion_mutations').where('round','==',String(round)),snap=>{
+                    mutationRows=snap.docs.map(d=>d.data());paintMutations();
+                });
+                sub(db.collection('perfis').where('role','==','estilista'),snap=>{
+                    mutationProfiles=snap.docs.map(d=>({uid:d.id,...d.data()}));paintMutations();
                 });
             }
             let designers=[],looks=[],readyProfiles=false,readyLooks=false;
