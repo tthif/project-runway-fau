@@ -3597,7 +3597,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
         const eliminated=castResult.status==='fulfilled'?castResult.value.docs.map(d=>({uid:d.id,...d.data()})).filter(p=>p.out===true&&!p.disabled).sort((a,b)=>(a.ate||'').localeCompare(b.ate||'','pt-BR')):[];
         const eliminatedCards=eliminated.map(p=>{
-          const ownLooks=publications.filter(x=>x.uid===p.uid&&typeof x.image==='string'&&/^https:\/\//i.test(x.image));
+          const ownLooks=publications.filter(x=>x.uid===p.uid&&typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
           const latest=ownLooks.sort((a,b)=>String(b.round||'').localeCompare(String(a.round||''),'pt-BR',{numeric:true}))[0];
           const photo=latest?.image||p.fotoElenco||'';
           return `<article class="fau-archive-out-card"><div class="fau-archive-out-photo">${photo?`<img src="${esc(photo)}" loading="lazy" alt="${esc(p.ate||'Designer')}" class="${latest?'':'fau-archive-out-portrait'}">`:`<div class="fau-archive-out-placeholder"><i class="fa-solid fa-user" aria-hidden="true"></i><span>${esc(p.ate||'Designer')}</span></div>`}</div><div class="p-4"><span class="fau-archive-out-tag">OUT · AUF WIEDERSEHEN</span><h4 class="font-cinzel text-white text-xl mt-2">${esc(p.ate||'Designer')}</h4>${p.publicOutRealName?`<p class="text-xs text-fashion-gold mt-2">POR TRÁS DO DESIGNER: <strong>${esc(p.publicOutRealName)}</strong></p>`:''}</div></article>`;
@@ -3616,7 +3616,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         // identifica explicitamente o UID E há exatamente um look publicado.
         // Em desafios de múltiplos looks, a galeria não adivinha qual venceu.
         const findImage=(round,uid)=>{
-          const candidates=publications.filter(x=>roundKey(x.round)===roundKey(round)&&x.uid===uid&&typeof x.image==='string'&&/^https:\/\//i.test(x.image));
+          const candidates=publications.filter(x=>roundKey(x.round)===roundKey(round)&&x.uid===uid&&typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
           return candidates.length===1?candidates[0]:null;
         };
         rounds.forEach(({round,rank,title})=>{
@@ -3669,9 +3669,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             ${lines.length?lines.map(l=>`<p class="text-gray-300 text-sm mt-1">${l}</p>`).join(''):'<p class="text-gray-400 text-sm mt-1">Aguardando resultados oficiais.</p>'}
           </article>`;
         }).join('');
-        const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^https:\/\//i.test(x.image)).length;
+        const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).length;
         const availableRounds=[...new Set([...rounds.map(r=>r.round),...publications.map(p=>roundKey(p.round))])].filter(Boolean).sort((a,b)=>fauArchiveSort(b,a));
-        const gallery=publications.filter(x=>typeof x.image==='string'&&/^https:\/\//i.test(x.image)).sort((a,b)=>fauArchiveSort(roundKey(b.round),roundKey(a.round))).map((x,i)=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(roundKey(x.round))}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
+        const gallery=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).sort((a,b)=>fauArchiveSort(roundKey(b.round),roundKey(a.round))).map((x,i)=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(roundKey(x.round))}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
           <div class="fau-archive-photo-wrap"><img src="${esc(x.image)}" loading="lazy" alt="Look publicado: ${esc(x.title||'Criação do acervo')}" class="fau-archive-img w-full aspect-[3/4] object-contain bg-black" /></div>
           <div class="p-3 space-y-1"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(weekLabel(x.round))}</p><h4 class="text-sm text-white font-cinzel">${esc(x.title||'Criação do arquivo')}</h4>${x.designer||x.ate?`<p class="text-xs text-gray-400">${esc(x.designer||x.ate)}</p>`:''}</div></article>`).join('');
         body.innerHTML=`
@@ -6069,14 +6069,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           }
           await batch.commit();
           // A publicação oficial também arquiva as imagens já liberadas no desfile.
-          // O público só consulta fau_publications, nunca a coleção privada looks.
+          // O público só consulta fau_publications, nunca a coleção privada looks. As imagens de entregas são data:image/...;base64, não apenas HTTPS.
           let archiveCount=0,archiveError='';
           try {
             const lookSnap=await db.collection('looks').where('rodada','==',globalState.rodada).get();
             let imageBatch=db.batch(),pending=0;
             for(const doc of lookSnap.docs){
               const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
-              if(typeof image!=='string'||!/^https:\/\//i.test(image)||!l.uid)continue;
+              if(typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image)||!l.uid)continue;
               const id='round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
               imageBatch.set(db.collection('fau_publications').doc(id),{kind:'archive',round,title:String(l.titulo||l.title||l.ate||'Look').slice(0,120),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid,designer:l.ate||'',slot:l.slot||null,createdAt:stamp,createdBy:currentUser.uid},{merge:true});
               archiveCount++;pending++;
@@ -6181,12 +6181,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const rounds=[...new Set(published.docs.filter(d=>Array.isArray(d.data().rows)).map(d=>String(d.id)))];
           if(!rounds.length)throw new Error('Nenhuma Week com ranking oficialmente publicado.');
           if(!productionConfirm('Sincronizar as fotos das '+rounds.length+' Weeks já publicadas? Nenhuma Week futura será liberada.'))return;
-          let count=0;let batch=db.batch(),pending=0;
+          let count=0,missing=0,found=0;let batch=db.batch(),pending=0;
           for(const round of rounds){
             const snap=await db.collection('looks').where('rodada','==',round).get();
             for(const doc of snap.docs){
               const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
-              if(typeof image!=='string'||!/^https:\/\//i.test(image)||!l.uid)continue;
+              if(typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image)||!l.uid)continue;
               const id='round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
               batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round,title:String(l.titulo||l.title||l.ate||'Look').slice(0,120),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid,designer:l.ate||'',slot:l.slot||null,createdAt:now(),createdBy:currentUser.uid},{merge:true});
               count++;pending++;
@@ -6194,7 +6194,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             }
           }
           if(pending)await batch.commit();
-          $('#fauArchiveSyncStatus').textContent=count+' looks sincronizados de '+rounds.length+' Weeks oficiais. Atualize o Fashion Archive.';
+          $('#fauArchiveSyncStatus').textContent=count+' looks sincronizados de '+rounds.length+' Weeks oficiais.'+(count?' Abra o Fashion Archive para conferir.':' Nenhuma imagem válida encontrada; confira os envios e as permissões de leitura.');
           await productionLog('fashion_archive_backfill',{rounds,count});
         });
         $('#fauArchiveSync').onclick=safeExec(async()=>{
@@ -6206,13 +6206,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           let count=0;const batches=[];let batch=db.batch(),n=0;
           for(const doc of looksSnap.docs){
             const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
-            if(!image||typeof image!=='string'||!/^https:\/\//i.test(image))continue;
+            if(!image||typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image))continue;
             const id='round_'+String(globalState.rodada).replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
             batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round:String(globalState.rodada),title:String(l.titulo||l.title||l.ate||'Look').slice(0,120),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid||'',designer:l.ate||'',slot:l.slot||null,createdAt:now(),createdBy:currentUser.uid},{merge:true});count++;n++;
             if(n>=400){batches.push(batch);batch=db.batch();n=0;}
           }
           if(n)batches.push(batch);
-          if(!count)throw new Error('Não encontrei imagens HTTPS nos looks desta rodada. Verifique o formato das entregas.');
+          if(!count)throw new Error('Não encontrei imagens válidas nos looks desta rodada. Verifique os registros e os envios.');
           for(const b of batches)await b.commit();
           await productionLog('fashion_archive_synced',{round:globalState.rodada,count});
           $('#fauArchiveSyncStatus').textContent=`${count} criação(ões) sincronizada(s) com o acervo.`;
