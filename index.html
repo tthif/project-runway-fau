@@ -3654,7 +3654,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const uid=title.icon,match=rows.find(r=>r.uid===uid);
             const p=getPerson(uid,match?.ate);
             if(p){p.icons++;p.rounds.add(round);p.achievements.push({round,type:'Ícone da Moda'});}
-            awards.push({round,uid,name:p?.name||'Designer',type:'ÍCONE DA MODA'});
+            awards.push({round,uid,name:p?.name||'Designer',type:'Ícone da Moda'});
           }
         });
         const grouped=new Map();
