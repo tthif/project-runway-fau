@@ -5712,7 +5712,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(hasOfficialRank){
             rank=rankSnap.data().rows.slice();
           }else if(globalState.notasEncerradas){
-            const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd);
+            const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd||b.tot-a.tot);
             if(!standings.length)throw new Error('Não há avaliações para calcular o ranking privado.');
             const count=standings.length;
             const isFinal=globalState.fase==='final';
@@ -5733,6 +5733,27 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const looks=lookSnap.docs.map(d=>({id:d.id,...d.data()}));
           const critiques=critSnap.docs.map(d=>d.data()).filter(d=>d.received);
           const profiles=profileSnap.docs.map(d=>({uid:d.id,...d.data()}));
+          // Somente looks efetivamente enviados concorrem às posições e ao BOTTOM.
+          // Ausentes são registrados à parte como OUT — NÃO ENVIOU.
+          const normalizedName=v=>String(v||'').trim().toLocaleLowerCase('pt-BR');
+          const submittedUids=new Set(looks.filter(l=>l.url||l.image||l.img||l.foto).map(l=>String(l.uid||'')).filter(Boolean));
+          const submittedNames=new Set(looks.filter(l=>l.url||l.image||l.img||l.foto).map(l=>normalizedName(l.ate)).filter(Boolean));
+          const hasSubmission=r=>submittedUids.has(String(r.uid||''))||submittedNames.has(normalizedName(r.ate||r.nome));
+          const absentRows=rank.filter(r=>!hasSubmission(r));
+          rank=rank.filter(hasSubmission);
+          if(hasRank){
+            // A classificação é calculada entre os participantes que desfilaram.
+            // Não reaproveitar BOTTOM/LOW de um ranking que incluía ausentes.
+            const count=rank.length;
+            const isFinal=globalState.fase==='final',isSemifinal=globalState.fase==='top5';
+            const bottom=isFinal?0:isSemifinal?1:Math.min(2,Math.max(0,count-1));
+            const desiredTop=count>=16?5:count>=11?4:count>=7?3:count===6?2:Math.min(2,count);
+            const configuredTop=Math.max(0,Number(globalState.critiqueTopCount||0));
+            const configuredLow=Math.max(0,Number(globalState.critiqueBottomCount||0));
+            const top=isFinal?0:isSemifinal?4:Math.min(configuredTop||desiredTop,Math.max(1,count-bottom));
+            const low=isFinal||isSemifinal?0:Math.min(configuredLow?Math.max(0,configuredLow-bottom):Math.min(4,Math.max(0,count-top-bottom)),Math.max(0,count-top-bottom));
+            rank=rank.map((r,i)=>({...r,pos:i+1,status:isFinal?(['WINNER · VENCEDOR DA TEMPORADA','2º LUGAR','3º LUGAR'][i]||''):i===0?'WIN':i<top?'HIGH':i>=count-bottom?'BOTTOM':i>=count-bottom-low?'LOW':'SAFE'}));
+          }
           const judges=profiles.filter(p=>p.role==='jurado'||p.uid===currentUser.uid).map(p=>({uid:p.uid,name:p.nomeJurado||p.ate||(p.uid===currentUser.uid?'FAU':'Jurado')}));
           const byName=(a,b)=>String(a).localeCompare(String(b),'pt-BR',{sensitivity:'base'});
           const jurorName=c=>String(c.jurorNome||judges.find(j=>j.uid===c.juror)?.name||'Jurado');
@@ -5773,11 +5794,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               }).join(''):'<p class="text-xs text-gray-400">Nenhuma crítica recebida para este Designer.</p>'}
             </div></details>`;
           });
-          root.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><p class="text-xs text-gray-300">${rank.length} Designers · ${critiques.length} críticas · ${hasRank?'ranking oficial':'prévia privada sem ranking oficial'}</p><span id="fauBroadcastProgress" class="text-xs text-fashion-gold font-semibold" role="status"></span></div><div class="flex flex-wrap gap-2"><button type="button" id="fauBroadcastNext" class="border border-fashion-gold rounded px-3 py-2 text-xs">Próximo Designer pendente ↓</button><button type="button" id="fauBroadcastCopyNext" class="bg-fashion-gold text-black rounded px-3 py-2 text-xs font-bold">Copiar próxima mensagem pendente</button></div>${cards.join('')}`;
+          const absentNames=absentRows.map(r=>String(r.ate||r.nome||'Designer'));
+          const absenceNotice=absentNames.length?`<div class="border border-red-500/40 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-red-300">OUT · NÃO ENVIOU — FORA DO RANKING</p>${absentNames.map(n=>`<p class="text-sm">${escAttr(n)} · sem posição, sem BOTTOM e sem críticas de avaliação</p>`).join('')}</div>`:'';
+          root.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><p class="text-xs text-gray-300">${rank.length} Designers · ${critiques.length} críticas · ${hasRank?'ranking oficial':'prévia privada sem ranking oficial'}</p><span id="fauBroadcastProgress" class="text-xs text-fashion-gold font-semibold" role="status"></span></div><div class="flex flex-wrap gap-2"><button type="button" id="fauBroadcastNext" class="border border-fashion-gold rounded px-3 py-2 text-xs">Próximo Designer pendente ↓</button><button type="button" id="fauBroadcastCopyNext" class="bg-fashion-gold text-black rounded px-3 py-2 text-xs font-bold">Copiar próxima mensagem pendente</button></div>${absenceNotice}${cards.join('')}`;
           const messages=[];
           rank.forEach((r,i)=>{
             const name=String(r.ate||r.nome||'Designer');
-            const position=hasRank?i+1:null,status=String(r.status||'').toUpperCase();
+            const position=hasRank?(Number(r.pos)||i+1):null,status=String(r.status||'').toUpperCase();
             const matchingLook=looks.find(l=>(String(l.uid||'')===String(r.uid||'__sem_uid__')||String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(l.url||l.image||l.img||l.foto));
             messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n\n*${status}*`:''}`});
             const related=critiques.filter(c=>c.maison===name).sort(orderCritiques);
