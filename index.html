@@ -3703,13 +3703,27 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
     // 4. BANCADA DE JÚRI (AI EDITION)
     // V54 · Critique Call: notas primeiro, uma crítica opcional por Designer apenas quando convocada.
+    // Só podem receber críticas Designers com entrega válida nesta rodada.
+    const fauEligibleCritiqueNames = async () => {
+        const round=String(globalState.rodada||'');
+        const [looks,profiles]=await Promise.all([
+            db.collection('looks').where('rodada','==',round).get(),
+            db.collection('perfis').where('role','==','estilista').get()
+        ]);
+        const required=Math.max(1,Number(getTheme()?.numSubmissoes)||1);
+        const counts=new Map();
+        looks.docs.forEach(d=>{const uid=d.data().uid;if(uid)counts.set(uid,(counts.get(uid)||0)+1);});
+        return new Set(profiles.docs.filter(d=>!d.data().disabled&&!d.data().out&&(counts.get(d.id)||0)>=required)
+            .map(d=>d.data().ate).filter(Boolean));
+    };
     const fauCritiqueTargets = async () => {
         const round=String(globalState.rodada||'');
         if(!round)return [];
+        const eligible=await fauEligibleCritiqueNames();
         // A convocação privada pode ser preparada antes da publicação do ranking.
         const call=globalState.critiqueCall;
         if(call && String(call.round)===round && Array.isArray(call.names)){
-            return [...new Set(call.names.filter(Boolean))].map(ate=>({ate}))
+            return [...new Set(call.names.filter(name=>eligible.has(name)))].map(ate=>({ate}))
                 .sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
         }
         const current=await db.collection('ranking_historico').doc(round).get();
@@ -3731,7 +3745,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         // WIN occupies one of the configured TOP slots; no classification is exposed to jurors.
         if(topCount>0){currentRows.slice(0,topCount).forEach(r=>selected.set(r.ate,{ate:r.ate}));}
         if(bottomCount>0){currentRows.slice(-bottomCount).forEach(r=>selected.set(r.ate,{ate:r.ate}));}
-        return [...selected.values()].filter(t=>t.ate).sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
+        return [...selected.values()].filter(t=>eligible.has(t.ate)).sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
     };
     // Publicação em coleção separada: os leitores nunca consultam as críticas privadas.
     const fauPublicCritiquesRef = round => db.collection('fau_criticas_publicas').doc(String(round||'sem-rodada'));
@@ -5412,8 +5426,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     names=rows.filter((r,i)=>/\b(WIN|TOP|HIGH|BOTTOM|LOW)\b/i.test(r.status||'')||r.ate===prevWin||(top>0&&i<top)||(bottom>0&&i>=rows.length-bottom)).map(r=>r.ate);
                 }else{
                     // Apuração privada: não publica resultados nem revela posições aos jurados.
-                    const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd);
-                    if(!standings.length)throw new Error('Não há avaliações para convocar críticas.');
+                    const eligible=await fauEligibleCritiqueNames();
+                    const standings=(await computeSeasonStandings()).filter(r=>eligible.has(r.ate)).sort((a,b)=>b.rd-a.rd);
+                    if(!standings.length)throw new Error('Não há entregas válidas para convocar críticas.');
                     const n=standings.length;
                     const bottom=Math.min(Math.max(0,Number(globalState.critiqueBottomCount||0))||3,Math.max(0,n-1));
                     const desiredTop=n>=16?5:n>=11?4:n>=7?3:n===6?2:Math.min(2,n);
@@ -5425,7 +5440,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         if(prevWin && standings.some(r=>r.ate===prevWin))names.push(prevWin);
                     }
                 }
-                names=[...new Set(names.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+                const eligible=await fauEligibleCritiqueNames();
+                names=[...new Set(names.filter(name=>eligible.has(name)))].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
                 if(!names.length)throw new Error('Nenhum Designer elegível para críticas.');
                 update.critiqueCall={round,names};
             }
