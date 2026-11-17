@@ -3499,6 +3499,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
         const eliminatedStylists = stylists.filter(s => s.out);
         const elimGrid = $('#eliminationGalleryGrid');
+        // No elimination gallery is mounted inside the Archive Track Record tab.
+        // The separate Auf Wiedersehen tab owns that gallery.
+        if (!elimGrid) return;
         if (!eliminatedStylists.length) {
             elimGrid.innerHTML = '<p class="col-span-full text-gray-500 italic py-4">Nenhum Designer eliminada até o momento.</p>';
         } else {
