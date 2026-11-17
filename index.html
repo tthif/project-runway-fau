@@ -3338,19 +3338,36 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         `);
 
 
-        // The full season score matrix is production-only. Other profiles never query
-        // the full evaluations collection through this view.
+        // Public Track Record: read ONLY published classifications, never private scores.
         if (!isAdmin) {
             const slot = $('#trackRecordTableContainer');
-            if (currentUser.role === 'estilista') {
-                slot.innerHTML = `<div class="text-center py-9 space-y-3"><p class="text-fashion-gold text-[10px] tracking-[.25em]">YOUR RUNWAY JOURNEY</p><h3 class="font-cinzel text-xl text-white">Sua trajetória é sua.</h3><p class="text-gray-400 text-sm">O arquivo mostra os momentos oficiais. Seu acumulado é privado e aparece exclusivamente em My Profile.</p><button type="button" id="fauOpenPrivateProfile" class="border border-fashion-gold/50 rounded-lg text-fashion-gold px-5 py-3 text-xs">MY PROFILE</button></div>`;
-                $('#fauOpenPrivateProfile')?.addEventListener('click',()=>navigate('meu_perfil'));
-            } else {
-                slot.innerHTML = '<div class="text-center py-10 space-y-3"><p class="text-fashion-gold text-xs tracking-[.3em]">FRONT ROW · SEASON ARCHIVE</p><h3 class="font-cinzel text-xl text-white">A história está sendo escrita.</h3><p class="text-gray-400 text-sm">Acompanhe os desfiles e as revelações oficiais. O ranking acumulado é confidencial.</p></div>';
+            try {
+                const history = await db.collection('ranking_historico_publico').get();
+                const rounds = history.docs.map(d=>({round:d.id,...d.data()}))
+                    .filter(r=>Array.isArray(r.rows)&&r.rows.length)
+                    .sort((a,b)=>String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true}));
+                if (!slot?.isConnected) return;
+                if (!rounds.length) {
+                    slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
+                } else {
+                    const participants=new Map();
+                    rounds.forEach(r=>(r.rows||[]).forEach(x=>{
+                        if(!x.uid)return;
+                        if(!participants.has(x.uid))participants.set(x.uid,{name:x.ate||'Designer',statuses:{}});
+                        const entry=participants.get(x.uid);
+                        entry.name=x.ate||entry.name;
+                        entry.statuses[r.round]=String(x.status||'—').replace(/\s*\(PROTEGIDO\)/i,'');
+                    }));
+                    const header=rounds.map(r=>`<th class="px-3 py-3 text-fashion-gold whitespace-nowrap">WEEK ${esc(r.round)}</th>`).join('');
+                    const lines=[...participants.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(p=>`<tr class="border-t border-fashion-700"><th class="text-left text-white px-3 py-3 whitespace-nowrap">${esc(p.name)}</th>${rounds.map(r=>`<td class="text-center px-3 py-3 font-bold">${esc(p.statuses[r.round]||'—')}</td>`).join('')}</tr>`).join('');
+                    slot.innerHTML=`<div class="space-y-3"><p class="text-xs text-gray-400">Classificações oficiais por semana. Notas individuais e acumulados permanecem confidenciais.</p><table class="w-full text-xs"><thead><tr><th class="text-left px-3 py-3 text-fashion-gold">DESIGNER</th>${header}</tr></thead><tbody>${lines}</tbody></table></div>`;
+                }
+            } catch(err) {
+                console.warn('Public Track Record unavailable',err);
+                if(slot?.isConnected)slot.innerHTML='<p class="text-amber-200 text-sm py-5">Não foi possível consultar as classificações públicas. Verifique a leitura de ranking_historico_publico nas regras do Firestore.</p>';
             }
-            // Gallery is public, but no global score data or evaluation documents are loaded.
             const gallery=$('#eliminationGalleryGrid');
-            if(gallery) gallery.innerHTML='<p class="text-gray-400 col-span-full py-5">As eliminações e os momentos oficiais são revelados no The Runway e no The Results Show.</p>';
+            if(gallery)gallery.innerHTML='<p class="text-gray-400 col-span-full py-5">Confira as despedidas oficiais em Auf Wiedersehen, no Fashion Archive.</p>';
             return;
         }
 
