@@ -3882,12 +3882,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div id="juryMatrixGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 text-xs"></div>
                 </div>
 
+                ${globalState.criticasAbertas && !globalState.criticasEncerradas ? `<div class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">ETAPA ATUAL · CRÍTICAS ABERTAS</p><h3 class="font-cinzel text-xl">The Critique Call</h3><p class="text-xs text-gray-300">As notas estão encerradas. Escreva suas críticas abaixo, sem revelar as classificações.</p><a href="#fauCritiqueJury" class="inline-block rounded bg-fashion-gold px-4 py-3 text-black text-xs font-bold">IR PARA AS CRÍTICAS ↓</a></div>` : ''}
+                <section id="fauCritiqueJury" class="scroll-mt-24"></section>
+                ${globalState.notasEncerradas ? `<details id="fauClosedScoreDetails" class="rounded-xl border border-fashion-700 bg-fashion-900 p-4"><summary class="cursor-pointer text-fashion-gold font-semibold text-sm py-2">CONSULTAR NOTAS ENCERRADAS · Exibir avaliações</summary><div class="mt-4 space-y-5">` : ''}
                 <section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-4 space-y-2" aria-label="Progresso de avaliação"><div class="flex justify-between items-center gap-2"><span class="text-xs uppercase tracking-widest text-fashion-gold">⚖️ YOUR JUDGING DESK</span><span id="fauJuryProgressText" class="text-xs text-gray-300">Preparando avaliações...</span></div><div class="h-2 rounded-full bg-fashion-950 overflow-hidden"><div id="fauJuryProgressBar" class="h-full bg-fashion-gold transition-all duration-500" style="width:0%"></div></div><p class="text-[11px] text-gray-400">Avalie cada criação e salve suas notas antes de sair.</p></section>
                 <div id="juryCardsContainer" class="space-y-8"></div>
                 <div class="mt-6 rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Salvar avaliações da rodada">
                     <p class="text-xs text-gray-300 text-center">Terminou de avaliar todas as fotos? Salve as notas da rodada de uma só vez.</p>
                     <button id="btnSubmitAllEvaluationsBottom" ${scoresClosed()?'disabled':''} class="w-full bg-fashion-gold hover:bg-fashion-gold-hover text-black font-semibold py-3 rounded uppercase tracking-wider">Salvar Todas as Notas</button>
-                </div><section id="fauCritiqueJury" class="mt-6"></section>
+                </div>
+                ${globalState.notasEncerradas ? `</div></details>` : ''}
             </div>
         `);
 
