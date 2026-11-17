@@ -3415,7 +3415,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             history.rows.forEach(entry => {
                 if (!entry.uid) return;
                 const status = String(entry.status || '').toUpperCase();
-                byUid.set(entry.uid, /WINNER|\bWIN\b/.test(status) ? 'WIN' : /\b(TOP|HIGH)\b/.test(status) ? 'TOP' : /\b(BOTTOM|LOW)\b/.test(status) ? 'BOTTOM' : /\bOUT\b/.test(status) ? 'OUT' : 'SAFE');
+                byUid.set(entry.uid, /\bOUT\b/.test(status) ? 'OUT' : /WINNER|\bWIN\b/.test(status) ? 'WIN' : /\b(TOP|HIGH)\b/.test(status) ? 'HIGH' : /\bBOTTOM\b/.test(status) ? 'BOTTOM' : /\bLOW\b/.test(status) ? 'LOW' : 'SAFE');
             });
             officialStatuses.set(r,byUid);
         });
@@ -3434,10 +3434,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const desiredTop = count >= 16 ? 5 : count >= 11 ? 4 : count >= 7 ? 3 : count === 6 ? 2 : Math.min(2,count);
             const configuredTop = Math.max(0,Number(globalState.critiqueTopCount||0));
             const configuredBottom = Math.max(0,Number(globalState.critiqueBottomCount||0));
-            const bottom = Math.min(configuredBottom || 3, Math.max(0,count-1));
+            const bottom = Math.min(2, Math.max(0,count-1));
             const top = Math.min(configuredTop || desiredTop, Math.max(1,count-bottom));
             const statuses = new Map();
-            ranked.forEach((x,i) => statuses.set(x.uid,i===0?'WIN':i<top?'TOP':i>=count-bottom?'BOTTOM':'SAFE'));
+            const low = Math.min(Math.max(0, count >= 16 ? 4 : count >= 9 ? 2 : 1), Math.max(0,count-top-bottom));
+            ranked.forEach((x,i) => statuses.set(x.uid,i===0?'WIN':i<top?'HIGH':i>=count-bottom?'BOTTOM':i>=count-bottom-low?'LOW':'SAFE'));
             previewStatuses.set(r,statuses);
         });
 
@@ -3481,6 +3482,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     const classes = {
                         WIN:'bg-amber-700 text-amber-50 font-bold',
                         TOP:'bg-yellow-900 text-yellow-100 font-bold',
+                        HIGH:'bg-yellow-900 text-yellow-100 font-bold',
+                        LOW:'bg-orange-950 text-orange-200 font-bold',
                         SAFE:'bg-fashion-800 text-gray-200',
                         BOTTOM:'bg-rose-950 text-rose-200 font-bold',
                         OUT:'bg-red-950 text-red-300 font-bold',
@@ -4881,7 +4884,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
                 <section class="bg-fashion-900 border border-fashion-700 rounded-xl p-4 space-y-2" aria-label="Episode Checklist"><p class="text-[10px] text-fashion-gold tracking-widest">🎬 EPISODE CHECKLIST · PRÓXIMA AÇÃO</p><div class="grid sm:grid-cols-2 gap-2 text-xs"><p>${globalState.themeId?'✓':'○'} Desafio configurado</p><p>${globalState.liberado?'✓':'○'} Passarela liberada</p><p>${globalState.urna?'✓':'○'} Votações abertas</p><p>${globalState.berlinda?.length?'✓':'○'} Elimination Pool definido</p></div><p class="text-[11px] text-gray-400">Acompanhe os envios acima; apure as notas e só depois convoque as críticas. As revelações continuam sob seu controle.</p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Critique Call"><div><p class="text-[10px] tracking-[.25em] text-fashion-gold">🎤 THE CRITIQUE CALL · PRODUCTION</p><h3 class="font-cinzel text-lg">Críticas pendentes</h3><p class="text-xs text-gray-400">Após publicar o ranking, convoque os jurados. Textos chegam automaticamente pelo site; áudios do WhatsApp são confirmados aqui com um toque. Nenhuma crítica é publicada automaticamente.</p></div><div class="grid sm:grid-cols-2 gap-3"><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das notas</p><p class="text-xs text-gray-400">${globalState.notasEncerradas?'Encerrado':'Aberto'} · controlar edição das avaliações</p><button type="button" id="fauToggleScoreWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.notasEncerradas?'Reabrir notas':'Encerrar notas'}</button></div><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das críticas</p><p class="text-xs text-gray-400">${globalState.criticasEncerradas?'Encerrado':'Aberto'} · controlar edição dos textos</p><button type="button" id="fauToggleCritiqueWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas'}</button><div class="flex gap-2 mt-2"><label class="text-xs text-gray-300">HIGH (inclui WIN) <input id="fauCritiqueTopCount" type="number" min="0" max="30" value="${Number(globalState.critiqueTopCount||0)}" class="w-16 p-2 rounded border border-fashion-700 bg-fashion-950"></label><label class="text-xs text-gray-300">LOW <input id="fauCritiqueBottomCount" type="number" min="0" max="30" value="${Number(globalState.critiqueBottomCount||0)}" class="w-16 p-2 rounded border border-fashion-700 bg-fashion-950"></label><button id="fauSaveCritiqueCounts" type="button" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs">Salvar vagas</button></div><p class="text-[10px] text-gray-400">BOTTOM = sempre os dois últimos. 0 = distribuição automática de HIGH/LOW. WIN atual e WIN anterior também são convocados.</p></div></div><div id="fauCritiqueAdmin" class="space-y-3"><p class="text-xs text-gray-400">Carregando...</p></div><div class="flex flex-wrap gap-2"><button id="fauCritiquePublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Publicar críticas com texto</button><button id="fauCritiqueHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar críticas</button></div><p id="fauCritiquePublishStatus" class="text-xs text-gray-400">Áudios do WhatsApp só aparecem publicamente se você registrar uma transcrição.</p></section>
-                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="The Results Desk" id="fauResultsDesk"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS DESK · PRODUCTION ONLY</p><h3 class="font-cinzel text-xl">Apuração & WhatsApp</h3><p class="text-xs text-gray-300">Confira o ranking oficial, prepare o anúncio e copie para o WhatsApp. Nenhum resultado será revelado no site antes de você confirmar a publicação.</p></div><div class="flex flex-wrap gap-2"><button type="button" id="fauDeskLoad" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Ver resultado — somente ADM</button><button type="button" id="fauDeskCopy" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar para WhatsApp</button></div><div id="fauBroadcast" class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3"><div><p class="text-[10px] tracking-widest text-fashion-gold">WHATSAPP BROADCAST · ADM</p><h4 class="font-cinzel text-lg">Ranking + críticas individuais</h4><p class="text-xs text-gray-400">Disponível assim que as críticas forem abertas. Antes da apuração, mostra uma prévia privada sem posição ou classificação oficial. Após apurar, inclui posição, WIN/HIGH/SAFE/LOW/BOTTOM e as mensagens separadas por jurado. Áudios recebidos no WhatsApp são identificados para encaminhamento manual.</p></div><button type="button" id="fauBroadcastLoad" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Preparar sequência de publicação</button><div id="fauBroadcastContent" class="space-y-3" aria-live="polite"></div></div><div id="fauDeskPrivateSummary" class="text-xs text-gray-300 bg-fashion-950 border border-fashion-700 rounded-lg p-4" aria-live="polite">Carregue os resultados para conferir os dados da rodada.</div><label class="block text-xs text-gray-300">Texto do anúncio — editável antes de copiar<textarea id="fauDeskWhatsApp" rows="10" class="mt-2 w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-sm text-gray-100" placeholder="Carregue os resultados para gerar um rascunho. Revise o texto antes de publicar no WhatsApp."></textarea></label><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-4 space-y-3"><p class="text-xs text-fashion-gold font-semibold">PUBLICAÇÃO OFICIAL NO SITE</p><p class="text-xs text-gray-300">Depois de anunciar no WhatsApp, confirme que o resultado oficial pode aparecer no site. Este botão não altera notas nem apura votos.</p><label class="flex gap-2 text-xs text-gray-200 items-start"><input type="checkbox" id="fauDeskAnnounced" class="mt-0.5"> <span>Já anunciei os resultados no WhatsApp e conferi os nomes, desempates e dinâmica especial.</span></label><button type="button" id="fauDeskPublish" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Confirmar publicação no site</button></div><p id="fauDeskStatus" class="text-xs text-gray-300" role="status"></p></section>
+                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="The Results Desk" id="fauResultsDesk"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS DESK · PRODUCTION ONLY</p><h3 class="font-cinzel text-xl">Apuração & WhatsApp</h3><p class="text-xs text-gray-300">Confira o ranking oficial, prepare o anúncio e copie para o WhatsApp. Nenhum resultado será revelado no site antes de você confirmar a publicação.</p></div><div class="flex flex-wrap gap-2"><button type="button" id="fauDeskLoad" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Ver resultado — somente ADM</button><button type="button" id="fauDeskCopy" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar para WhatsApp</button></div><div id="fauBroadcast" class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3"><div><p class="text-[10px] tracking-widest text-fashion-gold">WHATSAPP BROADCAST · ADM</p><h4 class="font-cinzel text-lg">Ranking + críticas individuais</h4><p class="text-xs text-gray-400">Disponível após abrir as críticas. Assim que as notas forem encerradas, calcula o ranking privado com WIN/HIGH/SAFE/LOW/BOTTOM, sem exigir apuração ou publicação oficial. As críticas continuam separadas por jurado. Áudios recebidos no WhatsApp são identificados para encaminhamento manual.</p></div><button type="button" id="fauBroadcastLoad" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Preparar sequência de publicação</button><div id="fauBroadcastContent" class="space-y-3" aria-live="polite"></div></div><div id="fauDeskPrivateSummary" class="text-xs text-gray-300 bg-fashion-950 border border-fashion-700 rounded-lg p-4" aria-live="polite">Carregue os resultados para conferir os dados da rodada.</div><label class="block text-xs text-gray-300">Texto do anúncio — editável antes de copiar<textarea id="fauDeskWhatsApp" rows="10" class="mt-2 w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-sm text-gray-100" placeholder="Carregue os resultados para gerar um rascunho. Revise o texto antes de publicar no WhatsApp."></textarea></label><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-4 space-y-3"><p class="text-xs text-fashion-gold font-semibold">PUBLICAÇÃO OFICIAL NO SITE</p><p class="text-xs text-gray-300">Depois de anunciar no WhatsApp, confirme que o resultado oficial pode aparecer no site. Este botão não altera notas nem apura votos.</p><label class="flex gap-2 text-xs text-gray-200 items-start"><input type="checkbox" id="fauDeskAnnounced" class="mt-0.5"> <span>Já anunciei os resultados no WhatsApp e conferi os nomes, desempates e dinâmica especial.</span></label><button type="button" id="fauDeskPublish" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Confirmar publicação no site</button></div><p id="fauDeskStatus" class="text-xs text-gray-300" role="status"></p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Auto Fashion Archive"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👗 THE FASHION ARCHIVE · ONE-CLICK CURATION</p><h3 class="font-cinzel text-lg">Publicar os looks da rodada</h3><p class="text-xs text-gray-400">Depois de liberar o desfile, copie as criações da rodada para o acervo público. Evita cadastro manual e não inclui notas, votos ou prompts. Operação idempotente: repetir não duplica os looks.</p><button id="fauArchiveSync" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold">📸 Arquivar looks liberados</button><p id="fauArchiveSyncStatus" class="text-xs text-gray-400" role="status"></p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Broadcast Studio"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">📺 BROADCAST STUDIO · ADMIN ONLY</p><h3 class="font-cinzel text-xl">The Fashion Press & The Fashion Archive</h3><p class="text-xs text-gray-400">Publique somente conteúdos já liberados para a plateia. O arquivo público não consulta notas nem votos secretos.</p></div><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs text-gray-300">Tipo<select id="fauBroadcastKind" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2"><option value="press">Fashion Press · Manchete</option><option value="archive">Fashion Archive · Look</option></select></label><label class="text-xs text-gray-300">Rodada / edição<input id="fauBroadcastRound" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2" placeholder="Ex.: WEEK 06"></label></div><input id="fauBroadcastTitle" maxlength="120" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Título do anúncio ou nome do look"><textarea id="fauBroadcastDescription" maxlength="700" rows="2" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Texto editorial público"></textarea><label class="block text-xs text-gray-300">Fotografia do acervo (arquivo, opcional)<input id="fauBroadcastImage" type="file" accept="image/*" class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"></label><button id="fauBroadcastPublish" class="rounded bg-fashion-gold text-black font-bold px-4 py-2 text-xs">Publicar no site</button><p id="fauBroadcastStatus" class="text-xs text-gray-400"></p><details id="fauReunionAdmin" class="border-t border-fashion-700 pt-4 space-y-2"><summary class="cursor-pointer font-cinzel text-fashion-gold">🏆 The Reunion · Season Finale (abrir somente no encerramento)</summary><p class="text-xs text-gray-400">Cole uma curiosidade por linha, no formato Título | Revelação. Revise os números no Season Secrets antes de publicar. Nenhum dado privado é publicado automaticamente.</p><textarea id="fauReunionInput" rows="4" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Mais votos para Ícone | Designer Exemplo — 12 votos"></textarea><div class="flex flex-wrap gap-2"><button id="fauReunionGenerate" class="rounded border border-fashion-700 px-3 py-2 text-xs">✨ Preparar curiosidades reais</button><button id="fauReunionPublish" class="rounded border border-fashion-gold text-fashion-gold px-3 py-2 text-xs">Revelar Reunion</button><button id="fauReunionHide" class="rounded border border-fashion-700 px-3 py-2 text-xs">Ocultar Reunion</button></div></details></section>
                 <section id="fauProductionPulse" class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4 md:p-5 space-y-3" aria-label="Painel operacional da rodada">
@@ -5678,7 +5681,30 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           ]);
           const hasOfficialRank=rankSnap.exists&&Array.isArray(rankSnap.data().rows)&&rankSnap.data().rows.length>0;
           const root=fauBroadcastRoot();if(!root)return;
-          const rank=hasOfficialRank?rankSnap.data().rows.slice():(globalState.critiqueCall?.round===round?(globalState.critiqueCall.names||[]):[]).map(ate=>({ate,status:'',uid:''})).sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
+          // Encerrar as notas permite ao ADM visualizar a classificação calculada,
+          // sem executar a publicação oficial nem alterar qualquer documento público.
+          let privateRank=false;
+          let rank;
+          if(hasOfficialRank){
+            rank=rankSnap.data().rows.slice();
+          }else if(globalState.notasEncerradas){
+            const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd);
+            if(!standings.length)throw new Error('Não há avaliações para calcular o ranking privado.');
+            const count=standings.length;
+            const isFinal=globalState.fase==='final';
+            const isSemifinal=globalState.fase==='top5';
+            const bottom=isFinal?0:isSemifinal?1:Math.min(2,Math.max(0,count-1));
+            const desiredTop=count>=16?5:count>=11?4:count>=7?3:count===6?2:Math.min(2,count);
+            const configuredTop=Math.max(0,Number(globalState.critiqueTopCount||0));
+            const configuredLow=Math.max(0,Number(globalState.critiqueBottomCount||0));
+            const top=isFinal?0:isSemifinal?4:Math.min(configuredTop||desiredTop,Math.max(1,count-bottom));
+            const low=isFinal||isSemifinal?0:Math.min(configuredLow||Math.min(4,Math.max(0,count-top-bottom)),Math.max(0,count-top-bottom));
+            rank=standings.map((x,i)=>({uid:x.uid,ate:x.ate,pos:i+1,status:isFinal?(['WINNER · VENCEDOR DA TEMPORADA','2º LUGAR','3º LUGAR'][i]||''):i===0?'WIN':i<top?'HIGH':i>=count-bottom?'BOTTOM':i>=count-bottom-low?'LOW':'SAFE'}));
+            privateRank=true;
+          }else{
+            rank=(globalState.critiqueCall?.round===round?(globalState.critiqueCall.names||[]):[]).map(ate=>({ate,status:'',uid:''})).sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
+          }
+          const hasRank=hasOfficialRank||privateRank;
           if(!rank.length)throw new Error('Abra as críticas e prepare a convocação dos Designers primeiro.');
           const looks=lookSnap.docs.map(d=>({id:d.id,...d.data()}));
           const critiques=critSnap.docs.map(d=>d.data()).filter(d=>d.received);
@@ -5686,14 +5712,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const judges=profiles.filter(p=>p.role==='jurado'||p.uid===currentUser.uid).map(p=>({uid:p.uid,name:p.nomeJurado||p.ate||(p.uid===currentUser.uid?'FAU':'Jurado')}));
           const byName=(a,b)=>String(a).localeCompare(String(b),'pt-BR',{sensitivity:'base'});
           const jurorName=c=>String(c.jurorNome||judges.find(j=>j.uid===c.juror)?.name||'Jurado');
-          const isHostJuror=c=>String(c.juror||'')===String(currentUser.uid)||/^(fau|thiago(?: faustino)?)$/i.test(jurorName(c).trim());
+          const isHostJuror=c=>String(c.juror||'')===String(currentUser.uid)||/^(fau|thiago(?: faustino)?|the control room(?: \(admin & júri\))?)$/i.test(jurorName(c).trim());
           const orderCritiques=(a,b)=>Number(isHostJuror(a))-Number(isHostJuror(b))||byName(jurorName(a),jurorName(b));
           const escAttr=x=>esc(String(x||''));
           const progressKey=`fau_broadcast_${round}`;
           let progress={};try{progress=JSON.parse(localStorage.getItem(progressKey)||'{}')||{}}catch(_){}
           const cards=rank.map((r,index)=>{
             const name=String(r.ate||r.nome||'Designer');
-            const position=hasOfficialRank?(Number(r.pos||r.posicao)||index+1):null;
+            const position=hasRank?(Number(r.pos||r.posicao)||index+1):null;
             const status=String(r.status||'').toUpperCase().replace(/\bTOP\b/g,'HIGH').replace(/^WIN.*$/,'WIN');
             const matching=looks.filter(l=>String(l.uid||'')===String(r.uid||'__sem_uid__') || String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'));
             const look=matching.find(l=>l.url||l.image||l.img||l.foto);
@@ -5706,34 +5732,34 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             return `<details class="border border-fashion-700 rounded-lg p-3" ${index===0?'open':''}><summary class="cursor-pointer flex justify-between gap-2 items-center"><strong class="text-fashion-gold">${escAttr(label)}</strong><span class="flex items-center gap-2"><span class="border rounded px-2 py-1 text-[10px] font-bold ${statusColor}">${escAttr(status||'SEM CLASSIFICAÇÃO')}</span><span class="text-xs text-gray-400">${sorted.length} crítica(s)</span></span></summary>
             <div class="mt-3 space-y-3">
               <div class="border border-fashion-700 rounded-lg p-3 space-y-2">
-                <p class="text-xs text-fashion-gold">01 · CRIAÇÃO ENVIADA PELO DESIGNER + LEGENDA</p>${!hasOfficialRank?'<p class="text-xs text-amber-200">Prévia: posição e classificação serão adicionadas após a apuração oficial.</p>':''}
+                <p class="text-xs text-fashion-gold">01 · CRIAÇÃO ENVIADA PELO DESIGNER + LEGENDA</p>${!hasRank?'<p class="text-xs text-amber-200">Prévia: posição e classificação aparecem quando as notas forem encerradas.</p>':''}
                 ${photo?`<img src="${escAttr(photo)}" alt="Look de ${escAttr(name)}" loading="lazy" class="max-h-72 w-full object-contain rounded bg-black">`:'<p class="text-xs text-amber-200">Criação não encontrada nos envios desta rodada. Nenhuma foto de perfil será usada como substituta.</p>'}
                 <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-sm italic text-gray-200">${escAttr(look?.titulo||'Criação sem título')}</p><p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
-                <div class="flex flex-wrap gap-2"><button type="button" data-broadcast-copy="${index}" class="border border-fashion-gold rounded px-3 py-2 text-xs">Copiar legenda</button>${photo?`<button type="button" data-broadcast-photo="${index}" class="border border-fashion-700 rounded px-3 py-2 text-xs">Compartilhar / baixar foto</button>`:''}<label class="text-xs flex items-center gap-2"><input type="checkbox" data-broadcast-done="${index}:foto" ${progress[`${index}:foto`]?'checked':''}> Enviado</label></div>
+                <div class="flex flex-wrap gap-2"><button type="button" data-broadcast-copy="${index}" class="border border-fashion-gold rounded px-3 py-2 text-xs">Copiar legenda</button>${photo?`<button type="button" data-broadcast-photo="${index}" class="border border-fashion-700 rounded px-3 py-2 text-xs">Compartilhar foto + legenda</button>`:''}<label class="text-xs flex items-center gap-2"><input type="checkbox" data-broadcast-done="${index}:foto" ${progress[`${index}:foto`]?'checked':''}> Enviado</label></div>
               </div>
               ${sorted.length?sorted.map((c,j)=>{
-                const juror=c.jurorNome||judges.find(x=>x.uid===c.juror)?.name||'Jurado';
+                const juror=isHostJuror(c)?'FAU':jurorName(c);
                 const audio=c.source==='whatsapp';
-                const message=`*${juror.replace(/[*~_`]/g,' ')}*\n${String(c.text||'').trim()}`;
+                const message=isHostJuror(c)?String(c.text||'').trim():`*${juror.replace(/[*~_`]/g,' ')}*\n${String(c.text||'').trim()}`;
                 return `<div class="border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs text-fashion-gold">${String(j+2).padStart(2,'0')} · ${escAttr(juror)} ${audio?'· ÁUDIO WHATSAPP':'· TEXTO'}</p>
-                  ${c.text?`<p class="text-sm whitespace-pre-wrap"><strong>${escAttr(juror)}:</strong> ${escAttr(c.text)}</p>`:''}
+                  ${c.text?`<p class="text-sm whitespace-pre-wrap">${isHostJuror(c)?'':`<strong>${escAttr(juror)}:</strong> `}${escAttr(c.text)}</p>`:''}
                   ${audio?`<p class="text-xs text-amber-200">Áudio recebido pelo WhatsApp: encaminhe a mensagem original de ${escAttr(juror)} referente a ${escAttr(name)}. O site registra o recebimento, mas não armazena o arquivo de áudio.</p>`:''}
                   <div class="flex flex-wrap gap-2">${c.text?`<button type="button" data-broadcast-message="${index}:${j}" class="border border-fashion-gold rounded px-3 py-2 text-xs">Copiar crítica</button>`:''}<label class="text-xs flex items-center gap-2"><input type="checkbox" data-broadcast-done="${index}:${j}" ${progress[`${index}:${j}`]?'checked':''}> Enviado</label></div>
                 </div>`;
               }).join(''):'<p class="text-xs text-gray-400">Nenhuma crítica recebida para este Designer.</p>'}
             </div></details>`;
           });
-          root.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><p class="text-xs text-gray-300">${rank.length} Designers · ${critiques.length} críticas · ${hasOfficialRank?'ranking oficial':'prévia privada sem ranking oficial'}</p><span id="fauBroadcastProgress" class="text-xs text-fashion-gold font-semibold" role="status"></span></div><div class="flex flex-wrap gap-2"><button type="button" id="fauBroadcastNext" class="border border-fashion-gold rounded px-3 py-2 text-xs">Próximo Designer pendente ↓</button><button type="button" id="fauBroadcastCopyNext" class="bg-fashion-gold text-black rounded px-3 py-2 text-xs font-bold">Copiar próxima mensagem pendente</button></div>${cards.join('')}`;
+          root.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><p class="text-xs text-gray-300">${rank.length} Designers · ${critiques.length} críticas · ${hasRank?'ranking oficial':'prévia privada sem ranking oficial'}</p><span id="fauBroadcastProgress" class="text-xs text-fashion-gold font-semibold" role="status"></span></div><div class="flex flex-wrap gap-2"><button type="button" id="fauBroadcastNext" class="border border-fashion-gold rounded px-3 py-2 text-xs">Próximo Designer pendente ↓</button><button type="button" id="fauBroadcastCopyNext" class="bg-fashion-gold text-black rounded px-3 py-2 text-xs font-bold">Copiar próxima mensagem pendente</button></div>${cards.join('')}`;
           const messages=[];
           rank.forEach((r,i)=>{
             const name=String(r.ate||r.nome||'Designer');
-            const position=hasOfficialRank?i+1:null,status=String(r.status||'').toUpperCase();
+            const position=hasRank?i+1:null,status=String(r.status||'').toUpperCase();
             const matchingLook=looks.find(l=>(String(l.uid||'')===String(r.uid||'__sem_uid__')||String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(l.url||l.image||l.img||l.foto));
             messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n*${status}*`:''}`});
             const related=critiques.filter(c=>c.maison===name).sort(orderCritiques);
             related.forEach((c,j)=>{
-              const juror=c.jurorNome||judges.find(x=>x.uid===c.juror)?.name||'Jurado';
-              if(c.text?.trim())messages.push({key:`${i}:${j}`,text:`*${juror.replace(/[*~_`]/g,' ')}*\n${c.text.trim()}`});
+              const juror=isHostJuror(c)?'FAU':jurorName(c);
+              if(c.text?.trim())messages.push({key:`${i}:${j}`,text:isHostJuror(c)?c.text.trim():`*${juror.replace(/[*~_`]/g,' ')}*\n${c.text.trim()}`});
             });
           });
           const refreshProgress=()=>{
@@ -5756,16 +5782,41 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           root.querySelectorAll('[data-broadcast-message]').forEach(b=>b.onclick=safeExec(()=>fauBroadcastCopy(messages.find(m=>m.key===b.dataset.broadcastMessage)?.text||'')));
           refreshProgress();
           root.querySelectorAll('[data-broadcast-photo]').forEach(b=>b.onclick=safeExec(async()=>{
-            const r=rank[Number(b.dataset.broadcastPhoto)],name=String(r.ate||r.nome||'Designer');
+            const i=Number(b.dataset.broadcastPhoto),r=rank[i],name=String(r.ate||r.nome||'Designer');
             const l=looks.find(x=>(String(x.uid||'')===String(r.uid||'__sem_uid__')||String(x.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(x.url||x.image||x.img||x.foto));
-            const url=l&&(l.url||l.image||l.img||l.foto);if(!url)throw new Error('Foto indisponível.');
-            // Compartilhamento nativo, quando possível; caso contrário abre a foto original.
+            const url=l&&(l.url||l.image||l.img||l.foto);if(!url)throw new Error('Foto da criação indisponível.');
+            const caption=messages.find(m=>m.key===`${i}:foto`)?.text||'';
+            let file;
             try{
-              const response=await fetch(url);if(!response.ok)throw new Error('Download bloqueado');
-              const blob=await response.blob(),file=new File([blob],`WEEK_${round}_${name.replace(/[^a-z0-9]+/gi,'_')}.jpg`,{type:blob.type||'image/jpeg'});
-              if(navigator.canShare?.({files:[file]})){await navigator.share({files:[file]});return;}
-              const a=document.createElement('a');const objectUrl=URL.createObjectURL(blob);a.href=objectUrl;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(objectUrl),30000);
-            }catch(e){if(e.name==='AbortError')return;window.open(url,'_blank','noopener,noreferrer');showToast('Foto aberta: salve ou compartilhe pelo navegador.');}
+              const response=await fetch(url);if(!response.ok)throw new Error('Não foi possível acessar a imagem');
+              const blob=await response.blob();
+              const ext=blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':'jpg';
+              file=new File([blob],`WEEK_${round}_${name.replace(/[^a-z0-9]+/gi,'_')}.${ext}`,{type:blob.type||'image/jpeg'});
+            }catch(e){
+              await fauBroadcastCopy(caption);
+              window.open(url,'_blank','noopener,noreferrer');
+              showToast('Legenda copiada. Abra a imagem e envie pelo WhatsApp com a legenda.');
+              return;
+            }
+            // Android/iOS: o compartilhamento nativo envia o arquivo e o texto juntos
+            // quando o aplicativo de destino aceita legenda em compartilhamento de mídia.
+            if(navigator.share && navigator.canShare?.({files:[file]})){
+              try{
+                await navigator.share({files:[file],text:caption});
+                return;
+              }catch(e){
+                if(e.name==='AbortError')return;
+                // Alguns destinos não aceitam texto + arquivo: tenta mídia isolada,
+                // deixando a legenda pronta para colar manualmente.
+                await fauBroadcastCopy(caption);
+                try{await navigator.share({files:[file]});return;}catch(second){if(second.name==='AbortError')return;}
+              }
+            }
+            await fauBroadcastCopy(caption);
+            const objectUrl=URL.createObjectURL(file),a=document.createElement('a');
+            a.href=objectUrl;a.download=file.name;document.body.appendChild(a);a.click();a.remove();
+            setTimeout(()=>URL.revokeObjectURL(objectUrl),30000);
+            showToast('Foto baixada e legenda copiada. Anexe a foto no WhatsApp e cole a legenda.');
           }));
           root.querySelectorAll('[data-broadcast-done]').forEach(b=>b.onchange=()=>{progress[b.dataset.broadcastDone]=b.checked;try{localStorage.setItem(progressKey,JSON.stringify(progress))}catch(_){}refreshProgress();});
         }));
