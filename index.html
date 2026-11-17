@@ -3309,8 +3309,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 slot.innerHTML = data?.published ? `<div class="bg-fashion-900 border border-fashion-gold rounded-xl p-5 space-y-3"><h3 class="font-cinzel text-fashion-gold text-lg">🗡️ THE BLACK BANQUET — THE REVEAL</h3><p class="text-gray-300 text-xs">Before you leave my castle forever, you must reveal to us: are you a Faithful or are you a Traitor?</p><div class="grid sm:grid-cols-2 gap-2">${(data.members||[]).map(x=>`<div class="border border-fashion-700 rounded p-3 text-xs"><b>${esc(x.ate)}</b><div class="text-fashion-gold mt-1">${esc(x.faction)}</div></div>`).join('')}</div></div>` : '';
             });
         }
-        renderView(`
-            ${insideArchive ? `<section class="fau-archive-head rounded-xl p-5 border border-fashion-gold/40 mb-6"><p class="text-fashion-gold text-[10px] tracking-[.3em]">PROJECT RUNWAY: FAU · THE OFFICIAL ARCHIVE</p><h2 class="font-cinzel text-2xl text-white mt-2">THE FASHION ARCHIVE</h2><button type="button" id="backToFashionArchive" class="mt-4 border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">← Voltar ao arquivo</button></section>` : ''}
+        const mountTrackRecord = insideArchive ? (html) => { const target=document.querySelector('[data-archive-panel="track"]'); if(target)target.innerHTML=html; } : renderView;
+        mountTrackRecord(`
+
             <div class="space-y-8">
                 ${globalState.themeId === 'theme_traitors' ? '<div id="banquetRevealSlot"></div>' : ''}
                 <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
@@ -3323,7 +3324,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <p class="text-gray-400 py-8 text-center">Calculando matriz de desempenho da temporada...</p>
                 </div>
 
-                <div class="space-y-4 pt-4 border-t border-fashion-700">
+                ${insideArchive ? '' : `<div class="space-y-4 pt-4 border-t border-fashion-700">
                     <div class="border-b border-fashion-700 pb-2">
                         <span class="text-xs uppercase tracking-widest text-fashion-red font-medium font-cinzel font-bold">Auf Wiedersehen</span>
                         <h3 class="font-cinzel text-lg text-white font-normal">Galeria de Eliminações (Hall dos Eliminados)</h3>
@@ -3331,14 +3332,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div id="eliminationGalleryGrid" class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                         <p class="text-gray-500 italic py-4">Carregando galeria...</p>
                     </div>
-                </div>
+                </div>`}
             </div>
         `);
 
-        if (insideArchive) {
-            const back = document.getElementById('backToFashionArchive');
-            if (back) back.onclick = () => navigate('legado');
-        }
 
         // The full season score matrix is production-only. Other profiles never query
         // the full evaluations collection through this view.
@@ -3641,9 +3638,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <button type="button" role="tab" aria-selected="true" data-archive-tab="gallery" class="fau-archive-tab bg-fashion-gold text-black font-bold rounded px-4 py-3 text-xs">LOOKBOOK</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="hall" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">HALL OF FASHION</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="out" class="fau-archive-tab fau-archive-out-nav border border-fashion-700 rounded px-4 py-3 text-xs">AUF WIEDERSEHEN <span class="text-[10px] opacity-70">· HALL DOS ELIMINADOS</span></button>
+            <button type="button" role="tab" aria-selected="false" data-archive-tab="track" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">TRACK RECORD</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="designers" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">DESIGNER LEGACY</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="story" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">SEASON STORY</button>
-            <button type="button" id="archiveShowTrackRecord" class="fau-archive-tab border border-fashion-gold/50 text-fashion-gold rounded px-4 py-3 text-xs">TRACK RECORD</button>
           </div>
           <section data-archive-panel="gallery" class="space-y-4" role="tabpanel">
             <div><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL LOOKBOOK</p><h3 class="font-cinzel text-2xl text-white mt-1">Every Look Tells a Story</h3><p class="text-sm text-gray-400 mt-2">Explore as criações que já foram oficialmente liberadas pela produção.</p></div>
@@ -3657,6 +3654,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           <p class="text-gray-400 text-sm">WIN é a vitória de uma rodada, decidida pelos jurados. WINNER é o título exclusivo de quem vence a temporada. Ícone da Moda é uma distinção separada, decidida pelos participantes.</p>
           ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm py-6">O Hall abrirá após as primeiras conquistas oficiais.</p>'}</section>
           <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">THE RUNWAY IS STILL OPEN</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>'}</section>
+          <section data-archive-panel="track" class="space-y-4 hidden" role="tabpanel"><p class="text-gray-400 text-sm py-6 text-center">Abra o Track Record para consultar o histórico da temporada.</p></section>
           <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">The Designers’ Dossiers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
           <section data-archive-panel="story" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
           <p class="text-gray-400 text-sm">Reviva a temporada capítulo por capítulo, somente com anúncios oficiais.</p>
@@ -3665,12 +3663,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           ${titlesResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Os títulos publicados não estão acessíveis com as permissões atuais.</p>':''}
           ${castResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar o elenco público para o Hall dos Eliminados.</p>':''}
           ${publicationsResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O acervo de imagens publicadas não está acessível com as permissões atuais.</p>':''}`;
-        body.querySelector('#archiveShowTrackRecord')?.addEventListener('click',()=>VIEWS.historico(true));
+        let trackLoaded=false;
         const tabs=[...body.querySelectorAll('[data-archive-tab]')];
         tabs.forEach(tab=>tab.addEventListener('click',()=>{
           const chosen=tab.dataset.archiveTab;
           tabs.forEach(t=>{const active=t===tab;t.setAttribute('aria-selected',String(active));t.classList.toggle('bg-fashion-gold',active);t.classList.toggle('text-black',active);t.classList.toggle('font-bold',active);t.classList.toggle('border',!active);t.classList.toggle('border-fashion-700',!active);});
           body.querySelectorAll('[data-archive-panel]').forEach(panel=>panel.classList.toggle('hidden',panel.dataset.archivePanel!==chosen));
+          if(chosen==='track'&&!trackLoaded){trackLoaded=true;VIEWS.historico(true).catch(err=>{trackLoaded=false;console.error('Track Record',err);const panel=body.querySelector('[data-archive-panel="track"]');if(panel)panel.innerHTML='<p class="text-red-300 text-sm">Não foi possível carregar o Track Record. Tente novamente.</p>';});}
         }));
         const search=body.querySelector('#fauArchiveSearch'),select=body.querySelector('#fauArchiveRound');
         body.querySelector('#fauArchiveClear')?.addEventListener('click',()=>{if(search)search.value='';if(select)select.value='';filterArchive();search?.focus();});
