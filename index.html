@@ -3748,7 +3748,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     };
     const fauCritiqueKey = (round,juror,maison) => `${round}_${juror}_${encodeURIComponent(maison)}`;
     const fauCritiqueJuryMount = async () => {
-        const root=document.getElementById('fauCritiqueJury');if(!root||currentUser?.role!=='jurado')return;
+        const root=document.getElementById('fauCritiqueJury');if(!root||!(currentUser?.role==='jurado'||isAdmin))return;
         try{
             const round=String(globalState.rodada||'');
             const targets=await fauCritiqueTargets();if(!root.isConnected)return;
@@ -3772,7 +3772,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const round=String(globalState.rodada||'');const targets=await fauCritiqueTargets();if(!root.isConnected)return;
             if(!targets.length){root.innerHTML='<p class="text-xs text-gray-400">A lista será gerada quando o ranking oficial da rodada estiver publicado. Não é necessário solicitar críticas antes das notas.</p>';return;}
             const profiles=await db.collection('perfis').where('role','==','jurado').get();
-            const jurors=profiles.docs.filter(d=>!d.data().disabled).map(d=>({uid:d.id,name:d.data().nomeJurado||d.data().nome||d.data().name||d.data().ate||'Jurado',photo:d.data().fotoElenco||''})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
+            const jurors=profiles.docs.filter(d=>!d.data().disabled).map(d=>({uid:d.id,name:d.data().nomeJurado||d.data().nome||d.data().name||d.data().ate||'Jurado',photo:d.data().fotoElenco||''}));
+            // A direção também integra a bancada, usando a própria conta e UID.
+            if(isAdmin && currentUser?.uid && !jurors.some(j=>j.uid===currentUser.uid)){
+                jurors.push({uid:currentUser.uid,name:currentUser.nomeJurado||currentUser.ate||'FAU · Direção',photo:currentUser.fotoElenco||''});
+            }
+            jurors.sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
             const all=await db.collection('criticas_solicitadas').where('round','==',round).get();
             const found=new Map(all.docs.map(d=>[d.id,d.data()]));
             if(!root.isConnected)return;
