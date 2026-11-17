@@ -771,6 +771,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 
 <script>
     const firebaseConfig = {
@@ -5580,7 +5581,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                                         <div class="fau-profile-role-row"><select id="fau-role-${p.id}" data-role-select="${p.id}" ${isSelf?'disabled':''}>
                                             <option value="estilista" ${p.role==='estilista'?'selected':''}>Designer</option><option value="jurado" ${p.role==='jurado'?'selected':''}>Jurado</option><option value="plateia" ${p.role==='plateia'?'selected':''}>Público</option>
                                         </select><button data-act="save-role" data-uid="${p.id}" ${isSelf?'disabled':''} class="fau-profile-btn">Salvar função</button></div>
-                                        <div class="fau-profile-actions"><button data-act="toggle-status" data-uid="${p.id}" data-current="${isDisabled?'true':'false'}" ${isSelf?'disabled':''} class="fau-profile-btn">${isDisabled?'Ativar':'Desativar'}</button>
+                                        <div class="fau-profile-actions"><button data-act="reset-random-password" data-uid="${p.id}" data-name="${esc(p.ate||p.username||'Usuário')}" class="fau-profile-btn fau-profile-edit"><i class="fa-solid fa-key" aria-hidden="true"></i> Nova senha aleatória</button><button data-act="toggle-status" data-uid="${p.id}" data-current="${isDisabled?'true':'false'}" ${isSelf?'disabled':''} class="fau-profile-btn">${isDisabled?'Ativar':'Desativar'}</button>
                                         <button data-act="delete-profile" data-uid="${p.id}" data-name="${esc(p.ate)}" ${isSelf?'disabled':''} class="fau-profile-btn fau-profile-danger">Excluir perfil</button></div>
                                     </div>
                                 </details>
@@ -7212,6 +7213,29 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const uid = btn.dataset.uid;
             if (!isAdmin || !auth.currentUser) throw new Error('Apenas a produção pode gerenciar usuários.');
             if (['save-role','toggle-status','delete-profile','edit-profile'].includes(act) && (!uid || uid === auth.currentUser.uid)) throw new Error('Não é permitido alterar sua própria conta neste painel.');
+
+            if (act === 'reset-random-password') {
+                if (!uid) throw new Error('Selecione um usuário válido.');
+                const name=btn.dataset.name||'este usuário';
+                if (!confirm(`Gerar e aplicar uma nova senha aleatória para ${name}? A senha anterior deixará de funcionar imediatamente.`)) return;
+                btn.disabled=true;
+                try {
+                    const result=await firebase.app().functions('us-central1').httpsCallable('adminResetRandomPassword')({uid});
+                    const password=result.data?.password;
+                    if (!password) throw new Error('O servidor não retornou a nova senha.');
+                    const dialog=document.createElement('div');
+                    dialog.className='fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4';
+                    dialog.innerHTML=`<section role="dialog" aria-modal="true" aria-label="Nova senha" class="w-full max-w-md rounded-xl border border-fashion-gold bg-fashion-900 p-6 space-y-4"><p class="text-[10px] tracking-widest text-fashion-gold">USER MANAGEMENT · CREDENTIALS</p><h3 class="font-cinzel text-2xl text-white">Nova senha aplicada</h3><p class="text-sm text-gray-300">${esc(name)} já pode entrar com a nova senha. A anterior foi invalidada. Copie agora: ela não será exibida novamente.</p><input aria-label="Nova senha gerada" readonly class="w-full bg-fashion-950 border border-fashion-gold rounded-lg p-3 text-white font-mono" value="${esc(password)}"><div class="flex gap-2"><button type="button" data-copy class="flex-1 rounded-lg bg-fashion-gold p-3 text-black font-bold">Copiar senha</button><button type="button" data-close class="rounded-lg border border-fashion-700 px-4 text-white">Fechar</button></div></section>`;
+                    document.body.appendChild(dialog);
+                    dialog.querySelector('[data-copy]').onclick=async()=>{try{await navigator.clipboard.writeText(password);showToast('Nova senha copiada.');}catch{dialog.querySelector('input').select();showToast('Selecione e copie a senha.');}};
+                    dialog.querySelector('[data-close]').onclick=()=>dialog.remove();
+                    dialog.querySelector('input').focus();
+                } catch(error) {
+                    if(error.code==='functions/not-found'||error.code==='functions/unavailable') throw new Error('A função segura de redefinição ainda não está publicada no Firebase. Consulte o arquivo de instalação.');
+                    throw error;
+                } finally {btn.disabled=false;}
+                return;
+            }
 
             if (act === 'edit-profile') {
                 const ref = db.doc(`perfis/${uid}`);
