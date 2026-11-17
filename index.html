@@ -3350,17 +3350,33 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if (!rounds.length) {
                     slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
                 } else {
-                    const participants=new Map();
-                    rounds.forEach(r=>(r.rows||[]).forEach(x=>{
-                        if(!x.uid)return;
-                        if(!participants.has(x.uid))participants.set(x.uid,{name:x.ate||'Designer',statuses:{}});
-                        const entry=participants.get(x.uid);
-                        entry.name=x.ate||entry.name;
-                        entry.statuses[r.round]=String(x.status||'—').replace(/\s*\(PROTEGIDO\)/i,'');
-                    }));
-                    const header=rounds.map(r=>`<th class="px-3 py-3 text-fashion-gold whitespace-nowrap">WEEK ${esc(r.round)}</th>`).join('');
-                    const lines=[...participants.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(p=>`<tr class="border-t border-fashion-700"><th class="text-left text-white px-3 py-3 whitespace-nowrap">${esc(p.name)}</th>${rounds.map(r=>`<td class="text-center px-3 py-3 font-bold">${esc(p.statuses[r.round]||'—')}</td>`).join('')}</tr>`).join('');
-                    slot.innerHTML=`<div class="space-y-3"><p class="text-xs text-gray-400">Classificações oficiais por semana. Notas individuais e acumulados permanecem confidenciais.</p><table class="w-full text-xs"><thead><tr><th class="text-left px-3 py-3 text-fashion-gold">DESIGNER</th>${header}</tr></thead><tbody>${lines}</tbody></table></div>`;
+                    // The Track Record is a chronological archive of each WEEK's official
+                    // ranking, in the exact published order (not an alphabetical roster).
+                    const statusLabel = raw => String(raw||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
+                    const statusClass = raw => {
+                        const v=statusLabel(raw);
+                        return /^WIN/.test(v)?'text-amber-200':/^(HIGH|TOP)/.test(v)?'text-violet-200':/^SAFE/.test(v)?'text-emerald-200':/^LOW/.test(v)?'text-orange-200':/^(BOTTOM|OUT)/.test(v)?'text-rose-300':'text-gray-200';
+                    };
+                    const weekLabel = (r,i) => {
+                        const raw=String(r.round||'');
+                        const num=Number(raw.match(/(?:week|w)\s*0*(\d+)/i)?.[1] || (/^\d+$/.test(raw)?raw:0));
+                        return `WEEK ${String(num||i+1).padStart(2,'0')}`;
+                    };
+                    slot.classList.remove('font-mono');
+                    slot.innerHTML=`<div class="space-y-6">
+                        <p class="text-xs text-gray-300 leading-relaxed">Ranking oficial de cada rodada, do primeiro ao último colocado. As notas individuais e o acumulado permanecem confidenciais.</p>
+                        ${rounds.map((r,i)=>`<section class="rounded-xl border border-fashion-700 overflow-hidden" aria-label="Ranking ${weekLabel(r,i)}">
+                            <div class="px-4 py-4 bg-fashion-950 border-b border-fashion-700 flex items-center justify-between gap-3">
+                                <h3 class="font-cinzel text-xl text-fashion-gold">${weekLabel(r,i)}</h3>
+                                <span class="text-[10px] tracking-widest text-gray-400">RANKING OFICIAL</span>
+                            </div>
+                            <div class="divide-y divide-fashion-700">${r.rows.map((x,rank)=>`<div class="flex items-center gap-3 px-3 sm:px-4 py-3 ${rank===0?'bg-amber-900/10':''}">
+                                <span class="w-8 shrink-0 text-center font-semibold text-fashion-gold tabular-nums">${String(rank+1).padStart(2,'0')}</span>
+                                <span class="min-w-0 flex-1 text-sm text-white font-medium break-words">${esc(x.ate||'Designer')}</span>
+                                <span class="shrink-0 text-xs font-bold tracking-wide ${statusClass(x.status)}">${esc(statusLabel(x.status))}</span>
+                            </div>`).join('')}</div>
+                        </section>`).join('')}
+                    </div>`;
                 }
             } catch(err) {
                 console.warn('Public Track Record unavailable',err);
@@ -3561,6 +3577,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       if(trackButton)trackButton.onclick=()=>VIEWS.historico(true);
       const body=$('#fauArchiveBody'),loading=$('#fauArchiveLoading');
       const roundKey=x=>String(x??'');
+      const weekLabel=x=>{const m=String(x??'').match(/^w0*(\d+)/i);return m?'WEEK '+String(Number(m[1])).padStart(2,'0'):String(x??'').replace(/^week\s*/i,'WEEK ');};
       try{
         // Nunca ler a coleção privada "looks" para montar uma página pública.
         const [ranksResult,titlesResult,publicationsResult,castResult]=await Promise.allSettled([
@@ -3623,7 +3640,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const pub=findImage(a.round,a.uid),types=[...a.types].join(' + ');
           return `<article class="rounded-xl border border-fashion-gold/25 bg-fashion-950 overflow-hidden">
             ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
-            <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · WEEK ${esc(a.round)}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
+            <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
           </article>`;
         }).join('');
         const profiles=[...people.values()].sort((a,b)=>(b.wins+b.icons)-(a.wins+a.icons)||a.name.localeCompare(b.name,'pt-BR')).map(p=>
@@ -5967,8 +5984,24 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           batch.set(db.collection('fau_titulos_publicos').doc(round),{...titles,round,icon:iconResult.uid,fora,published:true,updatedAt:stamp,updatedBy:currentUser.uid},{merge:true});
           batch.set(db.doc('config/estado'),{rankingLiberado:true,winUid:winner.uid},{merge:true});
           await batch.commit();
+          // A publicação oficial também arquiva as imagens já liberadas no desfile.
+          // O público só consulta fau_publications, nunca a coleção privada looks.
+          let archiveCount=0,archiveError='';
+          try {
+            const lookSnap=await db.collection('looks').where('rodada','==',globalState.rodada).get();
+            let imageBatch=db.batch(),pending=0;
+            for(const doc of lookSnap.docs){
+              const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
+              if(typeof image!=='string'||!/^https:\/\//i.test(image)||!l.uid)continue;
+              const id='round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
+              imageBatch.set(db.collection('fau_publications').doc(id),{kind:'archive',round,title:String(l.title||l.titulo||l.ate||'Look').slice(0,120),description:String(l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid,slot:l.slot||null,createdAt:stamp,createdBy:currentUser.uid},{merge:true});
+              archiveCount++;pending++;
+              if(pending===400){await imageBatch.commit();imageBatch=db.batch();pending=0;}
+            }
+            if(pending)await imageBatch.commit();
+          }catch(err){archiveError=err?.message||'Falha ao sincronizar imagens';console.warn('Archive sync',err);}
           await productionLog('official_results_published_together',{round,win:winner.uid,icon:iconResult.uid,fora,count:rows.length});
-          $('#fauDeskStatus').textContent='WIN, ranking, Ícone da Moda e Fora de Moda publicados automaticamente.';
+          $('#fauDeskStatus').textContent='WIN, ranking, Ícone da Moda e Fora de Moda publicados. '+(archiveError?'Atenção: imagens não sincronizadas ('+archiveError+').':archiveCount+' imagem(ns) arquivada(s).');
           showToast('Todos os resultados publicados!');
         });
         // Desempate oficial do Ícone: votos > ranking da rodada > acumulado.
