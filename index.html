@@ -3261,17 +3261,26 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         sub(db.doc('config/entregas_publicas'), doc => {
             const data = doc.exists ? doc.data() : null;
             submissionPulse = data && String(data.rodada)===String(globalState.rodada) ? data : null;
-            // Atualiza somente a contagem: não recria o formulário e não perde
-            // imagem ou texto que o Designer esteja preenchendo.
+            // Atualiza o painel inteiro, inclusive o texto e a barra, sem recriar
+            // o formulário nem apagar o que o Designer está preenchendo.
             const board = document.getElementById('workroomThermometer');
-            if(board && submissionPulse){
-                const sent = Math.max(0, Number(submissionPulse.enviados)||0);
-                const total = Math.max(sent, Number(submissionPulse.total)||0);
-                const pending = Math.max(0,total-sent);
-                const counts=board.querySelectorAll('.grid strong');
-                if(counts.length>=2){counts[0].textContent=String(sent);counts[1].textContent=String(pending);}
-                const bar=board.querySelector('.h-full.bg-fashion-gold');
-                if(bar)bar.style.width=(total?Math.round(100*sent/total):0)+'%';
+            if (board) {
+                const ready = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
+                const sent = ready ? Math.max(0, Number(submissionPulse.enviados)) : null;
+                const total = ready ? Math.max(sent, Number(submissionPulse.total)||0) : 0;
+                const pending = ready ? Math.max(0, total-sent) : null;
+                const percent = ready && total ? Math.min(100,Math.round(100*sent/total)) : 0;
+                const counts = board.querySelectorAll('.grid strong');
+                if (counts.length >= 2) {
+                    counts[0].textContent = sent===null ? '—' : String(sent);
+                    counts[1].textContent = pending===null ? '—' : String(pending);
+                }
+                const bar = board.querySelector('.h-full.bg-fashion-gold');
+                if (bar) bar.style.width = percent+'%';
+                const note = board.querySelector('p.mt-2');
+                if (note) note.textContent = ready
+                    ? `${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.`
+                    : 'Aguardando a sincronização da produção.';
             }
         });
     };
