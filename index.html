@@ -5724,7 +5724,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const matching=looks.filter(l=>String(l.uid||'')===String(r.uid||'__sem_uid__') || String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'));
             const look=matching.find(l=>l.url||l.image||l.img||l.foto);
             const photo=look&&(look.url||look.image||look.img||look.foto)||'';
-            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n${String(look?.titulo||'Criação sem título').trim()}${status?`\n*${status}*`:''}`;
+            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(look?.titulo||'Criação sem título').trim()}${status?`\n\n*${status}*`:''}`;
             const related=critiques.filter(c=>c.maison===name);
             const sorted=related.slice().sort(orderCritiques);
             const label=`${position?position+'º LUGAR — ':''}${name}`;
@@ -5755,7 +5755,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const name=String(r.ate||r.nome||'Designer');
             const position=hasRank?i+1:null,status=String(r.status||'').toUpperCase();
             const matchingLook=looks.find(l=>(String(l.uid||'')===String(r.uid||'__sem_uid__')||String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(l.url||l.image||l.img||l.foto));
-            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n*${status}*`:''}`});
+            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n\n*${status}*`:''}`});
             const related=critiques.filter(c=>c.maison===name).sort(orderCritiques);
             related.forEach((c,j)=>{
               const juror=isHostJuror(c)?'FAU':jurorName(c);
