@@ -3291,12 +3291,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             sub(db.doc(`perfis/${uid}`),snap=>{if(!snap.exists||activeTab!=='meu_perfil')return;const el=$('#fauProfileManifesto');if(el)el.textContent=snap.data().bio||'Nenhum manifesto definido.';});
         }
         try{
-            const summary=await db.doc(`desempenho_privado/${uid}`).get();
-            if(currentUser.uid!==uid||activeTab!=='meu_perfil')return;
-            const data=summary.exists?summary.data():null,avg=Number(data?.acumulado);
-            const valid=data&&Number.isFinite(avg)&&avg>=0;
-            const slot=$('#fauMyAggregate');
-            if(slot)slot.innerHTML=`<p class="text-[10px] tracking-[.25em] text-fashion-gold">SEASON PERFORMANCE · PRIVATE</p><p class="font-cinzel text-5xl text-white mt-3">${valid?avg.toFixed(2):'—'}<span class="text-lg text-gray-400"> pontos</span></p><p class="text-gray-400 text-xs mt-3">${valid?'Seu acumulado oficial, calculado pela produção.':'Seu acumulado ainda não foi publicado pela produção.'}</p>`;
+            sub(db.doc(`desempenho_privado/${uid}`),summary=>{
+                if(currentUser.uid!==uid||activeTab!=='meu_perfil')return;
+                const data=summary.exists?summary.data():null,avg=Number(data?.acumulado);
+                const valid=!!data&&Number.isFinite(avg)&&avg>=0;
+                const slot=$('#fauMyAggregate');
+                if(slot)slot.innerHTML=`<p class="text-[10px] tracking-[.25em] text-fashion-gold">SEASON PERFORMANCE · PRIVATE</p><p class="font-cinzel text-5xl text-white mt-3">${valid?avg.toFixed(2):'—'}<span class="text-lg text-gray-400"> pontos</span></p><p class="text-gray-400 text-xs mt-3">${valid?'Seu acumulado oficial, calculado pela produção.':'Seu acumulado ainda não foi publicado pela produção.'}</p>`;
+            });
         }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyAggregate');if(slot)slot.textContent='Não foi possível carregar seu acumulado.';}
     };
 
@@ -5975,6 +5976,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(!fora||!rows.some(x=>x.uid===fora))throw new Error('Fora de Moda empatado ou sem votos. Resolva o desempate antes de publicar.');
           const label=uid=>rows.find(x=>x.uid===uid)?.ate||uid;
           if(!productionConfirm(`PUBLICAR TUDO DA RODADA ${round}?\nWIN: ${label(winner.uid)}\nÍcone da Moda: ${label(iconResult.uid)}\nFora de Moda: ${label(fora)}\nRanking: ${rows.length} Designers\n\nO site exibirá classificações, sem notas individuais.`))return;
+          // Calcula os totais privados apenas no momento da publicação oficial.
+          const privateStandings=await computeSeasonStandings();
+          const privateByUid=new Map(privateStandings.map(x=>[x.uid,x]));
           const stamp=now(),batch=db.batch();
           const publicRows=rows.map(({uid,ate,status})=>({uid,ate,status}));
           // Non-submitters explicitly marked OUT must appear after the ranked looks.
@@ -5991,6 +5995,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           batch.set(db.collection('ranking_historico_publico').doc(round),{rodada:globalState.rodada,rows:publicRows});
           batch.set(db.collection('fau_titulos_publicos').doc(round),{...titles,round,icon:iconResult.uid,fora,published:true,updatedAt:stamp,updatedBy:currentUser.uid},{merge:true});
           batch.set(db.doc('config/estado'),{rankingLiberado:true,winUid:winner.uid},{merge:true});
+          // Dados privados: cada perfil recebe somente o próprio acumulado.
+          // Não incluir notas de jurados nem pontuações de outros Designers no ranking público.
+          for(const [uid,score] of privateByUid){
+            batch.set(db.doc(`desempenho_privado/${uid}`),{
+              acumulado:score.tot,rodada:globalState.rodada,
+              ultimaRodada:score.rd,atualizadoEm:stamp
+            },{merge:true});
+          }
           await batch.commit();
           // A publicação oficial também arquiva as imagens já liberadas no desfile.
           // O público só consulta fau_publications, nunca a coleção privada looks.
