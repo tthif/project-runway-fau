@@ -3365,6 +3365,27 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             officialStatuses.set(r,byUid);
         });
 
+        // Prévia estritamente administrativa: enquanto não houver histórico oficial,
+        // classificar pela posição relativa da rodada, nunca por faixas de nota.
+        // WIN está incluído no total de TOPs configurado.
+        const previewStatuses = new Map();
+        rodadas.forEach(r => {
+            if (officialStatuses.has(r)) return;
+            const ranked = stylists.map(s => ({uid:s.id, avg:statsByStylist[s.id]?.rounds[r]?.avg}))
+                .filter(x => Number.isFinite(x.avg))
+                .sort((a,b) => b.avg-a.avg || String(a.uid).localeCompare(String(b.uid)));
+            if (!ranked.length) return;
+            const count = ranked.length;
+            const desiredTop = count >= 16 ? 5 : count >= 11 ? 4 : count >= 7 ? 3 : count === 6 ? 2 : Math.min(2,count);
+            const configuredTop = Math.max(0,Number(globalState.critiqueTopCount||0));
+            const configuredBottom = Math.max(0,Number(globalState.critiqueBottomCount||0));
+            const bottom = Math.min(configuredBottom || 3, Math.max(0,count-1));
+            const top = Math.min(configuredTop || desiredTop, Math.max(1,count-bottom));
+            const statuses = new Map();
+            ranked.forEach((x,i) => statuses.set(x.uid,i===0?'WIN':i<top?'TOP':i>=count-bottom?'BOTTOM':'SAFE'));
+            previewStatuses.set(r,statuses);
+        });
+
         const rowsData = stylists.map(s => {
             const sObj = statsByStylist[s.id];
             const totalScores = sObj.scores;
@@ -3376,9 +3397,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <table class="w-full text-center border-collapse">
                 <thead>
                     <tr class="bg-fashion-950 text-fashion-gold border-b border-fashion-700 text-[11px] font-cinzel">
-                        <th class="p-2.5 text-left border-r border-fashion-700">DESIGNER / ATELIÊ</th>
+                        <th class="p-2.5 text-left border-r border-fashion-700">DESIGNER</th>
                         <th class="p-2.5 border-r border-fashion-700">P.P.E.</th>
-                        ${rodadas.map(r => `<th class="p-2.5 border-r border-fashion-700 uppercase">${esc(r)}</th>`).join('')}
+                        ${rodadas.map((r, i) => { const m = String(r).match(/w(?:eek)?\s*0*(\d+)/i); const n = m ? Number(m[1]) : i + 1; const label = String(r).replace(/^w(?:eek)?\s*0*\d+[\s_-]*/i, '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim(); return `<th class="p-2.5 border-r border-fashion-700 uppercase">W${String(n).padStart(2, '0')}${label ? ' — ' + esc(label) : ''}</th>`; }).join('')}
                     </tr>
                 </thead>
                 <tbody>
@@ -3400,17 +3421,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     badgeText = 'OUT';
                     badgeClass = 'bg-red-950 text-red-400 font-bold';
                 } else if (rData) {
-                    const classification = officialStatuses.get(r)?.get(row.uid);
-                    badgeText = classification || 'PENDENTE';
+                    const classification = officialStatuses.get(r)?.get(row.uid) || previewStatuses.get(r)?.get(row.uid);
+                    badgeText = classification || '—';
                     const classes = {
                         WIN:'bg-amber-700 text-amber-50 font-bold',
                         TOP:'bg-yellow-900 text-yellow-100 font-bold',
                         SAFE:'bg-fashion-800 text-gray-200',
                         BOTTOM:'bg-rose-950 text-rose-200 font-bold',
                         OUT:'bg-red-950 text-red-300 font-bold',
-                        PENDENTE:'bg-fashion-800 text-gray-400'
+                        '—':'bg-fashion-950 text-gray-600'
                     };
-                    badgeClass = classes[badgeText] || classes.PENDENTE;
+                    badgeClass = classes[badgeText] || classes['—'];
                 }
 
                 html += `<td class="p-2 border-r border-fashion-800"><span class="px-2 py-1 rounded text-[10px] inline-block uppercase ${badgeClass}">${badgeText}</span></td>`;
