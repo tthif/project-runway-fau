@@ -4624,6 +4624,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         // A cabine só abre com o desfile publicado e fecha assim que o Pool é formado.
         // O prazo de entrega do Workroom não interfere no período de votação.
         const castBallotOpen = () => !!globalState.rodada && !!globalState.liberado && !(Array.isArray(globalState.berlinda) && globalState.berlinda.length);
+        const ballotTypeOpen = type => castBallotOpen() && globalState.castVoteLocks?.[String(globalState.rodada)]?.[type] !== true;
         if (!castBallotOpen()) {
             const poolStarted = Array.isArray(globalState.berlinda) && globalState.berlinda.length > 0;
             renderView(`
@@ -4687,17 +4688,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const refreshStatus = (type) => {
           const conf=ballot[type];
           const chosenName=candidates?.find(d=>d.id===selectedBefore[type])?.data()?.ate;
-          $(`#${conf.status}`).textContent=saved[type]?`🔒 ENVELOPE LACRADO · ${chosenName?'Sua escolha: '+chosenName+'. ':''}Voto recebido em sigilo. O resultado permanece secreto até a revelação oficial.`:'Selecione um Designer para confirmar.';
+          $(`#${conf.status}`).textContent=!ballotTypeOpen(type)?'VOTAÇÃO ENCERRADA PELA PRODUÇÃO · Os resultados permanecem secretos.':saved[type]?`🔒 ENVELOPE LACRADO · ${chosenName?'Sua escolha: '+chosenName+'. ':''}Voto recebido em sigilo. O resultado permanece secreto até a revelação oficial.`:'Selecione um Designer para confirmar.';
           $(`#${conf.button}`).textContent=saved[type]?'VOTO REGISTRADO ✓':`CONFIRMAR ${conf.label.toUpperCase()}`;
-          $(`#${conf.button}`).disabled=!canVote||saved[type]||!document.querySelector(`input[name="ballot_${type}"]:checked`);
-          document.querySelectorAll(`input[name="ballot_${type}"]`).forEach(r=>{r.disabled=!canVote||saved[type];if(saved[type])r.checked=false;});
+          $(`#${conf.button}`).disabled=!canVote||!ballotTypeOpen(type)||saved[type]||!document.querySelector(`input[name="ballot_${type}"]:checked`);
+          document.querySelectorAll(`input[name="ballot_${type}"]`).forEach(r=>{r.disabled=!canVote||!ballotTypeOpen(type)||saved[type];if(saved[type])r.checked=false;});
           updateProgress();
         };
         const candidatesSnap=await db.collection('perfis').where('role','==','estilista').get();
         const candidates=candidatesSnap.docs.filter(d=>!d.data().out&&!d.data().disabled&&d.id!==currentUser.uid).sort((a,b)=>(a.data().ate||'').localeCompare(b.data().ate||'', 'pt-BR', {sensitivity:'base', numeric:true}));
         const renderCandidates=(type)=>{
           const conf=ballot[type];
-          $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>`<label class="flex items-center gap-3 p-3 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500" ${!canVote?'disabled':''}><span class="text-white text-sm">${esc(d.data().ate||'Designer')}</span></label>`).join(''):'<p class="text-sm text-gray-400">Nenhum Designer elegível nesta rodada.</p>';
+          $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>`<label class="flex items-center gap-3 p-3 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500" ${(!canVote||!ballotTypeOpen(type))?'disabled':''}><span class="text-white text-sm">${esc(d.data().ate||'Designer')}</span></label>`).join(''):'<p class="text-sm text-gray-400">Nenhum Designer elegível nesta rodada.</p>';
           refreshStatus(type);
         };
         for(const type of ['veto','fdm'])renderCandidates(type);
@@ -4706,7 +4707,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(!event.target.matches(`input[name="ballot_${type}"]`))return;
             const selected=candidates.find(d=>d.id===event.target.value);
             document.getElementById(ballot[type].status).textContent=selected?`Sua escolha: ${selected.data().ate||'Designer'}. Confira antes de lacrar o envelope.`:'Selecione um Designer.';
-            document.getElementById(ballot[type].button).disabled=!canVote||saved[type]||!selected;
+            document.getElementById(ballot[type].button).disabled=!canVote||!ballotTypeOpen(type)||saved[type]||!selected;
             document.querySelectorAll(`input[name="ballot_${type}"]`).forEach(input=>{
               input.closest('label')?.classList.toggle('fau-ballot-selected',input.checked);
             });
@@ -4722,7 +4723,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           $(`#${ballot[type].button}`).onclick=safeExec(async()=>{
             if(saved[type])throw new Error('Este voto já foi registrado e não pode ser alterado.');
             if(globalState.rodada!==roundAtOpen)throw new Error('A rodada mudou. Atualize a página.');
-            if(!castBallotOpen() || !isCastVoter())throw new Error('A votação foi encerrada ou você não está elegível.');
+            if(!ballotTypeOpen(type) || !isCastVoter())throw new Error('A votação foi encerrada ou você não está elegível.');
             const selected=document.querySelector(`input[name="ballot_${type}"]:checked`);
             if(!selected)throw new Error('Escolha um Designer antes de confirmar.');
             const targetUid=selected.value;
@@ -4733,6 +4734,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             try{
               const ref=db.doc(`votos/${type}_${roundAtOpen}_${currentUser.uid}`);
               await db.runTransaction(async tx=>{
+                const stateSnap=await tx.get(db.doc('config/estado'));
+                const state=stateSnap.data()||{};
+                if(state.castVoteLocks?.[String(roundAtOpen)]?.[type]===true || !state.liberado || (state.berlinda||[]).length)throw new Error('Esta votação já foi encerrada pela produção.');
                 const previous=await tx.get(ref);
                 if(previous.exists)throw new Error('Voto já registrado. Não é permitido votar novamente ou editar.');
                 tx.set(ref,{tipo:type,rodada:roundAtOpen,alvo:targetUid,voter:currentUser.uid,voterName:currentUser.ate,t:now(),createdAt:previous.exists?(previous.data().createdAt||previous.data().t||now()):now()});
@@ -4919,6 +4923,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <p class="text-[10px] text-gray-500">Dados privados exigem regras de segurança no Firestore. Esta prévia mostra o estado de publicação, não substitui testes com contas reais.</p>
                 </section>
 
+                <section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-4 space-y-3" id="fauCastVotingControls">
+                  <div><h3 class="font-cinzel text-fashion-gold">THE CAST VOTE · Controle independente</h3><p class="text-xs text-gray-400">Encerre cada eleição sem ocultar a passarela ou interferir na urna de salvação. Os votos permanecem salvos e confidenciais.</p></div>
+                  <div class="grid sm:grid-cols-2 gap-3">
+                    ${[['veto','Ícone da Moda'],['fdm','Fora de Moda']].map(([type,label])=>{const closed=globalState.castVoteLocks?.[String(globalState.rodada)]?.[type]===true;return `<div class="border border-fashion-700 rounded-lg p-3 flex items-center justify-between gap-3"><div><strong class="text-sm text-white">${label}</strong><p class="text-xs ${closed?'text-red-300':'text-green-300'}">${closed?'Encerrada':'Aberta após liberar passarela'}</p></div><button data-cast-vote-toggle="${type}" class="rounded px-3 py-2 text-xs font-semibold ${closed?'bg-fashion-gold text-black':'bg-fashion-red text-white'}">${closed?'Reabrir':'Encerrar'}</button></div>`}).join('')}
+                  </div>
+                  <p class="text-xs text-gray-400">Antes de encerrar, confira a Central de Apuração. Reabrir exige confirmação da produção.</p>
+                </section>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg flex justify-between items-center">
                         <div>
@@ -5085,7 +5096,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const groups=[
             {id:'episode',label:'Episódio',hint:'Rodada, prazos e entregas',keys:['fauUnifiedOperations','fauProductionDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck']},
             {id:'cast',label:'Elenco',hint:'Designers, jurados e inscrições',keys:['fauDesignerRoster','castQuickList','profileManagerContainer','createRole']},
-            {id:'judging',label:'Julgamento',hint:'Notas, títulos e eliminação',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn']},
+            {id:'judging',label:'Julgamento',hint:'Notas, títulos e eliminação',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn','fauCastVotingControls']},
             {id:'show',label:'Ao vivo',hint:'Cenas e revelações públicas',keys:['fauLiveScenes','fauRevealMoment','fauRevealSuggest','fauBroadcastPublish']},
             {id:'archive',label:'Bastidores',hint:'Configurações, histórico e ferramentas raras',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
           ];
@@ -5104,7 +5115,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const showPanel=panels.querySelector('#fau-panel-show');
           ['Live Show Director','The Results Show Director','Official Reveal Assistant'].forEach(label=>{const section=root.querySelector('[aria-label="'+label+'"]');if(section)showPanel.append(section);});
           const judgingPanel=panels.querySelector('#fau-panel-judging');
-          const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);
+          const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);const castControls=root.querySelector('#fauCastVotingControls');if(castControls)judgingPanel.prepend(castControls);
           const critique=root.querySelector('#fauCritiqueAdmin')?.closest('section');if(critique)judgingPanel.append(critique);
           const episodePanel=panels.querySelector('#fau-panel-episode');
           const status=root.querySelector('[aria-label="Production Status"]');if(status)episodePanel.append(status);
@@ -6011,6 +6022,23 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             await productionLog('runway_visibility_changed', {visible:!globalState.liberado});
             showToast('Status da passarela atualizado.');
         });
+
+        document.querySelectorAll('[data-cast-vote-toggle]').forEach(button=>button.addEventListener('click',safeExec(async()=>{
+            const type=button.dataset.castVoteToggle,round=String(globalState.rodada);
+            if(!round||round==='undefined')throw new Error('Nenhuma rodada ativa.');
+            const closed=globalState.castVoteLocks?.[round]?.[type]===true;
+            const title=type==='veto'?'Ícone da Moda':'Fora de Moda';
+            if(!productionConfirm(closed?`Reabrir a votação de ${title}? Novos votos poderão ser registrados.`:`Encerrar a votação de ${title}? Os votos existentes serão preservados.`))return;
+            const ref=db.doc('config/estado');
+            await db.runTransaction(async tx=>{
+                const snap=await tx.get(ref),state=snap.data()||{};
+                const locks={...(state.castVoteLocks||{})};
+                locks[round]={...(locks[round]||{}),[type]:!closed};
+                tx.update(ref,{castVoteLocks:locks});
+            });
+            await productionLog('cast_vote_status_changed',{round,type,closed:!closed});
+            showToast(`${title}: votação ${closed?'reaberta':'encerrada'}.`);
+        })));
 
         $('#btnToggleUrn').onclick = safeExec(async () => {
             if(!globalState.urna && !stageAtLeast('voting') && !productionConfirm('A fase oficial ainda não é de votação. Abrir a urna mesmo assim?'))return;
