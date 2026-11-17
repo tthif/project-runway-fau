@@ -5682,6 +5682,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const profiles=profileSnap.docs.map(d=>({uid:d.id,...d.data()}));
           const judges=profiles.filter(p=>p.role==='jurado'||p.uid===currentUser.uid).map(p=>({uid:p.uid,name:p.nomeJurado||p.ate||(p.uid===currentUser.uid?'FAU':'Jurado')}));
           const byName=(a,b)=>String(a).localeCompare(String(b),'pt-BR',{sensitivity:'base'});
+          const jurorName=c=>String(c.jurorNome||judges.find(j=>j.uid===c.juror)?.name||'Jurado');
+          const isHostJuror=c=>String(c.juror||'')===String(currentUser.uid)||/^(fau|thiago(?: faustino)?)$/i.test(jurorName(c).trim());
+          const orderCritiques=(a,b)=>Number(isHostJuror(a))-Number(isHostJuror(b))||byName(jurorName(a),jurorName(b));
           const escAttr=x=>esc(String(x||''));
           const progressKey=`fau_broadcast_${round}`;
           let progress={};try{progress=JSON.parse(localStorage.getItem(progressKey)||'{}')||{}}catch(_){}
@@ -5694,10 +5697,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const photo=look&&(look.url||look.image||look.img||look.foto)||'';
             const caption=`*${position}º LUGAR — ${name.replace(/[*~_`]/g,' ')}*\n${String(look?.titulo||'Criação sem título').trim()}${status?`\n*${status}*`:''}`;
             const related=critiques.filter(c=>c.maison===name);
-            const sorted=related.slice().sort((a,b)=>{
-              const ai=judges.findIndex(j=>j.uid===a.juror),bi=judges.findIndex(j=>j.uid===b.juror);
-              return (ai<0?999:ai)-(bi<0?999:bi)||byName(a.jurorNome,b.jurorNome);
-            });
+            const sorted=related.slice().sort(orderCritiques);
             const label=`${position}º LUGAR — ${name}`;
             const statusColor=({WIN:'text-amber-300 border-amber-500/60',TOP:'text-violet-200 border-violet-400/60',SAFE:'text-emerald-200 border-emerald-500/60',BOTTOM:'text-rose-200 border-rose-500/60',OUT:'text-red-300 border-red-500/60','ELIMINATION POOL':'text-orange-200 border-orange-500/60'})[status]||'text-gray-300 border-fashion-700';
             return `<details class="border border-fashion-700 rounded-lg p-3" ${index===0?'open':''}><summary class="cursor-pointer flex justify-between gap-2 items-center"><strong class="text-fashion-gold">${escAttr(label)}</strong><span class="flex items-center gap-2"><span class="border rounded px-2 py-1 text-[10px] font-bold ${statusColor}">${escAttr(status||'SEM CLASSIFICAÇÃO')}</span><span class="text-xs text-gray-400">${sorted.length} crítica(s)</span></span></summary>
@@ -5727,10 +5727,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const position=i+1,status=String(r.status||'').toUpperCase();
             const matchingLook=looks.find(l=>(String(l.uid||'')===String(r.uid||'__sem_uid__')||String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(l.url||l.image||l.img||l.foto));
             messages.push({key:`${i}:foto`,text:`*${position}º LUGAR — ${name.replace(/[*~_`]/g,' ')}*\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n*${status}*`:''}`});
-            const related=critiques.filter(c=>c.maison===name).sort((a,b)=>{
-              const ai=judges.findIndex(x=>x.uid===a.juror),bi=judges.findIndex(x=>x.uid===b.juror);
-              return (ai<0?999:ai)-(bi<0?999:bi)||byName(a.jurorNome,b.jurorNome);
-            });
+            const related=critiques.filter(c=>c.maison===name).sort(orderCritiques);
             related.forEach((c,j)=>{
               const juror=c.jurorNome||judges.find(x=>x.uid===c.juror)?.name||'Jurado';
               if(c.text?.trim())messages.push({key:`${i}:${j}`,text:`*${juror.replace(/[*~_`]/g,' ')}*\n${c.text.trim()}`});
