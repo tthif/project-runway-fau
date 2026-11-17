@@ -390,6 +390,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-cast-card.fau-cast-eliminated .fau-cast-tag{color:#e2a1ac;font-weight:700}
 .fau-cast-card.fau-cast-eliminated .fau-cast-number{color:#aaa0a7}
 @media(prefers-reduced-motion:reduce){.fau-cast-card .fau-cast-photo{transition:none}}
+ .fau-cast-real{margin-top:7px;font-size:10px;line-height:1.5;color:#d1b38b;overflow-wrap:anywhere}.fau-cast-real strong{color:#f0eae1;font-weight:700}
 </style>
 <style id="fau-workroom-focus-ux">
 @media(max-width:640px){#fauWorkroomClock{width:100%;min-width:0;padding:10px 14px!important;display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left;column-gap:10px}#fauWorkroomClock .fau-clock-kicker{font-size:9px}#fauWorkroomClock .fau-clock-digits{font-size:23px;margin:0;grid-column:2;grid-row:1/3}#fauWorkroomClock .fau-clock-status{font-size:9px;grid-column:1;grid-row:2}#fauWorkroomClock .fau-clock-track{grid-column:1/-1;margin:6px 0 0}#fauWorkroomClock .fau-clock-direction{display:none}#mainView .fau-workroom-personal{margin-top:-10px!important}}
@@ -2093,6 +2094,20 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         finally{input.disabled=false;input.value='';}
     });
 
+    // Publicação deliberada da identidade apenas depois da eliminação.
+    // As coleções privadas nunca são consultadas por visitantes.
+    async function fauPublishOutIdentity(uid) {
+        if (!isAdmin || !uid) return;
+        const profileRef=db.doc(`perfis/${uid}`);
+        const [profile, identity, registration]=await Promise.all([
+            profileRef.get(), db.doc(`identidades/${uid}`).get(), db.doc(`inscricoes_designers/${uid}`).get()
+        ]);
+        if (!profile.exists || !profile.data().out) return;
+        const real=String(identity.data()?.real || registration.data()?.real || '').trim();
+        if (real && profile.data().publicOutRealName!==real)
+            await profileRef.update({publicOutRealName:real});
+    }
+
     // THE CAST: editorial public roster, separate from submission flow.
     VIEWS.cast = () => {
         renderView(`<section class="fau-cast-page space-y-5">
@@ -2105,12 +2120,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const q=($('#fauCastSearch')?.value||'').toLocaleLowerCase('pt-BR').trim();
             const found=cast.filter(p=>String(p.ate||'').toLocaleLowerCase('pt-BR').includes(q)||String(p.bio||'').toLocaleLowerCase('pt-BR').includes(q));
             $('#fauCastCount').textContent=`${found.length} de ${cast.length} Designers`;
-            grid.innerHTML=found.map((p,i)=>`<article class="fau-cast-card${p.out?' fau-cast-eliminated':''}" style="--cast-delay:${Math.min(i,12)*35}ms"><div class="fau-cast-row">${p.fotoElenco?`<img class="fau-cast-photo" src="${esc(p.fotoElenco)}" alt="Retrato de ${esc(p.ate||'Designer')}" loading="lazy">`:`<div class="fau-cast-photo fau-cast-placeholder" aria-hidden="true"><i class="fa-solid fa-user"></i></div>`}<div class="fau-cast-identity"><h3>${esc(p.ate||'Designer')}</h3><span class="fau-cast-tag">${p.out?'OUT · ELIMINADO':'IN · NA COMPETIÇÃO'}</span></div></div><div class="fau-cast-manifesto"><p class="fau-cast-manifesto-label">MANIFESTO</p><p>${esc(p.bio||'Manifesto ainda não publicado.')}</p></div></article>`).join('')||'<p class="fau-cast-empty">Nenhum Designer encontrado.</p>';
+            grid.innerHTML=found.map((p,i)=>`<article class="fau-cast-card${p.out?' fau-cast-eliminated':''}" style="--cast-delay:${Math.min(i,12)*35}ms"><div class="fau-cast-row">${p.fotoElenco?`<img class="fau-cast-photo" src="${esc(p.fotoElenco)}" alt="Retrato de ${esc(p.ate||'Designer')}" loading="lazy">`:`<div class="fau-cast-photo fau-cast-placeholder" aria-hidden="true"><i class="fa-solid fa-user"></i></div>`}<div class="fau-cast-identity"><h3>${esc(p.ate||'Designer')}</h3><span class="fau-cast-tag">${p.out?'OUT · ELIMINADO':'IN · NA COMPETIÇÃO'}</span>${p.out&&p.publicOutRealName?`<p class="fau-cast-real">POR TRÁS DO DESIGNER: <strong>${esc(p.publicOutRealName)}</strong></p>`:''}</div></div><div class="fau-cast-manifesto"><p class="fau-cast-manifesto-label">MANIFESTO</p><p>${esc(p.bio||'Manifesto ainda não publicado.')}</p></div></article>`).join('')||'<p class="fau-cast-empty">Nenhum Designer encontrado.</p>';
         };
         $('#fauCastSearch').addEventListener('input',paint);
         sub(db.collection('perfis').where('role','==','estilista'),snap=>{
             cast=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(p=>!p.disabled).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR'));
             paint();
+            if(isAdmin) Promise.allSettled(cast.filter(p=>p.out&&!p.publicOutRealName).map(p=>fauPublishOutIdentity(p.uid)));
         });
     };
 
@@ -3455,7 +3471,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div class="bg-fashion-950 border border-red-900/40 p-3 rounded space-y-2 text-center relative overflow-hidden">
                         <div class="absolute top-2 right-2 bg-fashion-red text-white text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest">OUT</div>
                         ${lastLook ? `<img src="${esc(lastLook.url)}" class="w-full img-look rounded opacity-80">` : '<div class="w-full aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-500">Sem Imagem</div>'}
-                        <div class="font-cinzel font-bold text-white text-sm">${esc(s.ate)}</div>
+                        <div class="font-cinzel font-bold text-white text-sm">${esc(s.ate)}</div>${s.publicOutRealName?`<p class="text-xs text-fashion-gold">Por trás do Designer: ${esc(s.publicOutRealName)}</p>`:''}
                         <p class="text-[10px] text-gray-400 italic">"You are out. Auf Wiedersehen."</p>
                     </div>
                 `);
@@ -4577,7 +4593,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           updateProgress();
         };
         const candidatesSnap=await db.collection('perfis').where('role','==','estilista').get();
-        const candidates=candidatesSnap.docs.filter(d=>!d.data().out&&!d.data().disabled&&d.id!==currentUser.uid);
+        const candidates=candidatesSnap.docs.filter(d=>!d.data().out&&!d.data().disabled&&d.id!==currentUser.uid).sort((a,b)=>(a.data().ate||'').localeCompare(b.data().ate||'', 'pt-BR', {sensitivity:'base', numeric:true}));
         const renderCandidates=(type)=>{
           const conf=ballot[type];
           $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>`<label class="flex items-center gap-3 p-3 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500" ${!canVote?'disabled':''}><span class="text-white text-sm">${esc(d.data().ate||'Designer')}</span></label>`).join(''):'<p class="text-sm text-gray-400">Nenhum Designer elegível nesta rodada.</p>';
@@ -6261,6 +6277,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             batch.set(tarantinoRef(),{phase:'duel_ready',round:globalState.rodada,first:{uid:result.first.uid,ate:result.first.ate,tot:result.first.tot},duel:result.duel.map(x=>({uid:x.uid,ate:x.ate,rd:x.rd})),confirmedBy:currentUser.uid,confirmedAt:firebase.firestore.FieldValue.serverTimestamp()});
             batch.set(db.doc('config/estado'),{berlinda:result.duel.map(x=>({uid:x.uid,ate:x.ate})),urna:false},{merge:true});
             await batch.commit();
+            await fauPublishOutIdentity(result.first.uid);
             await productionLog('tarantino_first_kill',{round:globalState.rodada,uid:result.first.uid,duel:result.duel.map(x=>x.uid)});
             showToast('First Kill confirmado. Bottom 2 preparado; abra a urna quando desejar.');
         });
@@ -6322,6 +6339,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             batch.update(db.doc(`perfis/${loser.uid}`),{out:true});
             batch.update(tarantinoRef(),{phase:'completed',second:{uid:loser.uid,ate:loser.ate},survivor:{uid:winner.uid,ate:winner.ate},votes:{[a.uid]:va,[b.uid]:vb},tiebreak:tiebreak||null,completedBy:currentUser.uid,completedAt:firebase.firestore.FieldValue.serverTimestamp()});
             await batch.commit();
+            await fauPublishOutIdentity(loser.uid);
             await productionLog('tarantino_second_kill',{round:globalState.rodada,uid:loser.uid,survivor:winner.uid,tiebreak:tiebreak||null});
             showToast('Double Kill concluído e registrado.');
         });
@@ -6359,6 +6377,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             batch.update(db.doc(`perfis/${loser.uid}`),{out:true});
             batch.update(restRef(),{phase:'eliminated',outUid:loser.uid,outAte:loser.ate,eliminatedBy:currentUser.uid,eliminatedAt:firebase.firestore.FieldValue.serverTimestamp()});
             await batch.commit();
+            await fauPublishOutIdentity(loser.uid);
             await productionLog('rest_funeral_elimination',{round:globalState.rodada,uid:loser.uid,score:loser.score});
             showToast('Eliminação registrada. Revele o resultado quando desejar.');
         });
@@ -6945,11 +6964,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const [execAct, val] = btn.dataset.exec.split('|');
                 if (execAct === 'elim') {
                     await db.doc(`perfis/${val}`).update({ out: true });
+                    await fauPublishOutIdentity(val);
                     showToast(`${atelierMap[val]} está OUT.`);
                 }
                 if (execAct === 'apply-top5' && calculationState) {
                     for (const outItem of calculationState.outList) {
                         await db.doc(`perfis/${outItem.uid}`).update({ out: true });
+                        await fauPublishOutIdentity(outItem.uid);
                     }
                     await db.doc('config/estado').update({ fase: 'final' });
                     showToast('Top 3 definido para a Grande Final.');
@@ -7035,7 +7056,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     if(!row.profile)throw new Error('Perfil não encontrado.');
                     const out=!!row.profile.out;
                     if(!confirm(`${out?'Reintegrar':'Marcar como OUT'} este participante?`))return;
-                    await profileRef.update({out:!out});showToast('Situação na competição atualizada.');
+                    await profileRef.update({out:!out});if(!out)await fauPublishOutIdentity(uid);showToast('Situação na competição atualizada.');
                 }
                 if(action==='delete'){
                     if(!confirm('EXCLUIR cadastro e perfil do Firestore? Esta ação não exclui a conta do Firebase Authentication nem o histórico de looks, votos e notas. Prefira desativar se deseja apenas bloquear o acesso.'))return;
