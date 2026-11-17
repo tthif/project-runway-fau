@@ -701,6 +701,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #fauArchive .fau-archive-out-tag{font-size:10px;letter-spacing:.08em;color:#e9b5bc;font-weight:700}
 @media(min-width:700px){#fauArchive .fau-archive-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
+
+<style id="fau-archive-refinement-2026">
+#fauArchive{max-width:1100px;margin:auto}
+#fauArchive .fau-archive-head{border-radius:18px;min-height:160px;display:flex;flex-direction:column;justify-content:center}
+#fauArchive .fau-archive-tabs{position:relative;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
+#fauArchive .fau-archive-tab{border-radius:10px;min-height:54px;padding:10px 12px;font-size:11px;letter-spacing:.035em}
+#fauArchive .fau-archive-tab[aria-selected=true]{box-shadow:0 4px 20px rgba(209,179,139,.14)}
+#fauArchive [data-archive-panel]{border:1px solid rgba(209,179,139,.17);border-radius:15px;background:linear-gradient(155deg,rgba(40,30,39,.45),rgba(20,18,21,.7));padding:clamp(15px,3vw,25px);min-width:0}
+#fauArchive [data-archive-panel].hidden{display:none!important}
+#fauArchive .fau-archive-entry{border-radius:11px;overflow:hidden}
+#fauArchive .fau-archive-entry .fau-archive-photo-wrap{aspect-ratio:3/4}
+#fauArchive .fau-archive-entry .fau-archive-photo-wrap img{height:100%;width:100%;object-fit:contain}
+#fauArchive .fau-archive-entry h4{line-height:1.35;overflow-wrap:anywhere}
+#fauArchive .fau-archive-chapter{border:1px solid rgba(209,179,139,.2);border-left:3px solid #8e3446;border-radius:10px;padding:18px;background:#1b171d}
+#fauArchive .fau-archive-chapter:first-child{border-left-color:#d1b38b}
+#fauArchive .fau-archive-out-card{transition:border-color .2s}
+#fauArchive .fau-archive-out-card:hover{border-color:#d1b38b}
+.fau-archive-lightbox{overflow-y:auto}
+.fau-archive-lightbox .fau-archive-lightbox-description{font-size:13px;line-height:1.6;color:#d5cbd3;white-space:pre-wrap;max-width:680px;max-height:20dvh;overflow:auto;text-align:center}
+@media(min-width:760px){#fauArchive .fau-archive-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:500px){#fauArchive .fau-archive-head{min-height:135px}#fauArchive .fau-archive-stat strong{font-size:26px}#fauArchive .fau-archive-tab{font-size:10px;padding:8px 6px}#fauArchive [data-archive-panel]{padding:13px}#fauArchive .fau-archive-entry .p-3{padding:10px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3572,7 +3594,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         <header class="fau-archive-head rounded-xl p-7 border border-fashion-gold/40">
           <p class="text-fashion-gold text-[10px] tracking-[.3em]">PROJECT RUNWAY: FAU · THE OFFICIAL ARCHIVE</p>
           <h2 class="font-cinzel text-3xl text-white mt-3">THE FASHION ARCHIVE</h2>
-          <p class="text-gray-300 text-sm mt-3">Uma temporada. Cada criação, conquista e despedida tem sua história.</p>
+          <p class="text-gray-300 text-sm mt-3">Reviva os looks, as conquistas e as despedidas que marcaram a temporada.</p>
         </header>
 
         <div id="fauArchiveLoading" class="text-gray-400 text-sm animate-pulse" role="status">✦ Abrindo os arquivos oficiais da temporada…</div>
@@ -3582,7 +3604,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       if(trackButton)trackButton.onclick=()=>VIEWS.historico(true);
       const body=$('#fauArchiveBody'),loading=$('#fauArchiveLoading');
       const roundKey=x=>String(x??'');
-      const weekLabel=x=>{const raw=String(x??'');const m=raw.match(/(?:week|w)\s*0*(\d+)/i)||raw.match(/^(\d+)$/);const n=m?Number(m[1]):0;return n===1?'WEEK 01 — THE FIRST GARMENT':n===2?'WEEK 02 — A NEW FORM':n?'WEEK '+String(n).padStart(2,'0'):raw;};
+      const weekLabel=x=>fauWeekLabel(x);
       try{
         // Nunca ler a coleção privada "looks" para montar uma página pública.
         const [ranksResult,titlesResult,publicationsResult,castResult]=await Promise.allSettled([
@@ -3625,7 +3647,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const p=getPerson(r.uid,r.ate);if(!p)return;
             p.rounds.add(round);
             const status=String(r.status||'').toUpperCase().replace(/\bTOP\b/g,'HIGH').replace(/^WIN.*$/,'WIN');
-            if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'WIN'});awards.push({round,uid:r.uid,name:r.ate,type:'WIN'});}
+            if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'Winner da Rodada'});awards.push({round,uid:r.uid,name:r.ate,type:'Winner da Rodada'});}
             if(/\b(HIGH|TOP)\b/.test(status))p.highs++;
           });
           if(title?.icon){
@@ -3650,8 +3672,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         }).join('');
         const profiles=[...people.values()].sort((a,b)=>(b.wins+b.icons)-(a.wins+a.icons)||a.name.localeCompare(b.name,'pt-BR')).map(p=>
           `<article class="border border-fashion-700 rounded-xl bg-fashion-950 p-4"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>
-          <p class="text-xs text-fashion-gold mt-2">${p.wins} WIN · ${p.icons} Ícone da Moda</p>
-          <p class="text-xs text-gray-400 mt-1">${p.rounds.size} semanas registradas · ${p.highs} TOP/HIGH</p>
+          <p class="text-xs text-fashion-gold mt-2">${p.wins} Winner da Rodada · ${p.icons} Ícone da Moda</p>
+          <p class="text-xs text-gray-400 mt-1">${p.rounds.size} ${p.rounds.size===1?'rodada registrada':'rodadas registradas'} · ${p.highs} destaques entre os melhores</p>
           <p class="text-xs text-gray-300 mt-2">${p.achievements.map(a=>`${esc(weekLabel(a.round))}: ${esc(a.type)}`).join(' · ')||'História em construção'}</p></article>`).join('');
         const story=[...rounds].reverse().map(({round,rank,title},index)=>{
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
@@ -3659,19 +3681,19 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const out=rows.filter(r=>/\bOUT\b|ELIMINAD/i.test(r.status||''));
           const icon=title?.icon?rows.find(r=>r.uid===title.icon):null;
           const lines=[
-            winners.length?'🏆 WIN · '+winners.map(x=>esc(x.ate)).join(', '):'',
-            icon?'👑 Ícone da Moda · '+esc(icon.ate):'',
-            out.length?'🥀 OUT · '+out.map(x=>esc(x.ate)).join(', '):''
+            winners.length?'Winner da Rodada · '+winners.map(x=>esc(x.ate)).join(', '):'',
+            icon?'Ícone da Moda · '+esc(icon.ate):'',
+            out.length?'Eliminados · '+out.map(x=>esc(x.ate)).join(', '):''
           ].filter(Boolean);
           return `<article class="fau-archive-chapter">
-            <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'LATEST CHAPTER · ':''}${esc(weekLabel(round))}</p>
-            <h4 class="font-cinzel text-white mt-2">${esc(weekLabel(round))}</h4>
+            <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'CAPÍTULO MAIS RECENTE · ':''}${esc(weekLabel(round))}</p>
+            <h4 class="font-cinzel text-white mt-2">${esc(weekLabel(round))}</h4><p class="text-xs text-gray-400 mb-3">${rows.length} ${rows.length===1?'Designer no resultado':'Designers no resultado'}</p>
             ${lines.length?lines.map(l=>`<p class="text-gray-300 text-sm mt-1">${l}</p>`).join(''):'<p class="text-gray-400 text-sm mt-1">Aguardando resultados oficiais.</p>'}
           </article>`;
         }).join('');
         const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).length;
         const availableRounds=[...new Set([...rounds.map(r=>r.round),...publications.map(p=>roundKey(p.round))])].filter(Boolean).sort((a,b)=>fauArchiveSort(b,a));
-        const gallery=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).sort((a,b)=>fauArchiveSort(roundKey(b.round),roundKey(a.round))).map((x,i)=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(roundKey(x.round))}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
+        const gallery=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).sort((a,b)=>fauArchiveSort(roundKey(b.round),roundKey(a.round))).map((x,i)=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(roundKey(x.round))}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round,weekLabel(x.round)].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
           <div class="fau-archive-photo-wrap"><img src="${esc(x.image)}" loading="lazy" alt="Look publicado: ${esc(x.title||'Criação do acervo')}" class="fau-archive-img w-full aspect-[3/4] object-contain bg-black" /></div>
           <div class="p-3 space-y-1"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(weekLabel(x.round))}</p><h4 class="text-sm text-white font-cinzel">${esc(x.title||'Criação do arquivo')}</h4>${x.designer||x.ate?`<p class="text-xs text-gray-400">${esc(x.designer||x.ate)}</p>`:''}</div></article>`).join('');
         body.innerHTML=`
@@ -3689,22 +3711,22 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <button type="button" role="tab" aria-selected="false" data-archive-tab="story" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">SEASON STORY</button>
           </div>
           <section data-archive-panel="gallery" class="space-y-4" role="tabpanel">
-            <div><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL LOOKBOOK</p><h3 class="font-cinzel text-2xl text-white mt-1">Every Look Tells a Story</h3><p class="text-sm text-gray-400 mt-2">Explore as criações que já foram oficialmente liberadas pela produção.</p></div>
+            <div><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL LOOKBOOK</p><h3 class="font-cinzel text-2xl text-white mt-1">As criações da temporada</h3><p class="text-sm text-gray-400 mt-2">Todas as criações oficialmente publicadas, reunidas em um só lugar.</p></div>
             <div class="flex flex-col sm:flex-row gap-2"><label class="flex-1"><span class="sr-only">Buscar no arquivo</span><input id="fauArchiveSearch" type="search" placeholder="Buscar look, Designer ou conceito…" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg px-4 py-3 text-sm text-white" /></label>
             <label><span class="sr-only">Filtrar por semana</span><select id="fauArchiveRound" class="w-full sm:w-auto bg-fashion-950 border border-fashion-700 rounded-lg px-4 py-3 text-sm text-white"><option value="">Todas as semanas</option>${availableRounds.map(r=>`<option value="${esc(r)}">${esc(weekLabel(r))}</option>`).join('')}</select></label><button type="button" id="fauArchiveClear" class="fau-archive-clear">LIMPAR FILTROS</button></div>
             <p id="fauArchiveCount" class="text-xs text-gray-400" aria-live="polite"></p>
-            <div id="fauArchiveGallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${gallery||'<p class="col-span-full text-sm text-gray-400 py-8 text-center">The runway is still waiting. Os looks aparecerão aqui após a publicação oficial.</p>'}</div>
+            <div id="fauArchiveGallery" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${gallery||'<p class="col-span-full text-sm text-gray-400 py-8 text-center">O Lookbook será preenchido quando a produção publicar os looks das rodadas.</p>'}</div>
             <p id="fauArchiveEmpty" class="hidden text-sm text-gray-400 text-center py-8">Nenhum look corresponde à sua busca. Experimente outra palavra ou semana.</p>
           </section>
           <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">Os destaques da passarela</h3>
           <p class="text-gray-400 text-sm">A cada rodada, dois nomes entram para a história: o <strong>Winner da Rodada</strong>, escolhido pelos jurados, e o <strong>Ícone da Moda</strong>, eleito pelos próprios Designers.</p>
           ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm py-6">O Hall abrirá após as primeiras conquistas oficiais.</p>'}</section>
-          <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">THE RUNWAY IS STILL OPEN</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>'}</section>
+          <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">NENHUMA DESPEDIDA ATÉ AGORA</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>'}</section>
           <section data-archive-panel="track" class="space-y-4 hidden" role="tabpanel"><p class="text-gray-400 text-sm py-6 text-center">Abra o Track Record para consultar o histórico da temporada.</p></section>
-          <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">The Designers’ Dossiers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
+          <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">A trajetória dos Designers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
           <section data-archive-panel="story" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
-          <p class="text-gray-400 text-sm">Reviva a temporada capítulo por capítulo, somente com anúncios oficiais.</p>
-          <div class="bg-fashion-950 border border-fashion-700 rounded-xl p-5 space-y-3">${story||'<p class="text-gray-400 text-sm">A primeira história ainda será escrita.</p>'}</div></section>
+          <p class="text-gray-400 text-sm">Cada rodada tem sua história. Relembre os resultados e os momentos que marcaram a competição.</p>
+          <div class="fau-archive-timeline space-y-3">${story||'<p class="text-gray-400 text-sm">Os capítulos aparecerão após a publicação dos primeiros resultados.</p>'}</div></section>
           ${ranksResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O histórico público não está acessível com as permissões atuais. Nenhuma nota privada será consultada.</p>':''}
           ${titlesResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Os títulos publicados não estão acessíveis com as permissões atuais.</p>':''}
           ${castResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar o elenco público para o Hall dos Eliminados.</p>':''}
@@ -3720,7 +3742,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const search=body.querySelector('#fauArchiveSearch'),select=body.querySelector('#fauArchiveRound');
         body.querySelector('#fauArchiveClear')?.addEventListener('click',()=>{if(search)search.value='';if(select)select.value='';filterArchive();search?.focus();});
         document.querySelectorAll('.fau-archive-lightbox').forEach(el=>el.remove());
-        const viewer=document.createElement('div');viewer.className='fau-archive-lightbox';viewer.hidden=true;viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Fotografia do Fashion Archive');viewer.innerHTML='<button type="button" data-close-archive>FECHAR ✕</button><img alt="Look ampliado"><div class="fau-archive-lightbox-meta"></div>';
+        const viewer=document.createElement('div');viewer.className='fau-archive-lightbox';viewer.hidden=true;viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Fotografia do Fashion Archive');viewer.innerHTML='<button type="button" data-close-archive>FECHAR ✕</button><img alt="Look ampliado"><div class="fau-archive-lightbox-meta"></div><p class="fau-archive-lightbox-description"></p>';
         document.body.appendChild(viewer);
         let previousFocus=null;
         const closeViewer=()=>{viewer.hidden=true;previousFocus?.focus?.();};
@@ -3728,7 +3750,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer();});
         viewer.addEventListener('keydown',e=>{if(e.key==='Escape')closeViewer();if(e.key==='Tab'){e.preventDefault();viewer.querySelector('button')?.focus();}});
         body.querySelectorAll('.fau-archive-entry').forEach(card=>{
-          const open=()=>{previousFocus=document.activeElement;viewer.querySelector('img').src=card.dataset.image;viewer.querySelector('img').alt=card.dataset.title||'Look do arquivo';viewer.querySelector('.fau-archive-lightbox-meta').textContent=[card.dataset.title,card.dataset.designer,weekLabel(card.dataset.round)].filter(Boolean).join(' · ');viewer.hidden=false;viewer.querySelector('button')?.focus();};
+          const open=()=>{previousFocus=document.activeElement;viewer.querySelector('img').src=card.dataset.image;viewer.querySelector('img').alt=card.dataset.title||'Look do arquivo';viewer.querySelector('.fau-archive-lightbox-meta').textContent=[card.dataset.title,card.dataset.designer,weekLabel(card.dataset.round)].filter(Boolean).join(' · ');viewer.querySelector('.fau-archive-lightbox-description').textContent=card.dataset.description||'';viewer.hidden=false;viewer.querySelector('button')?.focus();};
           card.addEventListener('click',open);
           card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}});
         });
@@ -3736,7 +3758,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const q=(search?.value||'').trim().toLocaleLowerCase('pt-BR'),round=select?.value||'';
           let visible=0;
           body.querySelectorAll('.fau-archive-entry').forEach(card=>{const show=(!round||card.dataset.round===round)&&(!q||(card.dataset.search||'').includes(q));card.classList.toggle('hidden',!show);if(show)visible++;});
-          const counter=body.querySelector('#fauArchiveCount');if(counter)counter.textContent=`${visible} ${visible===1?'look encontrado':'looks encontrados'}`;
+          const counter=body.querySelector('#fauArchiveCount');if(counter)counter.textContent=`${visible} ${visible===1?'look encontrado':'looks encontrados'}${round?' · '+weekLabel(round):''}`;
           body.querySelector('#fauArchiveEmpty')?.classList.toggle('hidden',visible>0||totalLooks===0);
         };
         search?.addEventListener('input',filterArchive);select?.addEventListener('change',filterArchive);filterArchive();
