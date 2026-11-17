@@ -6419,24 +6419,57 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             finally{btn.disabled=false;}
         });
         loadDesignerRoster();
-        $('#newThemeId').value = globalState.themeId || '';
+        // Preserva regras personalizadas por tema e a configuração já salva da rodada.
+        const fauRulesKey=id=>'fau_round_rules_draft_'+(id||'custom');
+        let fauPreviousTheme=globalState.themeId||'';
+        const fauSavedRules=typeof globalState.regras==='string'?globalState.regras:null;
+        $('#newThemeId').value=fauPreviousTheme;
+        const fauRulesInput=$('#newRoundRules');
+        const fauDefaultRules=id=>SEASON_THEMES[id]?.mandate||'';
+        const fauReadDraft=id=>{
+            try {return window.localStorage.getItem(fauRulesKey(id));}catch(e){return null;}
+        };
+        const fauWriteDraft=(id,value)=>{
+            try {window.localStorage.setItem(fauRulesKey(id),value);}catch(e){}
+        };
+        // A configuração do Firebase tem prioridade sobre o briefing padrão do catálogo.
+        fauRulesInput.value=fauSavedRules!==null?fauSavedRules:(fauReadDraft(fauPreviousTheme)??fauDefaultRules(fauPreviousTheme));
+        fauRulesInput.addEventListener('input',()=>fauWriteDraft($('#newThemeId').value,fauRulesInput.value));
         $('#newThemeId').onchange = () => {
-            const t = SEASON_THEMES[$('#newThemeId').value];
-            $('#themePreview').textContent = t ? `${t.subtitle} — ${t.mandate}` : 'Configure manualmente.';
-            if (!t) return;
-            $('#newRoundId').value = t.id;
-            $('#newRoundSubmissions').value = t.numSubmissoes;
-            $('#newRoundSoma').value = t.id === 'theme_beauty_eye' ? 'soma' : 'media';
-            $('#newRoundSoma').disabled = t.id === 'theme_beauty_eye' || t.id === 'w01_first_garment';
-            $('#newRoundSubmissions').disabled = t.id === 'theme_beauty_eye' || t.id === 'w01_first_garment';
-            $('#newRoundElimType').value = t.elimTipo === 'finale' ? 'normal' : t.elimTipo === 'double' ? 'double' : t.elimTipo === 'none' ? 'none' : 'single';
-            $('#newRoundElimType').disabled = t.id === 'w01_first_garment';
-            if (t.fixedOrder === 99) $('#newRoundPhase').value = 'final';
-            $('#newRoundRules').value = t.mandate;
+            const id=$('#newThemeId').value;
+            if(fauPreviousTheme!==id){
+                fauWriteDraft(fauPreviousTheme,fauRulesInput.value);
+                fauRulesInput.value=fauReadDraft(id)??fauDefaultRules(id);
+                fauPreviousTheme=id;
+            }
+            const t=SEASON_THEMES[id];
+            $('#themePreview').textContent=t?`${t.subtitle} — ${t.mandate}`:'Configure manualmente.';
+            if(t){
+                $('#newRoundId').value=t.id;
+                $('#newRoundSubmissions').value=t.numSubmissoes;
+                $('#newRoundSoma').value=t.id==='theme_beauty_eye'?'soma':'media';
+                $('#newRoundSoma').disabled=t.id==='theme_beauty_eye'||t.id==='w01_first_garment';
+                $('#newRoundSubmissions').disabled=t.id==='theme_beauty_eye'||t.id==='w01_first_garment';
+                $('#newRoundElimType').value=t.elimTipo==='finale'?'normal':t.elimTipo==='double'?'double':t.elimTipo==='none'?'none':'single';
+                $('#newRoundElimType').disabled=t.id==='w01_first_garment';
+                if(t.fixedOrder===99)$('#newRoundPhase').value='final';
+            }
             refreshRoundSummary();
             renderDirectorPreview();
         };
         $('#newThemeId').dispatchEvent(new Event('change'));
+        const fauRulesReset=document.createElement('button');
+        fauRulesReset.type='button';
+        fauRulesReset.className='text-xs text-fashion-gold underline mt-2';
+        fauRulesReset.textContent='Restaurar texto original do tema';
+        fauRulesReset.onclick=()=>{
+            if(!confirm('Substituir suas alterações pelo texto original deste tema?'))return;
+            fauRulesInput.value=fauDefaultRules($('#newThemeId').value);
+            fauWriteDraft($('#newThemeId').value,fauRulesInput.value);
+            fauRulesInput.dispatchEvent(new Event('input',{bubbles:true}));
+            renderDirectorPreview();
+        };
+        fauRulesInput.parentElement.append(fauRulesReset);
         renderDirectorPreview();
         fauRoundPreflight();
 
