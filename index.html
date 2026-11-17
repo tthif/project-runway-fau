@@ -2611,7 +2611,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           <section class="fau-workroom-overview bg-fashion-900 border border-fashion-700 p-4 md:p-5 rounded-xl" aria-label="Prazo e entregas da rodada">
             <div class="fau-workroom-overview-heading"><h2 class="font-cinzel text-2xl text-white font-normal">Seu espaço de criação</h2><p class="text-xs text-gray-400">Acompanhe o prazo e as entregas da rodada.</p></div>
             <div class="fau-workroom-overview-content"><div id="fauWorkroomClock" class="fau-clock rounded-xl px-4 py-3 text-center" role="timer"><span class="fau-clock-kicker block">⏱ PRAZO DE ENTREGA</span><div id="roundTimer" class="fau-clock-digits">23:59:59</div><div id="fauClockStatus" class="fau-clock-status">PRAZO SIMULADO</div><div class="fau-clock-track"><div id="fauClockProgress" class="fau-clock-fill" style="width:50%"></div></div><p id="fauClockDirection" class="fau-clock-direction">Make it work.</p></div>
-            <div class="fau-submission-board"><div id="workroomThermometer" class="text-xs"><div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div><p class="text-xs text-gray-300">0 de 20 Designers enviaram · 20 faltam</p><p class="text-[10px] text-gray-500 mt-2">Dados fictícios para visualização</p></div></div></div>
+            <div class="fau-submission-board"><div id="workroomThermometer" class="text-xs"><div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div><p class="text-xs text-gray-300">0 de 18 Designers enviaram · 18 faltam</p><p class="text-[10px] text-gray-500 mt-2">Dados fictícios para visualização</p></div></div></div>
           </section>
           ${fauLabSecondPhase(theme)}<div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
           <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada"><details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${esc(phaseOne?({'theme_beauty_eye':'THE CHALLENGE — Apresente sua visão pessoal da beleza em um look autoral. Envie sua primeira criação. A produção anunciará os próximos acontecimentos no momento certo.','theme_rest_in_style':'THE CHALLENGE — Crie um look para um funeral sem utilizar preto. A produção anunciará os próximos acontecimentos no momento certo.','theme_tarantino':'THE CHALLENGE — Crie uma proposta autoral inspirada no universo cinematográfico de Tarantino. Aguarde novas instruções da produção.','theme_plaid_bay':'THE CHALLENGE — Reinvente o uniforme xadrez da Baia para um ex-participante de A Fazenda. Xadrez obrigatório. Aguarde novas instruções da produção.'}[theme.id]):theme.mandate||'Aguarde as instruções da produção.')}</div></details></section>
@@ -2693,7 +2693,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     byUid.get(uid).push(look);
                 }
                 const required=globalState.fase==='final'?4:(Number(globalState.numSubmissoes)||1);
-                const eligible=designers.filter(d=>!d.disabled&&!d.out);
+                const eligible=designers.filter(d=>!d.disabled&&!d.out&&!d.eliminado&&d.ativo!==false&&String(d.status||'').toUpperCase()!=='OUT');
                 const completed=eligible.filter(d=>(byUid.get(d.uid)||[]).length>=required).length;
                 counter.innerHTML=`<strong class="text-fashion-gold">${completed} de ${eligible.length}</strong> Designers concluíram as entregas · <strong>${eligible.length-completed}</strong> ainda faltam. <span class="block text-xs text-gray-400 mt-1">Informações individuais visíveis somente para a produção.</span>`;
                 list.innerHTML=eligible.map(d=>{
@@ -4886,7 +4886,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           db.collection('votos').where('rodada','==',round).get()
         ]);
         if(activeTab!=='direcao'||!document.getElementById('fauPulseStats'))return;
-        const designers=ps.docs.filter(d=>!d.data().out),submitted=new Set(ls.docs.map(d=>d.data().uid));
+        const designers=ps.docs.filter(d=>!d.data().out&&!d.data().disabled&&!d.data().eliminado&&d.data().ativo!==false&&String(d.data().status||'').toUpperCase()!=='OUT'),submitted=new Set(ls.docs.map(d=>d.data().uid));
         const delivered=designers.filter(d=>submitted.has(d.id)).length;
         const scored=ev.docs.filter(d=>d.data().rodada===round).length;
         slot.innerHTML=tile(`${delivered}/${designers.length}`,'DESIGNERS ENTREGUES')+tile(Math.max(0,designers.length-delivered),'FALTAM ENVIAR')+tile(scored,'AVALIAÇÕES REGISTRADAS')+tile(vs.size,'VOTOS REGISTRADOS');
@@ -5553,7 +5553,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               db.collection('votos').where('rodada','==',round).get()
             ]);
             if(!fauStatusEl.isConnected||globalState.rodada!==round)return;
-            const cast=profiles.docs.filter(d=>d.data().role==='estilista'&&!d.data().out&&!d.data().disabled);
+            const cast=profiles.docs.filter(d=>d.data().role==='estilista'&&!d.data().out&&!d.data().disabled&&!d.data().eliminado&&d.data().ativo!==false&&String(d.data().status||'').toUpperCase()!=='OUT');
             const jurors=profiles.docs.filter(d=>d.data().role==='jurado'&&!d.data().disabled);
             const castIds=new Set(cast.map(d=>d.id));
             const jurorIds=new Set(jurors.map(d=>d.id));
@@ -5608,7 +5608,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const round = String(globalState.rodada);
             const active = new Set(fauRosterForPulse.docs.filter(d => {
                 const p = d.data();
-                return p.role === 'estilista' && p.disabled !== true && p.ativo !== false && p.eliminado !== true;
+                return p.role === 'estilista' && p.disabled !== true && p.ativo !== false && p.eliminado !== true && p.out !== true && String(p.status || '').toUpperCase() !== 'OUT';
             }).map(d => d.id));
             const required = Number(getTheme()?.numSubmissoes || globalState.numSubmissoes || 1);
             const counts = new Map();
