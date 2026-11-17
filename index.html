@@ -3706,6 +3706,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     const fauCritiqueTargets = async () => {
         const round=String(globalState.rodada||'');
         if(!round)return [];
+        // A convocação privada pode ser preparada antes da publicação do ranking.
+        const call=globalState.critiqueCall;
+        if(call && String(call.round)===round && Array.isArray(call.names)){
+            return [...new Set(call.names.filter(Boolean))].map(ate=>({ate}))
+                .sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
+        }
         const current=await db.collection('ranking_historico').doc(round).get();
         if(!current.exists)return [];
         const currentRows=Array.isArray(current.data().rows)?current.data().rows:[];
@@ -5379,7 +5385,45 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           </article>`;
         };
         document.getElementById('fauToggleScoreWindow')?.addEventListener('click',safeExec(async()=>{const closing=!globalState.notasEncerradas;if(!confirm(closing?'Encerrar o prazo de notas para todos os jurados?':'Reabrir o prazo de notas para todos os jurados?'))return;await db.doc('config/estado').update({notasEncerradas:closing});showToast(closing?'Notas encerradas':'Notas reabertas');}));
-        document.getElementById('fauToggleCritiqueWindow')?.addEventListener('click',safeExec(async()=>{const opening=!globalState.criticasAbertas||globalState.criticasEncerradas;if(!confirm(opening?'Abrir críticas para os Designers elegíveis, sem revelar classificações?':'Encerrar críticas para todos os jurados?'))return;await db.doc('config/estado').update({criticasAbertas:opening,criticasEncerradas:!opening});showToast(opening?'Críticas abertas':'Críticas encerradas');}));
+        document.getElementById('fauToggleCritiqueWindow')?.addEventListener('click',safeExec(async()=>{
+            const opening=!globalState.criticasAbertas||globalState.criticasEncerradas;
+            if(!confirm(opening?'Abrir críticas para os Designers elegíveis, sem revelar classificações?':'Encerrar críticas para todos os jurados?'))return;
+            const update={criticasAbertas:opening,criticasEncerradas:!opening};
+            if(opening){
+                const round=String(globalState.rodada||'');
+                if(!round)throw new Error('Nenhuma rodada ativa.');
+                const official=await db.collection('ranking_historico').doc(round).get();
+                let names=[];
+                if(official.exists && Array.isArray(official.data().rows)){
+                    const rows=official.data().rows;
+                    const prev=Number(round)>1?await db.collection('ranking_historico').doc(String(Number(round)-1)).get():null;
+                    const prevWin=prev?.exists?(prev.data().rows||[]).find(r=>/\bWIN\b/i.test(r.status||''))?.ate:null;
+                    const top=Math.max(0,Number(globalState.critiqueTopCount||0));
+                    const bottom=Math.max(0,Number(globalState.critiqueBottomCount||0));
+                    names=rows.filter((r,i)=>/\b(WIN|TOP|HIGH|BOTTOM|LOW)\b/i.test(r.status||'')||r.ate===prevWin||(top>0&&i<top)||(bottom>0&&i>=rows.length-bottom)).map(r=>r.ate);
+                }else{
+                    // Apuração privada: não publica resultados nem revela posições aos jurados.
+                    const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd);
+                    if(!standings.length)throw new Error('Não há avaliações para convocar críticas.');
+                    const n=standings.length;
+                    const bottom=Math.min(Math.max(0,Number(globalState.critiqueBottomCount||0))||3,Math.max(0,n-1));
+                    const desiredTop=n>=16?5:n>=11?4:n>=7?3:n===6?2:Math.min(2,n);
+                    const top=Math.min(Math.max(0,Number(globalState.critiqueTopCount||0))||desiredTop,Math.max(1,n-bottom));
+                    names=standings.filter((r,i)=>i<top||i>=n-bottom).map(r=>r.ate);
+                    if(Number(round)>1){
+                        const prev=await db.collection('ranking_historico').doc(String(Number(round)-1)).get();
+                        const prevWin=prev.exists?(prev.data().rows||[]).find(r=>/\bWIN\b/i.test(r.status||''))?.ate:null;
+                        if(prevWin && standings.some(r=>r.ate===prevWin))names.push(prevWin);
+                    }
+                }
+                names=[...new Set(names.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+                if(!names.length)throw new Error('Nenhum Designer elegível para críticas.');
+                update.critiqueCall={round,names};
+            }
+            await db.doc('config/estado').update(update);
+            showToast(opening?'Críticas abertas para os Designers convocados':'Críticas encerradas');
+            if(opening)await fauCritiqueAdminMount();
+        }));
         document.getElementById('fauSaveCritiqueCounts')?.addEventListener('click',safeExec(async()=>{const top=Number(document.getElementById('fauCritiqueTopCount')?.value),bottom=Number(document.getElementById('fauCritiqueBottomCount')?.value);if(!Number.isInteger(top)||!Number.isInteger(bottom)||top<0||bottom<0||top>30||bottom>30)throw new Error('Informe valores entre 0 e 30.');await db.doc('config/estado').update({critiqueTopCount:top,critiqueBottomCount:bottom});showToast('Vagas de críticas configuradas.');await fauCritiqueAdminMount();}));
         fauCritiqueAdminMount();
         const refreshFauStatus = async () => {
