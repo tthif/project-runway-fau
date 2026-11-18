@@ -4406,7 +4406,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         });
         sub(db.doc('fau_public/reunion'),snap=>{const d=snap.data()||{},section=$('#fauReunionPublic'),cards=$('#fauReunionCards');if(!section||!cards)return;section.classList.toggle('hidden',d.published!==true);if(d.published===true)cards.innerHTML=(d.cards||[]).map(c=>`<article class="border border-fashion-gold/30 rounded-lg p-4"><p class="text-fashion-gold font-cinzel text-xs">${esc(c.title)}</p><p class="text-white text-lg mt-2">${esc(c.value)}</p></article>`).join('')||'<p class="text-gray-400">Aguarde as revelações.</p>';});
 
-        // Compartilhamento do desfile: Week 02 envia duas fotos originais separadas.
+        // Compartilhamento em etapas: origem, mutação em português e nova criação.
         const fauShareHandler = async event => {
             const button=event.target.closest('[data-fau-whatsapp]');
             if(!button || !isAdmin || !runwayRoot?.contains(button))return;
@@ -4435,44 +4435,64 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();
                 setTimeout(()=>URL.revokeObjectURL(url),60000);
             };
+            const sharePhoto=async(file,caption)=>{
+                if(navigator.share && navigator.canShare?.({files:[file]})){
+                    try{await navigator.share({files:[file],text:caption});return;}
+                    catch(e){
+                        if(e.name==='AbortError')return;
+                        await copyCaption(caption);
+                        try{await navigator.share({files:[file]});showToast('Legenda copiada para colar no WhatsApp.');return;}
+                        catch(second){if(second.name==='AbortError')return;}
+                    }
+                }
+                await copyCaption(caption);downloadFile(file);
+                showToast('Foto baixada e legenda copiada para o WhatsApp.');
+            };
             try{
-                let caption=`*${runwayName(look)}*\n\n*${look.titulo||'Nova criação'}*\n\n${look.mem||''}`;
-                const newBlob=await fetchImage(look.url);
-                const files=[];
-                if(week02){
-                    const [pastSnap,drawSnap]=await Promise.all([
-                        db.collection('looks').where('themeId','==','w01_first_garment').where('uid','==',look.uid).get(),
-                        db.collection('fashion_mutations').where('round','==',String(globalState.rodada)).where('uid','==',look.uid).get()
-                    ]);
-                    const past=pastSnap.docs.map(d=>d.data()).find(d=>d.url);
-                    const mutation=fauMutationResult(drawSnap.docs[0]?.data());
-                    caption=`*${runwayName(look)}*\n*Mutação:* ${mutation?.[0]||'Não localizada'}\n\n*${look.titulo||'Nova criação'}*\n\n${look.mem||''}`;
-                    if(past){
-                        files.push(makeFile(await fetchImage(past.url),'Week-01-Original'));
-                    }else{
-                        showToast('Foto original da Week 01 não encontrada. Será enviada apenas a nova criação.');
-                    }
-                }
-                files.push(makeFile(newBlob,week02?'Week-02-Nova-Criacao':'Look'));
-                // Os dois arquivos são compartilhados sem montagem, cortes ou alteração de qualidade.
-                if(navigator.share && navigator.canShare?.({files})){
-                    try{
-                        await navigator.share({files,text:caption});
-                        return;
-                    }catch(error){
-                        if(error.name==='AbortError')return;
-                        // Alguns aplicativos aceitam várias fotos, mas não a legenda simultaneamente.
-                        try{
-                            await copyCaption(caption);
-                            await navigator.share({files});
-                            showToast('Fotos compartilhadas. A legenda foi copiada para você colar no WhatsApp.');
-                            return;
-                        }catch(second){if(second.name==='AbortError')return;}
-                    }
-                }
-                await copyCaption(caption);
-                files.forEach(downloadFile);
-                showToast(files.length===2?'Duas fotos originais baixadas e legenda copiada. Anexe ambas no WhatsApp.':'Foto baixada e legenda copiada. Anexe no WhatsApp.');
+                const newFile=makeFile(await fetchImage(look.url),week02?'Week-02-Nova-Criacao':'Look');
+                const finalCaption=`*${runwayName(look)}*\n*${look.titulo||'Nova criação'}*\n\n${look.mem||''}`;
+                if(!week02){await sharePhoto(newFile,finalCaption);return;}
+                const [pastSnap,drawSnap]=await Promise.all([
+                    db.collection('looks').where('themeId','==','w01_first_garment').where('uid','==',look.uid).get(),
+                    db.collection('fashion_mutations').where('round','==',String(globalState.rodada)).where('uid','==',look.uid).get()
+                ]);
+                const past=pastSnap.docs.map(d=>d.data()).find(d=>d.url);
+                const mutation=fauMutationResult(drawSnap.docs[0]?.data());
+                const mutationRaw=String(mutation?.[0]||'').trim().toUpperCase();
+                const translations={
+                    'MORE IS MORE':'MAXIMALISMO',
+                    'LESS IS MORE':'MINIMALISMO',
+                    'SHAPE SHIFT':'METAMORFOSE',
+                    'MATERIAL REVOLUTION':'REVOLUÇÃO DOS MATERIAIS'
+                };
+                const mutationName=translations[mutationRaw]||mutation?.[0]||'Não localizada';
+                const mutationCaption=`*${runwayName(look)}*\nMutação: *${mutationName}*`;
+                const pastFile=past?makeFile(await fetchImage(past.url),'Week-01-Original'):null;
+                const existing=document.getElementById('fau-share-sequence');if(existing)existing.remove();
+                const overlay=document.createElement('div');
+                overlay.id='fau-share-sequence';
+                overlay.className='fixed inset-0 z-[200] bg-black/90 flex items-center justify-center p-4';
+                overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
+                overlay.setAttribute('aria-label','Compartilhar desfile em três etapas');
+                overlay.innerHTML=`<div class="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-fashion-gold/50 bg-fashion-900 p-5 space-y-4">
+                  <div class="flex items-center justify-between gap-3"><h3 class="text-fashion-gold font-bold text-lg">Compartilhar desfile</h3><button type="button" data-close aria-label="Fechar" class="text-white text-xl px-2">✕</button></div>
+                  <p class="text-gray-300 text-sm">Envie nesta ordem, separadamente, para revelar a evolução.</p>
+                  <div class="space-y-2"><p class="text-white text-sm font-bold">1. Foto da criação original</p><button type="button" data-step="past" class="w-full rounded-lg border border-fashion-gold/60 p-3 text-fashion-gold text-sm font-bold" ${pastFile?'':'disabled'}>${pastFile?'Compartilhar primeira foto':'Foto original não encontrada'}</button></div>
+                  <div class="space-y-2"><p class="text-white text-sm font-bold">2. Mensagem da mutação</p><div class="rounded-lg bg-fashion-950 p-3 text-white text-sm whitespace-pre-line" data-preview></div><button type="button" data-step="mutation" class="w-full rounded-lg border border-fashion-gold/60 p-3 text-fashion-gold text-sm font-bold">Copiar mensagem</button></div>
+                  <div class="space-y-2"><p class="text-white text-sm font-bold">3. Nova criação com legenda</p><button type="button" data-step="new" class="w-full rounded-lg bg-fashion-gold p-3 text-black text-sm font-bold">Compartilhar nova foto</button></div>
+                  <p class="text-gray-400 text-xs">O WhatsApp pode exigir que você cole a legenda manualmente. Cada etapa é enviada por você.</p>
+                </div>`;
+                overlay.querySelector('[data-preview]').textContent=mutationCaption;
+                overlay.querySelector('[data-close]').onclick=()=>overlay.remove();
+                overlay.addEventListener('click',async e=>{
+                    if(e.target===overlay){overlay.remove();return;}
+                    const step=e.target.closest('[data-step]')?.dataset.step;
+                    if(!step)return;
+                    if(step==='past'&&pastFile)await sharePhoto(pastFile,'');
+                    if(step==='mutation'){await copyCaption(mutationCaption);showToast('Mutação copiada. Cole como mensagem no WhatsApp.');}
+                    if(step==='new')await sharePhoto(newFile,finalCaption);
+                });
+                document.body.appendChild(overlay);
             }catch(error){showError(error.message||'Não foi possível preparar o compartilhamento.');}
             finally{button.disabled=false;button.innerHTML=original;}
         };
