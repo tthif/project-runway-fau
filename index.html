@@ -2830,7 +2830,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             // Public aggregate only: never query or reveal other designers' individual submissions.
             const pulseReady = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
             const sent = pulseReady ? Math.max(0, Number(submissionPulse.enviados)) : null;
-            const total = pulseReady && Number.isFinite(Number(submissionPulse.total)) ? Math.max(0, Number(submissionPulse.total)) : activeStylistsCount;
+            const rawTotal = pulseReady && Number.isFinite(Number(submissionPulse.total)) ? Math.max(0, Number(submissionPulse.total)) : activeStylistsCount;
+            const total = globalState.themeId === 'w02_new_form' ? Math.min(18, rawTotal) : rawTotal;
             const pending = sent===null ? null : Math.max(0,total-Math.min(sent,total));
             const percent = sent===null || total<=0 ? 0 : Math.min(100,Math.round(Math.min(sent,total)/total*100));
             $('#workroomThermometer').innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div></div>
@@ -3254,7 +3255,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if (board) {
                 const ready = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
                 const sent = ready ? Math.max(0, Number(submissionPulse.enviados)) : null;
-                const total = ready ? Math.max(0, Number(submissionPulse.total)||0) : 0;
+                const rawTotal = ready ? Math.max(0, Number(submissionPulse.total)||0) : 0;
+                const total = globalState.themeId === 'w02_new_form' ? Math.min(18, rawTotal) : rawTotal;
                 const pending = ready ? Math.max(0, total-Math.min(sent,total)) : null;
                 const percent = ready && total ? Math.min(100,Math.round(100*Math.min(sent,total)/total)) : 0;
                 const counts = board.querySelectorAll('.grid strong');
@@ -4453,10 +4455,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         'MATERIAL REVOLUTION':'REVOLUÇÃO DOS MATERIAIS'
                     };
                     const mutationName=translations[mutationRaw]||mutation?.[0]||'Não localizada';
-                    mutationLine=`Mutação: *${mutationName}*\n\n`;
+                    mutationLine=`*Mutação:* ${mutationName}\n\n`;
                     files=[await makeFile(past.url,'01-Criacao-Original'),newFile];
                 }
-                const caption=`*${runwayName(look)}*\n\n${mutationLine}*${look.titulo||'Nova criação'}*\n\n${look.mem||''}`;
+                const caption=`*${runwayName(look)}*\n\n${mutationLine}_${look.titulo||'Nova criação'}_\n\n${look.mem||''}`;
                 if(navigator.share && navigator.canShare?.({files})){
                     try{
                         await navigator.share({files,text:caption});
@@ -5721,7 +5723,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const l = d.data();
                 if(active.has(l.uid)) counts.set(l.uid, (counts.get(l.uid)||0)+1);
             });
-            const eligibleTotal = Number(globalState.rodada) === 2 ? Math.min(active.size, 18) : active.size;
+            const eligibleTotal = (Number(globalState.rodada) === 2 || String(globalState.themeId) === 'w02_new_form') ? Math.min(active.size, 18) : active.size;
             const sent = Math.min(eligibleTotal, [...counts.values()].filter(n => n >= required).length);
             const signature = [round, sent, eligibleTotal, required].join('|');
             if(signature === fauLastPulseSignature) return;
