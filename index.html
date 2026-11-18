@@ -3346,6 +3346,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         <h2 class="font-cinzel text-xl text-white font-normal">${isAdmin ? 'The Track Record · Season Intelligence' : currentUser.role === 'estilista' ? 'The Track Record · Minha Trajetória' : 'The Track Record · Momentos da Temporada'}</h2>
                     </div>
                 </div>
+                ${isAdmin ? `<section class="rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Ranking acumulado privado">
+                    <div><span class="text-[10px] uppercase tracking-widest text-fashion-gold">EXCLUSIVO DO ADM · ACUMULADO DA TEMPORADA</span>
+                    <h3 class="font-cinzel text-xl text-white">Ranking Geral Acumulado</h3>
+                    <p class="text-xs text-gray-400 mt-1">Soma das médias de cada rodada. Atualiza conforme novas avaliações entram, sem zerar os resultados anteriores. Não altera a ordem do Track Record.</p></div>
+                    <div id="fauAdminCumulativeRanking" class="overflow-x-auto"><p class="text-xs text-gray-400 py-4">Calculando acumulado...</p></div>
+                </section>` : ''}
                 <div id="trackRecordTableContainer" class="bg-fashion-900 border border-fashion-700 p-4 rounded-lg overflow-x-auto text-xs font-mono">
                     <p class="text-gray-400 py-8 text-center">Calculando matriz de desempenho da temporada...</p>
                 </div>
@@ -3506,7 +3512,44 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const totalScores = sObj.scores;
             const ppe = totalScores.length ? (totalScores.reduce((a, b) => a + b, 0) / totalScores.length).toFixed(2) : '0.00';
             return { uid: s.id, ate: s.ate, ppe: Number(ppe), rounds: sObj.rounds, out: s.out };
-        }).sort((a, b) => b.ppe - a.ppe);
+        });
+
+        // Ranking separado e privado: soma a média de cada rodada, sem recalcular
+        // a partir da média geral (P.P.E.) e sem afetar a ordem do Track Record.
+        const cumulativeSlot = document.getElementById('fauAdminCumulativeRanking');
+        if (isAdmin && cumulativeSlot) {
+            const cumulativeRows = rowsData.map(row => {
+                const entries = Object.values(row.rounds).filter(x => Number.isFinite(x?.avg));
+                return {...row, cumulative: entries.reduce((sum, x) => sum + x.avg, 0), roundsCount: entries.length};
+            }).sort((a,b) => b.cumulative-a.cumulative || String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR'));
+            cumulativeSlot.innerHTML = `<table class="w-full text-left text-xs border-collapse">
+                <thead><tr class="border-b border-fashion-700 text-fashion-gold text-[10px] uppercase tracking-wide"><th class="p-3">#</th><th class="p-3">Designer</th><th class="p-3 text-center">Rodadas</th><th class="p-3 text-right">Total somado</th></tr></thead>
+                <tbody>${cumulativeRows.map((row,index)=>`<tr class="border-b border-fashion-800 ${row.out?'opacity-60':''}"><td class="p-3 text-fashion-gold font-bold tabular-nums">${index+1}</td><td class="p-3 text-white font-medium">${esc(row.ate||'Designer')}${row.out?' <span class="text-red-300 text-[10px]">OUT</span>':''}</td><td class="p-3 text-center tabular-nums">${row.roundsCount}</td><td class="p-3 text-right font-semibold text-fashion-gold tabular-nums">${row.cumulative.toFixed(2)}</td></tr>`).join('')}</tbody></table>`;
+        }
+
+        // Track Record: ordenar pela classificação da ÚLTIMA rodada, nunca pelo P.P.E.
+        // Priorizar a ordem oficial publicada; na ausência dela, usar a nota da rodada.
+        const latestRound = rodadas[rodadas.length - 1];
+        const latestOfficial = resolveHistory(latestRound, rodadas.length - 1);
+        const officialPositions = new Map();
+        if (Array.isArray(latestOfficial?.rows)) {
+            latestOfficial.rows.forEach((entry, index) => {
+                if (entry.uid) officialPositions.set(String(entry.uid), index);
+            });
+        }
+        rowsData.sort((a, b) => {
+            const aPosition = officialPositions.get(String(a.uid));
+            const bPosition = officialPositions.get(String(b.uid));
+            if (aPosition !== undefined && bPosition !== undefined) return aPosition - bPosition;
+            if (aPosition !== undefined) return -1;
+            if (bPosition !== undefined) return 1;
+            const aScore = a.rounds[latestRound]?.avg;
+            const bScore = b.rounds[latestRound]?.avg;
+            if (Number.isFinite(aScore) && Number.isFinite(bScore)) return bScore - aScore;
+            if (Number.isFinite(aScore)) return -1;
+            if (Number.isFinite(bScore)) return 1;
+            return String(a.ate || '').localeCompare(String(b.ate || ''), 'pt-BR');
+        });
 
         let html = `
             <table class="w-full text-center border-collapse">
