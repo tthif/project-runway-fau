@@ -1020,15 +1020,15 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             },
             "theme_amoras_cut": {
                 id: "theme_amoras_cut",
-                code: "WEEK 04 — AMORA'S CUT",
+                code: "WEEK — AVENIDA BRASIL",
                 fixedOrder: null,
-                title: "AMORA'S CUT — THE NEXT BIG CHARACTER",
-                subtitle: "Lights, camera, drama! Crie uma personagem original para a próxima novela dirigida por Amora Mautner e revele sua história por meio do figurino.",
+                title: "SUBURBAN LUXURY",
+                subtitle: "Luxury has no zip code. Do Divino para o mundo: transforme a identidade estética e cultural do subúrbio brasileiro em alta-costura.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🎬🔴 THE RED SIGNATURE — Imagine uma personagem inédita de novela: quem ela é, o que deseja, como vive e qual é seu papel na trama? Crie UM figurino completo, original e coerente com a história dela, com qualidade de editorial, campanha ou divulgação de novela. VERMELHO OBRIGATÓRIO: deve aparecer de modo visível e intencional, mas o look NÃO PODE ser inteiramente vermelho. A cor pode estar em roupa, acessórios, calçados ou maquiagem. Não reproduza figurinos de personagens existentes. Entregue imagem gerada por IA, título, nome da personagem, descrição de até 500 caracteres incluindo espaços. Cinco critérios oficiais, máximo de 50 pontos. SEMANA ELIMINATÓRIA.",
-                extraField: { key: "nomePersonagem", label: "🎭 Personagem original da novela", placeholder: "Nome da personagem (ex.: Helena Montenegro)" }
+                mandate: "🎬 WEEK — AVENIDA BRASIL: SUBURBAN LUXURY\n\n“Luxury has no zip code.”\n\n🎥 LUZ, CÂMERA... DIVINO!\n\nPreparem-se para ouvir novamente aquele famoso OI OI OI!\n\nAvenida Brasil vai ganhar uma continuação e o Divino está prestes a voltar aos holofotes.\n\nEm 2012, a novela colocou o subúrbio carioca no centro da televisão brasileira. Entre jogadores milionários, empresárias, mansões e bailes charme, mostrou uma classe em ascensão que conquistava dinheiro e poder sem abandonar suas origens.\n\nMas o que acontece quando essa estética conquista as grandes passarelas?\n\n✨ THE CHALLENGE — SUBURBAN LUXURY\n\nDesigners, vocês deverão criar, utilizando inteligência artificial, UM LOOK DE ALTA-COSTURA INSPIRADO NA IDENTIDADE ESTÉTICA E CULTURAL DO SUBÚRBIO BRASILEIRO.\n\nA missão é reinterpretar a ascensão social retratada em Avenida Brasil, unindo referências populares aos códigos do luxo e da alta-costura.\n\n👑 THE WORKROOM — LUXO SEM CEP\n\nDo salão da Monalisa à mansão do Tufão, o Divino mostrou que existem diferentes maneiras de expressar riqueza, sucesso e poder.\n\nExplorem estampas, materiais, acessórios e silhuetas que traduzam essa identidade.\n\nA sofisticação não deverá apagar as origens da criação, mas valorizá-las.\n\nNão queremos uma caricatura do subúrbio. Queremos sua consagração na alta-costura.\n\n📸 THE RUNWAY — SUBMISSION RULES\n\nCada Designer deverá enviar pelo site:\n\n• 1 imagem original gerada por IA, apresentando o look completo.\n• Título da criação.\n• Conceito de até 500 caracteres, incluindo espaços.\n\n⚠️ RUNWAY REQUIREMENTS\n\n• Unir referências da cultura suburbana à alta-costura.\n• Representar visualmente a ascensão social.\n• Não reproduzir figurinos existentes da novela.\n• Apresentar qualidade de editorial de moda.\n\n⚖️ JUDGING\n\nOs jurados avaliarão as criações pelos cinco critérios oficiais:\n\n• Criatividade e originalidade.\n• Conceito e narrativa.\n• Qualidade visual.\n• Styling e composição.\n• Interpretação do desafio.\n\n🚨 THIS IS AN ELIMINATION WEEK!\n\nAo final da rodada, um Designer deixará a competição conforme as regras oficiais.\n\n🏁 THE FINAL WORD\n\nSe Avenida Brasil colocou o subúrbio no horário nobre, vocês terão a missão de colocá-lo no centro da alta-costura.\n\nDesta vez, não é o subúrbio que precisa conquistar a elite.\n\nÉ a elite que precisa olhar para o subúrbio.\n\nDO DIVINO PARA O MUNDO!\n\nOI OI OI!",
+                extraField: null
             },
             "theme_art_seduction": {
                 id: "theme_art_seduction",
@@ -3923,7 +3923,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           <p><strong>House Code:</strong> ${esc([fm.silhouette,fm.materials,fm.palette,fm.signature,fm.philosophy].filter(Boolean).join(' · '))}</p>
           ${fm.manifesto?`<p><strong>Manifesto:</strong> ${esc(fm.manifesto)}</p>`:''}
         </div>` : '';
-        const label=theme?.id==='theme_amoras_cut' ? '🎬 Personagem em cena' : (theme?.extraField?.label || 'Referência obrigatória');
+        const label=theme?.extraField?.label || 'Referência obrigatória';
         return `<section class="bg-fashion-950 border border-fashion-gold/40 rounded p-3 space-y-2">
           <p class="font-cinzel text-[10px] uppercase tracking-wider text-fashion-gold">✦ Creative Dossier — Especificações da Criação</p>
           ${twist?`<p class="text-xs text-white"><span class="text-gray-400">🎁 Sorteio:</span> ${esc(twist)}</p>`:''}
