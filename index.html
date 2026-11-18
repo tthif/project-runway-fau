@@ -3937,6 +3937,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         let looks = [];
         let evaluations = {};
         let week01References = new Map();
+        let week02Mutations = new Map();
         // O nome exibido vem do cadastro atual, nunca do snapshot do envio.
         let juryNamesByUid = new Map();
         const juryLiveName = look => juryNamesByUid.get(String(look.uid)) || look.ate || 'Designer';
@@ -3956,6 +3957,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         <h2 class="font-cinzel text-xl text-white font-normal">The Judges&#39; Panel</h2><p class="text-xs mt-2 ${scoresClosed()?'text-red-300':'text-green-300'}">${scoresClosed()?'🔒 '+juryStatus():'● '+juryStatus()}</p>
                     </div>
                     <div class="flex gap-2 fau-jury-actions">
+                        <button id="btnJuryHistory" type="button" aria-expanded="false" aria-controls="fauJuryHistory" class="bg-fashion-800 hover:bg-fashion-700 text-fashion-sand px-3 py-1.5 rounded border border-fashion-gold/50 text-xs">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Notas anteriores
+                        </button>
                         <button id="btnOpenMatrix" class="bg-fashion-800 hover:bg-fashion-700 text-fashion-sand px-3 py-1.5 rounded border border-fashion-600 text-xs">
                             <i class="fa-solid fa-table-cells"></i> Comparar Notas
                         </button>
@@ -3965,6 +3969,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     </div>
                 </div>
 
+                <section id="fauJuryHistory" hidden class="bg-fashion-900 border border-fashion-gold/40 p-4 rounded-xl space-y-3" aria-label="Histórico das suas avaliações">
+                    <div class="flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-cinzel text-fashion-gold text-lg">Suas notas por rodada</h3><p class="text-xs text-gray-400">Histórico individual e privado das avaliações salvas.</p></div><label class="text-xs text-fashion-gold">Rodada <select id="fauJuryHistoryRound" class="ml-2 p-2 rounded border border-fashion-700 bg-fashion-950 text-white"><option value="all">Todas</option></select></label></div>
+                    <div id="fauJuryHistoryBody" class="space-y-4 text-xs text-gray-300" aria-live="polite"></div>
+                </section>
                 <div id="juryMatrixContainer" class="hidden bg-fashion-900 border border-fashion-gold/40 p-4 rounded-lg space-y-3">
                     <span class="text-xs uppercase tracking-wider text-fashion-gold font-cinzel font-bold block">Visão Geral das Suas Notas:</span>
                     <div id="juryMatrixGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 text-xs"></div>
@@ -3983,6 +3991,47 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             </div>
         `);
 
+
+    // Histórico exclusivo do jurado autenticado; não consulta nem exibe notas de colegas.
+    const historyButton=$('#btnJuryHistory');
+    const historyPanel=$('#fauJuryHistory');
+    const historySelect=$('#fauJuryHistoryRound');
+    const historyBody=$('#fauJuryHistoryBody');
+    let juryHistoryLoaded=false;
+    let juryHistoryRows=[];
+    const renderJuryHistory=()=>{
+        const selected=historySelect.value;
+        const groups=new Map();
+        juryHistoryRows.filter(v=>selected==='all'||String(v.rodada)===selected).forEach(v=>{
+            const key=String(v.rodada);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(v);
+        });
+        if(!groups.size){historyBody.innerHTML='<p class="py-4 text-gray-400">Nenhuma nota salva nas rodadas anteriores.</p>';return;}
+        historyBody.innerHTML=[...groups.entries()].sort((a,b)=>Number(a[0])-Number(b[0])).map(([round,items])=>`
+            <section class="border border-fashion-700 rounded-lg p-3 space-y-3">
+                <h4 class="text-fashion-gold font-semibold uppercase tracking-wider">Week ${esc(String(round).padStart(2,'0'))}</h4>
+                <div class="space-y-2">${items.sort((a,b)=>String(a.alvoAte||'').localeCompare(String(b.alvoAte||''),'pt-BR',{sensitivity:'base'})).map(v=>`
+                    <div class="border-b border-fashion-700/60 pb-2 last:border-0 flex flex-wrap justify-between items-start gap-2">
+                        <div class="min-w-0"><strong class="text-white">${esc(juryNamesByUid.get(String(v.alvo))||v.alvoAte||'Designer')}</strong><p class="text-gray-400 mt-1">${CRITERIOS.map((c,i)=>`${esc(c)}: ${Number(v.nota[i]).toFixed(1)}`).join(' · ')}</p></div>
+                        <strong class="text-fashion-gold whitespace-nowrap">${Number(v.total??v.nota.reduce((a,b)=>a+Number(b),0)).toFixed(1)} / 50</strong>
+                    </div>`).join('')}</div>
+            </section>`).join('');
+    };
+    historyButton.onclick=safeExec(async()=>{
+        const opening=historyPanel.hidden;historyPanel.hidden=!opening;historyButton.setAttribute('aria-expanded',String(opening));
+        if(!opening)return;
+        if(!juryHistoryLoaded){
+            historyBody.textContent='Carregando avaliações anteriores...';
+            try{
+                const snap=await db.collection('avaliacoes').where('jurado','==',currentUser.uid).get();
+                juryHistoryRows=snap.docs.map(d=>d.data()).filter(v=>v.rodada!=null&&String(v.rodada)!==String(globalState.rodada)&&Array.isArray(v.nota)&&v.nota.length===5);
+                const rounds=[...new Set(juryHistoryRows.map(v=>String(v.rodada)))].sort((a,b)=>Number(a)-Number(b));
+                historySelect.innerHTML='<option value="all">Todas</option>'+rounds.map(r=>`<option value="${esc(r)}">Week ${esc(r.padStart(2,'0'))}</option>`).join('');
+                juryHistoryLoaded=true;
+            }catch(error){historyBody.textContent='Não foi possível carregar o histórico. Verifique a permissão de leitura das suas avaliações.';console.warn('[jury history]',error);return;}
+        }
+        renderJuryHistory();
+    });
+    historySelect.onchange=renderJuryHistory;
 
     const refreshJuryUI = () => {
             if (!juryCanViewLooks()) {
@@ -4028,14 +4077,30 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
-                                <img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">
-                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div><p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
-                                ${creativeDossier(look)}
-                                ${globalState.themeId==='w02_new_form' ? (()=>{const previous=week01References.get(look.uid);return `<div class="bg-fashion-950 p-3 rounded border border-fashion-gold/40 space-y-2"><p class="text-[10px] uppercase text-fashion-gold font-bold">🔮 Comparação com a Week 01</p>${previous?`<img src="${esc(previous.url)}" class="w-full max-w-44 rounded" alt="Criação anterior"><p class="text-xs text-white">${esc(previous.titulo)}</p><p class="text-xs text-gray-300">${esc(previous.mem)}</p>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}</div>`;})() : ''}
-                                <details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700">
-                                    <summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>LER CONCEITO · ${esc(look.titulo || 'Sem título')}</span><span class="fau-jury-chevron" aria-hidden="true">⌄</span></summary>
-                                    <p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p>
-                                </details>
+                                <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div>
+                                <p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
+                                ${globalState.themeId==='w02_new_form' ? (()=>{
+                                  const previous=week01References.get(String(look.uid));
+                                  const draw=week02Mutations.get(String(look.uid));
+                                  const mutation=fauMutationResult(draw);
+                                  return `<section class="space-y-3" aria-label="Comparação da evolução">
+                                    <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-2">
+                                      <p class="text-[10px] uppercase text-fashion-gold font-bold">01 · LOOK ORIGINAL — WEEK 01</p>
+                                      ${previous?`<img src="${esc(previous.url)}" class="fau-jury-look-photo w-full img-look rounded" loading="lazy" alt="Look original da Week 01"><p class="text-xs text-white font-semibold">${esc(previous.titulo||'Sem título')}</p><details class="border border-fashion-700 rounded"><summary class="p-3 text-xs text-fashion-gold cursor-pointer">LER CONCEITO ORIGINAL ⌄</summary><p class="text-xs text-gray-300 whitespace-pre-wrap px-3 pb-3">${esc(previous.mem||'Sem conceito')}</p></details>`:'<p class="text-xs text-amber-300">Criação anterior não localizada.</p>'}
+                                    </div>
+                                    <div class="bg-fashion-950 p-3 rounded border border-fashion-gold/50 space-y-1">
+                                      <p class="text-[10px] uppercase text-fashion-gold font-bold">02 · MUTAÇÃO SORTEADA${draw?.envelope?' · ENVELOPE '+String(draw.envelope).padStart(2,'0'):''}</p>
+                                      <p class="text-sm text-white font-semibold">${esc(mutation?.[0]||'Mutação ainda não localizada')}</p>
+                                      ${mutation?`<p class="text-xs text-gray-300">${esc(mutation[1])}</p>`:''}
+                                    </div>
+                                    <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-2">
+                                      <p class="text-[10px] uppercase text-fashion-gold font-bold">03 · NOVA CRIAÇÃO — WEEK 02</p>
+                                      <img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700" loading="lazy" alt="Novo look da Week 02">
+                                      <p class="text-xs text-white font-semibold">${esc(look.titulo||'Sem título')}</p>
+                                      <details class="fau-jury-dossier border border-fashion-700 rounded"><summary class="p-3 text-xs text-fashion-gold cursor-pointer">LER CONCEITO NOVO ⌄</summary><p class="text-xs text-gray-300 whitespace-pre-wrap px-3 pb-3">${esc(look.mem||'Sem conceito')}</p></details>
+                                    </div>
+                                  </section>`;
+                                })() : `<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">${creativeDossier(look)}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>LER CONCEITO · ${esc(look.titulo || 'Sem título')}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
                             </div>
                             <div class="fau-jury-scoring md:col-span-8 space-y-4 text-xs">
                                 <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
@@ -4167,8 +4232,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             looks=sortJuryLooks(looks);
             refreshJuryUI();
         });
+        if(juryCanViewLooks() && globalState.themeId==='w02_new_form') sub(db.collection('fashion_mutations').where('round','==',String(globalState.rodada)),snap=>{
+            week02Mutations=new Map(snap.docs.map(d=>[String(d.data().uid),d.data()]));
+            refreshJuryUI();
+        });
         if(juryCanViewLooks() && globalState.themeId==='w02_new_form') sub(db.collection('looks').where('themeId','==','w01_first_garment'),snap=>{
-            week01References=new Map(snap.docs.map(d=>[d.data().uid,{id:d.id,...d.data()}]));
+            week01References=new Map(snap.docs.map(d=>[String(d.data().uid),{id:d.id,...d.data()}]));
             refreshJuryUI();
         });
         if(juryCanViewLooks()) sub(db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
@@ -5773,6 +5842,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             db.collection('criticas_solicitadas').where('round','==',round).get(),
             db.collection('perfis').get()
           ]);
+          const broadcastMutations=new Map();
+          if(globalState.themeId==='w02_new_form'){
+            const mutationSnap=await db.collection('fashion_mutations').where('round','==',round).get();
+            mutationSnap.docs.forEach(d=>broadcastMutations.set(String(d.data().uid),d.data()));
+          }
+          const broadcastMutationText=look=>{
+            if(globalState.themeId!=='w02_new_form'||!look)return '';
+            const draw=broadcastMutations.get(String(look.uid));
+            const mutation=fauMutationResult(draw);
+            return `\n*Mutação sorteada:* ${mutation?.[0]||'Não localizada'}${draw?.envelope?' (envelope '+String(draw.envelope).padStart(2,'0')+')':''}`;
+          };
           const hasOfficialRank=rankSnap.exists&&Array.isArray(rankSnap.data().rows)&&rankSnap.data().rows.length>0;
           const root=fauBroadcastRoot();if(!root)return;
           // Encerrar as notas permite ao ADM visualizar a classificação calculada,
@@ -5839,7 +5919,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const matching=looks.filter(l=>String(l.uid||'')===String(r.uid||'__sem_uid__') || String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'));
             const look=matching.find(l=>l.url||l.image||l.img||l.foto);
             const photo=look&&(look.url||look.image||look.img||look.foto)||'';
-            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(look?.titulo||'Criação sem título').trim()}${status?`\n\n*${status}*`:''}`;
+            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(look?.titulo||'Criação sem título').trim()}${broadcastMutationText(look)}${status?`\n\n*${status}*`:''}`;
             const related=critiques.filter(c=>c.maison===name);
             const sorted=related.slice().sort(orderCritiques);
             const label=`${position?position+'º LUGAR — ':''}${name}`;
@@ -5849,7 +5929,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               <div class="border border-fashion-700 rounded-lg p-3 space-y-2">
                 <p class="text-xs text-fashion-gold">01 · CRIAÇÃO ENVIADA PELO DESIGNER + LEGENDA</p>${!hasRank?'<p class="text-xs text-amber-200">Prévia: posição e classificação aparecem quando as notas forem encerradas.</p>':''}
                 ${photo?`<img src="${escAttr(photo)}" alt="Look de ${escAttr(name)}" loading="lazy" class="max-h-72 w-full object-contain rounded bg-black">`:'<p class="text-xs text-amber-200">Criação não encontrada nos envios desta rodada. Nenhuma foto de perfil será usada como substituta.</p>'}
-                <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-sm italic text-gray-200">${escAttr(look?.titulo||'Criação sem título')}</p><p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
+                <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-sm italic text-gray-200">${escAttr(look?.titulo||'Criação sem título')}</p>${globalState.themeId==='w02_new_form'?`<p class="text-xs text-fashion-gold">${escAttr(broadcastMutationText(look).trim())}</p>`:''}<p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
                 <div class="flex flex-wrap gap-2"><button type="button" data-broadcast-copy="${index}" class="border border-fashion-gold rounded px-3 py-2 text-xs">Copiar legenda</button>${photo?`<button type="button" data-broadcast-photo="${index}" class="border border-fashion-700 rounded px-3 py-2 text-xs">Compartilhar foto + legenda</button>`:''}<label class="text-xs flex items-center gap-2"><input type="checkbox" data-broadcast-done="${index}:foto" ${progress[`${index}:foto`]?'checked':''}> Enviado</label></div>
               </div>
               ${sorted.length?sorted.map((c,j)=>{
@@ -5872,7 +5952,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const name=String(r.ate||r.nome||'Designer');
             const position=hasRank?(Number(r.pos)||i+1):null,status=String(r.status||'').toUpperCase();
             const matchingLook=looks.find(l=>(String(l.uid||'')===String(r.uid||'__sem_uid__')||String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(l.url||l.image||l.img||l.foto));
-            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n\n*${status}*`:''}`});
+            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(matchingLook?.titulo||'Criação sem título').trim()}${broadcastMutationText(matchingLook)}${status?`\n\n*${status}*`:''}`});
             const related=critiques.filter(c=>c.maison===name).sort(orderCritiques);
             related.forEach((c,j)=>{
               const juror=isHostJuror(c)?'FAU':jurorName(c);
