@@ -4419,37 +4419,72 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         });
         sub(db.doc('fau_public/reunion'),snap=>{const d=snap.data()||{},section=$('#fauReunionPublic'),cards=$('#fauReunionCards');if(!section||!cards)return;section.classList.toggle('hidden',d.published!==true);if(d.published===true)cards.innerHTML=(d.cards||[]).map(c=>`<article class="border border-fashion-gold/30 rounded-lg p-4"><p class="text-fashion-gold font-cinzel text-xs">${esc(c.title)}</p><p class="text-white text-lg mt-2">${esc(c.value)}</p></article>`).join('')||'<p class="text-gray-400">Aguarde as revelações.</p>';});
 
-        // Compartilhamento de produção: arquivo original e legenda, somente Admin.
+        // Compartilhamento do desfile: na Week 02, montagem comparativa + envelope real.
         const fauShareHandler = async event => {
             const button=event.target.closest('[data-fau-whatsapp]');
             if(!button || !isAdmin || !runwayRoot?.contains(button))return;
             const look=looks.find(item=>String(item.id)===button.dataset.fauWhatsapp);
             if(!look)return;
-            const caption=`*${runwayName(look)}*\n\n${look.titulo||'Look Sem Nome'}\n\n${look.mem||''}`;
+            const week02=globalState.themeId==='w02_new_form';
             const original=button.innerHTML;
-            button.disabled=true;button.textContent='PREPARANDO FOTO…';
-            const copyCaption=async()=>{
+            button.disabled=true;button.textContent='PREPARANDO COMPARTILHAMENTO…';
+            const copyCaption=async caption=>{
                 try{await navigator.clipboard.writeText(caption);return true;}
                 catch(e){const input=document.createElement('textarea');input.value=caption;input.style.position='fixed';input.style.opacity='0';document.body.appendChild(input);input.select();const ok=document.execCommand('copy');input.remove();return ok;}
             };
-            try{
-                const response=await fetch(look.url);
+            const fetchImage=async url=>{
+                const response=await fetch(url);
                 if(!response.ok)throw new Error('Foto indisponível');
-                const blob=await response.blob();
+                return response.blob();
+            };
+            const imageFromBlob=blob=>new Promise((resolve,reject)=>{
+                const url=URL.createObjectURL(blob),img=new Image();
+                img.onload=()=>{URL.revokeObjectURL(url);resolve(img);};
+                img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Não foi possível abrir a foto'));};
+                img.src=url;
+            });
+            try{
+                let caption=`*${runwayName(look)}*\n\n${look.titulo||'Look Sem Nome'}\n\n${look.mem||''}`;
+                let blob=await fetchImage(look.url);
+                if(week02){
+                    const [pastSnap,drawSnap]=await Promise.all([
+                        db.collection('looks').where('themeId','==','w01_first_garment').where('uid','==',look.uid).get(),
+                        db.collection('fashion_mutations').where('round','==',String(globalState.rodada)).where('uid','==',look.uid).get()
+                    ]);
+                    const past=pastSnap.docs.map(d=>d.data()).find(d=>d.url);
+                    const draw=drawSnap.docs[0]?.data();
+                    const mutation=fauMutationResult(draw);
+                    const envelope=draw?.envelope?`Envelope ${String(draw.envelope).padStart(2,'0')}`:'Envelope não localizado';
+                    caption=`*${runwayName(look)}*\n*WEEK 02 — A NEW FORM*\n\n*Week 01:* ${past?.titulo||'Look original'}\n*${envelope}:* ${mutation?.[0]||'Mutação não localizada'}\n*Week 02:* ${look.titulo||'Look sem nome'}\n\n${look.mem||''}`;
+                    if(past){
+                        const [oldImg,newImg]=await Promise.all([imageFromBlob(await fetchImage(past.url)),imageFromBlob(blob)]);
+                        const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=1000;
+                        const ctx=canvas.getContext('2d');
+                        ctx.fillStyle='#141215';ctx.fillRect(0,0,1200,1000);
+                        const drawCover=(img,x,y,w,h)=>{const scale=Math.max(w/img.width,h/img.height);const sw=w/scale,sh=h/scale;ctx.drawImage(img,(img.width-sw)/2,(img.height-sh)/2,sw,sh,x,y,w,h);};
+                        ctx.fillStyle='#d1b38b';ctx.font='bold 24px sans-serif';ctx.textAlign='center';
+                        ctx.fillText('WEEK 01 · LOOK ORIGINAL',300,48);ctx.fillText('WEEK 02 · NOVA CRIAÇÃO',900,48);
+                        drawCover(oldImg,35,75,530,760);drawCover(newImg,635,75,530,760);
+                        ctx.fillStyle='#f0eae1';ctx.font='bold 29px sans-serif';
+                        const short=t=>String(t||'').length>34?String(t).slice(0,31)+'…':String(t||'');
+                        ctx.fillText(short(past.titulo||'Look original'),300,878);ctx.fillText(short(look.titulo||'Nova criação'),900,878);
+                        ctx.fillStyle='#d1b38b';ctx.font='bold 23px sans-serif';
+                        ctx.fillText(`${envelope.toUpperCase()} · ${short(mutation?.[0]||'MUTAÇÃO NÃO LOCALIZADA')}`,600,943);
+                        blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Falha ao gerar comparação')),'image/jpeg',.92));
+                    }else{caption+='\n\n(Foto original da Week 01 não localizada no acervo.)';}
+                }
                 const type=blob.type||'image/jpeg';
                 const ext=type.includes('png')?'png':type.includes('webp')?'webp':'jpg';
-                const file=new File([blob],`FAU-${String(runwayName(look)).replace(/[^a-z0-9_-]/gi,'-')}.${ext}`,{type});
+                const file=new File([blob],`FAU-${String(runwayName(look)).replace(/[^a-z0-9_-]/gi,'-')}${week02?'-Evolucao':''}.${ext}`,{type});
                 if(navigator.share && navigator.canShare?.({files:[file]})){
                     try{await navigator.share({files:[file],text:caption});return;}
                     catch(error){if(error.name==='AbortError')return;}
                 }
-                await copyCaption();
-                const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-                showToast('Foto baixada e legenda copiada. Anexe a foto no WhatsApp e cole a legenda.');
-            }catch(error){
-                const copied=await copyCaption();
-                showToast(copied?'Legenda copiada. Abra a foto para salvá-la e enviar no WhatsApp.':'Não foi possível compartilhar. Tente novamente.');
-            }finally{button.disabled=false;button.innerHTML=original;}
+                await copyCaption(caption);
+                const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+                showToast(week02?'Comparação baixada e legenda com envelope copiada. Envie a imagem no WhatsApp.':'Foto baixada e legenda copiada. Anexe a foto no WhatsApp.');
+            }catch(error){showError(error.message||'Não foi possível preparar o compartilhamento.');}
+            finally{button.disabled=false;button.innerHTML=original;}
         };
         runwayRoot?.addEventListener('click',fauShareHandler);
         unsubsTab.push(()=>runwayRoot?.removeEventListener('click',fauShareHandler));
