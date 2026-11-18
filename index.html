@@ -970,30 +970,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 extraField: { key: "exPeao", label: "Ex-participante de A Fazenda escolhido", placeholder: "Nome do ex-peão que vestirá o uniforme All Stars" }
             },
             "theme_seven_deadly": {
-                id: "theme_seven_deadly",
-                code: "WEEK — SEVEN DEADLY STYLES",
-                fixedOrder: null,
-                title: "SEVEN DEADLY STYLES",
-                subtitle: "Sete personalidades, sete inspirações. Escolha livremente um dos sete anões de Branca de Neve e transforme sua personalidade em alta-costura. Repetições permitidas.",
-                elimTipo: "single",
-                numSubmissoes: 1,
-                drawType: "none",
-                mandate: "🍎 FROM FAIRY TALE TO FASHION — Traduza a personalidade do anão escolhido em um look autoral completo. Não são permitidos cosplay, fantasia nem reprodução literal de figurinos. A escolha é livre e pode se repetir entre designers. Uma imagem de IA, título, conceito de até 500 caracteres. Avaliação de 0 a 50 pontos.",
-                extraField: {
-                    key: "anaoEscolhido",
-                    label: "Personagem Escolhido (7 Anões)",
-                    type: "select",
-                    options: [
-                        "👑 Mestre (Doc) — Liderança & Controle",
-                        "😠 Zangado (Grumpy) — Rabugento & Intimidador",
-                        "🌷 Dengoso (Bashful) — Tímido & Sensível",
-                        "☀️ Feliz (Happy) — Otimista & Solar",
-                        "💤 Soneca (Sleepy) — Desconstruído & Sonolento",
-                        "🤧 Atchim (Sneezy) — Imprevisível & Explosivo",
-                        "🍄 Dunga (Dopey) — Excêntrico & Surreal"
-                    ]
-                }
-            },
+                "id": "theme_seven_deadly",
+                "code": "WEEK — ONCE UPON A RUNWAY",
+                "fixedOrder": null,
+                "title": "ONCE UPON A RUNWAY",
+                "subtitle": "Escolha um conto de fadas e conte sua história através de um look autoral de alta-costura. Sem reproduzir personagens ou figurinos.",
+                "elimTipo": "single",
+                "numSubmissoes": 1,
+                "drawType": "none",
+                "mandate": "📖 WEEK — ONCE UPON A RUNWAY\n“Not every fairy tale has a happy ending.”\n\n🪞 ERA UMA VEZ...\nPrincesas, bruxas, maldições, reinos encantados e finais felizes. Durante séculos, os contos de fadas atravessaram gerações com histórias de amor, ambição, coragem, traição e magia. Mas nem toda princesa precisa ser salva, nem todo vilão nasceu para ser mau. Desta vez, essas histórias vão ganhar um novo capítulo. E quem vai escrevê-lo são vocês!\n\n✨ THE CHALLENGE — A FASHION FAIRY TALE\nDesigners, escolham UM CONTO DE FADAS e criem, utilizando inteligência artificial, UM LOOK DE ALTA-COSTURA QUE CONTE ESSA HISTÓRIA ATRAVÉS DA MODA. De Cinderela a Chapeuzinho Vermelho, de Branca de Neve a João e Maria, qualquer conto poderá inspirar vocês. A escolha é livre e diferentes Designers podem escolher a mesma história.\n\nNão queremos reproduções de personagens ou figurinos. Se escolherem Branca de Neve, por exemplo, não queremos uma versão moderna do vestido da princesa, mas uma criação que traduza a maçã envenenada, o espelho mágico, a obsessão pela beleza ou o sono eterno. O desafio não é vestir um personagem, mas transformar um conto de fadas em moda!\n\n👑 THE WORKROOM — BEYOND THE FAIRY TALE\nEsqueçam os figurinos tradicionais. Pensem em como os conflitos, acontecimentos e símbolos da história podem influenciar silhuetas, materiais, cores, texturas e a construção da roupa. A referência ao conto deverá aparecer visualmente no look, sem depender apenas do título ou do conceito. Não serão aceitos cosplays, fantasias ou reproduções de figurinos existentes. Não há Twist nesta rodada.\n\n📸 THE RUNWAY\nEntreguem 1 imagem original gerada por IA com um look completo, título e conceito de até 500 caracteres explicando como a história escolhida foi traduzida para a roupa. Os jurados avaliarão criatividade, conceito, qualidade visual, styling e interpretação do desafio.\n\n🍎 THE FINAL WORD\nNos contos de fadas, a magia pode mudar destinos. Mas nesta competição, nem mesmo uma fada madrinha poderá garantir um final feliz. Algumas histórias serão lembradas para sempre. Outras terminarão antes da última página.\n\nERA UMA VEZ... UMA PASSARELA.\nAnd they lived fashionably ever after... or did they?",
+                "teaserHint": "“Sabe, as pessoas sempre esperam que alguém apareça para salvar o dia. Mas, às vezes, o verdadeiro poder está em quem ninguém imaginava que pudesse mudar o rumo da história. E nem todo herói é exatamente quem parece ser.” — Gal Gadot (fala fictícia para a dica)"
+},
             "theme_mathematics": {
                 id: "theme_mathematics",
                 code: "WEEK — THE BEAUTY OF MATHEMATICS",
@@ -1202,21 +1189,21 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         if(!themeHasDraw(t) && t.drawType!=='faction_choice' && t.id!=='theme_seven_deadly')throw new Error('Esta rodada não tem escolha confirmável.');
         const wedding=t.drawType==='invitation_box_3d';
         const choices=wedding?['color','element','print'].map(k=>document.getElementById('wedding_'+k)?.value):[];
-        const chosen=wedding?choices.join('-'):(t.drawType==='faction_choice'?document.getElementById('factionChoice')?.value:(t.id==='theme_seven_deadly'?document.getElementById('themeExtraInput')?.value:document.getElementById('sealedEnvelope')?.value));
+        const chosen=wedding?choices.join('-'):(t.drawType==='faction_choice'?document.getElementById('factionChoice')?.value:(false?document.getElementById('themeExtraInput')?.value:document.getElementById('sealedEnvelope')?.value));
         if(wedding && (choices.length!==3 || choices.some(n=>!n || !/^[1-5]$/.test(n))))throw new Error('Escolha um envelope de 01 a 05 em cada categoria.');
-        if(!chosen)throw new Error(t.id==='theme_seven_deadly'?'Escolha um dos sete anões antes de confirmar.':'Faça sua escolha antes de confirmar.');
-        if(t.id==='theme_seven_deadly' && !t.extraField.options.includes(chosen))throw new Error('Personagem inválido.');
+        if(!chosen)throw new Error(false?'Escolha um dos sete anões antes de confirmar.':'Faça sua escolha antes de confirmar.');
+        if(false && !t.extraField.options.includes(chosen))throw new Error('Personagem inválido.');
         const ref=db.doc(`sorteios/${drawKey()}`);
         await db.runTransaction(async tx=>{
             const snap=await tx.get(ref);
             if(snap.exists)throw new Error('Você já confirmou sua escolha. Não é possível alterar.');
             const assignment=(!wedding&&t.drawType!=='faction_choice'&&t.id!=='theme_seven_deadly')?fauEnvelopeAssignment(t,Number(chosen)):null;
-            const value=wedding?[t.invitationBoxMap.colors[Number(choices[0])-1],t.invitationBoxMap.elements[Number(choices[1])-1],t.invitationBoxMap.prints[Number(choices[2])-1]].join(' • '):(t.drawType==='faction_choice'||t.id==='theme_seven_deadly'?chosen:assignment.value);
+            const value=wedding?[t.invitationBoxMap.colors[Number(choices[0])-1],t.invitationBoxMap.elements[Number(choices[1])-1],t.invitationBoxMap.prints[Number(choices[2])-1]].join(' • '):(t.drawType==='faction_choice'||false?chosen:assignment.value);
             tx.set(ref,{uid:currentUser.uid,rodada:globalState.rodada,themeId:t.id,envelope:chosen,value,...(assignment?{envelopeDistribution:assignment.order}:{}),...(wedding?{weddingNumbers:{color:Number(choices[0]),element:Number(choices[1]),print:Number(choices[2])}}:{}),
                 createdAt:firebase.firestore.FieldValue.serverTimestamp()});
         });
         await renderPersonalTwist();
-        showToast(t.id==='theme_seven_deadly'?'Personagem confirmado! Sua escolha foi salva.':t.drawType==='faction_choice'?'Facção confirmada! Sua escolha foi salva.':'Envelope aberto! Seu resultado foi salvo e estará disponível sempre que entrar.');
+        showToast(false?'Personagem confirmado! Sua escolha foi salva.':t.drawType==='faction_choice'?'Facção confirmada! Sua escolha foi salva.':'Envelope aberto! Seu resultado foi salvo e estará disponível sempre que entrar.');
     }
     function fauSealedEnvelopeHeading(t){
         const headings={theme_climate_chaos:['CLIMATE CHAOS','TWO SEASONS. ONE LOOK.'],theme_art_seduction:['THE ART OF SEDUCTION','ONE ELEMENT. ONE SEDUCTION.'],theme_awards:['THE AWARDS','ONE INVITATION. ONE RED CARPET.'],theme_wedding_party:['THE INVITATION BOX','THREE SECRETS. ONE LOOK.']};
@@ -1231,18 +1218,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const isDraw=themeHasDraw(t);
         if(!t.extraField && !t.slotLabels && !isDraw && t.drawType!=='faction_choice' && !draw){slot.innerHTML='';return;}
         slot.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
-          ${t.extraField && !(t.id==='theme_seven_deadly'&&draw)?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
+          ${t.extraField && !(false&&draw)?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
           ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
           ${isDraw?fauSealedEnvelopeHeading(t):''}
           ${draw?`<div class="border border-fashion-gold/50 rounded p-4 text-center">
-              <div class="text-[10px] uppercase text-gray-400">${t.id==='theme_seven_deadly'?'PERSONAGEM CONFIRMADO':t.drawType==='faction_choice'?'FACÇÃO CONFIRMADA':'ENVELOPE ABERTO'}</div>
+              <div class="text-[10px] uppercase text-gray-400">${false?'PERSONAGEM CONFIRMADO':t.drawType==='faction_choice'?'FACÇÃO CONFIRMADA':'ENVELOPE ABERTO'}</div>
               <strong class="text-fashion-gold">${released?esc(draw.value):(t.drawType==='invitation_box_3d'?`COLOR ${esc(draw.weddingNumbers?.color||'?')} · ELEMENT ${esc(draw.weddingNumbers?.element||'?')} · PRINT ${esc(draw.weddingNumbers?.print||'?')} — aguardando revelação`:`Envelope ${esc(draw.envelope||'confirmado')} — aguardando liberação da produção`)}</strong>
             </div>`:
-            (isDraw||t.drawType==='faction_choice'||t.id==='theme_seven_deadly')?
-            `<div class="space-y-3">${t.id==='theme_seven_deadly'?'<p class="text-xs text-gray-300">Escolha livremente um dos sete anões acima. A confirmação é definitiva.</p>':t.drawType==='invitation_box_3d'?`<div class="grid grid-cols-1 lg:grid-cols-3 gap-3">${[['color','🎨 COLOR'],['element','🧵 ELEMENT'],['print','🪡 PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded-lg p-3 bg-fashion-950/50"><div class="text-xs text-fashion-gold font-bold mb-2">${label}</div><input type="hidden" id="wedding_${key}" value=""><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-wedding-category="${key}" data-wedding-envelope="${n}" aria-pressed="false" class="wedding-envelope border border-fashion-gold/30 rounded-md py-3 px-0.5 text-center bg-fashion-900 hover:bg-fashion-gold/20 hover:border-fashion-gold transition-colors"><span class="block text-lg">✉️</span><span class="block text-[10px] text-fashion-gold mt-1">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><div id="wedding_status_${key}" class="text-[11px] text-gray-400 mt-2">🔒 Escolha um envelope</div></div>`).join('')}</div>`:t.drawType==='faction_choice'?
+            (isDraw||t.drawType==='faction_choice'||false)?
+            `<div class="space-y-3">${false?'<p class="text-xs text-gray-300">Escolha livremente um dos sete anões acima. A confirmação é definitiva.</p>':t.drawType==='invitation_box_3d'?`<div class="grid grid-cols-1 lg:grid-cols-3 gap-3">${[['color','🎨 COLOR'],['element','🧵 ELEMENT'],['print','🪡 PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded-lg p-3 bg-fashion-950/50"><div class="text-xs text-fashion-gold font-bold mb-2">${label}</div><input type="hidden" id="wedding_${key}" value=""><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-wedding-category="${key}" data-wedding-envelope="${n}" aria-pressed="false" class="wedding-envelope border border-fashion-gold/30 rounded-md py-3 px-0.5 text-center bg-fashion-900 hover:bg-fashion-gold/20 hover:border-fashion-gold transition-colors"><span class="block text-lg">✉️</span><span class="block text-[10px] text-fashion-gold mt-1">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><div id="wedding_status_${key}" class="text-[11px] text-gray-400 mt-2">🔒 Escolha um envelope</div></div>`).join('')}</div>`:t.drawType==='faction_choice'?
                 '<div class="space-y-2"><p class="text-[10px] tracking-[.2em] text-fashion-gold text-center">THE BLACK BANQUET · YOUR ALLEGIANCE</p><h3 class="font-cinzel text-xl text-white text-center">CHOOSE YOUR SIDE</h3><p class="text-xs text-gray-300 text-center">Você decide sua facção. Não há sorteio. Sua escolha será definitiva.</p><label class="block text-xs text-fashion-gold">SUA FACÇÃO<select id="factionChoice" class="block w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-3 text-sm text-white"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Joia amaldiçoada</option></select></label></div>':
                 `<input type="hidden" id="sealedEnvelope" value=""><div class="grid grid-cols-3 gap-3">${Array.from({length:fauEnvelopePool(t).length},(_,i)=>`<button type="button" data-sealed-envelope="${i+1}" aria-pressed="false" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold"><span class="block text-4xl text-fashion-gold mb-1" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p id="sealedEnvelopeStatus" class="text-xs text-gray-400 text-center">Selecione um envelope para confirmar.</p>`}
-                <button id="btnRevealTwist"  class="w-full bg-fashion-gold text-black rounded px-4 py-3 text-xs font-bold disabled:opacity-50">${t.id==='theme_seven_deadly'?'CONFIRMAR PERSONAGEM':t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
+                <button id="btnRevealTwist"  class="w-full bg-fashion-gold text-black rounded px-4 py-3 text-xs font-bold disabled:opacity-50">${false?'CONFIRMAR PERSONAGEM':t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
         </div>`;
         slot.querySelectorAll('[data-wedding-envelope]').forEach(envelope=>{
             envelope.addEventListener('click',()=>{
@@ -2563,17 +2550,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     }
     function fauLabTwist(t){
       const draw=fauTestLabState.draw, released=fauTestLabState.released;
-      const extra=t.extraField && !(t.id==='theme_seven_deadly'&&draw)?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="fauLabCharacter" class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="">Escolha...</option>${(t.extraField.options||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select>`:`<input class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:'';
+      const extra=t.extraField && !(false&&draw)?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="fauLabCharacter" class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="">Escolha...</option>${(t.extraField.options||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select>`:`<input class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:'';
       const hiddenSecond=t.id==='theme_beauty_eye'&&!fauTestLabState.phaseTwo;
       const slots=t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${hiddenSecond?esc('Look 1 — Criação Autoral Original'):t.slotLabels.map(esc).join(' / ')}</p>`:'';
       if(!extra&&!slots&&(!t.drawType||t.drawType==='none'))return '';
       let control='';
-      if(t.id==='theme_seven_deadly')control='<p class="text-xs text-gray-300">Escolha livremente um personagem acima e confirme. Sua escolha será definitiva.</p><button type="button" id="fauLabDrawConfirm" class="w-full bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">CONFIRMAR PERSONAGEM</button>';
+      if(false)control='<p class="text-xs text-gray-300">Escolha livremente um personagem acima e confirme. Sua escolha será definitiva.</p><button type="button" id="fauLabDrawConfirm" class="w-full bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">CONFIRMAR PERSONAGEM</button>';
       else if(t.drawType==='faction_choice')control=`<div class="space-y-3"><div class="text-center space-y-2"><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE BLACK BANQUET · YOUR ALLEGIANCE</p><h3 class="font-cinzel text-2xl text-white">CHOOSE YOUR SIDE</h3><p class="text-xs text-gray-300">Você decide sua facção. Não há sorteio. Sua escolha será definitiva.</p></div><label class="block text-xs text-gray-300">ESCOLHA SUA FACÇÃO<select id="fauLabFaction" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select></label><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA ESCOLHA</button></div>`;
       else if(t.drawType==='blind_concept_swap')control=fauTestLabState.phaseTwo?`<div class="space-y-3"><p class="text-[10px] tracking-[.18em] text-fashion-gold">THE TWIST — ANOTHER POINT OF VIEW</p><p class="text-xs text-gray-300">Você recebeu um conceito de outro Designer. A imagem e a autoria permanecem em segredo.</p><div class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-widest text-fashion-gold">YOUR SEALED CONCEPT · SORTEIO EXCLUSIVO</p><h3 class="font-cinzel text-2xl text-white">${esc(fauLabBeautyConcept().title)}</h3><p class="text-sm text-gray-200 whitespace-pre-wrap">${esc(fauLabBeautyConcept().concept)}</p><p class="text-[11px] text-gray-400">Conceito fictício para o Test Lab. No Workroom real, cada Designer recebe um conceito original diferente, sem repetição e sem receber o próprio.</p></div></div>`:'';
       else if(t.drawType==='invitation_box_3d')control=`<div class="text-center text-fashion-gold font-cinzel">THE INVITATION BOX</div><div class="grid grid-cols-1 md:grid-cols-3 gap-3">${[['color','COLOR'],['element','ELEMENT'],['print','PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded p-3"><p class="text-xs text-fashion-gold mb-2">${label}</p><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-lab-wedding="${key}|${n}" class="border border-fashion-gold/30 rounded p-2 text-xs ${fauTestLabState.wedding[key]===n?'bg-fashion-gold text-black':'text-fashion-gold'}">✉<br>${n}</button>`).join('')}</div></div>`).join('')}</div><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA INVITATION BOX</button>`;
       else if(t.drawType&&t.drawType!=='none')control=`<div class="grid grid-cols-3 gap-3">${Array.from({length:fauEnvelopePool(t).length},(_,i)=>`<button type="button" data-lab-envelope="${i+1}" aria-pressed="${fauTestLabState.selectedEnvelope===i+1}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold ${fauTestLabState.selectedEnvelope===i+1?'ring-2 ring-fashion-gold bg-fashion-gold/20':''}"><span class="block text-4xl text-fashion-gold mb-1" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p class="text-xs text-gray-400 text-center">${fauTestLabState.selectedEnvelope?`Envelope ${String(fauTestLabState.selectedEnvelope).padStart(2,'0')} selecionado — conteúdo lacrado`:'Escolha um envelope para confirmar.'}</p><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR ENVELOPE LACRADO</button>`;
-      if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-[10px] tracking-[.2em] text-fashion-gold">${t.id==='theme_seven_deadly'?'PERSONAGEM CONFIRMADO':t.drawType==='faction_choice'?'THE BLACK BANQUET · FACÇÃO CONFIRMADA':'YOUR FATE IS SEALED · RESULTADO DEFINITIVO'}</p><strong class="text-fashion-gold">${esc(draw.value)}</strong></div><button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
+      if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-[10px] tracking-[.2em] text-fashion-gold">${false?'PERSONAGEM CONFIRMADO':t.drawType==='faction_choice'?'THE BLACK BANQUET · FACÇÃO CONFIRMADA':'YOUR FATE IS SEALED · RESULTADO DEFINITIVO'}</p><strong class="text-fashion-gold">${esc(draw.value)}</strong></div><button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
       return `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-4">${extra}${slots}${themeHasDraw(t)?fauSealedEnvelopeHeading(t):''}${control}</section>`;
     }
     // Fases posteriores: prévias isoladas e interativas, sem consultas nem gravações no Firebase.
@@ -2633,7 +2620,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       document.querySelectorAll('[data-lab-wedding]').forEach(b=>b.onclick=()=>{const [key,n]=b.dataset.labWedding.split('|');fauTestLabState.wedding[key]=Number(n);VIEWS.testlab();});
       const labConfirm=document.getElementById('fauLabDrawConfirm');if(labConfirm)labConfirm.onclick=()=>{
         let value='',label='';
-        if(theme.id==='theme_seven_deadly'){value=document.getElementById('fauLabCharacter')?.value||'';if(!value){showToast('Escolha um dos sete anões antes de confirmar.');return;}label='Personagem escolhido';}
+        if(false){value=document.getElementById('fauLabCharacter')?.value||'';if(!value){showToast('Escolha um dos sete anões antes de confirmar.');return;}label='Personagem escolhido';}
         else if(theme.drawType==='faction_choice'){value=document.getElementById('fauLabFaction').value;label='Facção escolhida';}
         else if(theme.drawType==='invitation_box_3d'){
           const w=fauTestLabState.wedding;if(!w.color||!w.element||!w.print){showToast('Escolha um envelope em cada uma das três categorias.');return;}
@@ -3169,7 +3156,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if(theme?.id==='w02_new_form' && !allMyLooks.some(l=>l.themeId==='w01_first_garment')) throw new Error('Sua criação da Week 01 não foi encontrada. Procure a produção para regularizar o histórico antes de enviar A New Form.');
                 const draw = theme ? await getPersonalTwist() : null;
                 if (theme && (themeHasDraw(theme) || theme.drawType === 'faction_choice') && !draw) throw new Error('Abra seu envelope antes de enviar o look.');
-                if (theme?.extraField && !(theme.id==='theme_seven_deadly' && (await getPersonalTwist()).value) && !document.getElementById('themeExtraInput')?.value.trim()) throw new Error('Preencha a exigência especial deste desafio.');
+                if (theme?.extraField && !(false && (await getPersonalTwist()).value) && !document.getElementById('themeExtraInput')?.value.trim()) throw new Error('Preencha a exigência especial deste desafio.');
                 if(theme?.id==='theme_climate_chaos') {
                     if(!draw || draw.themeId!=='theme_climate_chaos' || !draw.value || !draw.value.includes(' + ')) throw new Error('Seu sorteio das duas estações está ausente ou inválido. Procure a produção.');
                 }
@@ -3210,7 +3197,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     slot: index + 1,
                     twistValue: ['theme_traitors','theme_beauty_eye'].includes(theme?.id) ? null : (draw?.value || null),
                     beautySourceUid: beauty && index===1 ? beauty.assignments.find(a=>a.uid===currentUser.uid)?.sourceUid : null,
-                    themeExtra: theme?.id==='theme_seven_deadly'?(await getPersonalTwist()).value||'':document.getElementById('themeExtraInput')?.value.trim() || '',
+                    themeExtra: false?(await getPersonalTwist()).value||'':document.getElementById('themeExtraInput')?.value.trim() || '',
                     finaleMeta: finaleMeta,
                     titulo: lookTitle,
                     url: photoBase64,
