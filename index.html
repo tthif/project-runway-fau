@@ -4864,9 +4864,20 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         };
         const candidatesSnap=await db.collection('perfis').where('role','==','estilista').get();
         const candidates=candidatesSnap.docs.filter(d=>!d.data().out&&!d.data().disabled&&d.id!==currentUser.uid).sort((a,b)=>(a.data().ate||'').localeCompare(b.data().ate||'', 'pt-BR', {sensitivity:'base', numeric:true}));
+        // Exibe a criação enviada nesta rodada, nunca a foto de perfil do Designer.
+        const ballotLooksSnap=await db.collection('looks').where('rodada','==',roundAtOpen).get();
+        const ballotLooks=new Map();
+        ballotLooksSnap.docs.forEach(doc=>{
+          const look=doc.data();
+          if(look.uid && look.url && !ballotLooks.has(look.uid))ballotLooks.set(look.uid,look.url);
+        });
         const renderCandidates=(type)=>{
           const conf=ballot[type];
-          $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>`<label class="flex items-center gap-3 p-3 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500" ${(!canVote||!ballotTypeOpen(type))?'disabled':''}><span class="text-white text-sm">${esc(d.data().ate||'Designer')}</span></label>`).join(''):'<p class="text-sm text-gray-400">Nenhum Designer elegível nesta rodada.</p>';
+          $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>{
+            const photo=ballotLooks.get(d.id);
+            const preview=photo?`<img src="${esc(photo)}" alt="Look da rodada de ${esc(d.data().ate||'Designer')}" loading="lazy" class="w-10 h-12 sm:w-12 sm:h-14 object-cover rounded-md border border-fashion-700 flex-shrink-0">`:`<span class="w-10 h-12 sm:w-12 sm:h-14 rounded-md border border-fashion-700 bg-fashion-800 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs text-center">Sem foto</span>`;
+            return `<label class="flex items-center gap-3 p-2 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500 flex-shrink-0" ${(!canVote||!ballotTypeOpen(type))?'disabled':''}>${preview}<span class="text-white text-sm">${esc(d.data().ate||'Designer')}</span></label>`;
+          }).join(''):'<p class="text-sm text-gray-400">Nenhum Designer elegível nesta rodada.</p>';
           refreshStatus(type);
         };
         for(const type of ['veto','fdm'])renderCandidates(type);
