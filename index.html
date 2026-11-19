@@ -5635,22 +5635,49 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               if(token!==previewToken||preview.hidden)return;
               body.innerHTML='<p class="text-fashion-gold font-cinzel tracking-widest text-sm">THE ICON&#39;S CHOICE</p><p class="text-sm text-gray-300">Você tem o poder. Explore as pistas e escolha o próximo desafio.</p>'+(chosen?'<p class="text-fashion-gold text-sm">🔒 Escolha registrada. Aguarde a revelação da produção.</p>':'')+'<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">'+options.map((o,i)=>'<div class="rounded-lg border border-fashion-gold/30 bg-fashion-900 overflow-hidden"><div class="aspect-[4/5] bg-fashion-950">'+(o.photo?'<img src="'+escapePreview(o.photo)+'" alt="Pista '+(i+1)+'" class="w-full h-full object-cover">':'')+'</div><div class="p-3 space-y-2"><strong class="block font-cinzel text-fashion-gold">MYSTERY '+String(i+1).padStart(2,'0')+'</strong>'+(chosen?'':'<p class="text-gray-300 text-xs">'+escapePreview(clues[i]||'Pista em preparação…')+'</p><span class="block text-center bg-fashion-gold/70 text-black rounded py-2 text-xs font-semibold" aria-label="Botão ilustrativo, desativado">Escolher esta pista</span>')+'</div></div>').join('')+'</div>';
             };
-            // Manter o topo do Episódio reservado à Central de Comandos.
-            // The Icon's Choice fica recolhido dentro dela, junto às demais ações de direção.
+            // Integração nativa à Central de Comandos: sem card ou título duplicado.
             const commandCenter=episode.querySelector('#fauUnifiedOperations');
             if(commandCenter){
-              const iconFold=document.createElement('details');
-              iconFold.id='fauIconChoiceCommandFold';
-              iconFold.className='fau-command-status-details';
-              const iconSummary=document.createElement('summary');
-              iconSummary.textContent='THE ICON\'S CHOICE · Abrir, acompanhar e visualizar';
-              iconFold.append(iconSummary,iconDesk);
-              const controlPanel=commandCenter.querySelector('.fau-command-control-panel');
-              if(controlPanel)commandCenter.insertBefore(iconFold,controlPanel);
-              else commandCenter.append(iconFold);
-              iconDesk.classList.remove('bg-fashion-900');
-              iconDesk.classList.add('mt-3');
-            }else episode.append(iconDesk);
+              const previewsGrid=commandCenter.querySelector('.fau-command-previews .fau-command-quick-grid');
+              const controlGrid=commandCenter.querySelector('.fau-command-control-panel .fau-command-quick-grid');
+              const publicationGrid=commandCenter.querySelectorAll('.fau-command-control-panel')[1]?.querySelector('.fau-command-quick-grid');
+              const previewArea=commandCenter.querySelector('.fau-command-previews');
+              const normalize=(button,label)=>{button.className='fau-command-btn';button.textContent=label;button.type='button';};
+              normalize(previewButton,'Prévia do Ícone da Moda');
+              normalize(iconOpen,'Abrir The Icon\'s Choice');
+              normalize(iconView,'Ver escolha lacrada');
+              if(previewsGrid)previewsGrid.append(previewButton);
+              if(controlGrid)controlGrid.append(iconOpen);
+              if(publicationGrid)publicationGrid.append(iconView);
+              if(previewArea)previewArea.append(preview);
+              // Status discreto, sem um segundo painel ocupando a tela.
+              if(publicationGrid){
+                const statusLine=document.createElement('div');
+                statusLine.id='fauIconChoiceStatusLine';
+                statusLine.className='fau-command-footnote';
+                statusLine.append(iconStatus);
+                publicationGrid.parentElement.append(statusLine);
+              }
+              // Uma prévia por vez, inclusive ao alternar para as prévias da rodada.
+              const originalPreviewClick=previewButton.onclick;
+              previewButton.onclick=async()=>{
+                if(preview.hidden){
+                  const other=commandCenter.querySelector('#fauPreviewViewer');
+                  if(other)other.classList.add('hidden');
+                }
+                await originalPreviewClick();
+              };
+              previewsGrid?.querySelectorAll('button:not(#fauIconDesignerPreview button)').forEach(button=>{
+                if(button===previewButton)return;
+                button.addEventListener('click',()=>{
+                  preview.hidden=true;
+                  previewButton.setAttribute('aria-expanded','false');
+                });
+              });
+              iconDesk.remove();
+            }else{
+              episode.append(iconDesk);
+            }
           }
           // Bastidores: não exibir todas as ferramentas de uma vez.
           const archiveLoose=[...archive.children].filter(el=>el.tagName!=='HEADER' && el.tagName!=='DETAILS');
