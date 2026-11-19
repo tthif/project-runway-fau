@@ -753,6 +753,32 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 @media(max-width:640px){.fau-command-center{padding:14px;gap:14px}.fau-command-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.fau-command-grid{grid-template-columns:1fr}.fau-command-card{padding:14px;gap:12px}.fau-command-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.fau-command-round{font-size:10px}}
 @media(prefers-reduced-motion:reduce){#fauUnifiedOperations .fau-command-btn{transition:none}}
 </style>
+
+<style id="fau-admin-senior-ux-2026">
+/* A single operational surface; specialist forms remain available on demand. */
+#fauDirectorShell{--admin-edge:rgba(209,179,139,.28)}
+#fauDirectorTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;gap:7px}
+#fauDirectorTabs button{min-width:0;white-space:normal;min-height:46px;border-radius:9px!important;line-height:1.25}
+#fauDirectorTabs button[aria-selected="true"]{box-shadow:inset 0 -3px 0 #8e3446}
+#fauDirectorPanels>[role="tabpanel"]{min-width:0}
+#fauDirectorPanels>[role="tabpanel"][hidden]{display:none!important}
+.fau-admin-disclosure{border:1px solid var(--admin-edge);border-radius:13px;background:#1d191e;overflow:hidden}
+.fau-admin-disclosure>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;list-style:none;color:#f0eae1}
+.fau-admin-disclosure>summary::-webkit-details-marker{display:none}
+.fau-admin-disclosure>summary strong{display:block;font-size:14px;font-weight:700}
+.fau-admin-disclosure>summary small{display:block;color:#b9afb8;font-size:11px;line-height:1.5;margin-top:4px}
+.fau-admin-disclosure[open]>summary{border-bottom:1px solid var(--admin-edge);color:#d1b38b}
+.fau-admin-disclosure[open]>summary>span:last-child{transform:rotate(180deg)}
+.fau-admin-disclosure-content{padding:12px}
+.fau-admin-disclosure-content>#fauResultsDesk{margin:0;border:0;background:transparent;padding:8px}
+#fauUnifiedOperations .fau-command-card{position:relative}
+#fauUnifiedOperations .fau-command-card:focus-within{border-color:#d1b38b}
+#fauUnifiedOperations .fau-command-card:nth-child(3){border-color:rgba(209,179,139,.5)}
+#fauUnifiedOperations .fau-command-btn:focus-visible{outline:2px solid #f0eae1;outline-offset:2px}
+#fauUnifiedOperations .fau-command-btn-critical{background:#37252d;border-color:#8e5963}
+#fauUnifiedOperations .fau-command-previews:has(#fauPoolPreviewHome:not(.hidden)){scroll-margin-top:90px}
+@media(max-width:640px){#fauDirectorTabs{grid-template-columns:repeat(2,minmax(0,1fr))}#fauDirectorTabs button{font-size:12px!important;padding:10px!important}#fauDirectorShell .fau-hq-header{padding:15px!important}.fau-admin-disclosure>summary{padding:14px}.fau-admin-disclosure-content{padding:8px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -5107,7 +5133,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                       ['02','RUNWAY','Passarela',globalState.liberado?'Desfile publicado':'Looks ocultos',[[globalState.liberado?'Ocultar desfile':'Publicar desfile','btnTogglePublic','danger']]],
                       ['03','JÚRI','Avaliações e críticas',globalState.notasEncerradas?'Notas encerradas':'Notas abertas',[[globalState.notasEncerradas?'Reabrir notas':'Encerrar notas','fauToggleScoreWindow','danger'],[globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas','fauToggleCritiqueWindow','standard'],['Prévia das notas','jury','preview'],['Prévia do Elimination Pool','btnPreviewPool','preview']]],
                       ['04','VOTAÇÃO','Votos e salvação',globalState.urna?'Urna aberta':'Urna fechada',[[globalState.urna?'Trancar urna':'Abrir urna','btnToggleUrn','danger'],['Ícone / Fora de Moda','cast','preview'],['Prévia da salvação','save','preview']]],
-                      ['05','RESULTADOS','Conferência e publicação','Acesso restrito', [['Ver ranking','fauDeskLoad','preview'],['Publicar resultado','fauDeskPublish','danger']]]
+                      ['05','RESULTADOS','Conferência e publicação','Acesso restrito', [['Ver ranking','fauDeskLoad','preview'],['Abrir publicação','fauDeskPublish','danger']]]
                     ].map(([number,title,subtitle,status,actions])=>`<article class="fau-command-card"><div class="fau-command-card-top"><span class="fau-command-number">${number}</span><div><h4>${title}</h4><p>${subtitle}</p></div></div><div class="fau-command-status"><span class="fau-command-dot"></span>${status}</div><div class="fau-command-actions">${actions.length?actions.map(([label,target,kind])=>`<button type="button" ${['jury','cast','save'].includes(target)?`data-fau-preview="${target}"`:`data-fau-command="${target}"`} class="fau-command-btn ${kind==='danger'?'fau-command-btn-critical':''}">${label}</button>`).join(''):'<p class="fau-command-muted">Nenhuma ação pendente neste bloco.</p>'}</div></article>`).join('')}
                   </div>
                   <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>CONSULTAS PRIVADAS</strong><span>Somente ADM · Não altera a rodada</span></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div>
@@ -5339,16 +5365,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const root=document.querySelector('#fauProductionDesk')?.parentElement;
           if(!root)return;
           const groups=[
-            {id:'episode',label:'Episódio',hint:'Rodada, prazos e entregas',keys:['fauUnifiedOperations','fauProductionDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck']},
+            {id:'episode',label:'Episódio',hint:'Rodada, prazos e entregas',keys:['fauUnifiedOperations','fauResultsDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck']},
             {id:'cast',label:'Elenco',hint:'Designers, jurados e inscrições',keys:['fauDesignerRoster','castQuickList','profileManagerContainer','createRole']},
-            {id:'judging',label:'Julgamento',hint:'Notas, títulos e eliminação',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn','fauCastVotingControls']},
+            {id:'judging',label:'Julgamento',hint:'Notas, títulos e eliminação',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn','fauCastVotingControls','fauProductionDesk']},
                         {id:'archive',label:'Bastidores',hint:'Configurações, histórico e ferramentas raras',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
           ];
           const shell=document.createElement('div');shell.id='fauDirectorShell';shell.className='space-y-5';
           shell.innerHTML=`<header class="fau-hq-header rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 md:p-7 space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY: FAU · PRODUCTION HQ</p><h2 class="font-cinzel text-3xl text-white">THE CONTROL ROOM</h2><p class="text-sm text-gray-300">Você dirige o episódio. A produção cuida do resto.</p><nav id="fauDirectorTabs" class="fau-hq-tabs flex gap-2 overflow-x-auto pt-3 pb-2" role="tablist" aria-label="Áreas da produção"></nav><p id="fauDirectorHint" class="text-xs text-gray-400" aria-live="polite"></p></header><div id="fauDirectorPanels"></div>`;
           root.prepend(shell);
           const panels=shell.querySelector('#fauDirectorPanels');
-          groups.forEach(g=>{const panel=document.createElement('div');panel.id='fau-panel-'+g.id;panel.className='space-y-5';panel.setAttribute('role','tabpanel');panel.hidden=true;panels.append(panel);});
+          groups.forEach(g=>{const panel=document.createElement('div');panel.id='fau-panel-'+g.id;panel.className='space-y-5';panel.setAttribute('role','tabpanel');panel.setAttribute('tabindex','-1');panel.setAttribute('aria-labelledby','fau-tab-'+g.id);panel.hidden=true;panels.append(panel);});
           const directChild=el=>{let node=el;while(node&&node.parentElement!==root)node=node.parentElement;return node?.parentElement===root?node:null;};
           const assigned=new Set([shell]);
           groups.forEach(g=>g.keys.forEach(key=>{const el=document.getElementById(key);if(!el)return;const top=directChild(el);if(!top||assigned.has(top))return;assigned.add(top);panels.querySelector('#fau-panel-'+g.id).append(top);}));
@@ -5396,13 +5422,25 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             quick.querySelector('#fauUnifiedTitles').onclick=()=>root.querySelector('#fauOfficialLoad')?.click();
           }
           const critique=root.querySelector('#fauCritiqueAdmin')?.closest('section');if(critique)judgingPanel.append(critique);
+          // Keep publication alongside the episode command center, not in a hidden archive.
+          const episodeResults=root.querySelector('#fauResultsDesk');
+          if(episodeResults)panels.querySelector('#fau-panel-episode').append(episodeResults);
           const episodePanel=panels.querySelector('#fau-panel-episode');
           const status=root.querySelector('[aria-label="Production Status"]');if(status)episodePanel.append(status);
           // Controles de rotina em primeiro plano; painéis especializados ficam recolhidos.
           const optional=document.createElement('details');optional.className='rounded-xl border border-fashion-700 bg-fashion-900 p-4';
           optional.innerHTML='<summary class="cursor-pointer text-fashion-gold text-sm font-semibold">Ferramentas avançadas do episódio</summary><div class="space-y-5 mt-4" id="fauEpisodeAdvanced"></div>';
+          const resultDesk=episodePanel.querySelector('#fauResultsDesk');
+          if(resultDesk){
+            const resultDisclosure=document.createElement('details');
+            resultDisclosure.id='fauEpisodeResultsDisclosure';
+            resultDisclosure.className='fau-admin-disclosure';
+            resultDisclosure.innerHTML='<summary><span><strong>Apuração, WhatsApp e publicação</strong><small>Conferência detalhada e confirmação oficial</small></span><span aria-hidden="true">⌄</span></summary><div class="fau-admin-disclosure-content"></div>';
+            episodePanel.append(resultDisclosure);
+            resultDisclosure.querySelector('.fau-admin-disclosure-content').append(resultDesk);
+          }
           episodePanel.append(optional);
-          ['fauProductionDesk','fauProductionPulse'].forEach(id=>{const el=episodePanel.querySelector('#'+id);if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
+          ['fauProductionDesk','fauProductionPulse'].forEach(id=>{const el=root.querySelector('#'+id);if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
           ['Season Flow da produção','Auto Fashion Archive','Broadcast Studio'].forEach(label=>{const el=episodePanel.querySelector('[aria-label="'+label+'"]');if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
 
           const sectionDescriptions={
@@ -5416,6 +5454,21 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             heading.innerHTML='<h3 class="font-cinzel text-xl text-fashion-gold">'+title+'</h3><p class="text-xs text-gray-300 mt-1">'+description+'</p>';
             panel.prepend(heading);
           });
+          // A compact, documented inventory of specialized controls. Do not discard
+          // legacy controls: unknown widgets stay reachable under Bastidores.
+          const archivePanel=panels.querySelector('#fau-panel-archive');
+          const archiveBuckets=[
+            ['fauArchivePresentation','Apresentação e revelações','Cenas, cerimônias e recursos usados durante o programa', ['Live Show Director','The Results Show Director','Official Reveal Assistant','Broadcast Studio']],
+            ['fauArchiveRecords','Arquivo e histórico','Acervo, auditoria, backup e registros da temporada',['Auto Fashion Archive']]
+          ];
+          archiveBuckets.forEach(([id,title,subtitle,labels])=>{
+            const items=labels.map(label=>[...archivePanel.children].find(el=>el.getAttribute('aria-label')===label)).filter(Boolean);
+            if(!items.length)return;
+            const details=document.createElement('details');details.id=id;details.className='fau-admin-disclosure';
+            details.innerHTML='<summary><span><strong>'+title+'</strong><small>'+subtitle+'</small></span><span aria-hidden="true">⌄</span></summary><div class="fau-admin-disclosure-content space-y-4"></div>';
+            items.forEach(item=>details.querySelector('.fau-admin-disclosure-content').append(item));
+            archivePanel.append(details);
+          });
           const tabs=shell.querySelector('#fauDirectorTabs');
           const activate=id=>{
             if(!groups.some(g=>g.id===id))id='episode';
@@ -5423,7 +5476,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             shell.querySelector('#fauDirectorHint').textContent=groups.find(g=>g.id===id).hint;
             try{sessionStorage.setItem('fauDirectorTab',id);}catch(e){}
           };
-          groups.forEach(g=>{const b=document.createElement('button');b.type='button';b.dataset.directorTab=g.id;b.textContent=g.label;b.setAttribute('role','tab');b.onclick=()=>activate(g.id);tabs.append(b);});
+          groups.forEach(g=>{const b=document.createElement('button');b.type='button';b.dataset.directorTab=g.id;b.id='fau-tab-'+g.id;b.setAttribute('aria-controls','fau-panel-'+g.id);b.textContent=g.label;b.setAttribute('role','tab');b.onclick=()=>activate(g.id);tabs.append(b);});
           let previous='episode';try{previous=sessionStorage.getItem('fauDirectorTab')||'episode';}catch(e){}activate(previous);
           shell.addEventListener('click',e=>{const trigger=e.target.closest('[data-production-target]');if(!trigger)return;const dest=document.getElementById(trigger.dataset.productionTarget);const panel=dest?.closest('[role="tabpanel"]');if(panel)activate(panel.id.replace('fau-panel-',''));},true);
           // Contextual command center: status is derived from the existing season state, never fabricated.
@@ -8942,8 +8995,8 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    const msg=document.getElementById('fauCommandMessage');
    if(!target){if(msg)msg.textContent='Este controle não está disponível nesta etapa. Consulte os controles específicos da rodada abaixo.';return;}
    if(target.matches('button')){
-     if(id==='fauDeskLoad'||id==='fauDeskPublish'){const tab=document.querySelector('#fauDirectorTabs button[data-hq-tab=\"episode\"]');if(tab)tab.click();const section=document.getElementById('fauResultsDesk');if(section){section.scrollIntoView({behavior:'smooth',block:'start'});}if(id==='fauDeskLoad')target.click();else {section?.scrollIntoView({behavior:'smooth',block:'start'});if(msg)msg.textContent='Confirme a publicação na seção oficial, após anunciar no WhatsApp.';}return;}
-     if(target.disabled){if(msg)msg.textContent='Controle indisponível nesta etapa.';return;}target.click();if(msg)msg.textContent='Ação solicitada. Confira o estado atualizado antes de prosseguir.';}
+     if(id==='fauDeskLoad'||id==='fauDeskPublish'){const tab=document.querySelector('#fauDirectorTabs button[data-director-tab="episode"]');tab?.click();const disclosure=document.getElementById('fauEpisodeResultsDisclosure');if(disclosure)disclosure.open=true;document.getElementById('fauResultsDesk')?.scrollIntoView({behavior:'smooth',block:'start'});if(id==='fauDeskLoad')target.click();else if(msg)msg.textContent='Confira os dados e confirme a publicação na seção oficial.';return;}
+     const containingPanel=target.closest('[role=\"tabpanel\"]');if(containingPanel){const tab=document.querySelector('#fauDirectorTabs button[data-director-tab=\"'+containingPanel.id.replace('fau-panel-','')+'\"]');if(tab)tab.click();}for(const disclosure of (function*(el){while(el){if(el.tagName==='DETAILS')yield el;el=el.parentElement;}})(target)){disclosure.open=true;}if(target.disabled){if(msg)msg.textContent='Controle indisponível nesta etapa.';return;}target.click();if(msg)msg.textContent='Ação solicitada. Confira o estado atualizado antes de prosseguir.';}
    else{target.scrollIntoView({behavior:'smooth',block:'center'});if(msg)msg.textContent='Seção de produção localizada abaixo.';}
  });
 </script>
