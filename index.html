@@ -795,6 +795,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 @media(max-width:420px){#fauUnifiedOperations .fau-command-heading{display:block}#fauUnifiedOperations .fau-command-round{display:inline-block;margin-top:8px}#fauUnifiedOperations .fau-command-btn{font-size:11px!important}}
 </style>
 <style id="fau-command-director-ux">#fau-panel-episode>#fauUnifiedOperations{margin-top:0!important}#fauUnifiedOperations .fau-command-control-panel{margin-top:14px}#fauUnifiedOperations .fau-command-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#fauUnifiedOperations .fau-command-btn{min-width:0;white-space:normal;text-align:center;line-height:1.35;padding:12px 9px}#fauUnifiedOperations .fau-command-heading{display:flex;flex-wrap:wrap;align-items:start;gap:12px}#fauUnifiedOperations .fau-command-heading>div{min-width:0;flex:1 1 240px}#fauUnifiedOperations .fau-command-heading h3{overflow-wrap:normal;word-break:normal;font-size:clamp(26px,5vw,39px)}@media(max-width:480px){#fauUnifiedOperations .fau-command-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#fauUnifiedOperations .fau-command-heading h3{font-size:30px}}</style>
+<style id="fau-exclusive-previews-2026">#fauPreviewViewer.hidden,#fauPoolPreviewHome.hidden,#fauPrivatePreview[hidden]{display:none!important}#fauPreviewViewer details{border:0!important}#fauPreviewViewer details>summary{display:none!important}#fauUnifiedOperations [aria-pressed="true"]{border-color:#d1b38b!important;background:rgba(209,179,139,.15)!important;color:#f0eae1!important}@media(max-width:640px){#fauPreviewViewer{padding:12px}#fauPreviewViewerTitle{font-size:13px}}</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -5172,7 +5173,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div><span>JÚRI</span><strong>${globalState.notasEncerradas?'Notas encerradas':'Notas abertas'}</strong></div>
                     <div><span>URNA</span><strong>${globalState.urna?'Aberta':'Fechada'}</strong></div>
                   </div>
-                  <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>PRÉVIAS DA RODADA</strong><span>Somente ADM · Não altera a rodada</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-preview="jury" class="fau-command-btn">Notas e ranking</button><button type="button" id="btnPreviewPool" class="fau-command-btn">Elimination Pool</button><button type="button" data-fau-preview="cast" class="fau-command-btn">Ícone / Fora de Moda</button><button type="button" data-fau-preview="save" class="fau-command-btn">Votação de salvação</button></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div>
+                  <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>PRÉVIAS DA RODADA</strong><span>Somente ADM · Não altera a rodada</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-preview="jury" class="fau-command-btn">Notas e ranking</button><button type="button" id="btnPreviewPool" class="fau-command-btn">Elimination Pool</button><button type="button" data-fau-preview="cast" class="fau-command-btn">Ícone / Fora de Moda</button><button type="button" data-fau-preview="save" class="fau-command-btn">Votação de salvação</button></div><div id="fauPreviewViewer" class="hidden mt-4 rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4" aria-label="Visualizador de prévias"><div class="flex items-center justify-between gap-3 mb-3"><strong id="fauPreviewViewerTitle" class="text-fashion-gold text-sm">Prévia privada</strong><button type="button" id="fauClosePreview" class="fau-command-btn" aria-label="Fechar prévia">Fechar ✕</button></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div></div>
                   <div class="fau-command-control-panel" aria-label="Abrir e fechar etapas da rodada"><div class="fau-command-previews-heading"><strong>ABRIR E FECHAR</strong><span>Controles oficiais · alterações reais</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-command="btnEndTimer" class="fau-command-btn fau-command-btn-critical" ${globalState.prazo&&now()>globalState.prazo?'disabled':''}>Encerrar entregas</button><button type="button" data-fau-command="btnTogglePublic" class="fau-command-btn">${globalState.liberado?'Ocultar passarela':'Publicar passarela'}</button><button type="button" data-fau-command="fauToggleScoreWindow" class="fau-command-btn">${globalState.notasEncerradas?'Reabrir notas':'Encerrar notas'}</button><button type="button" data-fau-command="fauToggleCritiqueWindow" class="fau-command-btn">${globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas'}</button><button type="button" data-fau-command="btnToggleUrn" class="fau-command-btn">${globalState.urna?'Fechar urna':'Abrir urna'}</button><button type="button" data-fau-command="fauDeskLoad" class="fau-command-btn">Consultar resultados</button><button type="button" data-fau-command="fauDeskPublish" class="fau-command-btn fau-command-btn-critical">Publicação oficial</button></div></div>
                   <div class="fau-command-control-panel" aria-label="Direção e publicação"><div class="fau-command-previews-heading"><strong>DIRIGIR E PUBLICAR</strong><span>Atalhos para os controles oficiais</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-command="btnAdd15Min" class="fau-command-btn">+15 min no prazo</button><button type="button" data-fau-command="fauBroadcastLoad" class="fau-command-btn">Preparar críticas</button><button type="button" data-fau-command="fauOfficialLoad" class="fau-command-btn">Conferir títulos</button><button type="button" data-fau-command="fauOfficialPublish" class="fau-command-btn">Registrar títulos</button><button type="button" data-fau-command="fauPublishAllResults" class="fau-command-btn fau-command-btn-critical">Publicar resultados</button><button type="button" data-fau-command="btnLiveBroadcast" class="fau-command-btn">Tela de anúncio</button></div><p class="fau-command-footnote">Ações oficiais usam os controles existentes e suas confirmações. Confira a prévia antes de publicar.</p></div>
                   <details class="fau-command-status-details"><summary>Ver etapas e situação da rodada</summary>
@@ -5687,9 +5688,38 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
         // Private, read-only live previews. Do not mutate the voting or judging windows.
         let fauPreviewMode='jury';
+        let fauPreviewSequence=0;
+        const selectFauPreview=(mode)=>{
+          const seq=++fauPreviewSequence;
+          const viewer=document.getElementById('fauPreviewViewer');
+          const pool=document.getElementById('fauPoolPreviewHome');
+          const privateBox=document.getElementById('fauPrivatePreview');
+          if(!viewer||!pool||!privateBox)return seq;
+          viewer.classList.remove('hidden');
+          pool.classList.add('hidden');
+          privateBox.hidden=true;privateBox.open=false;
+          const title=document.getElementById('fauPreviewViewerTitle');
+          if(title)title.textContent=({jury:'Notas e ranking',pool:'Elimination Pool',cast:'Ícone / Fora de Moda',save:'Votação de salvação'})[mode]||'Prévia privada';
+          viewer.querySelectorAll('[data-fau-preview-active]').forEach(el=>el.removeAttribute('data-fau-preview-active'));
+          document.querySelectorAll('#fauUnifiedOperations [data-fau-preview],#btnPreviewPool').forEach(el=>{
+            const active=(el.id==='btnPreviewPool'?'pool':el.dataset.fauPreview)===mode;
+            el.setAttribute('aria-pressed',String(active));
+          });
+          return seq;
+        };
+        document.addEventListener('click',e=>{
+          if(e.target.closest('#fauClosePreview')){
+            ++fauPreviewSequence;
+            document.getElementById('fauPreviewViewer')?.classList.add('hidden');
+            document.getElementById('fauPoolPreviewHome')?.classList.add('hidden');
+            const box=document.getElementById('fauPrivatePreview');if(box){box.hidden=true;box.open=false;}
+            document.querySelectorAll('#fauUnifiedOperations [aria-pressed]').forEach(b=>b.setAttribute('aria-pressed','false'));
+          }
+        });
         const renderFauPrivatePreview=async(mode)=>{
           if(!isAdmin)throw new Error('Acesso exclusivo do Admin.');
           fauPreviewMode=mode;
+          const requestSeq=selectFauPreview(mode);
           const box=document.getElementById('fauPrivatePreview');
           const output=document.getElementById('fauPrivatePreviewContent');
           if(!box||!output)return;
@@ -5752,8 +5782,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 html+=sorted.length?sorted.map(([id,n])=>`<div class="flex justify-between gap-3 border-b border-fashion-700 py-2"><span>${escPreview(label(id))}${n===top?' · LIDERANDO'+(sorted.filter(x=>x[1]===top).length>1?' (EMPATE)':''):''}</span><strong>${n} voto(s)</strong></div>`).join(''):'<p>Sem votos registrados nesta modalidade.</p>';
               });
             }
-            if(box.isConnected&&String(globalState.rodada||'')===round)output.innerHTML=html;
-          }catch(err){output.textContent='Não foi possível consultar a prévia: '+(err.message||err);}
+            if(box.isConnected&&requestSeq===fauPreviewSequence&&String(globalState.rodada||'')===round)output.innerHTML=html;
+          }catch(err){if(requestSeq===fauPreviewSequence)output.textContent='Não foi possível consultar a prévia: '+(err.message||err);}
         };
         document.addEventListener('click',e=>{
           const b=e.target.closest('[data-fau-preview]');
@@ -7579,6 +7609,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
         // Prévia confidencial: somente leitura, inclusive com avaliações pendentes.
         $('#btnPreviewPool').onclick = safeExec(async () => {
+            const requestSeq=selectFauPreview('pool');
             const round=String(globalState.rodada||'');
             const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd||b.tot-a.tot);
             const snap=await db.collection('avaliacoes').where('rodada','==',round).get();
@@ -7595,9 +7626,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const allJudges=new Set();snap.docs.forEach(d=>{const a=d.data();if(Array.isArray(a.nota)&&a.nota.length===5)allJudges.add(String(a.jurado||a.judgeUid||d.id));});
             const count=standings.filter(x=>(evaluated.get(String(x.uid))?.size||0)>0).length;
             const rows=pool.map(x=>`<div class="flex items-center justify-between gap-3 border border-fashion-700 rounded-lg p-3 bg-fashion-900"><div><strong class="text-white">${esc(x.ate||x.uid)}</strong><p class="text-xs text-fashion-gold">${esc(reasons.get(x.uid))}</p><p class="text-xs text-gray-400">${evaluated.get(String(x.uid))?.size||0} avaliação(ões) válida(s) · rodada ${fmt(x.rd)} · acumulado ${fmt(x.tot)}</p></div></div>`).join('');
+            if(requestSeq!==fauPreviewSequence)return;
             const poolHome=$('#fauPoolPreviewHome');poolHome.classList.remove('hidden');poolHome.innerHTML=`<section class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4"><div><p class="text-xs tracking-widest text-fashion-gold">CONSULTA PRIVADA · ADM</p><h3 class="font-cinzel text-2xl text-white">Prévia do Elimination Pool</h3><p class="text-sm text-gray-300">Calculada com as notas salvas até agora. ${count} de ${standings.length} Designers possuem avaliações válidas. Não exige que todos os jurados tenham votado.</p></div>${isSpecial?'<p class="text-amber-200 text-sm">Esta rodada possui uma dinâmica especial: a lista abaixo é apenas uma simulação da regra tradicional, não o Pool oficial do twist.</p>':''}${noPool?'<p class="text-gray-300">Rodada sem eliminação: não há Elimination Pool.</p>':rows||'<p class="text-gray-400">Ainda não há Designers suficientes para formar a prévia.</p>'}<p class="text-xs text-gray-400">As posições podem mudar a cada nova avaliação. Nenhum resultado é publicado, nenhuma votação é aberta e o Elimination Pool oficial permanece inalterado.</p><button id="btnRefreshPoolPreview" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar prévia</button></section>`;
             $('#btnRefreshPoolPreview').onclick=()=>$('#btnPreviewPool').click();
-            poolHome.scrollIntoView({behavior:'smooth',block:'nearest'});
+            document.getElementById('fauPreviewViewer')?.scrollIntoView({behavior:'smooth',block:'nearest'});
         });
 
         $('#btnApurarRanking').onclick = safeExec(async () => {
