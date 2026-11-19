@@ -723,6 +723,36 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 @media(min-width:760px){#fauArchive .fau-archive-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:500px){#fauArchive .fau-archive-head{min-height:135px}#fauArchive .fau-archive-stat strong{font-size:26px}#fauArchive .fau-archive-tab{font-size:10px;padding:8px 6px}#fauArchive [data-archive-panel]{padding:13px}#fauArchive .fau-archive-entry .p-3{padding:10px}}
 </style>
+<style id="fau-command-dashboard-2026">
+.fau-command-center{--cc-line:rgba(209,179,139,.22);--cc-muted:#b8adb6;background:#171419;border:1px solid rgba(209,179,139,.4);border-radius:18px;padding:clamp(16px,3vw,28px);display:flex;flex-direction:column;gap:18px;box-shadow:0 18px 44px rgba(0,0,0,.18)}
+.fau-command-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--cc-line);padding-bottom:17px}
+.fau-command-eyebrow{font:700 10px/1.4 Inter,sans-serif;letter-spacing:.16em;color:#d1b38b}
+.fau-command-heading h3{font:600 clamp(23px,4vw,32px)/1.2 'Cormorant Garamond',serif;color:#f0eae1;margin:6px 0}
+.fau-command-heading p:not(.fau-command-eyebrow){font-size:12px;color:var(--cc-muted)}
+.fau-command-round{max-width:100%;border:1px solid var(--cc-line);border-radius:100px;padding:8px 12px;color:#d1b38b;font-size:11px;overflow-wrap:anywhere}
+.fau-command-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.fau-command-stats>div{min-width:0;background:#211c23;border:1px solid #3e343f;border-radius:10px;padding:12px 14px}
+.fau-command-stats span{display:block;color:#b7a8b4;font-size:9px;font-weight:700;letter-spacing:.12em}
+.fau-command-stats strong{display:block;color:#f0eae1;font-size:13px;margin-top:7px;line-height:1.35}
+.fau-command-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fau-command-card{display:flex;flex-direction:column;min-width:0;border:1px solid #4c414d;border-radius:12px;background:#211c23;padding:17px;gap:15px}
+.fau-command-card-top{display:flex;align-items:center;gap:12px}.fau-command-number{width:34px;height:34px;flex:none;display:grid;place-items:center;border:1px solid #6e5a4a;border-radius:8px;color:#d1b38b;font-size:11px;font-weight:700}
+.fau-command-card h4{font-size:13px;letter-spacing:.09em;color:#f0eae1;font-weight:700}.fau-command-card-top p{font-size:11px;color:#b8adb6;margin-top:3px}
+.fau-command-status{display:flex;align-items:center;gap:8px;color:#d7cbd4;font-size:12px}.fau-command-dot{height:7px;width:7px;flex:none;border-radius:50%;background:#d1b38b}
+.fau-command-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:auto}
+#fauUnifiedOperations .fau-command-btn{display:flex;align-items:center;justify-content:center;min-height:44px!important;padding:10px 9px;text-align:center;border:1px solid #77614e;border-radius:8px;color:#e9d5b6;background:#2b242c;font-size:11px;font-weight:600;line-height:1.35;transition:background .2s,border-color .2s}
+#fauUnifiedOperations .fau-command-btn:hover{background:#40313c;border-color:#d1b38b}
+#fauUnifiedOperations .fau-command-btn-critical{border-color:#66505a;color:#f0eae1;background:#32252c}
+.fau-command-muted{font-size:11px;color:#b8adb6;grid-column:1/-1}
+.fau-command-previews{border-top:1px solid var(--cc-line);padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.fau-command-previews-heading{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}.fau-command-previews-heading strong{font-size:11px;letter-spacing:.13em;color:#d1b38b}.fau-command-previews-heading span{font-size:11px;color:#b8adb6}
+.fau-command-previews details{border:1px solid #5d4c55;border-radius:10px;padding:14px;background:#211c23}.fau-command-previews summary{cursor:pointer;font-size:12px;font-weight:700;color:#d1b38b}
+.fau-command-footnote{font-size:11px;color:#b8adb6}
+#fauPoolPreviewHome:not(.hidden)>section{background:#211c23;border:1px solid #6b5749;border-radius:12px;padding:16px}
+@media(min-width:1100px){.fau-command-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:640px){.fau-command-center{padding:14px;gap:14px}.fau-command-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.fau-command-grid{grid-template-columns:1fr}.fau-command-card{padding:14px;gap:12px}.fau-command-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.fau-command-round{font-size:10px}}
+@media(prefers-reduced-motion:reduce){#fauUnifiedOperations .fau-command-btn{transition:none}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -5069,26 +5099,25 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
 
 
-                <section id="fauUnifiedOperations" class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 md:p-5 space-y-3" aria-label="Central de comandos">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h3 class="font-cinzel text-lg text-white">CENTRAL DE COMANDOS</h3>
-                    <span class="text-xs text-fashion-gold">${esc((getTheme()?.nome || getTheme()?.titulo || globalState.rodada || 'Rodada atual'))}</span>
+                <section id="fauUnifiedOperations" class="fau-command-center" aria-label="Central de comandos">
+                  <header class="fau-command-heading"><div><p class="fau-command-eyebrow">PRODUÇÃO · CONTROLE DO EPISÓDIO</p><h3>CENTRAL DE COMANDOS</h3><p>O andamento da rodada, os controles e as prévias em um só lugar.</p></div><span class="fau-command-round">${esc(getTheme()?.nome || getTheme()?.titulo || globalState.rodada || 'Rodada atual')}</span></header>
+                  <div class="fau-command-stats" aria-label="Resumo do episódio">
+                    <div><span>WORKROOM</span><strong>${globalState.prazo&&now()>globalState.prazo?'Encerrado':'Em andamento'}</strong></div>
+                    <div><span>RUNWAY</span><strong>${globalState.liberado?'Publicado':'Não publicado'}</strong></div>
+                    <div><span>JÚRI</span><strong>${globalState.notasEncerradas?'Notas encerradas':'Notas abertas'}</strong></div>
+                    <div><span>URNA</span><strong>${globalState.urna?'Aberta':'Fechada'}</strong></div>
                   </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+                  <div class="fau-command-grid">
                     ${[
-                      ['WORKROOM',globalState.prazo&&now()>globalState.prazo?'Prazo encerrado':'Envios em andamento',globalState.prazo&&now()>globalState.prazo?[]:[['Encerrar envios','btnEndTimer']]],
-                      ['RUNWAY',globalState.liberado?'Desfile publicado':'Looks ocultos',[[globalState.liberado?'Ocultar desfile':'Publicar desfile','btnTogglePublic']]],
-                      ['JÚRI',globalState.notasEncerradas?'Notas encerradas':'Notas abertas',[[globalState.notasEncerradas?'Reabrir notas':'Encerrar notas','fauToggleScoreWindow'],[globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas','fauToggleCritiqueWindow'],['Prévia das notas','jury']]],
-                      ['VOTAÇÃO',globalState.urna?'Urna aberta':'Urna fechada',[[globalState.urna?'Trancar urna':'Abrir urna','btnToggleUrn'],['Ícone / Fora de Moda','cast'],['Prévia da salvação','save']]],
-                      ['RESULTADOS','Conferência privada', [['Ver ranking','fauDeskLoad'],['Publicar resultado','fauDeskPublish']]]
-                    ].map(([title,status,actions])=>`<article class="rounded-lg border border-fashion-700 bg-fashion-900 p-3 flex flex-col gap-2 min-w-0"><div class="flex items-center justify-between gap-2"><h4 class="text-xs font-semibold text-fashion-gold">${title}</h4><span class="text-[11px] text-gray-400 text-right">${status}</span></div><div class="flex flex-wrap gap-2">${actions.length?actions.map(([label,target])=>`<button type="button" ${['jury','cast','save'].includes(target)?`data-fau-preview="${target}"`:`data-fau-command="${target}"`} class="rounded-md border border-fashion-gold/40 text-fashion-sand px-3 py-2 text-xs hover:bg-fashion-gold/10">${label}</button>`).join(''):'<span class="text-[11px] text-gray-500">Encerrado pelo prazo</span>'}</div></article>`).join('')}
+                      ['01','WORKROOM','Entregas e prazo',globalState.prazo&&now()>globalState.prazo?'Prazo encerrado':'Envios em andamento',globalState.prazo&&now()>globalState.prazo?[]:[['Encerrar envios','btnEndTimer','danger']]],
+                      ['02','RUNWAY','Passarela',globalState.liberado?'Desfile publicado':'Looks ocultos',[[globalState.liberado?'Ocultar desfile':'Publicar desfile','btnTogglePublic','danger']]],
+                      ['03','JÚRI','Avaliações e críticas',globalState.notasEncerradas?'Notas encerradas':'Notas abertas',[[globalState.notasEncerradas?'Reabrir notas':'Encerrar notas','fauToggleScoreWindow','danger'],[globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas','fauToggleCritiqueWindow','standard'],['Prévia das notas','jury','preview'],['Prévia do Elimination Pool','btnPreviewPool','preview']]],
+                      ['04','VOTAÇÃO','Votos e salvação',globalState.urna?'Urna aberta':'Urna fechada',[[globalState.urna?'Trancar urna':'Abrir urna','btnToggleUrn','danger'],['Ícone / Fora de Moda','cast','preview'],['Prévia da salvação','save','preview']]],
+                      ['05','RESULTADOS','Conferência e publicação','Acesso restrito', [['Ver ranking','fauDeskLoad','preview'],['Publicar resultado','fauDeskPublish','danger']]]
+                    ].map(([number,title,subtitle,status,actions])=>`<article class="fau-command-card"><div class="fau-command-card-top"><span class="fau-command-number">${number}</span><div><h4>${title}</h4><p>${subtitle}</p></div></div><div class="fau-command-status"><span class="fau-command-dot"></span>${status}</div><div class="fau-command-actions">${actions.length?actions.map(([label,target,kind])=>`<button type="button" ${['jury','cast','save'].includes(target)?`data-fau-preview="${target}"`:`data-fau-command="${target}"`} class="fau-command-btn ${kind==='danger'?'fau-command-btn-critical':''}">${label}</button>`).join(''):'<p class="fau-command-muted">Nenhuma ação pendente neste bloco.</p>'}</div></article>`).join('')}
                   </div>
-                  <details id="fauPrivatePreview" class="rounded-lg border border-fashion-gold/30 bg-fashion-900 p-3" hidden>
-                    <summary class="cursor-pointer text-fashion-gold text-sm font-semibold">PRÉVIA PRIVADA · ADMIN</summary>
-                    <div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div>
-                    <button type="button" id="fauPrivatePreviewRefresh" class="mt-3 rounded border border-fashion-gold/40 px-3 py-2 text-xs">Atualizar prévia</button>
-                  </details>
-                  <p id="fauCommandMessage" role="status" class="text-[11px] text-gray-400">As prévias não encerram votos, notas ou publicam resultados.</p>
+                  <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>CONSULTAS PRIVADAS</strong><span>Somente ADM · Não altera a rodada</span></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div>
+                  <p id="fauCommandMessage" role="status" class="fau-command-footnote">Pré-visualizações não encerram notas, votos ou publicam resultados.</p>
                 </section>
                 <section id="fauProductionDesk" class="fau-production-desk rounded-2xl border border-fashion-gold/50 bg-fashion-950 p-5 md:p-7 space-y-5" aria-label="The Production Desk">
                   <div class="flex flex-wrap justify-between gap-3 items-start"><div><p class="text-[10px] tracking-[.35em] text-fashion-gold">PROJECT RUNWAY · FAU / PRODUCTION HEADQUARTERS</p><h3 class="font-cinzel text-2xl text-white mt-2">THE CONTROL ROOM</h3><p class="text-sm text-gray-300 mt-1">O episódio em um olhar. Acompanhe o que precisa de atenção e acesse o controle certo.</p></div><span class="text-[10px] tracking-widest border border-fashion-gold/40 rounded px-3 py-2 text-fashion-gold">PRIVATE · ADMIN</span></div>
@@ -5319,8 +5348,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             {id:'episode',label:'Episódio',hint:'Rodada, prazos e entregas',keys:['fauUnifiedOperations','fauProductionDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck']},
             {id:'cast',label:'Elenco',hint:'Designers, jurados e inscrições',keys:['fauDesignerRoster','castQuickList','profileManagerContainer','createRole']},
             {id:'judging',label:'Julgamento',hint:'Notas, títulos e eliminação',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn','fauCastVotingControls']},
-            {id:'show',label:'Ao vivo',hint:'Cenas e revelações públicas',keys:['fauLiveScenes','fauRevealMoment','fauRevealSuggest','fauBroadcastPublish']},
-            {id:'archive',label:'Bastidores',hint:'Configurações, histórico e ferramentas raras',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
+                        {id:'archive',label:'Bastidores',hint:'Configurações, histórico e ferramentas raras',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
           ];
           const shell=document.createElement('div');shell.id='fauDirectorShell';shell.className='space-y-5';
           shell.innerHTML=`<header class="fau-hq-header rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 md:p-7 space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY: FAU · PRODUCTION HQ</p><h2 class="font-cinzel text-3xl text-white">THE CONTROL ROOM</h2><p class="text-sm text-gray-300">Você dirige o episódio. A produção cuida do resto.</p><nav id="fauDirectorTabs" class="fau-hq-tabs flex gap-2 overflow-x-auto pt-3 pb-2" role="tablist" aria-label="Áreas da produção"></nav><p id="fauDirectorHint" class="text-xs text-gray-400" aria-live="polite"></p></header><div id="fauDirectorPanels"></div>`;
@@ -5335,7 +5363,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const stageGrid=root.querySelector('[aria-label="Season Flow da produção"] .grid');if(stageGrid)stageGrid.hidden=true;
           // A single Live Show Studio: scenes, reveal editor and prepared official results in one place.
           const showPanel=panels.querySelector('#fau-panel-show');
-          ['Live Show Director','The Results Show Director','Official Reveal Assistant'].forEach(label=>{const section=root.querySelector('[aria-label="'+label+'"]');if(section)showPanel.append(section);});
+          ['Live Show Director','The Results Show Director','Official Reveal Assistant'].forEach(label=>{const section=root.querySelector('[aria-label="'+label+'"]');if(section)panels.querySelector('#fau-panel-archive')?.append(section);});
           const judgingPanel=panels.querySelector('#fau-panel-judging');
           const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);const castControls=root.querySelector('#fauCastVotingControls');
           if(castControls){
@@ -5353,6 +5381,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const critique=root.querySelector('#fauCritiqueAdmin')?.closest('section');if(critique)judgingPanel.append(critique);
           const episodePanel=panels.querySelector('#fau-panel-episode');
           const status=root.querySelector('[aria-label="Production Status"]');if(status)episodePanel.append(status);
+          // Controles de rotina em primeiro plano; painéis especializados ficam recolhidos.
+          const optional=document.createElement('details');optional.className='rounded-xl border border-fashion-700 bg-fashion-900 p-4';
+          optional.innerHTML='<summary class="cursor-pointer text-fashion-gold text-sm font-semibold">Ferramentas avançadas do episódio</summary><div class="space-y-5 mt-4" id="fauEpisodeAdvanced"></div>';
+          episodePanel.append(optional);
+          ['fauProductionDesk','fauProductionPulse'].forEach(id=>{const el=episodePanel.querySelector('#'+id);if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
+          ['Season Flow da produção','Auto Fashion Archive','Broadcast Studio'].forEach(label=>{const el=episodePanel.querySelector('[aria-label="'+label+'"]');if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
+
           const tabs=shell.querySelector('#fauDirectorTabs');
           const activate=id=>{
             if(!groups.some(g=>g.id===id))id='episode';
@@ -5370,7 +5405,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const steps=[['setup','Preparar o desafio','Escolha o tema e defina o prazo.','newThemeId'],['workroom','Acompanhar entregas','Confira o andamento dos designers e os prazos.','fauStatusDashboard'],['judging','Conferir avaliações','Verifique notas e pendências dos jurados.','adminOutput'],['runway','Preparar a passarela','Confira as publicações e as avaliações.','adminOutput'],['ballot','Acompanhar votação','Confira os votos antes de formar o Elimination Pool.','adminOutput'],['pool','Preparar o veredito','Confira a berlinda e a dinâmica especial.','adminOutput']];
           const current=steps.find(x=>x[0]===phase)||steps[0];
           overview.innerHTML=`<div class="flex flex-wrap justify-between gap-3 items-center"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">NOW PRODUCING · EPISODE ${esc(fauRoundDisplayName())}</p><h3 class="font-cinzel text-2xl text-white mt-2">${esc(theme?.title||'Prepare a próxima estreia')}</h3></div><span class="text-[10px] border border-fashion-gold/40 text-fashion-gold rounded-full px-3 py-2">${esc(phase.toUpperCase())}</span></div><div class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">PRÓXIMA AÇÃO SUGERIDA</p><h4 class="font-cinzel text-xl text-white">${esc(current[1])}</h4><p class="text-xs text-gray-300">${esc(current[2])}</p><button type="button" id="fauNextAction" class="rounded-lg bg-fashion-gold text-black font-semibold px-4 py-3 text-xs">Abrir controle →</button></div><details class="rounded-xl border border-fashion-700 p-4"><summary class="cursor-pointer text-sm text-fashion-gold">Roteiro de produção · etapas do episódio</summary><ol class="list-decimal pl-5 mt-3 space-y-2 text-xs text-gray-300"><li>Configurar desafio e prazo</li><li>Receber looks e liberar envelopes, quando houver</li><li>Conferir avaliações e apurar o ranking</li><li>Realizar votações e dinâmica especial</li><li>Conduzir revelações e confirmar o veredito</li></ol><p class="text-[11px] text-gray-400 mt-3">As etapas dependem do tema. Nada é publicado automaticamente.</p></details>`;
-          episodePanel.prepend(overview);
+          // O resumo agora integra a Central de Comandos; evitar um segundo dashboard.
+          // episodePanel.prepend(overview);
           overview.querySelector('#fauNextAction').onclick=()=>{const target=document.getElementById(current[3]);if(!target)return;const parent=target.closest('[role="tabpanel"]');if(parent)activate(parent.id.replace('fau-panel-',''));target.scrollIntoView({behavior:'smooth',block:'center'});target.focus?.({preventScroll:true});};
           // Episode-specific controls: keep the selected challenge in focus.
           const twist=root.querySelector('#fauActiveTwistControls');if(twist?.children.length){const section=twist.closest('section')||twist.parentElement;if(section)judgingPanel.prepend(section);}
@@ -7355,8 +7391,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const allJudges=new Set();snap.docs.forEach(d=>{const a=d.data();if(Array.isArray(a.nota)&&a.nota.length===5)allJudges.add(String(a.jurado||a.judgeUid||d.id));});
             const count=standings.filter(x=>(evaluated.get(String(x.uid))?.size||0)>0).length;
             const rows=pool.map(x=>`<div class="flex items-center justify-between gap-3 border border-fashion-700 rounded-lg p-3 bg-fashion-900"><div><strong class="text-white">${esc(x.ate||x.uid)}</strong><p class="text-xs text-fashion-gold">${esc(reasons.get(x.uid))}</p><p class="text-xs text-gray-400">${evaluated.get(String(x.uid))?.size||0} avaliação(ões) válida(s) · rodada ${fmt(x.rd)} · acumulado ${fmt(x.tot)}</p></div></div>`).join('');
-            $('#adminOutput').innerHTML=`<section class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4"><div><p class="text-xs tracking-widest text-fashion-gold">CONSULTA PRIVADA · ADM</p><h3 class="font-cinzel text-2xl text-white">Prévia do Elimination Pool</h3><p class="text-sm text-gray-300">Calculada com as notas salvas até agora. ${count} de ${standings.length} Designers possuem avaliações válidas. Não exige que todos os jurados tenham votado.</p></div>${isSpecial?'<p class="text-amber-200 text-sm">Esta rodada possui uma dinâmica especial: a lista abaixo é apenas uma simulação da regra tradicional, não o Pool oficial do twist.</p>':''}${noPool?'<p class="text-gray-300">Rodada sem eliminação: não há Elimination Pool.</p>':rows||'<p class="text-gray-400">Ainda não há Designers suficientes para formar a prévia.</p>'}<p class="text-xs text-gray-400">As posições podem mudar a cada nova avaliação. Nenhum resultado é publicado, nenhuma votação é aberta e o Elimination Pool oficial permanece inalterado.</p><button id="btnRefreshPoolPreview" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar prévia</button></section>`;
+            const poolHome=$('#fauPoolPreviewHome');poolHome.classList.remove('hidden');poolHome.innerHTML=`<section class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4"><div><p class="text-xs tracking-widest text-fashion-gold">CONSULTA PRIVADA · ADM</p><h3 class="font-cinzel text-2xl text-white">Prévia do Elimination Pool</h3><p class="text-sm text-gray-300">Calculada com as notas salvas até agora. ${count} de ${standings.length} Designers possuem avaliações válidas. Não exige que todos os jurados tenham votado.</p></div>${isSpecial?'<p class="text-amber-200 text-sm">Esta rodada possui uma dinâmica especial: a lista abaixo é apenas uma simulação da regra tradicional, não o Pool oficial do twist.</p>':''}${noPool?'<p class="text-gray-300">Rodada sem eliminação: não há Elimination Pool.</p>':rows||'<p class="text-gray-400">Ainda não há Designers suficientes para formar a prévia.</p>'}<p class="text-xs text-gray-400">As posições podem mudar a cada nova avaliação. Nenhum resultado é publicado, nenhuma votação é aberta e o Elimination Pool oficial permanece inalterado.</p><button id="btnRefreshPoolPreview" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar prévia</button></section>`;
             $('#btnRefreshPoolPreview').onclick=()=>$('#btnPreviewPool').click();
+            poolHome.scrollIntoView({behavior:'smooth',block:'nearest'});
         });
 
         $('#btnApurarRanking').onclick = safeExec(async () => {
