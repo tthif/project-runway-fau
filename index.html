@@ -5394,10 +5394,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const root=document.querySelector('#fauProductionDesk')?.parentElement;
           if(!root)return;
           const groups=[
-            {id:'episode',label:'Episódio',hint:'Rodada, prazos e entregas',keys:['fauUnifiedOperations','fauResultsDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck']},
-            {id:'cast',label:'Elenco',hint:'Designers, jurados e inscrições',keys:['fauDesignerRoster','castQuickList','profileManagerContainer','createRole']},
-            {id:'judging',label:'Julgamento',hint:'Notas, títulos e eliminação',keys:['adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn','fauCastVotingControls','fauProductionDesk']},
-                        {id:'archive',label:'Bastidores',hint:'Configurações, histórico e ferramentas raras',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
+            {id:'episode',label:'Episódio',hint:'Preparação, julgamento e publicação',keys:['fauUnifiedOperations','fauResultsDesk','fauStatusDashboard','newRoundId','btnAdd15Min','btnTogglePublic','flowCheck','adminOutput','fauCritiqueAdmin','fauOfficialIcon','fauTwistDirector','btnToggleUrn','fauCastVotingControls','fauProductionDesk']},
+            {id:'cast',label:'Elenco',hint:'Designers, inscrições e acessos',keys:['fauDesignerRoster','castQuickList','profileManagerContainer','createRole']},
+                        {id:'archive',label:'Bastidores',hint:'Apresentação, histórico e configurações',keys:['ctrlOutput','vaultTheme','fauArchiveSync','fauReunionAdmin']}
           ];
           const shell=document.createElement('div');shell.id='fauDirectorShell';shell.className='space-y-5';
           shell.innerHTML=`<header class="fau-hq-header rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 md:p-7 space-y-3"><p class="text-[10px] tracking-[.3em] text-fashion-gold">PROJECT RUNWAY: FAU · PRODUCTION HQ</p><h2 class="font-cinzel text-3xl text-white">THE CONTROL ROOM</h2><p class="text-sm text-gray-300">Você dirige o episódio. A produção cuida do resto.</p><nav id="fauDirectorTabs" class="fau-hq-tabs flex gap-2 overflow-x-auto pt-3 pb-2" role="tablist" aria-label="Áreas da produção"></nav><p id="fauDirectorHint" class="text-xs text-gray-400" aria-live="polite"></p></header><div id="fauDirectorPanels"></div>`;
@@ -5415,7 +5414,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           // Organizar por responsabilidade, não pela ordem histórica de criação dos widgets.
           // Mover sempre o bloco raiz para preservar listeners, formulários e IDs existentes.
           const moveSection=(selector,destination)=>{
-            const el=root.querySelector(selector),panel=panels.querySelector('#fau-panel-'+destination);
+            const el=root.querySelector(selector),panel=panels.querySelector('#fau-panel-'+(destination==='judging'?'episode':destination));
             if(!el||!panel)return;
             const block=directChild(el);
             if(block&&block!==shell&&block.parentElement!==panel)panel.append(block);
@@ -5436,7 +5435,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             archivedStudios.forEach(el=>studio.querySelector('div').append(el));
             panels.querySelector('#fau-panel-archive').prepend(studio);
           }
-          const judgingPanel=panels.querySelector('#fau-panel-judging');
+          const judgingPanel=panels.querySelector('#fau-panel-episode');
           const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);const castControls=root.querySelector('#fauCastVotingControls');
           if(castControls){
             judgingPanel.prepend(castControls);
@@ -5472,7 +5471,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             critiqueBroadcast.classList.remove('bg-fashion-950');
             critiqueBroadcast.classList.add('bg-fashion-950/70');
             critiqueSection.append(critiqueBroadcast);
-            episodePanel.insertBefore(critiqueSection,episodePanel.firstChild);
+            episodePanel.append(critiqueSection);
           }
           if(resultDesk){
             const resultDisclosure=document.createElement('details');
@@ -5482,13 +5481,29 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             episodePanel.append(resultDisclosure);
             resultDisclosure.querySelector('.fau-admin-disclosure-content').append(resultDesk);
           }
+          // Fluxo: apuração primeiro, críticas para copiar em seguida, ferramentas avançadas por último.
           episodePanel.append(optional);
           ['fauProductionDesk','fauProductionPulse'].forEach(id=>{const el=root.querySelector('#'+id);if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
           ['Season Flow da produção','Auto Fashion Archive','Broadcast Studio'].forEach(label=>{const el=episodePanel.querySelector('[aria-label="'+label+'"]');if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
 
+          // Sequência operacional: status e preparação, apuração, críticas e ferramentas opcionais.
+          // Reordenar nós existentes mantém handlers e permissões intactos.
+          const episodePriority=[
+            '#fauUnifiedOperations', '#fauStatusDashboard', '#fauResultsDesk',
+            '#fauAdminJurorComments', '#fauEpisodeResultsDisclosure'
+          ];
+          const episodeOrdered=episodePriority.map(sel=>episodePanel.querySelector(sel))
+            .filter(el=>el && el.parentElement===episodePanel);
+          episodeOrdered.forEach(el=>episodePanel.append(el));
+          episodePanel.append(optional);
+          // Julgamento faz parte do episódio, sem aba independente.
+          // Elenco: inscrições e participantes antes da administração técnica de contas.
+          const castPanel=panels.querySelector('#fau-panel-cast');
+          ['#fauDesignerRoster','#castQuickList','#profileManagerContainer']
+            .map(sel=>castPanel.querySelector(sel)).filter(el=>el && el.parentElement===castPanel)
+            .forEach(el=>castPanel.append(el));
           const sectionDescriptions={
             cast:['ELENCO E ACESSOS','Cadastros, inscrições, permissões e perfis dos participantes.'],
-            judging:['JULGAMENTO E ELIMINAÇÃO','Apuração detalhada, críticas, títulos, twists e votação.'],
             archive:['BASTIDORES E ACERVO','Histórico, auditoria, publicações editoriais e ferramentas ocasionais.']
           };
           Object.entries(sectionDescriptions).forEach(([key,[title,description]])=>{
@@ -5512,6 +5527,46 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             items.forEach(item=>details.querySelector('.fau-admin-disclosure-content').append(item));
             archivePanel.append(details);
           });
+          // Três áreas claras: operação do episódio, pessoas e acervo.
+          // Reorganização de nós existentes, sem recriar inputs ou perder listeners.
+          const makeFold=(id,title,subtitle,nodes,open=false)=>{
+            const present=nodes.filter(Boolean);
+            if(!present.length)return null;
+            const d=document.createElement('details');d.id=id;d.className='fau-admin-disclosure';d.open=open;
+            const summary=document.createElement('summary');
+            const labels=document.createElement('span');
+            const strong=document.createElement('strong');strong.textContent=title;
+            const small=document.createElement('small');small.textContent=subtitle;
+            labels.append(strong,small);summary.append(labels);
+            const arrow=document.createElement('span');arrow.setAttribute('aria-hidden','true');arrow.textContent='⌄';summary.append(arrow);
+            const content=document.createElement('div');content.className='fau-admin-disclosure-content space-y-4';
+            present.forEach(n=>content.append(n));d.append(summary,content);return d;
+          };
+          const pick=(panel,selectors)=>selectors.map(sel=>panel.querySelector(sel)).filter(el=>el&&el.parentElement===panel);
+          const episode=panels.querySelector('#fau-panel-episode');
+          const cast=panels.querySelector('#fau-panel-cast');
+          const archive=panels.querySelector('#fau-panel-archive');
+          // Informações operacionais em destaque; julgamento e publicação ficam a um toque.
+          const episodeJudging=makeFold('fauEpisodeJudging','Julgamento e votações','Urnas, críticas para jurados, títulos e decisões',pick(episode,['#fauCastVotingControls','#fauCritiqueAdmin','#fauOfficialTitlesPanel','#fauTwistDirector']),false);
+          if(episodeJudging)episode.append(episodeJudging);
+          const episodeComments=episode.querySelector('#fauAdminJurorComments');
+          const episodePublication=episode.querySelector('#fauEpisodeResultsDisclosure');
+          // A seção de cópia das críticas vem depois do julgamento e antes da publicação.
+          if(episodeComments)episode.append(episodeComments);
+          if(episodePublication)episode.append(episodePublication);
+          if(optional.parentElement===episode)episode.append(optional);
+          // Elenco: ações de cadastro e consulta na frente; gestão técnica recolhida.
+          const castAccounts=makeFold('fauCastAccounts','Contas e permissões','Acessos, papéis e manutenção de usuários',pick(cast,['#profileManagerContainer']),false);
+          if(castAccounts)cast.append(castAccounts);
+          // Bastidores: não exibir todas as ferramentas de uma vez.
+          const archiveLoose=[...archive.children].filter(el=>el.tagName!=='HEADER' && el.tagName!=='DETAILS');
+          const archiveExtra=makeFold('fauArchiveExtra','Outras ferramentas','Configurações e funções menos utilizadas',archiveLoose,false);
+          if(archiveExtra)archive.append(archiveExtra);
+          // Reduzir ruído de instruções sem ocultar funcionalidades.
+          shell.querySelector('.fau-hq-header > p.text-sm')?.remove();
+          const episodeHeading=document.createElement('div');episodeHeading.className='fau-hq-compact-intro';
+          episodeHeading.innerHTML='<h3 class="font-cinzel text-lg text-fashion-gold">Episódio</h3><p class="text-xs text-gray-400">Prepare, acompanhe, julgue e publique a rodada.</p>';
+          episode.prepend(episodeHeading);
           const tabs=shell.querySelector('#fauDirectorTabs');
           const activate=id=>{
             if(!groups.some(g=>g.id===id))id='episode';
