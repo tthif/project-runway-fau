@@ -5459,7 +5459,21 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           // Controles de rotina em primeiro plano; painéis especializados ficam recolhidos.
           const optional=document.createElement('details');optional.className='rounded-xl border border-fashion-700 bg-fashion-900 p-4';
           optional.innerHTML='<summary class="cursor-pointer text-fashion-gold text-sm font-semibold">Ferramentas avançadas do episódio</summary><div class="space-y-5 mt-4" id="fauEpisodeAdvanced"></div>';
+          // Críticas dos jurados: acesso direto na Central, sem abrir a apuração.
+          // Reaproveita o Broadcast existente, seus IDs e handlers Firebase.
           const resultDesk=episodePanel.querySelector('#fauResultsDesk');
+          const critiqueBroadcast=resultDesk?.querySelector('#fauBroadcast');
+          if(critiqueBroadcast){
+            const critiqueSection=document.createElement('section');
+            critiqueSection.id='fauAdminJurorComments';
+            critiqueSection.className='rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4 md:p-5 space-y-4';
+            critiqueSection.setAttribute('aria-label','Críticas dos Jurados');
+            critiqueSection.innerHTML='<div><p class="text-[10px] tracking-[.2em] text-fashion-gold">JULGAMENTO · SOMENTE ADM</p><h3 class="font-cinzel text-xl text-white mt-1">Críticas dos Jurados</h3><p class="text-xs text-gray-300 mt-2">Veja os comentários por Designer e jurado, confira a criação da rodada e copie cada crítica para o WhatsApp. Nada é publicado automaticamente.</p></div>';
+            critiqueBroadcast.classList.remove('bg-fashion-950');
+            critiqueBroadcast.classList.add('bg-fashion-950/70');
+            critiqueSection.append(critiqueBroadcast);
+            episodePanel.insertBefore(critiqueSection,episodePanel.firstChild);
+          }
           if(resultDesk){
             const resultDisclosure=document.createElement('details');
             resultDisclosure.id='fauEpisodeResultsDisclosure';
