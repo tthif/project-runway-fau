@@ -191,6 +191,7 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}#mainView > *{animation:none!important}}
 </style>
 <style id="fau-hq-refinement">#fauDirectorPanels [hidden],#fauDirectorShell [hidden]{display:none!important}.fau-hq-tabs{scrollbar-width:thin}.fau-hq-overview button:focus-visible{outline:3px solid #f0eae1;outline-offset:3px}.fau-hq-header nav{position:static!important;background:transparent!important;border:0!important}.fau-hq-overview details summary{list-style:revert}.fau-hq-overview details[open]{border-color:#d1b38b}@media(max-width:640px){.fau-hq-header{padding:16px}.fau-hq-tabs button{min-width:max-content}.fau-hq-overview{padding:16px}}</style>
+<style id="fau-icon-vault-location">#poderCard{display:none!important}#fauVaultIconChoice.hidden{display:none!important}#fauVaultIconChoice [data-op]{min-height:42px}#fauIconDirectorDesk button{min-height:42px}</style>
 <style id="fau-frontrow-ux">
 .fau-frontrow-welcome{background:radial-gradient(ellipse at 80% 0%,rgba(209,179,139,.15),transparent 55%),linear-gradient(130deg,#211820,#100e13);box-shadow:0 20px 50px rgba(0,0,0,.22)}
 .fau-frontrow-primary{background:#d1b38b;color:#141215}
@@ -2338,6 +2339,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <p class="text-gray-300 text-sm max-w-lg mx-auto">Cada imagem é uma pista. Qual será o próximo desafio?</p>
             <p class="text-gray-500 text-xs">Os nomes permanecem secretos até a revelação oficial.</p>
           </header>
+          <div id="fauVaultChoiceAnchor"></div>
+          <section id="fauVaultIconChoice" class="hidden rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-live="polite"></section>
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-fashion-700 pb-4">
             <div class="flex gap-2" role="group" aria-label="Filtrar temas">
               <button type="button" class="fau-vault-filter is-active" data-vault-filter="all" aria-pressed="true">TODOS</button>
@@ -2348,6 +2351,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           </div>
           <div id="publicThemeClues" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4"><p class="text-gray-400 text-sm col-span-full text-center py-10">Abrindo o arquivo de pistas…</p></div>
         </section>`;
+        // A escolha pertence ao Vault, mas permanece fora do conteúdo substituível da view.
+        const choiceCard=document.getElementById("poderCard");
+        if(choiceCard){const anchor=document.getElementById("fauVaultChoiceAnchor");if(anchor){anchor.after(choiceCard);choiceCard.classList.add("fau-vault-icon-choice");}}
         // Visualizador fora de #mainView: evita cortes, transformações e z-index do layout.
         document.getElementById('fauVaultModal')?.remove();
         const modal=document.createElement('div');
@@ -5129,7 +5135,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(globalState.rodada!==round||!globalState.urna||!isCastVoter()||globalState.berlinda?.some(b=>b.uid===currentUser.uid)||!globalState.berlinda?.some(b=>b.uid===chosen.value))throw new Error('A votação mudou ou foi encerrada.');
           const name=pool.find(b=>b.uid===chosen.value)?.ate||'Designer';if(!window.confirm(`Salvar ${name}? Seu voto será secreto e DEFINITIVO. Não será possível alterar depois de confirmar.`))return;
           const btn=$('#btnSaveAtelier');btn.disabled=true;
-          try{await db.runTransaction(async tx=>{const old=await tx.get(ref);if(old.exists)throw new Error('Voto já registrado. Não é permitido editar.');tx.set(ref,{tipo:'ber',rodada:round,alvo:chosen.value,voter:currentUser.uid,voterName:currentUser.ate,t:now(),createdAt:old.exists?(old.data().createdAt||old.data().t||now()):now()});});
+          try{await db.runTransaction(async tx=>{
+            const stateSnap=await tx.get(db.doc('config/estado'));
+            const voterSnap=await tx.get(db.doc(`perfis/${currentUser.uid}`));
+            const old=await tx.get(ref);
+            const state=stateSnap.data()||{}, voter=voterSnap.data()||{};
+            const nominees=Array.isArray(state.berlinda)?state.berlinda:[];
+            if(old.exists)throw new Error('Voto já registrado. Não é permitido editar.');
+            if(String(state.rodada)!==String(round)||state.urna!==true||nominees.length!==3)throw new Error('A urna foi encerrada ou a rodada mudou.');
+            if(voter.role!=='estilista'||voter.out||voter.disabled||nominees.some(n=>n.uid===currentUser.uid))throw new Error('Designer sem permissão para votar.');
+            if(!nominees.some(n=>n.uid===chosen.value))throw new Error('O indicado não está mais elegível.');
+            tx.set(ref,{tipo:'ber',rodada:round,alvo:chosen.value,voter:currentUser.uid,voterName:currentUser.ate,t:now(),createdAt:now()});
+          });
           $('#saveBallotStatus').innerHTML='<span class="text-fashion-gold font-cinzel text-lg block mb-2">✉️ THE ENVELOPE IS SEALED</span>Seu voto foi recebido. O resultado só será revelado pela produção.';btn.textContent='VOTO REGISTRADO ✓';document.querySelectorAll('input[name="salvationVote"]').forEach(r=>{r.disabled=true;r.checked=false;});showToast('Seu voto secreto foi registrado!');}finally{btn.disabled=!!(await ref.get()).exists;}
         });
     };
@@ -5289,13 +5306,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <label class="text-xs text-gray-300">Texto da pista (somente Ícone da Moda ou WIN autorizado)<textarea id="vaultClue" rows="2" placeholder="Uma pista enigmática, sem revelar o desafio..." class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-white"></textarea></label>
                     <div class="flex flex-wrap gap-2"><button id="btnVaultSave" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">Guardar tema no Vault</button><button id="btnVaultRemovePublicClues" class="border border-fashion-gold text-fashion-gold rounded px-4 py-2 text-xs font-bold">Remover textos públicos antigos</button></div><p class="text-[11px] text-gray-400">Somente as fotografias são públicas. As pistas escritas ficam na coleção privada, acessível ao ADM e ao participante autorizado para escolher.</p>
                     <div id="vaultList" class="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs"></div>
-                    <h3 class="font-cinzel text-white text-base pt-3">👑 THE ICON'S CHOICE</h3>
+                    <div id="fauAdminIconChoice" class="rounded-xl border border-fashion-gold/40 bg-fashion-950/70 p-4 space-y-3"><h3 class="font-cinzel text-white text-base pt-3">👑 THE ICON'S CHOICE</h3>
                     <p class="text-xs text-gray-300">Ao abrir, TODOS os temas disponíveis do Vault serão oferecidos ao Ícone da Moda (ou ao WIN, na ausência de Ícone). Não existe limite de 2 a 4 opções. A escolha fica lacrada até a revelação da produção.</p>
                     <div class="flex flex-wrap gap-2">
                         <button id="btnPoderAbrir" class="px-4 py-2 rounded text-xs uppercase font-semibold bg-fashion-gold text-black">Abrir The Icon's Choice</button>
                         <button id="btnPoderVer" class="px-4 py-2 rounded text-xs uppercase font-semibold bg-fashion-800 border border-fashion-600 text-fashion-gold">Ver escolha lacrada</button>
                     </div>
-                    <div id="poderStatus" class="text-xs text-fashion-sand space-y-2"></div>
+                    <div id="poderStatus" class="text-xs text-fashion-sand space-y-2"></div></div>
                 </div>
 
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
@@ -5574,6 +5591,52 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           // Elenco: ações de cadastro e consulta na frente; gestão técnica recolhida.
           const castAccounts=makeFold('fauCastAccounts','Contas e permissões','Acessos, papéis e manutenção de usuários',pick(cast,['#profileManagerContainer']),false);
           if(castAccounts)cast.append(castAccounts);
+          // THE ICON'S CHOICE: comandos da escolha pertencem à direção do episódio;
+          // o cadastro das pistas permanece em Bastidores.
+          const iconOpen=root.querySelector('#btnPoderAbrir');
+          const iconView=root.querySelector('#btnPoderVer');
+          const iconStatus=root.querySelector('#poderStatus');
+          if(iconOpen&&iconView&&iconStatus){
+            const iconDesk=document.createElement('section');
+            iconDesk.id='fauIconDirectorDesk';
+            iconDesk.className='rounded-xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3';
+            iconDesk.innerHTML='<h3 class="font-cinzel text-fashion-gold text-lg">THE ICON\'S CHOICE</h3><p class="text-xs text-gray-300">Abra a escolha, acompanhe o tema lacrado e controle a revelação oficial. As pistas são cadastradas em Bastidores.</p><div class="flex flex-wrap gap-2" id="fauIconDirectorActions"></div>';
+            iconDesk.querySelector('#fauIconDirectorActions').append(iconOpen,iconView);
+            iconDesk.append(iconStatus);
+            // Prévia segura do ponto de vista do Designer, sem ações de escrita.
+            const previewButton=document.createElement('button');
+            previewButton.type='button';
+            previewButton.className='px-4 py-2 rounded text-xs font-semibold border border-fashion-gold text-fashion-gold';
+            previewButton.textContent='Prévia do Designer';
+            iconDesk.querySelector('#fauIconDirectorActions').append(previewButton);
+            const preview=document.createElement('section');
+            preview.id='fauIconDesignerPreview';
+            preview.hidden=true;
+            preview.className='rounded-xl border border-fashion-gold/30 bg-fashion-950 p-4 space-y-4';
+            preview.innerHTML='<div class="flex items-center justify-between gap-2"><h4 class="font-cinzel text-fashion-gold">THE THEME VAULT · VISÃO DO DESIGNER</h4><button type="button" id="fauCloseIconPreview" class="border border-fashion-700 rounded px-3 py-2 text-xs">Fechar</button></div><p class="text-xs text-gray-400">Simulação de leitura. Nenhuma escolha será registrada.</p><div id="fauIconPreviewBody" class="space-y-3"></div>';
+            iconDesk.append(preview);
+            preview.querySelector('#fauCloseIconPreview').onclick=()=>{preview.hidden=true;previewButton.setAttribute('aria-expanded','false');};
+            previewButton.setAttribute('aria-expanded','false');
+            const escapePreview=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            let previewToken=0;
+            previewButton.onclick=async()=>{
+              if(!preview.hidden){preview.hidden=true;previewButton.setAttribute('aria-expanded','false');return;}
+              preview.hidden=false;previewButton.setAttribute('aria-expanded','true');
+              const body=preview.querySelector('#fauIconPreviewBody');
+              body.innerHTML='<p class="text-xs text-gray-400">Carregando prévia…</p>';
+              const token=++previewToken;
+              const g=globalState||{};
+              const options=Array.isArray(g.proxOpcoes)?g.proxOpcoes:[];
+              if(g.proxTema){body.innerHTML='<p class="text-fashion-gold text-xs tracking-widest">THE RESULTS SHOW · THE REVEAL</p><h4 class="font-cinzel text-xl text-white">'+escapePreview(g.proxTema.nome)+'</h4><p class="text-xs text-gray-400">O próximo desafio foi revelado pela produção.</p>';return;}
+              if(!g.poderUid||!options.length){body.innerHTML='<p class="text-sm text-gray-300">A escolha ainda não foi aberta. Assim que você abrir o poder, a prévia mostrará as mesmas opções que o Ícone verá.</p>';return;}
+              let chosen=false;
+              try{const doc=await db.doc('escolhas/'+g.rodada).get();chosen=doc.exists&&!!doc.data()?.opcaoId;}catch(e){}
+              const clues=await Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_private').doc(o.id).get();return doc.exists?(doc.data()?.clue||''):'';}catch(e){return '';}}));
+              if(token!==previewToken||preview.hidden)return;
+              body.innerHTML='<p class="text-fashion-gold font-cinzel tracking-widest text-sm">THE ICON&#39;S CHOICE</p><p class="text-sm text-gray-300">Você tem o poder. Explore as pistas e escolha o próximo desafio.</p>'+(chosen?'<p class="text-fashion-gold text-sm">🔒 Escolha registrada. Aguarde a revelação da produção.</p>':'')+'<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">'+options.map((o,i)=>'<div class="rounded-lg border border-fashion-gold/30 bg-fashion-900 overflow-hidden"><div class="aspect-[4/5] bg-fashion-950">'+(o.photo?'<img src="'+escapePreview(o.photo)+'" alt="Pista '+(i+1)+'" class="w-full h-full object-cover">':'')+'</div><div class="p-3 space-y-2"><strong class="block font-cinzel text-fashion-gold">MYSTERY '+String(i+1).padStart(2,'0')+'</strong>'+(chosen?'':'<p class="text-gray-300 text-xs">'+escapePreview(clues[i]||'Pista em preparação…')+'</p><span class="block text-center bg-fashion-gold/70 text-black rounded py-2 text-xs font-semibold" aria-label="Botão ilustrativo, desativado">Escolher esta pista</span>')+'</div></div>').join('')+'</div>';
+            };
+            episode.prepend(iconDesk);
+          }
           // Bastidores: não exibir todas as ferramentas de uma vez.
           const archiveLoose=[...archive.children].filter(el=>el.tagName!=='HEADER' && el.tagName!=='DETAILS');
           const archiveExtra=makeFold('fauArchiveExtra','Outras ferramentas','Configurações e funções menos utilizadas',archiveLoose,false);
@@ -7622,6 +7685,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const rows=pool.map(x=>`<div class="flex items-center justify-between gap-3 border border-fashion-700 rounded-lg p-3 bg-fashion-900"><div><strong class="text-white">${esc(x.ate||x.uid)}</strong><p class="text-xs text-fashion-gold">${esc(reasons.get(x.uid))}</p><p class="text-xs text-gray-400">${evaluated.get(String(x.uid))?.size||0} avaliação(ões) válida(s) · rodada ${fmt(x.rd)} · acumulado ${fmt(x.tot)}</p></div></div>`).join('');
             if(requestSeq!==fauPreviewSequence)return;
             const poolHome=$('#fauPoolPreviewHome');poolHome.classList.remove('hidden');poolHome.innerHTML=`<section class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-4"><div><p class="text-xs tracking-widest text-fashion-gold">CONSULTA PRIVADA · ADM</p><h3 class="font-cinzel text-2xl text-white">Prévia do Elimination Pool</h3><p class="text-sm text-gray-300">Calculada com as notas salvas até agora. ${count} de ${standings.length} Designers possuem avaliações válidas. Não exige que todos os jurados tenham votado.</p></div>${isSpecial?'<p class="text-amber-200 text-sm">Esta rodada possui uma dinâmica especial: a lista abaixo é apenas uma simulação da regra tradicional, não o Pool oficial do twist.</p>':''}${noPool?'<p class="text-gray-300">Rodada sem eliminação: não há Elimination Pool.</p>':rows||'<p class="text-gray-400">Ainda não há Designers suficientes para formar a prévia.</p>'}<p class="text-xs text-gray-400">As posições podem mudar a cada nova avaliação. Nenhum resultado é publicado, nenhuma votação é aberta e o Elimination Pool oficial permanece inalterado.</p><button id="btnRefreshPoolPreview" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar prévia</button></section>`;
+            // Simulação de acesso: apenas renderização local, sem leitura ou gravação de votos.
+            const officialPool=Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?globalState.berlinda:null;
+            const displayPool=officialPool||pool;
+            const photoMap=displayPool.length?await fauPortraitDirectory():new Map();
+            if(requestSeq!==fauPreviewSequence)return;
+            const previewHost=document.createElement('section');
+            previewHost.className='mt-5 border-t border-fashion-700 pt-5 space-y-3';
+            previewHost.innerHTML=`<div><p class="text-xs tracking-widest text-fashion-gold">VISÃO DO PARTICIPANTE · SIMULAÇÃO</p><p class="text-xs text-gray-400 mt-1">${officialPool?'Três indicados oficiais publicados.':'Indicados simulados com o ranking atual; podem mudar.'} Nenhuma ação nesta prévia registra votos.</p></div><div class="flex flex-wrap gap-2"><button type="button" data-pool-role="voter" class="border border-fashion-gold rounded-lg px-3 py-2 text-xs text-fashion-gold">Designer que pode votar</button><button type="button" data-pool-role="nominee" class="border border-fashion-700 rounded-lg px-3 py-2 text-xs text-white">Designer indicado</button><button type="button" data-pool-role="voted" class="border border-fashion-700 rounded-lg px-3 py-2 text-xs text-white">Após votar</button></div><div id="fauPoolDesignerSimulation" class="rounded-xl border border-fashion-700 bg-fashion-900 p-4" aria-live="polite"></div>`;
+            poolHome.querySelector('section')?.appendChild(previewHost);
+            const stage=previewHost.querySelector('#fauPoolDesignerSimulation');
+            const nomineeCards=()=>displayPool.map((b,i)=>`<div class="flex items-center gap-3 border border-fashion-700 rounded-lg p-3 bg-fashion-950">${fauPortraitMarkup(b.uid,photoMap,true)}<div class="flex-1 min-w-0"><p class="text-[10px] text-fashion-gold">INDICADO ${String(i+1).padStart(2,'0')}</p><strong class="text-white">${esc(b.ate||'Designer')}</strong></div></div>`).join('');
+            const draw=(role)=>{
+              previewHost.querySelectorAll('[data-pool-role]').forEach(b=>{const active=b.dataset.poolRole===role;b.setAttribute('aria-pressed',String(active));b.classList.toggle('border-fashion-gold',active);b.classList.toggle('text-fashion-gold',active);});
+              if(displayPool.length!==3){stage.innerHTML='<p class="text-sm text-gray-300">A prévia do participante estará disponível quando houver três indicados. Nenhuma votação foi aberta.</p>';return;}
+              if(role==='nominee'){
+                stage.innerHTML=`<div class="text-center space-y-3 mb-5"><p class="text-xs tracking-widest text-red-300">THE ELIMINATION POOL</p><h4 class="font-cinzel text-2xl text-white">SEU DESTINO AINDA NÃO ESTÁ DECIDIDO</h4><p class="text-sm text-gray-300">Você está no Elimination Pool e não pode votar. Os outros Designers decidirão quem merece continuar.</p></div><div class="space-y-2">${nomineeCards()}</div><p class="text-xs text-gray-400 mt-4">O resultado permanece secreto até o anúncio oficial.</p>`;
+              }else{
+                stage.innerHTML=`<div class="text-center space-y-2 mb-5"><p class="text-xs tracking-widest text-fashion-gold">VOTO SECRETO · SALVAÇÃO</p><h4 class="font-cinzel text-2xl text-white">THE ELIMINATION POOL</h4><p class="text-sm text-gray-300">${role==='voted'?'Seu voto foi registrado.':'Escolha um Designer para salvar. Seu voto é definitivo.'}</p></div><div class="space-y-2">${nomineeCards()}</div><div class="mt-4 rounded-lg border border-fashion-gold/40 p-3 text-center text-sm text-fashion-gold">${role==='voted'?'VOTO REGISTRADO · ENVELOPE LACRADO':'CONFIRMAR VOTO PARA SALVAR · DESATIVADO NA PRÉVIA'}</div><p class="text-xs text-gray-400 mt-3">${role==='voted'?'O resultado só será revelado pela produção.':'A simulação não permite selecionar nem enviar votos.'}</p>`;
+              }
+            };
+            previewHost.querySelectorAll('[data-pool-role]').forEach(b=>b.addEventListener('click',()=>draw(b.dataset.poolRole)));
+            draw('voter');
             $('#btnRefreshPoolPreview').onclick=()=>$('#btnPreviewPool').click();
             document.getElementById('fauPreviewViewer')?.scrollIntoView({behavior:'smooth',block:'nearest'});
         });
@@ -8374,6 +8459,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const g=globalState;
             if(!currentUser||!g?.rodada){card.classList.add('hidden');return;}
             const owner=g.poderUid===currentUser.uid;
+            if(!owner||chosen||g.proxTema)privateClues={};
             const key=[g.rodada,g.poderUid,g.proxTema?.themeId,chosen,JSON.stringify(g.proxOpcoes||[]),Object.keys(privateClues).length].join('|');
             if(key===last)return;last=key;
             let html='';
@@ -8385,11 +8471,43 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             }
             card.innerHTML=html;card.classList.toggle('hidden',!html);
         };
+        // Exibir o poder somente dentro do Vault, sem duplicar a lógica de votação.
+        const syncVaultChoice=()=>{
+            const vault=document.getElementById('fauVaultIconChoice');
+            const owner=!!(currentUser&&globalState?.poderUid===currentUser.uid);
+            if(!vault)return;
+            const visible=owner&&!card.classList.contains('hidden');
+            vault.classList.toggle('hidden',!visible);
+            if(visible&&vault.innerHTML!==card.innerHTML)vault.innerHTML=card.innerHTML;
+        };
+        document.addEventListener('click',e=>{
+            const option=e.target.closest('#fauVaultIconChoice [data-op]');
+            if(!option)return;
+            const source=[...card.querySelectorAll('[data-op]')].find(b=>b.dataset.op===option.dataset.op);
+            if(source)source.click();
+        });
+        const syncChoiceTimer=setInterval(syncVaultChoice,500);
         card.onclick=async e=>{
             const b=e.target.closest('[data-op]');if(!b)return;
+            if(chosen||!currentUser||globalState.poderUid!==currentUser.uid||globalState.proxTema){showToast('Escolha indisponível ou já lacrada.');return;}
             const o=(globalState.proxOpcoes||[]).find(x=>x.id===b.dataset.op);if(!o)return;
             if(!confirm('Confirmar esta pista? Sua escolha será definitiva e o tema continuará secreto até a produção revelar.'))return;
-            try{await db.doc(`escolhas/${globalState.rodada}`).set({rodada:globalState.rodada,uid:currentUser.uid,opcaoId:o.id,t:Date.now()});}
+            try{
+                const round=globalState.rodada,uid=currentUser.uid,optionId=o.id;
+                await db.runTransaction(async tx=>{
+                    const stateSnap=await tx.get(db.doc('config/estado'));
+                    const profileSnap=await tx.get(db.doc(`perfis/${uid}`));
+                    const choiceRef=db.doc(`escolhas/${round}`);
+                    const existing=await tx.get(choiceRef);
+                    const state=stateSnap.data()||{},profile=profileSnap.data()||{};
+                    if(existing.exists)throw new Error('A escolha já foi lacrada e não pode ser alterada.');
+                    if(String(state.rodada)!==String(round)||state.poderUid!==uid||state.proxTema)throw new Error('O poder de escolha não está disponível para este Designer.');
+                    if(profile.role!=='estilista'||profile.out||profile.disabled)throw new Error('Este perfil não pode escolher o tema.');
+                    if(!Array.isArray(state.proxOpcoes)||!state.proxOpcoes.some(item=>item.id===optionId))throw new Error('Esta pista não está disponível.');
+                    tx.set(choiceRef,{rodada:round,uid,opcaoId:optionId,t:Date.now()});
+                });
+                chosen=optionId;privateClues={};last='';render();syncVaultChoice();showToast('Escolha lacrada. Aguarde a revelação oficial.');
+            }
             catch(err){showToast('Não foi possível registrar: '+err.message);}
         };
         setInterval(()=>{
@@ -8398,13 +8516,26 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(key!==choiceKey){
                 choiceKey=key;chosen=null;privateClues={};last='';if(unsub){unsub();unsub=null;}
                 if(key){
-                    unsub=db.doc(`escolhas/${key}`).onSnapshot(sn=>{chosen=sn.exists?sn.data().opcaoId:null;last='';},()=>{});
-                    Promise.all((g.proxOpcoes||[]).map(async o=>{
-                        try{const sn=await db.collection('theme_vault_private').doc(o.id).get();if(sn.exists)privateClues[o.id]=sn.data().clue||'';}catch(e){}
-                    })).then(()=>{last='';render();});
+                    unsub=db.doc(`escolhas/${key}`).onSnapshot(sn=>{chosen=sn.exists?sn.data().opcaoId:null;if(chosen)privateClues={};last='';render();syncVaultChoice();},()=>{});
+                    // A escolha lacrada não pode reexibir pistas, inclusive após recarregar.
+                    // Consultar a escolha antes de buscar qualquer texto privado.
+                    (async()=>{
+                        try{
+                            const choiceSnap=await db.doc(`escolhas/${key}`).get();
+                            if(choiceKey!==key||chosen||choiceSnap.exists)return;
+                            const clues=await Promise.all((g.proxOpcoes||[]).map(async o=>{
+                                try{const sn=await db.collection('theme_vault_private').doc(o.id).get();return [o.id,sn.exists?(sn.data().clue||''):''];}
+                                catch(e){return [o.id,''];}
+                            }));
+                            if(choiceKey!==key||chosen)return;
+                            privateClues=Object.fromEntries(clues);
+                            last='';render();syncVaultChoice();
+                        }catch(e){/* Sem confirmação de autorização, não carregar pistas. */}
+                    })();
                 }
             }
             render();
+            syncVaultChoice();
         },1000);
     })();
 </script>
