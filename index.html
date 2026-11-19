@@ -6191,12 +6191,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const mutationSnap=await db.collection('fashion_mutations').where('round','==',round).get();
             mutationSnap.docs.forEach(d=>broadcastMutations.set(String(d.data().uid),d.data()));
           }
-          const broadcastMutationText=look=>{
-            if(globalState.themeId!=='w02_new_form'||!look)return '';
-            const draw=broadcastMutations.get(String(look.uid));
-            const mutation=fauMutationResult(draw);
-            return `\n*Mutação sorteada:* ${mutation?.[0]||'Não localizada'}${draw?.envelope?' (envelope '+String(draw.envelope).padStart(2,'0')+')':''}`;
-          };
           const hasOfficialRank=rankSnap.exists&&Array.isArray(rankSnap.data().rows)&&rankSnap.data().rows.length>0;
           const root=fauBroadcastRoot();if(!root)return;
           // Encerrar as notas permite ao ADM visualizar a classificação calculada,
@@ -6273,7 +6267,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const matching=looks.filter(l=>String(l.uid||'')===String(r.uid||'__sem_uid__') || String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'));
             const look=matching.find(l=>l.url||l.image||l.img||l.foto);
             const photo=look&&(look.url||look.image||look.img||look.foto)||'';
-            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(look?.titulo||'Criação sem título').trim()}${broadcastMutationText(look)}${status?`\n\n*${status}*`:''}`;
+            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(look?.titulo||'Criação sem título').trim()}${status?`\n\n*${status}*`:''}`;
             const related=critiques.filter(c=>c.maison===name);
             const sorted=related.slice().sort(orderCritiques);
             const label=`${position?position+'º LUGAR — ':''}${name}`;
@@ -6283,7 +6277,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               <div class="border border-fashion-700 rounded-lg p-3 space-y-2">
                 <p class="text-xs text-fashion-gold">01 · CRIAÇÃO ENVIADA PELO DESIGNER + LEGENDA</p>${!hasRank?'<p class="text-xs text-amber-200">Prévia: posição e classificação aparecem quando as notas forem encerradas.</p>':''}
                 ${photo?`<img src="${escAttr(photo)}" alt="Look de ${escAttr(name)}" loading="lazy" class="max-h-72 w-full object-contain rounded bg-black">`:'<p class="text-xs text-amber-200">Criação não encontrada nos envios desta rodada. Nenhuma foto de perfil será usada como substituta.</p>'}
-                <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-sm italic text-gray-200">${escAttr(look?.titulo||'Criação sem título')}</p>${globalState.themeId==='w02_new_form'?`<p class="text-xs text-fashion-gold">${escAttr(broadcastMutationText(look).trim())}</p>`:''}<p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
+                <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-sm italic text-gray-200">${escAttr(look?.titulo||'Criação sem título')}</p><p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
                 <div class="flex flex-wrap gap-2"><button type="button" data-broadcast-copy="${index}" class="border border-fashion-gold rounded px-3 py-2 text-xs">Copiar legenda</button>${photo?`<button type="button" data-broadcast-photo="${index}" class="border border-fashion-700 rounded px-3 py-2 text-xs">Compartilhar foto + legenda</button>`:''}<label class="text-xs flex items-center gap-2"><input type="checkbox" data-broadcast-done="${index}:foto" ${progress[`${index}:foto`]?'checked':''}> Enviado</label></div>
               </div>
               ${sorted.length?sorted.map((c,j)=>{
@@ -6306,7 +6300,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const name=String(r.ate||r.nome||'Designer');
             const position=hasRank?(Number(r.pos)||i+1):null,status=String(r.status||'').toUpperCase();
             const matchingLook=looks.find(l=>(String(l.uid||'')===String(r.uid||'__sem_uid__')||String(l.ate||'').trim().toLocaleLowerCase('pt-BR')===name.trim().toLocaleLowerCase('pt-BR'))&&(l.url||l.image||l.img||l.foto));
-            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(matchingLook?.titulo||'Criação sem título').trim()}${broadcastMutationText(matchingLook)}${status?`\n\n*${status}*`:''}`});
+            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${String(matchingLook?.titulo||'Criação sem título').trim()}${status?`\n\n*${status}*`:''}`});
             const related=critiques.filter(c=>c.maison===name).sort(orderCritiques);
             related.forEach((c,j)=>{
               const juror=isHostJuror(c)?'FAU':jurorName(c);
