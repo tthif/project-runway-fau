@@ -5089,13 +5089,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
         renderView(`
             <div class="space-y-8">
-                <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
-                    <div>
-                        <span class="text-xs uppercase tracking-widest text-fashion-gold font-medium font-cinzel">Controle da Temporada (Fashion, Art & Uniqueness)</span>
-                        <h2 class="font-cinzel text-2xl text-white font-normal">The Control Room (Admin & Júri)</h2>
-                    </div>
-                    <span class="text-xs font-mono text-gray-400">Rodada: <strong>${esc(globalState.rodada || '-')}</strong> (${esc(globalState.fase || 'normal')})</span>
-                </div>
+
 
 
 
@@ -5362,8 +5356,31 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const redundant=root.querySelector('[aria-label="Episode Checklist"]');if(redundant)redundant.hidden=true;
           const stageGrid=root.querySelector('[aria-label="Season Flow da produção"] .grid');if(stageGrid)stageGrid.hidden=true;
           // A single Live Show Studio: scenes, reveal editor and prepared official results in one place.
-          const showPanel=panels.querySelector('#fau-panel-show');
           ['Live Show Director','The Results Show Director','Official Reveal Assistant'].forEach(label=>{const section=root.querySelector('[aria-label="'+label+'"]');if(section)panels.querySelector('#fau-panel-archive')?.append(section);});
+          // Organizar por responsabilidade, não pela ordem histórica de criação dos widgets.
+          // Mover sempre o bloco raiz para preservar listeners, formulários e IDs existentes.
+          const moveSection=(selector,destination)=>{
+            const el=root.querySelector(selector),panel=panels.querySelector('#fau-panel-'+destination);
+            if(!el||!panel)return;
+            const block=directChild(el);
+            if(block&&block!==shell&&block.parentElement!==panel)panel.append(block);
+          };
+          // Publicação editorial e arquivo pertencem a Bastidores, não à rotina da rodada.
+          ['[aria-label="Broadcast Studio"]','[aria-label="Auto Fashion Archive"]',
+           '#vaultTheme','#fauReunionAdmin'].forEach(sel=>moveSection(sel,'archive'));
+          // A apuração e os controles específicos de eliminação ficam juntos.
+          ['#fauCritiqueAdmin','#fauOfficialIcon','#fauCastVotingControls',
+           '#fauTwistDirector'].forEach(sel=>moveSection(sel,'judging'));
+          // Gerenciamento de contas e inscrições sempre no Elenco.
+          ['#profileManagerContainer','#fauDesignerRoster','#createRole',
+           '#fauEnrollToggle'].forEach(sel=>moveSection(sel,'cast'));
+          const archivedStudios=[...panels.querySelectorAll('#fau-panel-archive > [aria-label="Live Show Director"],#fau-panel-archive > [aria-label="The Results Show Director"],#fau-panel-archive > [aria-label="Official Reveal Assistant"]')];
+          if(archivedStudios.length){
+            const studio=document.createElement('details');studio.className='rounded-xl border border-fashion-700 bg-fashion-900 p-4';
+            studio.innerHTML='<summary class="cursor-pointer text-fashion-gold font-semibold text-sm">Estúdio de apresentação e revelações</summary><div class="space-y-5 mt-4"></div>';
+            archivedStudios.forEach(el=>studio.querySelector('div').append(el));
+            panels.querySelector('#fau-panel-archive').prepend(studio);
+          }
           const judgingPanel=panels.querySelector('#fau-panel-judging');
           const titles=root.querySelector('#fauOfficialIcon')?.closest('section');if(titles)judgingPanel.append(titles);const castControls=root.querySelector('#fauCastVotingControls');
           if(castControls){
@@ -5388,6 +5405,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           ['fauProductionDesk','fauProductionPulse'].forEach(id=>{const el=episodePanel.querySelector('#'+id);if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
           ['Season Flow da produção','Auto Fashion Archive','Broadcast Studio'].forEach(label=>{const el=episodePanel.querySelector('[aria-label="'+label+'"]');if(el)optional.querySelector('#fauEpisodeAdvanced').append(el);});
 
+          const sectionDescriptions={
+            cast:['ELENCO E ACESSOS','Cadastros, inscrições, permissões e perfis dos participantes.'],
+            judging:['JULGAMENTO E ELIMINAÇÃO','Apuração detalhada, críticas, títulos, twists e votação.'],
+            archive:['BASTIDORES E ACERVO','Histórico, auditoria, publicações editoriais e ferramentas ocasionais.']
+          };
+          Object.entries(sectionDescriptions).forEach(([key,[title,description]])=>{
+            const panel=panels.querySelector('#fau-panel-'+key);
+            const heading=document.createElement('header');heading.className='rounded-xl border border-fashion-700 bg-fashion-900 p-4';
+            heading.innerHTML='<h3 class="font-cinzel text-xl text-fashion-gold">'+title+'</h3><p class="text-xs text-gray-300 mt-1">'+description+'</p>';
+            panel.prepend(heading);
+          });
           const tabs=shell.querySelector('#fauDirectorTabs');
           const activate=id=>{
             if(!groups.some(g=>g.id===id))id='episode';
