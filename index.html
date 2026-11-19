@@ -3932,7 +3932,36 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(!targets.length){root.innerHTML='<div class="rounded-xl border border-fashion-700 p-4 text-xs text-gray-400">🎤 THE CRITIQUE CALL · As críticas serão solicitadas depois da apuração. Por enquanto, basta enviar as notas.</div>';return;}
             const docs=await Promise.all(targets.map(t=>db.collection('criticas_solicitadas').doc(fauCritiqueKey(round,currentUser.uid,t.ate)).get()));
             if(!root.isConnected)return;
-            root.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4"><div><p class="text-[10px] tracking-widest text-fashion-gold">🎤 THE CRITIQUE CALL</p><h3 class="font-cinzel text-lg">Uma crítica por Designer</h3><p class="text-xs text-gray-400">Somente as Designers convocadas. Escreva uma vez ou envie áudio pelo WhatsApp à produção. O texto pode ser ajustado até a produção encerrar as críticas.</p><p class="text-xs ${globalState.criticasEncerradas?'text-red-300':'text-green-300'}">${globalState.criticasEncerradas?'🔒 Prazo de críticas encerrado · somente leitura':'● Críticas abertas · edite e salve quantas vezes precisar'}</p></div>${targets.map((t,i)=>{const d=docs[i].data()||{};return `<div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><div class="flex justify-between gap-2"><strong class="text-fashion-gold">${esc(t.ate)}</strong></div>${d.source==='whatsapp'?'<p class="text-xs text-green-300">✓ Áudio recebido pela produção</p>':`<textarea data-critique-text="${i}" rows="4" maxlength="1500" ${globalState.criticasEncerradas?'disabled':''} class="w-full bg-fashion-900 border border-fashion-700 rounded p-2 text-xs" placeholder="Sua crítica (opcional)">${esc(d.text||'')}</textarea><button data-critique-send="${i}" ${globalState.criticasEncerradas?'disabled':''} class="rounded bg-fashion-gold text-black px-3 py-2 text-xs font-bold">${d.text?'Atualizar crítica':'Enviar crítica'}</button>${d.text?'<span class="text-green-300 text-xs ml-2">✓ Recebida</span>':''}`}</div>`}).join('')}</div>`;
+            // Fotos das criações desta rodada, vinculadas ao nome do Designer.
+            const [critiqueLooksSnap,critiqueProfilesSnap]=await Promise.all([
+                db.collection('looks').where('rodada','==',round).get(),
+                db.collection('perfis').where('role','==','estilista').get()
+            ]);
+            if(!root.isConnected)return;
+            const critiqueNames=new Map(critiqueProfilesSnap.docs.map(doc=>[doc.id,doc.data().ate]));
+            const critiquePhotos=new Map();
+            critiqueLooksSnap.docs.forEach(doc=>{
+                const look=doc.data(),name=critiqueNames.get(look.uid);
+                if(name&&look.url&&!critiquePhotos.has(name))critiquePhotos.set(name,look.url);
+            });
+            root.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4><div><p class="text-[10px] tracking-widest text-fashion-gold">🎤 THE CRITIQUE CALL</p><h3 class="font-cinzel text-lg">Uma crítica por Designer</h3><p class="text-xs text-gray-400">Somente as Designers convocadas. Escreva uma vez ou envie áudio pelo WhatsApp à produção. O texto pode ser ajustado até a produção encerrar as críticas.</p><p class="text-xs ${globalState.criticasEncerradas?'text-red-300':'text-green-300'}">${globalState.criticasEncerradas?'🔒 Prazo de críticas encerrado · somente leitura':'● Críticas abertas · edite e salve quantas vezes precisar'}</p></div>${targets.map((t,i)=>{const d=docs[i].data()||{};return `<div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><div class="flex items-center gap-3 min-w-0"><div class="shrink-0">${critiquePhotos.has(t.ate)?`<img src="${esc(critiquePhotos.get(t.ate))}" alt="Criação da rodada de ${esc(t.ate)}" loading="lazy" class="w-16 h-20 object-cover rounded-lg border border-fashion-gold/40 cursor-zoom-in" data-critique-photo="${i}" tabindex="0" role="button" aria-label="Ampliar criação de ${esc(t.ate)}">`:`<div class="w-16 h-20 rounded-lg border border-fashion-700 bg-fashion-800 flex items-center justify-center text-[10px] text-gray-400 text-center">Sem foto</div>`}</div><strong class="text-fashion-gold text-base">${esc(t.ate)}</strong></div>${d.source==='whatsapp'?'<p class="text-xs text-green-300">✓ Áudio recebido pela produção</p>':`<textarea data-critique-text="${i}" rows="4" maxlength="1500" ${globalState.criticasEncerradas?'disabled':''} class="w-full bg-fashion-900 border border-fashion-700 rounded p-2 text-xs" placeholder="Sua crítica (opcional)">${esc(d.text||'')}</textarea><button data-critique-send="${i}" ${globalState.criticasEncerradas?'disabled':''} class="rounded bg-fashion-gold text-black px-3 py-2 text-xs font-bold">${d.text?'Atualizar crítica':'Enviar crítica'}</button>${d.text?'<span class="text-green-300 text-xs ml-2">✓ Recebida</span>':''}`}</div>`}).join('')}</div>`;
+            root.querySelectorAll('[data-critique-photo]').forEach(img=>{
+                const expand=()=>{
+                    const overlay=document.createElement('div');
+                    overlay.className='fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center p-4 gap-3';
+                    overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
+                    const close=()=>{overlay.remove();document.removeEventListener('keydown',onKey);};
+                    const onKey=e=>{if(e.key==='Escape')close();};
+                    const picture=document.createElement('img');picture.src=img.src;picture.alt=img.alt;
+                    picture.className='max-w-full max-h-[80vh] object-contain rounded-lg';
+                    const button=document.createElement('button');button.textContent='Fechar foto';
+                    button.className='border border-fashion-gold text-fashion-gold rounded-lg px-5 py-2';button.onclick=close;
+                    overlay.append(picture,button);overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+                    document.body.appendChild(overlay);document.addEventListener('keydown',onKey);button.focus();
+                };
+                img.addEventListener('click',expand);
+                img.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();expand();}});
+            });
             root.querySelectorAll('[data-critique-send]').forEach(b=>b.onclick=safeExec(async()=>{
                 const i=Number(b.dataset.critiqueSend),t=targets[i];const val=root.querySelector(`[data-critique-text="${i}"]`)?.value.trim();
                 if(!val)throw new Error('Escreva a crítica antes de enviar.');
