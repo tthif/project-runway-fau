@@ -6148,6 +6148,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const low=isFinal||isSemifinal?0:Math.min(configuredLow?Math.max(0,configuredLow-bottom):Math.min(4,Math.max(0,count-top-bottom)),Math.max(0,count-top-bottom));
             rank=rank.map((r,i)=>({...r,pos:i+1,status:isFinal?(['WINNER · VENCEDOR DA TEMPORADA','2º LUGAR','3º LUGAR'][i]||''):i===0?'WIN':i<top?'HIGH':i>=count-bottom?'BOTTOM':i>=count-bottom-low?'LOW':'SAFE'}));
           }
+          // A Central de Críticas mostra apenas a convocação oficial da rodada,
+          // incluindo o WIN anterior mesmo quando estiver SAFE nesta rodada.
+          const targets=await fauCritiqueTargets();
+          const targetNames=new Set(targets.map(t=>String(t.ate||'').trim().toLocaleLowerCase('pt-BR')));
+          rank=rank.filter(r=>targetNames.has(String(r.ate||r.nome||'').trim().toLocaleLowerCase('pt-BR')));
+          // Preserve as posições originais: não renumerar após filtrar.
+          if(!rank.length){
+            root.innerHTML='<p class="text-sm text-gray-300">Nenhum Designer convocado para críticas nesta rodada. Abra as críticas e prepare a convocação no painel de julgamento.</p>';
+            return;
+          }
           const judges=profiles.filter(p=>p.role==='jurado'||p.uid===currentUser.uid).map(p=>({uid:p.uid,name:p.nomeJurado||p.ate||(p.uid===currentUser.uid?'FAU':'Jurado')}));
           const byName=(a,b)=>String(a).localeCompare(String(b),'pt-BR',{sensitivity:'base'});
           const jurorName=c=>String(c.jurorNome||judges.find(j=>j.uid===c.juror)?.name||'Jurado');
@@ -6190,7 +6200,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           });
           const absentNames=absentRows.map(r=>String(r.ate||r.nome||'Designer'));
           const absenceNotice=absentNames.length?`<div class="border border-red-500/40 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-red-300">OUT · NÃO ENVIOU — FORA DO RANKING</p>${absentNames.map(n=>`<p class="text-sm">${escAttr(n)} · sem posição, sem BOTTOM e sem críticas de avaliação</p>`).join('')}</div>`:'';
-          root.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><p class="text-xs text-gray-300">${rank.length} Designers · ${critiques.length} críticas · ${hasRank?'ranking oficial':'prévia privada sem ranking oficial'}</p><span id="fauBroadcastProgress" class="text-xs text-fashion-gold font-semibold" role="status"></span></div><div class="flex flex-wrap gap-2"><button type="button" id="fauBroadcastNext" class="border border-fashion-gold rounded px-3 py-2 text-xs">Próximo Designer pendente ↓</button><button type="button" id="fauBroadcastCopyNext" class="bg-fashion-gold text-black rounded px-3 py-2 text-xs font-bold">Copiar próxima mensagem pendente</button></div>${absenceNotice}${cards.join('')}`;
+          root.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><p class="text-xs text-gray-300">${rank.length} Designers convocados · ${critiques.filter(c=>targetNames.has(String(c.maison||'').trim().toLocaleLowerCase('pt-BR'))).length} críticas · ${hasRank?'ranking oficial':'prévia privada sem ranking oficial'}</p><span id="fauBroadcastProgress" class="text-xs text-fashion-gold font-semibold" role="status"></span></div><div class="flex flex-wrap gap-2"><button type="button" id="fauBroadcastNext" class="border border-fashion-gold rounded px-3 py-2 text-xs">Próximo Designer pendente ↓</button><button type="button" id="fauBroadcastCopyNext" class="bg-fashion-gold text-black rounded px-3 py-2 text-xs font-bold">Copiar próxima mensagem pendente</button></div>${absenceNotice}${cards.join('')}`;
           const messages=[];
           rank.forEach((r,i)=>{
             const name=String(r.ate||r.nome||'Designer');
