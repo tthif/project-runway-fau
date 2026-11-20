@@ -2325,7 +2325,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const [cta,...others]=available.length?available:fallback;
         const shortcuts=allowed.filter(t=>t!=='home'&&t!==cta?.[0]).slice(0,4);
         const roleNames={admin:'PRODUCTION HQ',estilista:'DESIGNER ACCESS',jurado:'JUDGES’ ACCESS',plateia:'FRONT ROW ACCESS'};
-        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">COMUNICADO OFICIAL DA PRODUÇÃO</p><p class="fau-hub-official-text">${esc(globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
+        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">RESUMO DA RODADA</p><p class="fau-hub-official-text">${esc(globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
         // A próxima ação vem antes do comunicado longo, sobretudo no celular.
         const hubRoot=document.querySelector('.fau-season-hub');
         if(hubRoot){const hero=hubRoot.querySelector('.fau-hub-hero');const action=hero?.nextElementSibling;if(action&&action.querySelector('[data-hub-go]'))hubRoot.insertBefore(action,hero);}
@@ -2820,7 +2820,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
                 <div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
-                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(String(globalState.regras?.trim() || getTheme()?.mandate || 'Aguarde as instruções da produção.'))}</div></details>
+                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(String(globalState.briefing?.trim() || getTheme()?.mandate || 'Aguarde as instruções da produção.'))}</div></details>
                 </section>
 
                 <section class="fau-submission-suite" aria-label="Envio do desafio">
@@ -5555,8 +5555,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Nota com várias fotos</span>
                             <select id="newRoundSoma" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="media">Média (máx. 50)</option><option value="soma">Soma das fotos</option></select></label>
                     </div>
-                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">Regras especiais desta rodada (aparecem para todos)</span>
-                        <textarea id="newRoundRules" rows="3" placeholder="Opcional. Ex: O look precisa ter a cor vermelha." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
+                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">RESUMO DA RODADA · SEASON HUB</span>
+                        <textarea id="newRoundRules" rows="3" placeholder="Resumo curto do desafio, exigências e regras especiais." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
                     <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3" aria-label="Editor do briefing publicado">
                       <h4 class="text-fashion-gold font-semibold text-sm">EDITAR BRIEFING DA RODADA ATIVA</h4>
                       <p class="text-xs text-gray-300">Altere o texto que os Designers veem na Workroom, mesmo depois de iniciar a rodada. Quebras de linha e emojis são preservados. Não altera prazo, notas ou demais regras.</p>
@@ -7253,6 +7253,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 urna: false,
                 berlinda: [],
                 regras: $('#newRoundRules').value.trim(),
+                briefing: (SEASON_THEMES[$('#newThemeId').value]?.mandate || ''),
                 proxTema: null, proxOpcoes: [], poderUid: null, poderNome: null,
                 modos: { ...(globalState.modos || {}), [rid]: scoringMode }
             }, { merge: true });
@@ -7276,7 +7277,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const checks=[
             {ok:!!rid,label:'Identificador da rodada definido'},
             {ok:Number.isFinite(timestamp)&&timestamp>Date.now(),label:'Prazo de entrega válido e no futuro'},
-            {ok:!!theme||!!($('#newRoundRules')?.value||'').trim(),label:'Tema selecionado ou briefing personalizado preenchido'},
+            {ok:!!theme||!!($('#newRoundRules')?.value||'').trim(),label:'Tema selecionado ou resumo personalizado preenchido'},
             {ok:Number.isInteger(count)&&count>=1&&count<=4,label:'Quantidade de fotos entre 1 e 4'},
             {ok:phase!=='final'||count===4,label:'Grande Final configurada com quatro looks'},
             {ok:phase!=='final'||elim==='none',label:'Grande Final sem eliminação intermediária'},
@@ -7308,7 +7309,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const header=`<p class="text-[10px] tracking-[.3em] text-fashion-gold">${esc(theme?.code||'SPECIAL CHALLENGE')} · SIMULAÇÃO</p><h5 class="font-cinzel text-white text-lg mt-2">${esc(title)}</h5><p class="text-xs text-gray-300 mt-2">${esc(theme?.subtitle||'Desafio personalizado definido pela produção.')}</p>`;
             const imageSlots=Array.from({length:count},(_,i)=>`<div class="border border-dashed border-fashion-gold/50 rounded-lg p-3 text-center"><span class="text-fashion-gold text-lg" aria-hidden="true">▧</span><p class="text-xs text-white">LOOK ${i+1}</p><p class="text-[10px] text-gray-400">Selecionar imagem do dispositivo (.jpg, .png, .webp)</p></div>`).join('');
             let body='';
-            if(directorRole==='designer')body=`${card('THE BRIEFING',$('#newRoundRules')?.value||theme?.mandate||'Briefing definido pela produção.')}${draw?card('YOUR ENVELOPE','A dinâmica individual aparece aqui quando o sorteio ou escolha for habilitado.'):''}<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${imageSlots}</div>${extra?card('CAMPO ESPECIAL',extra.label):''}${card('THE SUBMISSION','Título e conceito por look · Upload de arquivos · Entrega editável até o encerramento.')}`;
+            if(directorRole==='designer')body=`${card('THE BRIEFING',theme?.mandate||'Briefing definido pela produção.')}${draw?card('YOUR ENVELOPE','A dinâmica individual aparece aqui quando o sorteio ou escolha for habilitado.'):''}<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${imageSlots}</div>${extra?card('CAMPO ESPECIAL',extra.label):''}${card('THE SUBMISSION','Título e conceito por look · Upload de arquivos · Entrega editável até o encerramento.')}`;
             if(directorRole==='judge')body=`${card('THE JUDGES’ PANEL',`Avaliação de ${count} look(s) por Designer. Cinco critérios por look, notas de 0 a 10.`)}${card('VISUALIZAÇÃO','Imagens enviadas pelos designers, título e conceito; navegação entre as Designers.')}${special?card('DINÂMICA DA RODADA',special):''}${card('THE CRITIQUE CALL','Críticas solicitadas somente depois da apuração, quando a produção liberar essa etapa.')}`;
             if(directorRole==='audience')body=`${card('THE FRONT ROW',`Galeria editorial de ${count} look(s) por Designer, após liberação pela produção.`)}${card('THE RUNWAY','Ampliação de imagens, título e conceito. Nenhuma nota confidencial aparece.')}${draw?card('SEGREDOS DO DESAFIO','Sorteios e escolhas individuais só aparecem quando forem públicos.'):''}${card('RESULTADOS','Classificações somente após anúncio oficial; texto e ícones, nunca apenas cores.')}`;
             if(directorRole==='admin')body=`${card('PRODUCTION CHECKLIST',`Receber ${count} arquivo(s) de imagem por Designer · Fechar entregas · Abrir julgamento · Publicar quando decidir.`)}${draw?card('TWIST CONTROL',`Dinâmica especial: ${theme.drawType}. Verificar sorteios e permissões antes de liberar.`):''}${special?card('SPECIAL RULE',special):''}${card('ELIMINAÇÃO',isFinal?'Grande final: pontuação acumulada reiniciada.':elimin==='none'?'Rodada não eliminatória.':elimin==='double'?'Rodada com eliminação dupla.':'Rodada com eliminação padrão.')}${card('PRIVACIDADE','Esta prévia não expõe votos, notas, facções secretas ou resultados não publicados.')}`;
@@ -7464,8 +7465,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const activeBriefEditor=$('#fauActiveBriefEditor');
         const activeBriefStatus=$('#fauActiveBriefStatus');
         const loadActiveBrief=()=>{
-            activeBriefEditor.value=typeof globalState.regras==='string' && globalState.regras.trim()
-                ? globalState.regras : (SEASON_THEMES[globalState.themeId]?.mandate||'');
+            activeBriefEditor.value=typeof globalState.briefing==='string' && globalState.briefing.trim()
+                ? globalState.briefing : (SEASON_THEMES[globalState.themeId]?.mandate||'');
             activeBriefStatus.textContent=globalState.rodada?'Texto da rodada ativa carregado.':'Nenhuma rodada ativa.';
         };
         loadActiveBrief();
@@ -7479,13 +7480,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(!productionConfirm('Publicar o novo briefing da rodada ativa para todos os Designers?'))return;
             const btn=$('#fauSaveActiveBrief');btn.disabled=true;
             try{
-                await db.doc('config/estado').update({regras:content});
+                await db.doc('config/estado').update({briefing:content});
                 activeBriefStatus.textContent='Briefing publicado com sucesso.';
                 showToast('Briefing atualizado para todos os Designers.');
             }finally{btn.disabled=false;}
         });
         const fauRulesInput=$('#newRoundRules');
-        const fauDefaultRules=id=>SEASON_THEMES[id]?.mandate||'';
+        const fauDefaultRules=id=>'';
         const fauReadDraft=id=>{
             try {return window.localStorage.getItem(fauRulesKey(id));}catch(e){return null;}
         };
