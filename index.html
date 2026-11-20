@@ -3366,12 +3366,26 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     // Perfil: apenas proporções visuais agregadas de rodadas oficialmente publicadas.
     // O cliente Designer nunca consulta a coleção privada de avaliações.
     async function fauPublishedCriteriaProfiles(extraRound=null,extraUids=[]){
-        const [history, evaluations]=await Promise.all([
-            db.collection('ranking_historico').get(),db.collection('avaliacoes').get()
+        // A coleção pública de histórico é a prova de publicação em ambos os fluxos
+        // de publicação. O campo `published` não existe em algumas rodadas antigas.
+        const [publicHistory, privateHistory, evaluations]=await Promise.all([
+            db.collection('ranking_historico_publico').get(),
+            db.collection('ranking_historico').get(),
+            db.collection('avaliacoes').get()
         ]);
         const allowed=new Map();
-        history.docs.forEach(d=>{const x=d.data();if(x.published===true)allowed.set(String(x.rodada??d.id),new Set((x.rows||[]).map(r=>String(r.uid))));});
-        if(extraRound!==null)allowed.set(String(extraRound),new Set(extraUids.map(String)));
+        const include=(round,rows)=>{
+            if(!Array.isArray(rows))return;
+            const key=String(round);
+            if(!allowed.has(key))allowed.set(key,new Set());
+            rows.forEach(r=>{if(r.uid)allowed.get(key).add(String(r.uid));});
+        };
+        publicHistory.docs.forEach(d=>{const x=d.data();include(x.rodada??d.id,x.rows);});
+        privateHistory.docs.forEach(d=>{
+            const x=d.data();
+            if(x.published===true)include(x.rodada??d.id,x.rows);
+        });
+        if(extraRound!==null)include(extraRound,extraUids.map(uid=>({uid})));
         const totals=new Map();
         evaluations.docs.forEach(d=>{
             const x=d.data(),uid=String(x.alvo||''),round=String(x.rodada??'');
@@ -3382,6 +3396,21 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const t=totals.get(uid);values.forEach((v,i)=>t.sum[i]+=v);t.count++;
         });
         return new Map([...totals].map(([uid,t])=>[uid,t.sum.map(v=>Math.round(v/t.count*10))]));
+    }
+    async function fauSyncPublishedCriteriaToProfiles(profiles){
+        if(!isAdmin)return;
+        const privateData=await fauPublishedCriteriaProfiles();
+        const ids=new Set(profiles.map(p=>String(p.id||p.uid)));
+        let batch=db.batch(),pending=0;
+        for(const [uid,levels] of privateData){
+            if(!ids.has(uid))continue;
+            batch.set(db.doc(`desempenho_privado/${uid}`),{
+                criteriosVisuais:levels,criteriosAtualizadosEm:now()
+            },{merge:true});
+            if(++pending===400){await batch.commit();batch=db.batch();pending=0;}
+        }
+        if(pending)await batch.commit();
+        return privateData;
     }
     function fauCriteriaChart(levels){
         if(!Array.isArray(levels)||levels.length!==5)return '<p class="text-sm text-gray-400">Seu perfil de avaliação estará disponível após a publicação dos resultados.</p>';
@@ -6352,7 +6381,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             // Não expor estas médias no documento público nem no perfil dos Designers.
             const criteriaGrid=container.querySelector('#fauAdminCriteriaGrid');
             if(criteriaGrid && isAdmin){
-                fauPublishedCriteriaProfiles().then(privateData=>{
+                fauSyncPublishedCriteriaToProfiles(docs).then(privateData=>{
                     if(!criteriaGrid.isConnected)return;
                     const designers=docs.filter(p=>p.role==='estilista');
                     const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
@@ -6673,6 +6702,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(!productionConfirm('Você anunciou os resultados no WhatsApp e conferiu a apuração? Confirmar a visibilidade do ranking oficial no site?'))return;
           const round=String(globalState.rodada);
           await db.collection('ranking_historico').doc(round).update({published:true,announcedWhatsApp:true,announcedAt:now(),announcedBy:currentUser.uid});
+          await fauSyncPublishedCriteriaToProfiles((await db.collection('perfis').where('role','==','estilista').get()).docs.map(d=>({id:d.id})));
           await productionLog('round_results_announced_whatsapp',{round});
           $('#fauDeskStatus').textContent='Anúncio confirmado no registro da rodada. Confira se a visibilidade do ranking está liberada no controle de publicação existente.';
         });
@@ -8033,7 +8063,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             // Publish a separate, score-free document for non-admin users.
             await db.doc('ranking_publico/atual').set({rodada:globalState.rodada,rows:proposedRanking.rows.map(({uid,ate,status})=>({uid,ate,status}))});
             await db.collection('ranking_historico_publico').doc(String(globalState.rodada)).set({rodada:globalState.rodada,rows:proposedRanking.rows.map(({uid,ate,status})=>({uid,ate,status}))});
-            await db.collection('ranking_historico').doc(String(globalState.rodada)).set({...proposedRanking, publishedAt: firebase.firestore.FieldValue.serverTimestamp(), publishedBy: currentUser.uid});
+            await db.collection('ranking_historico').doc(String(globalState.rodada)).set({...proposedRanking, published:true, publishedAt: firebase.firestore.FieldValue.serverTimestamp(), publishedBy: currentUser.uid});
             await productionLog('ranking_published', {round:globalState.rodada, count:standings.length});
 
             await db.doc('config/estado').set(stateUpdate, { merge: true });
