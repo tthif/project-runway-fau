@@ -866,6 +866,21 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-my-profile .fau-profile-hero{border:1px solid rgba(209,179,139,.43);border-radius:22px;padding:clamp(20px,5vw,36px);background:radial-gradient(ellipse at 90% 0%,rgba(130,45,64,.22),transparent 65%),linear-gradient(145deg,#241b23,#151216)}
 .fau-my-profile .fau-profile-kicker{font-size:10px;letter-spacing:.2em;color:#d1b38b}.fau-my-profile .fau-profile-eyebrow{font-size:11px;letter-spacing:.24em;color:#bda6a9;margin-top:20px}.fau-my-profile .fau-profile-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(38px,8vw,62px);line-height:1.05;color:#f7eee7;margin:12px 0}.fau-my-profile .fau-profile-status{color:#d1b38b;font-size:11px;letter-spacing:.12em;margin:18px 0}.fau-my-profile .fau-profile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fau-my-profile .fau-profile-stat{border:1px solid #56434a;border-radius:12px;padding:13px 6px;text-align:center;display:flex;flex-direction:column;gap:4px}.fau-my-profile .fau-profile-stat strong{font-size:24px;color:#e1c39c;font-weight:600}.fau-my-profile .fau-profile-stat span{font-size:10px;color:#c5b7bf}.fau-my-profile .fau-profile-timeline{margin-top:20px;display:grid;gap:8px}.fau-my-profile .fau-profile-moment{border-left:3px solid #c9a77d;background:rgba(209,179,139,.07);padding:11px 13px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;font-size:12px}.fau-my-profile .fau-profile-moment span{color:#cdb38d}.fau-my-profile .fau-profile-moment strong{color:#eee6e8;font-weight:500}.fau-my-profile .fau-profile-panel{border:1px solid rgba(209,179,139,.25);border-radius:18px;background:#1b171d;padding:22px}.fau-my-profile details summary{color:#d1b38b;cursor:pointer;font-size:12px;letter-spacing:.08em}@media(max-width:430px){.fau-my-profile .fau-profile-stat strong{font-size:20px}.fau-my-profile .fau-profile-stat span{font-size:9px}.fau-my-profile .fau-profile-stats{gap:5px}}
 </style>
+<style id="fau-profile-score-immersive">
+.fau-my-profile .fau-my-score{margin-top:18px;padding:18px 20px;border:1px solid rgba(209,179,139,.42);border-radius:14px;background:linear-gradient(115deg,rgba(209,179,139,.13),rgba(93,34,52,.12) 65%,transparent);display:flex;flex-direction:column;gap:5px}
+.fau-my-profile .fau-my-score small{font-size:10px;letter-spacing:.16em;color:#d1b38b;font-weight:600}
+.fau-my-profile .fau-my-score strong{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(34px,8vw,48px);line-height:1.15;font-weight:600;color:#f4e5d0;font-variant-numeric:tabular-nums}
+.fau-my-profile .fau-my-score strong em{font:400 13px Inter,sans-serif;color:#cbb9ad;font-style:normal}
+.fau-my-profile .fau-my-score span{font-size:12px;color:#bcb0b9}
+</style>
+<style id="fau-profile-important-facts">
+.fau-my-profile .fau-profile-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:9px;margin:14px 0}
+.fau-my-profile .fau-profile-fact{border-top:1px solid rgba(209,179,139,.28);padding:12px 2px 5px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.fau-my-profile .fau-profile-fact small{font:600 10px Inter,sans-serif;letter-spacing:.12em;color:#cbb08b}
+.fau-my-profile .fau-profile-fact strong{font:500 14px/1.5 Inter,sans-serif;color:#f0eae1;overflow-wrap:anywhere}
+.fau-my-profile .fau-profile-fact.is-eliminated strong{color:#e6a1ae}
+@media(max-width:480px){.fau-my-profile .fau-profile-facts{grid-template-columns:1fr 1fr}.fau-my-profile .fau-profile-fact:last-child:nth-child(odd){grid-column:1/-1}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3501,9 +3516,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const uid=currentUser.uid;
         const locked=!!(globalState.rodada || globalState.themeId);
         renderView(`<section class="fau-my-profile max-w-3xl mx-auto space-y-5">
-          <div id="fauMyLegacyCard" class="fau-hall-profile"><div class="fau-hall-profile-head"><h2 class="font-cinzel text-white fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><span id="fauProfileStatus" class="fau-hall-out" hidden>ELIMINADO</span></div><div id="fauMyLegacyStats" class="fau-hall-counts"><span>Carregando conquistas…</span></div><p id="fauMyLegacyMeta" class="fau-hall-meta"></p><div id="fauMyLegacyTimeline" class="fau-hall-achievements"></div></div>
+          <div id="fauMyLegacyCard" class="fau-hall-profile"><div class="fau-hall-profile-head"><h2 class="font-cinzel text-white fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><span id="fauProfileStatus" class="fau-hall-out" hidden>ELIMINADO</span></div><div id="fauMyLegacyStats" class="fau-hall-counts"><span>Carregando conquistas…</span></div><p id="fauMyLegacyMeta" class="fau-hall-meta"></p><div id="fauMyLegacyHighlights" class="fau-profile-facts"></div><div id="fauMyScore" class="fau-my-score" role="status"><small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>—</strong><span>Aguardando resultado oficial</span></div><div id="fauMyLegacyTimeline" class="fau-hall-achievements"></div></div>
           ${!locked?`<details class="fau-profile-panel"><summary>EDITAR IDENTIDADE</summary><div class="space-y-3 mt-4"><label class="block space-y-2"><span class="text-xs text-fashion-gold">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></label><label class="block space-y-2"><span class="text-xs text-fashion-gold">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs">SALVAR IDENTIDADE</button></div></details>`:''}
-          <div id="fauMyAggregate" class="fau-profile-panel" role="status">Consultando seu desempenho privado…</div>
           <section class="fau-profile-panel space-y-4"><p class="fau-profile-kicker">JUDGES’ PROFILE</p><h3 class="font-cinzel text-xl text-white">Meu desempenho</h3><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section>
           <section class="fau-profile-panel space-y-3"><p class="fau-profile-kicker">MY RUNWAY JOURNEY</p><h3 class="font-cinzel text-xl text-white">Minha trajetória completa</h3><p class="text-sm text-gray-300">Classificações oficiais e conquistas da temporada.</p><button type="button" id="fauMyTrackRecord" class="rounded border border-fashion-gold/50 px-4 py-3 text-xs text-fashion-gold">VER TRACK RECORD</button></section>
           <button id="fauBackHome" type="button" class="border border-fashion-700 rounded-lg px-5 py-3 text-xs text-gray-200">VOLTAR AO SEASON HUB</button>
@@ -3525,6 +3539,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const played=entries.filter(x=>!/^OUT$/i.test(String(x.row.status||'').trim()));
             const wins=played.filter(x=>/^WIN$/i.test(String(x.row.status||'').trim())).length;
             const highlights=played.filter(x=>/^(WIN|HIGH|TOP)$/i.test(String(x.row.status||'').trim())).length;
+            const bottoms=played.filter(x=>/^BOTTOM$/i.test(String(x.row.status||'').trim())).length;
             const out=entries.some(x=>/^OUT$/i.test(String(x.row.status||'').trim()));
             const titleResults=await Promise.allSettled(rounds.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
             const titleMap=new Map();titleResults.forEach((res,i)=>{if(res.status==='fulfilled'&&res.value.exists&&res.value.data()?.published===true)titleMap.set(String(rounds[i].round),res.value.data());});
@@ -3533,7 +3548,15 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
             const chip=(label)=>`<span>${esc(label)}</span>`;
             stats.innerHTML=chip(`${wins} ${wins===1?'Winner':'Winners'}`)+chip(titlesAvailable?`${icons} ${icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível');
-            meta.textContent=`${played.length} ${played.length===1?'rodada disputada':'rodadas disputadas'} · ${highlights} ${highlights===1?'destaque':'destaques'} no ranking`;
+            meta.textContent=`${played.length} ${played.length===1?'rodada disputada':'rodadas disputadas'} · ${highlights} ${highlights===1?'destaque':'destaques'} no ranking · ${bottoms} ${bottoms===1?'vez':'vezes'} no BOTTOM`;
+            const facts=$('#fauMyLegacyHighlights');
+            if(facts){
+              const last=played[played.length-1];
+              const best=played.map(x=>String(x.row.status||'').trim().toUpperCase()).find(x=>x==='WIN')||(['HIGH','TOP','SAFE','LOW','BOTTOM'].find(st=>played.some(x=>String(x.row.status||'').trim().toUpperCase()===st))||'');
+              const elimination=entries.find(x=>String(x.row.status||'').trim().toUpperCase()==='OUT');
+              const fact=(label,value,cls='')=>`<div class="fau-profile-fact ${cls}"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`;
+              facts.innerHTML=(last?fact('ÚLTIMA PARTICIPAÇÃO',`${fauWeekLabel(last.r.round)} · ${String(last.row.status||'SAFE').toUpperCase()}`):'')+(best?fact('MELHOR CLASSIFICAÇÃO',best):'')+(elimination?fact('DESPEDIDA',fauWeekLabel(elimination.r.round),'is-eliminated'):'');
+            }
             status.hidden=!out;
             card.classList.toggle('is-out',out);
             card.classList.toggle('has-title',wins+icons>0);
@@ -3574,11 +3597,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if(currentUser.uid!==uid||activeTab!=='meu_perfil')return;
                 const data=summary.exists?summary.data():null,avg=Number(data?.acumulado);
                 const valid=!!data&&Number.isFinite(avg)&&avg>=0;
-                const slot=$('#fauMyAggregate');
+                const slot=$('#fauMyScore');
                 const chart=$('#fauMyCriteria');if(chart)chart.innerHTML=fauCriteriaChart(data?.criteriosVisuais);
-                if(slot)slot.innerHTML=`<p class="text-[10px] tracking-[.25em] text-fashion-gold">SEASON PERFORMANCE · PRIVATE</p><p class="font-cinzel text-5xl text-white mt-3">${valid?avg.toFixed(2):'—'}<span class="text-lg text-gray-400"> pontos</span></p><p class="text-gray-400 text-xs mt-3">${valid?'Seu acumulado oficial, calculado pela produção.':'Seu acumulado ainda não foi publicado pela produção.'}</p>`;
+                if(slot)slot.innerHTML=`<small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>${valid?avg.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}<em>${valid?' pontos':''}</em></strong><span>${valid?'Seu total oficial na temporada':'Aguardando publicação do resultado'}</span>`;
             });
-        }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyAggregate');if(slot)slot.textContent='Não foi possível carregar seu acumulado.';}
+        }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyScore');if(slot)slot.innerHTML='<small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>—</strong><span>Não foi possível carregar a pontuação</span>';}
     };
 
     VIEWS.historico = async (insideArchive=false) => {
