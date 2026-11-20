@@ -3842,14 +3842,22 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         // Nunca ler a coleção privada "looks" para montar uma página pública.
         const [ranksResult,titlesResult,publicationsResult,castResult]=await Promise.allSettled([
           db.collection('ranking_historico_publico').get(),
-          db.collection('fau_titulos_publicos').where('published','==',true).get(),
+          db.collection('fau_titulos_publicos').get(),
           db.collection('fau_publications').where('published','==',true).get(),
           db.collection('perfis').where('role','==','estilista').get()
         ]);
         if(!body?.isConnected)return;
         const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>Array.isArray(d.data().rows)).map(d=>({round:d.id,...d.data()})):[];
-        const titles=titlesResult.status==='fulfilled'?titlesResult.value.docs.filter(d=>d.data().published===true).map(d=>({round:d.id,...d.data()})):[];
-        const titlesAccessible=titlesResult.status==='fulfilled';
+        // A leitura da coleção inteira pode ser negada pelas regras, mesmo quando
+        // documentos de rodadas publicadas são legíveis individualmente.
+        let titles=titlesResult.status==='fulfilled'?titlesResult.value.docs.filter(d=>d.data().published===true).map(d=>({round:d.id,...d.data()})):[];
+        let titlesAccessible=titlesResult.status==='fulfilled';
+        if(!titlesAccessible){
+          const individual=await Promise.allSettled(ranks.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
+          titles=individual.filter(x=>x.status==='fulfilled'&&x.value.exists&&x.value.data()?.published===true)
+            .map(x=>({round:x.value.id,...x.value.data()}));
+          titlesAccessible=individual.length>0&&individual.every(x=>x.status==='fulfilled');
+        }
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
         // Exibir as despedidas da mais recente para a mais antiga.
         // O ranking histórico público é a fonte da rodada de eliminação;
@@ -3943,15 +3951,32 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
           </article>`;
         }).join('');
-        const profiles=[...people.values()].sort((a,b)=>
-          b.wins-a.wins || b.icons-a.icons || b.highs-a.highs || a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'})
-        ).map(p=>{
+        // Mesma ordem do Track Record: ativos pela última rodada publicada;
+        // eliminados ao final, da eliminação mais recente à mais antiga.
+        const latestRank=orderedRanks[orderedRanks.length-1];
+        const latestPositions=new Map((latestRank?.rows||[]).map((r,i)=>[String(r.uid),i]));
+        const castProfiles=castResult.status==='fulfilled'?castResult.value.docs.map(d=>({uid:d.id,...d.data()})):[];
+        const eliminatedIds=new Set(castProfiles.filter(p=>p.out===true).map(p=>String(p.uid)));
+        const profiles=[...people.values()].sort((a,b)=>{
+          const ao=eliminatedIds.has(String(a.uid)),bo=eliminatedIds.has(String(b.uid));
+          if(ao!==bo)return ao?1:-1;
+          if(ao){
+            const ar=outRounds.get(String(a.uid))??lastParticipation.get(String(a.uid))??-1;
+            const br=outRounds.get(String(b.uid))??lastParticipation.get(String(b.uid))??-1;
+            if(ar!==br)return br-ar;
+          }else{
+            const ar=latestPositions.get(String(a.uid))??Number.MAX_SAFE_INTEGER;
+            const br=latestPositions.get(String(b.uid))??Number.MAX_SAFE_INTEGER;
+            if(ar!==br)return ar-br;
+          }
+          return a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'});
+        }).map(p=>{
           const orderedAchievements=[...p.achievements].sort((a,b)=>fauArchiveSort(a.round,b.round));
-          const iconLabel=titlesAccessible?`${p.icons} ${p.icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível';
+          const iconLabel=titlesAccessible?`${p.icons} ${p.icons===1?'Ícone da Moda':'Ícones da Moda'}`:(p.icons?`${p.icons} ${p.icons===1?'Ícone da Moda confirmado':'Ícones da Moda confirmados'}`:'Ícone da Moda: aguardando dados públicos');
           return `<article class="border border-fashion-700 rounded-xl bg-fashion-950 p-4"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>
           <p class="text-xs text-fashion-gold mt-2">${p.wins} ${p.wins===1?'Winner da Rodada':'Winners da Rodada'} · ${iconLabel}</p>
           <p class="text-xs text-gray-400 mt-1">${p.rounds.size} ${p.rounds.size===1?'rodada registrada':'rodadas registradas'} · ${p.highs} ${p.highs===1?'destaque':'destaques'} entre os melhores</p>
-          <p class="text-xs text-gray-300 mt-2">${orderedAchievements.map(a=>`${esc(weekLabel(a.round))}: ${esc(a.type)}`).join(' · ')||'História em construção'}</p></article>`;
+          <p class="text-xs text-gray-300 mt-2">${orderedAchievements.map(a=>`${esc(weekLabel(a.round))}: ${esc(a.type)}`).join(' · ')||'Nenhum título conquistado até o momento'}</p></article>`;
         }).join('');
         const story=[...rounds].reverse().map(({round,rank,title},index)=>{
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
