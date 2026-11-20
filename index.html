@@ -3918,15 +3918,15 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
           rows.forEach(r=>{
             const p=getPerson(r.uid,r.ate);if(!p)return;
-            p.rounds.add(round);
             const status=String(r.status||'').toUpperCase().replace(/\bTOP\b/g,'HIGH').replace(/^WIN.*$/,'WIN');
+            if(!/\bOUT\b|ELIMINAD/.test(status))p.rounds.add(round);
             if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'Winner da Rodada'});awards.push({round,uid:r.uid,name:r.ate,type:'Winner da Rodada'});}
             if(/\b(WIN|HIGH|TOP)\b/.test(status))p.highs++;
           });
           if(title?.icon){
             const uid=title.icon,match=rows.find(r=>r.uid===uid);
             const p=getPerson(uid,match?.ate);
-            if(p){p.icons++;p.rounds.add(round);p.achievements.push({round,type:'Ícone da Moda'});}
+            if(p){p.icons++;p.achievements.push({round,type:'Ícone da Moda'});}
             awards.push({round,uid,name:p?.name||'Designer',type:'Ícone da Moda'});
           }
         });
@@ -3943,11 +3943,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
           </article>`;
         }).join('');
-        const profiles=[...people.values()].sort((a,b)=>(b.wins+b.icons)-(a.wins+a.icons)||a.name.localeCompare(b.name,'pt-BR')).map(p=>
-          `<article class="border border-fashion-700 rounded-xl bg-fashion-950 p-4"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>
-          <p class="text-xs text-fashion-gold mt-2">${p.wins} Winner da Rodada · ${titlesAccessible?p.icons:'—'} Ícone da Moda</p>
-          <p class="text-xs text-gray-400 mt-1">${p.rounds.size} ${p.rounds.size===1?'rodada registrada':'rodadas registradas'} · ${p.highs} destaques entre os melhores</p>
-          <p class="text-xs text-gray-300 mt-2">${p.achievements.map(a=>`${esc(weekLabel(a.round))}: ${esc(a.type)}`).join(' · ')||'História em construção'}</p></article>`).join('');
+        const profiles=[...people.values()].sort((a,b)=>
+          b.wins-a.wins || b.icons-a.icons || b.highs-a.highs || a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'})
+        ).map(p=>{
+          const orderedAchievements=[...p.achievements].sort((a,b)=>fauArchiveSort(a.round,b.round));
+          const iconLabel=titlesAccessible?`${p.icons} ${p.icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível';
+          return `<article class="border border-fashion-700 rounded-xl bg-fashion-950 p-4"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>
+          <p class="text-xs text-fashion-gold mt-2">${p.wins} ${p.wins===1?'Winner da Rodada':'Winners da Rodada'} · ${iconLabel}</p>
+          <p class="text-xs text-gray-400 mt-1">${p.rounds.size} ${p.rounds.size===1?'rodada registrada':'rodadas registradas'} · ${p.highs} ${p.highs===1?'destaque':'destaques'} entre os melhores</p>
+          <p class="text-xs text-gray-300 mt-2">${orderedAchievements.map(a=>`${esc(weekLabel(a.round))}: ${esc(a.type)}`).join(' · ')||'História em construção'}</p></article>`;
+        }).join('');
         const story=[...rounds].reverse().map(({round,rank,title},index)=>{
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
           const winners=rows.filter(r=>/\bWIN\b/i.test(r.status||''));
