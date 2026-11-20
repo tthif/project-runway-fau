@@ -4620,7 +4620,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const archive=snap.docs.map(d=>d.data()).filter(x=>x.published===true && x.kind==='archive');
             const press=$('#fauPressFeed'),gallery=$('#fauPublicArchive');
             if(press)press.innerHTML=news.slice(0,8).map(x=>`<article class="rounded-lg border border-fashion-700 p-3"><p class="text-[10px] text-fashion-gold">${esc(x.round||'FAU NEWS')}</p><h4 class="font-cinzel text-white mt-1">${esc(x.title)}</h4><p class="text-gray-400 mt-2">${esc(x.description||'')}</p></article>`).join('')||'<p class="text-gray-400">Nenhum anúncio publicado ainda.</p>';
-            if(gallery)gallery.innerHTML=archive.map(x=>`<article class="rounded-lg border border-fashion-700 overflow-hidden">${x.image?`<img src="${esc(x.image)}" alt="${esc(x.title)}" class="w-full aspect-[3/4] object-cover" loading="lazy">`:''}<div class="p-3"><p class="text-fashion-gold text-[10px]">${esc(x.round||'')}</p><p class="text-white font-cinzel">${esc(x.title)}</p><p class="text-gray-400 mt-1">${esc(x.description||'')}</p></div></article>`).join('')||'<p class="text-gray-400 col-span-full">As criações históricas aparecerão quando a produção publicá-las.</p>';
+            if(gallery)gallery.innerHTML=archive.map(x=>`<article class="rounded-lg border border-fashion-700 overflow-hidden">${x.image?`<img src="${esc(x.image)}" alt="${esc(x.title)}" class="w-full aspect-[3/4] object-cover" loading="lazy">`:''}<div class="p-3"><p class="text-fashion-gold text-[10px]">${esc(x.round ? fauRoundDisplayName(x.round) : 'TEMPORADA')}</p><p class="text-white font-cinzel">${esc(x.title)}</p><p class="text-gray-400 mt-1">${esc(x.description||'')}</p></div></article>`).join('')||'<p class="text-gray-400 col-span-full">As criações históricas aparecerão quando a produção publicá-las.</p>';
         });
         // A cerimônia é um documento público separado: nenhum dado de notas ou votos privados é consultado.
         sub(db.doc('fau_public/results_show'),snap=>{
@@ -5388,7 +5388,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
 
                 <section id="fauUnifiedOperations" class="fau-command-center" aria-label="Central de comandos">
-                  <header class="fau-command-heading"><div><p class="fau-command-eyebrow">PRODUÇÃO · CONTROLE DO EPISÓDIO</p><h3>Central de Comandos</h3><p>Prévia, controle e acompanhamento da rodada.</p></div><span class="fau-command-round">${esc(getTheme()?.nome || getTheme()?.titulo || globalState.rodada || 'Rodada atual')}</span></header>
+                  <header class="fau-command-heading"><div><p class="fau-command-eyebrow">PRODUÇÃO · CONTROLE DO EPISÓDIO</p><h3>Central de Comandos</h3><p>Prévia, controle e acompanhamento da rodada.</p></div><span class="fau-command-round">${esc(getTheme()?.title || getTheme()?.nome || getTheme()?.titulo || globalState.rodada || 'Rodada atual')}</span></header>
                   <div class="fau-command-stats" aria-label="Resumo do episódio">
                     <div><span>WORKROOM</span><strong>${globalState.prazo&&now()>globalState.prazo?'Encerrado':'Em andamento'}</strong></div>
                     <div><span>RUNWAY</span><strong>${globalState.liberado?'Publicado':'Não publicado'}</strong></div>
@@ -5555,19 +5555,20 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Nota com várias fotos</span>
                             <select id="newRoundSoma" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="media">Média (máx. 50)</option><option value="soma">Soma das fotos</option></select></label>
                     </div>
-                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">RESUMO DA RODADA · SEASON HUB</span>
+                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">RESUMO DA PRÓXIMA RODADA · NÃO PUBLICADO</span>
                         <textarea id="newRoundRules" rows="3" placeholder="Resumo curto do desafio, exigências e regras especiais." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
-                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">BRIEFING COMPLETO · PRÓXIMA RODADA / WORKROOM</span><textarea id="newRoundBriefing" rows="6" placeholder="Briefing completo que aparecerá na Workroom ao iniciar a rodada." class="bg-fashion-950 border border-fashion-700 rounded p-3 text-white w-full"></textarea></label>
+                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">BRIEFING DA PRÓXIMA RODADA · NÃO PUBLICADO</span><textarea id="newRoundBriefing" rows="6" placeholder="Briefing completo que aparecerá na Workroom ao iniciar a rodada." class="bg-fashion-950 border border-fashion-700 rounded p-3 text-white w-full"></textarea></label>
+                    <p class="text-xs text-fashion-gold">Os dois campos acima preparam uma NOVA rodada. Para alterar a rodada que já está no ar, use os editores abaixo e clique em Salvar e publicar.</p>
                     <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3" aria-label="Editor do resumo publicado no Season Hub">
                       <h4 class="text-fashion-gold font-semibold text-sm">EDITAR RESUMO DO SEASON HUB · RODADA ATIVA</h4>
-                      <p class="text-xs text-gray-300">Este resumo é independente do briefing da Workroom. Alterá-lo não muda o desafio completo.</p>
+                      <p class="text-xs text-gray-300">Este é o texto que aparece AGORA no Season Hub. Edite aqui e clique em Salvar e publicar. Não modifica a Workroom.</p>
                       <textarea id="fauActiveSummaryEditor" rows="4" class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white text-sm" placeholder="Escreva um resumo curto para o Season Hub..."></textarea>
-                      <div class="flex flex-wrap gap-2"><button type="button" id="fauLoadActiveSummary" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-4 py-2 text-xs">RECARREGAR RESUMO PUBLICADO</button><button type="button" id="fauSaveActiveSummary" class="bg-fashion-gold text-black font-semibold rounded-lg px-4 py-2 text-xs">SALVAR RESUMO</button></div>
+                      <div class="flex flex-wrap gap-2"><button type="button" id="fauLoadActiveSummary" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-4 py-2 text-xs">RECARREGAR RESUMO PUBLICADO</button><button type="button" id="fauSaveActiveSummary" class="bg-fashion-gold text-black font-semibold rounded-lg px-4 py-2 text-xs">SALVAR E PUBLICAR NO SEASON HUB</button></div>
                       <p id="fauActiveSummaryStatus" class="text-xs text-gray-400" role="status">Somente a produção pode editar o resumo.</p>
                     </section>
                     <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3" aria-label="Editor do briefing publicado">
                       <h4 class="text-fashion-gold font-semibold text-sm">EDITAR BRIEFING DA RODADA ATIVA</h4>
-                      <p class="text-xs text-gray-300">Altere o texto que os Designers veem na Workroom, mesmo depois de iniciar a rodada. Quebras de linha e emojis são preservados. Não altera prazo, notas ou demais regras.</p>
+                      <p class="text-xs text-gray-300">Este é o texto que aparece AGORA na Workroom. Edite aqui e clique em Salvar e publicar, mesmo depois de iniciar a rodada. Quebras de linha e emojis são preservados. Não altera prazo, notas ou demais regras.</p>
                       <textarea id="fauActiveBriefEditor" rows="10" class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white text-sm" placeholder="Escreva ou cole o briefing completo..."></textarea>
                       <div class="flex flex-wrap gap-2"><button type="button" id="fauLoadActiveBrief" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-4 py-2 text-xs">RECARREGAR TEXTO PUBLICADO</button><button type="button" id="fauSaveActiveBrief" class="bg-fashion-gold text-black font-semibold rounded-lg px-4 py-2 text-xs">SALVAR E PUBLICAR</button></div>
                       <p id="fauActiveBriefStatus" class="text-xs text-gray-400" role="status">Somente a produção pode publicar alterações.</p>
@@ -7487,6 +7488,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const btn=$('#fauSaveActiveSummary');btn.disabled=true;
             try{
                 await db.doc('config/estado').update({regras:content});
+                globalState.regras=content;
                 activeSummaryStatus.textContent='Resumo publicado no Season Hub.';
                 showToast('Resumo atualizado sem alterar o briefing.');
             }finally{btn.disabled=false;}
@@ -7511,6 +7513,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const btn=$('#fauSaveActiveBrief');btn.disabled=true;
             try{
                 await db.doc('config/estado').update({briefing:content});
+                globalState.briefing=content;
                 activeBriefStatus.textContent='Briefing publicado com sucesso.';
                 showToast('Briefing atualizado para todos os Designers.');
             }finally{btn.disabled=false;}
