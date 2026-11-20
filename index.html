@@ -6390,12 +6390,20 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             // Não expor estas médias no documento público nem no perfil dos Designers.
             const criteriaGrid=container.querySelector('#fauAdminCriteriaGrid');
             if(criteriaGrid && isAdmin){
-                fauSyncPublishedCriteriaToProfiles(docs).then(privateData=>{
+                fauPublishedCriteriaProfiles().then(privateData=>{
                     if(!criteriaGrid.isConnected)return;
                     const designers=docs.filter(p=>p.role==='estilista');
                     const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
                     const diag=window.fauCriteriaDiagnostic||{};
                     const diagnosticNote=`<p class=\"text-xs text-gray-400 sm:col-span-2\">Diagnóstico ADM: ${diag.publishedRounds??0} rodadas publicadas · ${diag.evaluations??0} avaliações encontradas · ${diag.validScores??0} avaliações correspondentes · ${diag.unmatched??0} sem correspondência de rodada/UID · ${diag.malformed??0} com formato inválido.</p>`;
+                    // A visualização ADM não depende do sucesso da gravação dos perfis privados.
+                    fauSyncPublishedCriteriaToProfiles(docs).catch(error=>{
+                        console.error('[judges-profile] Falha ao publicar médias privadas',error);
+                        const warning=document.createElement('p');
+                        warning.className='text-xs text-red-300 sm:col-span-2';
+                        warning.textContent='As médias foram calculadas, mas não foram publicadas nos perfis privados ('+(error.code||error.message||'erro desconhecido')+'). Confira as regras de desempenho_privado.';
+                        if(criteriaGrid.isConnected)criteriaGrid.appendChild(warning);
+                    });
                     criteriaGrid.innerHTML=designers.length?designers.map(p=>{
                         const levels=privateData.get(p.id);
                         const available=Array.isArray(levels)&&levels.length===5;
@@ -6406,7 +6414,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     }).join('')+diagnosticNote:'<p class="text-xs text-gray-400">Nenhum Designer cadastrado.</p>';
                 }).catch(error=>{
                     console.warn('Falha ao consultar médias privadas',error);
-                    if(criteriaGrid.isConnected)criteriaGrid.innerHTML='<p class="text-xs text-red-300">Não foi possível consultar as médias. Verifique as permissões de leitura do ADM.</p>';
+                    if(criteriaGrid.isConnected)criteriaGrid.innerHTML='<p class="text-xs text-red-300">Falha na leitura das avaliações: '+esc(error.code||error.message||'erro desconhecido')+'. Verifique as permissões de leitura do ADM.</p>';
                 });
             }
         });
