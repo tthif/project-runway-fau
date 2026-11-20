@@ -3842,7 +3842,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         // Nunca ler a coleção privada "looks" para montar uma página pública.
         const [ranksResult,titlesResult,publicationsResult,castResult]=await Promise.allSettled([
           db.collection('ranking_historico_publico').get(),
-          db.collection('fau_titulos_publicos').get(),
+          db.collection('fau_titulos_publicos').where('published','==',true).get(),
           db.collection('fau_publications').where('published','==',true).get(),
           db.collection('perfis').where('role','==','estilista').get()
         ]);
