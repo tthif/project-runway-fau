@@ -3537,7 +3537,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const uid=currentUser.uid;
         const locked=!!(globalState.rodada || globalState.themeId);
         renderView(`<section class="fau-my-profile max-w-3xl mx-auto space-y-5">
-          <div id="fauMyLegacyCard" class="fau-hall-profile"><p class="fau-legacy-kicker">THE DESIGNER LEGACY</p><div class="fau-hall-profile-head"><h2 class="font-cinzel text-white fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><span id="fauProfileStatus" class="fau-hall-out" hidden>ELIMINADO</span></div><div id="fauMyLegacyStats" class="fau-hall-counts"><span>Carregando conquistas…</span></div><p id="fauMyLegacyMeta" class="fau-hall-meta"></p><div id="fauMyLegacyHighlights" class="fau-profile-facts"></div><div id="fauMyScore" class="fau-my-score" role="status"><small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>—</strong><span>Aguardando resultado oficial</span></div><section class="fau-profile-panel space-y-3" aria-label="Desempenho privado dos jurados"><div class="flex items-center justify-between gap-3"><p class="fau-profile-kicker">MEU DESEMPENHO NOS CRITÉRIOS DOS JURADOS</p><small class="text-fashion-gold">PRIVADO</small></div><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section><div id="fauMyLegacyTimeline" class="fau-hall-achievements"></div></div>
+          <div id="fauMyLegacyCard" class="fau-hall-profile"><p class="fau-legacy-kicker">THE DESIGNER LEGACY</p><div class="fau-hall-profile-head"><h2 class="font-cinzel text-white fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><span id="fauProfileStatus" class="fau-hall-out" hidden>ELIMINADO</span></div><div id="fauMyLegacyStats" class="fau-hall-counts"><span>Carregando conquistas…</span></div><p id="fauMyLegacyMeta" class="fau-hall-meta"></p><div id="fauMyLegacyHighlights" class="fau-profile-facts"></div><div id="fauMyScore" class="fau-my-score" role="status"><small>PONTUAÇÃO ACUMULADA</small><strong>—</strong><span>Aguardando resultado oficial</span></div><section class="fau-profile-panel space-y-3" aria-label="Desempenho nos critérios dos jurados"><div class="flex items-center justify-between gap-3"><p class="fau-profile-kicker">MEU DESEMPENHO NOS CRITÉRIOS DOS JURADOS</p></div><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section><div id="fauMyLegacyTimeline" class="fau-hall-achievements"></div></div>
           ${!locked?`<details class="fau-profile-panel"><summary>EDITAR IDENTIDADE</summary><div class="space-y-3 mt-4"><label class="block space-y-2"><span class="text-xs text-fashion-gold">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></label><label class="block space-y-2"><span class="text-xs text-fashion-gold">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs">SALVAR IDENTIDADE</button></div></details>`:''}
           <section class="fau-profile-panel space-y-3"><p class="fau-profile-kicker">MY RUNWAY JOURNEY</p><h3 class="font-cinzel text-xl text-white">Minha trajetória completa</h3><p class="text-sm text-gray-300">Classificações oficiais e conquistas da temporada.</p><button type="button" id="fauMyTrackRecord" class="rounded border border-fashion-gold/50 px-4 py-3 text-xs text-fashion-gold">VER TRACK RECORD</button></section>
           <button id="fauBackHome" type="button" class="border border-fashion-700 rounded-lg px-5 py-3 text-xs text-gray-200">VOLTAR AO SEASON HUB</button>
@@ -3559,7 +3559,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const played=entries.filter(x=>!/^OUT$/i.test(String(x.row.status||'').trim()));
             const wins=played.filter(x=>/^WIN$/i.test(String(x.row.status||'').trim())).length;
             const highlights=played.filter(x=>/^(WIN|HIGH|TOP)$/i.test(String(x.row.status||'').trim())).length;
-            const bottoms=played.filter(x=>/^BOTTOM$/i.test(String(x.row.status||'').trim())).length;
+            // O Elimination Pool inclui também o indicado pelo acumulado, que pode estar SAFE/LOW/HIGH.
+            // Não inferir participação no Pool a partir da classificação BOTTOM.
+            const poolRounds=rounds.filter(r=>Array.isArray(r.eliminationPool));
+            const poolCount=poolRounds.filter(r=>r.eliminationPool.some(x=>String(typeof x==='string'?x:(x?.uid||''))===String(uid)||(!x?.uid&&String(x?.ate||'').trim().toLocaleLowerCase('pt-BR')===name))).length;
+            const poolHistoryComplete=rounds.every(r=>Array.isArray(r.eliminationPool));
             const out=entries.some(x=>/^OUT$/i.test(String(x.row.status||'').trim()));
             const titleResults=await Promise.allSettled(rounds.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
             const titleMap=new Map();titleResults.forEach((res,i)=>{if(res.status==='fulfilled'&&res.value.exists&&res.value.data()?.published===true)titleMap.set(String(rounds[i].round),res.value.data());});
@@ -3569,7 +3573,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
             const chip=(label)=>`<span>${esc(label)}</span>`;
             stats.innerHTML=chip(`${wins} ${wins===1?'Winner':'Winners'}`)+chip(titlesAvailable?`${icons} ${icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível')+(titlesAvailable?`<span class="fau-fdm">${fora} Fora de Moda</span>`:'');
-            meta.textContent=`${played.length} ${played.length===1?'rodada disputada':'rodadas disputadas'} · ${highlights} ${highlights===1?'destaque':'destaques'} no ranking · ${bottoms} ${bottoms===1?'vez':'vezes'} no BOTTOM`;
+            meta.textContent=`${played.length} ${played.length===1?'rodada disputada':'rodadas disputadas'} · ${highlights} ${highlights===1?'destaque':'destaques'} no ranking · ${poolHistoryComplete?poolCount:'—'} ${poolHistoryComplete?(poolCount===1?'vez':'vezes'):'vezes'} no Elimination Pool`;
             const facts=$('#fauMyLegacyHighlights');
             if(facts){
               const last=played[played.length-1];
@@ -3622,9 +3626,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const valid=!!data&&Number.isFinite(avg)&&avg>=0;
                 const slot=$('#fauMyScore');
                 const chart=$('#fauMyCriteria');if(chart)chart.innerHTML=fauCriteriaChart(data?.criteriosVisuais);
-                if(slot)slot.innerHTML=`<small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>${valid?avg.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}<em>${valid?' pontos':''}</em></strong><span>${valid?'Seu total oficial na temporada':'Aguardando publicação do resultado'}</span>`;
+                if(slot)slot.innerHTML=`<small>PONTUAÇÃO ACUMULADA</small><strong>${valid?avg.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}<em>${valid?' pontos':''}</em></strong><span>${valid?'Seu total oficial na temporada':'Aguardando publicação do resultado'}</span>`;
             });
-        }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyScore');if(slot)slot.innerHTML='<small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>—</strong><span>Não foi possível carregar a pontuação</span>';}
+        }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyScore');if(slot)slot.innerHTML='<small>PONTUAÇÃO ACUMULADA</small><strong>—</strong><span>Não foi possível carregar a pontuação</span>';}
     };
 
     VIEWS.historico = async (insideArchive=false) => {
@@ -7216,7 +7220,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           batch.set(db.doc('ranking/atual'),{rodada:globalState.rodada,rows,classificationSlots});
           batch.set(db.collection('ranking_historico').doc(round),{rodada:globalState.rodada,rows,classificationSlots,published:true,announcedWhatsApp:true,announcedAt:stamp,announcedBy:currentUser.uid},{merge:true});
           batch.set(db.doc('ranking_publico/atual'),{rodada:globalState.rodada,rows:publicRows});
-          batch.set(db.collection('ranking_historico_publico').doc(round),{rodada:globalState.rodada,rows:publicRows});
+          batch.set(db.collection('ranking_historico_publico').doc(round),{rodada:globalState.rodada,rows:publicRows,...(Array.isArray(globalState.berlinda)?{eliminationPool:globalState.berlinda.map(x=>({uid:x.uid,ate:x.ate}))}:{})},{merge:true});
           batch.set(db.collection('fau_titulos_publicos').doc(round),{...titles,round,icon:iconResult.uid,fora,published:true,updatedAt:stamp,updatedBy:currentUser.uid},{merge:true});
           batch.set(db.doc('config/estado'),{rankingLiberado:true,winUid:winner.uid},{merge:true});
           // Dados privados: cada perfil recebe somente o próprio acumulado.
@@ -8508,7 +8512,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             await db.doc('ranking/atual').set(proposedRanking);
             // Publish a separate, score-free document for non-admin users.
             await db.doc('ranking_publico/atual').set({rodada:globalState.rodada,rows:proposedRanking.rows.map(({uid,ate,status})=>({uid,ate,status}))});
-            await db.collection('ranking_historico_publico').doc(String(globalState.rodada)).set({rodada:globalState.rodada,rows:proposedRanking.rows.map(({uid,ate,status})=>({uid,ate,status}))});
+            await db.collection('ranking_historico_publico').doc(String(globalState.rodada)).set({rodada:globalState.rodada,rows:proposedRanking.rows.map(({uid,ate,status})=>({uid,ate,status})),eliminationPool:Array.isArray(stateUpdate.berlinda)?stateUpdate.berlinda.map(({uid,ate})=>({uid,ate})):[]},{merge:true});
             await db.collection('ranking_historico').doc(String(globalState.rodada)).set({...proposedRanking, published:true, publishedAt: firebase.firestore.FieldValue.serverTimestamp(), publishedBy: currentUser.uid});
             await productionLog('ranking_published', {round:globalState.rodada, count:standings.length});
 
