@@ -5557,6 +5557,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     </div>
                     <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">RESUMO DA RODADA · SEASON HUB</span>
                         <textarea id="newRoundRules" rows="3" placeholder="Resumo curto do desafio, exigências e regras especiais." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
+                    <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">BRIEFING COMPLETO · PRÓXIMA RODADA / WORKROOM</span><textarea id="newRoundBriefing" rows="6" placeholder="Briefing completo que aparecerá na Workroom ao iniciar a rodada." class="bg-fashion-950 border border-fashion-700 rounded p-3 text-white w-full"></textarea></label>
+                    <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3" aria-label="Editor do resumo publicado no Season Hub">
+                      <h4 class="text-fashion-gold font-semibold text-sm">EDITAR RESUMO DO SEASON HUB · RODADA ATIVA</h4>
+                      <p class="text-xs text-gray-300">Este resumo é independente do briefing da Workroom. Alterá-lo não muda o desafio completo.</p>
+                      <textarea id="fauActiveSummaryEditor" rows="4" class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white text-sm" placeholder="Escreva um resumo curto para o Season Hub..."></textarea>
+                      <div class="flex flex-wrap gap-2"><button type="button" id="fauLoadActiveSummary" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-4 py-2 text-xs">RECARREGAR RESUMO PUBLICADO</button><button type="button" id="fauSaveActiveSummary" class="bg-fashion-gold text-black font-semibold rounded-lg px-4 py-2 text-xs">SALVAR RESUMO</button></div>
+                      <p id="fauActiveSummaryStatus" class="text-xs text-gray-400" role="status">Somente a produção pode editar o resumo.</p>
+                    </section>
                     <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3" aria-label="Editor do briefing publicado">
                       <h4 class="text-fashion-gold font-semibold text-sm">EDITAR BRIEFING DA RODADA ATIVA</h4>
                       <p class="text-xs text-gray-300">Altere o texto que os Designers veem na Workroom, mesmo depois de iniciar a rodada. Quebras de linha e emojis são preservados. Não altera prazo, notas ou demais regras.</p>
@@ -7253,7 +7261,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 urna: false,
                 berlinda: [],
                 regras: $('#newRoundRules').value.trim(),
-                briefing: (SEASON_THEMES[$('#newThemeId').value]?.mandate || ''),
+                briefing: $('#newRoundBriefing').value.trim() || (SEASON_THEMES[$('#newThemeId').value]?.mandate || ''),
                 proxTema: null, proxOpcoes: [], poderUid: null, poderNome: null,
                 modos: { ...(globalState.modos || {}), [rid]: scoringMode }
             }, { merge: true });
@@ -7461,6 +7469,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         let fauPreviousTheme=globalState.themeId||'';
         const fauSavedRules=typeof globalState.regras==='string'?globalState.regras:null;
         $('#newThemeId').value=fauPreviousTheme;
+        // Resumo publicado no Season Hub: campo Firestore `regras`, separado de `briefing`.
+        const activeSummaryEditor=$('#fauActiveSummaryEditor');
+        const activeSummaryStatus=$('#fauActiveSummaryStatus');
+        const loadActiveSummary=()=>{
+            activeSummaryEditor.value=typeof globalState.regras==='string'?globalState.regras:'';
+            activeSummaryStatus.textContent=globalState.rodada?'Resumo publicado carregado.':'Nenhuma rodada ativa.';
+        };
+        loadActiveSummary();
+        $('#fauLoadActiveSummary').onclick=loadActiveSummary;
+        $('#fauSaveActiveSummary').onclick=safeExec(async()=>{
+            if(!isAdmin)throw new Error('Apenas o Admin pode editar o resumo.');
+            if(!globalState.rodada)throw new Error('Não existe uma rodada ativa.');
+            const content=activeSummaryEditor.value.trim();
+            if(content.length>3000)throw new Error('O resumo deve ter até 3.000 caracteres.');
+            if(!productionConfirm('Publicar este resumo no Season Hub sem alterar o briefing da Workroom?'))return;
+            const btn=$('#fauSaveActiveSummary');btn.disabled=true;
+            try{
+                await db.doc('config/estado').update({regras:content});
+                activeSummaryStatus.textContent='Resumo publicado no Season Hub.';
+                showToast('Resumo atualizado sem alterar o briefing.');
+            }finally{btn.disabled=false;}
+        });
         // Editor independente da rodada em andamento: não inicia outra rodada.
         const activeBriefEditor=$('#fauActiveBriefEditor');
         const activeBriefStatus=$('#fauActiveBriefStatus');
@@ -7494,7 +7524,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             try {window.localStorage.setItem(fauRulesKey(id),value);}catch(e){}
         };
         // A configuração do Firebase tem prioridade sobre o briefing padrão do catálogo.
-        fauRulesInput.value=fauSavedRules!==null?fauSavedRules:(fauReadDraft(fauPreviousTheme)??fauDefaultRules(fauPreviousTheme));
+        fauRulesInput.value=fauReadDraft(fauPreviousTheme)??fauDefaultRules(fauPreviousTheme);
+        $('#newRoundBriefing').value=SEASON_THEMES[fauPreviousTheme]?.mandate||'';
         fauRulesInput.addEventListener('input',()=>fauWriteDraft($('#newThemeId').value,fauRulesInput.value));
         $('#newThemeId').onchange = () => {
             const id=$('#newThemeId').value;
@@ -7504,6 +7535,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 fauPreviousTheme=id;
             }
             const t=SEASON_THEMES[id];
+            $('#newRoundBriefing').value=t?.mandate||'';
             $('#themePreview').textContent=t?(t.id==='w02_new_form'?t.mandate:`${t.subtitle} — ${t.mandate}`):'Configure manualmente.';
             if(t){
                 $('#newRoundId').value=t.id;
