@@ -122,6 +122,16 @@
 .fau-v75-guide strong{font-family:'Cormorant Garamond',serif;font-size:22px}
 @media(max-width:640px){#mainView{overflow-wrap:anywhere}.fau-v75-director-look{padding:15px}.fau-v75-guide{padding:13px}}
 @media(prefers-reduced-motion:reduce){#mainView>*,h2.font-cinzel,body::before{animation:none!important;transition:none!important}}
+    /* My Profile — mobile-first editorial layout */
+    .fau-my-profile .fau-profile-status{display:inline-flex;align-items:center;width:max-content;max-width:100%;border:1px solid rgba(209,179,139,.35);border-radius:999px;padding:7px 13px;margin:8px 0 22px;background:rgba(209,179,139,.07);font-size:11px;letter-spacing:.08em}
+    .fau-my-profile .fau-profile-status.is-out{color:#e7a2ae;border-color:#80374d;background:rgba(128,55,77,.12)}
+    .fau-my-profile .fau-profile-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .fau-my-profile .fau-profile-stat{min-width:0;min-height:96px;padding:15px 9px;justify-content:center}
+    .fau-my-profile .fau-profile-stat strong{font-size:clamp(24px,6vw,34px)}
+    .fau-my-profile .fau-profile-stat span{font-size:12px;line-height:1.3}
+    .fau-my-profile .fau-profile-timeline{margin-top:16px}
+    .fau-my-profile .fau-profile-moment{border-left-width:2px;border-radius:0 8px 8px 0}
+    @media(min-width:680px){.fau-my-profile .fau-profile-stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
 <style>
 [id^="fau-panel-"][hidden]{display:none!important}
@@ -3505,8 +3515,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const rs=await db.collection('ranking_historico_publico').get();
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
             const rounds=rs.docs.map(d=>({round:d.id,...d.data()})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true}));
-            const name=String(currentUser.ate||'').trim().toLocaleLowerCase('pt-BR');
+            let profileName=String(currentUser.ate||'').trim();
+            try {const profileDoc=await db.collection('perfis').doc(uid).get();const profile=profileDoc.data()||{};profileName=String(profile.ate||profile.nomeDesigner||profile.designerName||profileName).trim();}catch(e){console.warn('Designer profile name unavailable',e);}
+            const name=profileName.toLocaleLowerCase('pt-BR');
             const entries=rounds.map(r=>({r,row:r.rows.find(x=>String(x.uid||'')===String(uid)||(!x.uid&&String(x.ate||'').trim().toLocaleLowerCase('pt-BR')===name))})).filter(x=>x.row);
+            const officialName=entries.map(x=>String(x.row.ate||x.row.nome||'').trim()).find(Boolean);
+            const displayName=officialName||profileName;
+            const nameNode=document.querySelector('.fau-my-profile .fau-profile-name');if(nameNode&&displayName)nameNode.textContent=displayName;
             const played=entries.filter(x=>!/^OUT$/i.test(String(x.row.status||'').trim()));
             const wins=played.filter(x=>/^WIN$/i.test(String(x.row.status||'').trim())).length;
             const highlights=played.filter(x=>/^(WIN|HIGH|TOP)$/i.test(String(x.row.status||'').trim())).length;
@@ -3518,12 +3533,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
             const chip=(n,label)=>`<div class="fau-profile-stat"><strong>${n}</strong><span>${label}</span></div>`;
             stats.innerHTML=chip(wins,'WIN')+chip(titlesAvailable?icons:'—','Ícone da Moda')+chip(highlights,'Destaques')+chip(played.length,'Rodadas');
-            status.textContent=out?'OUT · LEGADO NA TEMPORADA':'IN · NA COMPETIÇÃO';
+            status.textContent=out?'ELIMINADO':'NA COMPETIÇÃO';status.classList.toggle('is-out',out);
             const moments=[];
-            entries.forEach(({r,row},i)=>{
+            entries.forEach(({r,row})=>{
               const st=String(row.status||'').trim().toUpperCase();
               const icon=String(titleMap.get(String(r.round))?.icon||'')===String(uid);
-              if(st==='WIN'||icon||st==='OUT')moments.push(`<div class="fau-profile-moment"><span>${esc(fauWeekLabel(r.round))}</span><strong>${[st==='WIN'?'Winner da Rodada':null,icon?'Ícone da Moda':null,st==='OUT'?'Eliminado':null].filter(Boolean).join(' · ')}</strong></div>`);
+              const labels=[st==='WIN'?'Winner da Rodada':st==='OUT'?'Eliminado':st||'Participação'];
+              if(icon)labels.push('Ícone da Moda');
+              moments.push(`<div class="fau-profile-moment"><span>${esc(fauWeekLabel(r.round))}</span><strong>${esc(labels.join(' · '))}</strong></div>`);
             });
             timeline.innerHTML=moments.length?moments.join(''):'<p class="text-sm text-gray-400">Sua história está sendo escrita.</p>';
           }catch(e){console.warn('Profile legacy unavailable',e);if(stats?.isConnected)stats.textContent='Não foi possível carregar as conquistas publicadas.';}
@@ -4090,12 +4107,27 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               firstOutByUid.set(uid,round);
           });
         });
+        // Eliminações decididas na urna podem ocorrer após a publicação do
+        // ranking: o status público da WEEK permanece BOTTOM, não OUT.
+        // Cruzar o estado final do elenco com a última participação oficial.
+        const castOutUids=new Set(castProfiles.filter(p=>p.out===true).map(p=>String(p.uid)));
+        const lastPlayedRound=new Map();
+        rounds.forEach(({round,rank})=>{
+          (Array.isArray(rank?.rows)?rank.rows:[]).forEach(r=>{
+            const uid=String(r.uid||r.id||'');
+            if(uid && !/\bOUT\b|ELIMINAD/i.test(String(r.status||'')))lastPlayedRound.set(uid,round);
+          });
+        });
         const story=[...rounds].reverse().map(({round,rank,title},index)=>{
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
           const winners=rows.filter(r=>/\bWIN\b/i.test(String(r.status||'')));
           const out=rows.filter(r=>{
             const uid=String(r.uid||r.id||'');
-            return uid && firstOutByUid.get(uid)===round && /\bOUT\b|ELIMINAD/i.test(String(r.status||''));
+            if(!uid)return false;
+            // OUT explícito no ranking ou eliminação posterior por votação.
+            // Não reatribuir uma eliminação já registrada em outra WEEK.
+            return firstOutByUid.get(uid)===round ||
+              (!firstOutByUid.has(uid) && castOutUids.has(uid) && lastPlayedRound.get(uid)===round);
           }).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'}));
           const icon=title?.icon?rows.find(r=>String(r.uid||r.id||'')===String(title.icon)):null;
           const participants=rows.filter(r=>!(/\bOUT\b|ELIMINAD/i.test(String(r.status||'')) && firstOutByUid.get(String(r.uid||r.id||''))!==round));
