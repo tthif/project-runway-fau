@@ -3366,35 +3366,39 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     // Perfil: apenas proporções visuais agregadas de rodadas oficialmente publicadas.
     // O cliente Designer nunca consulta a coleção privada de avaliações.
     async function fauPublishedCriteriaProfiles(extraRound=null,extraUids=[]){
-        // A coleção pública de histórico é a prova de publicação em ambos os fluxos
-        // de publicação. O campo `published` não existe em algumas rodadas antigas.
-        const [publicHistory, privateHistory, evaluations]=await Promise.all([
+        // O histórico público comprova a publicação; o privado é um complemento opcional.
+        // Não bloquear todos os gráficos se o histórico privado não puder ser consultado.
+        const [publicHistory, evaluations]=await Promise.all([
             db.collection('ranking_historico_publico').get(),
-            db.collection('ranking_historico').get(),
             db.collection('avaliacoes').get()
         ]);
         const allowed=new Map();
+        const roundKey=value=>String(value??'').trim().replace(/^0+(?=\d)/,'');
         const include=(round,rows)=>{
             if(!Array.isArray(rows))return;
-            const key=String(round);
+            const key=roundKey(round);
             if(!allowed.has(key))allowed.set(key,new Set());
             rows.forEach(r=>{if(r.uid)allowed.get(key).add(String(r.uid));});
         };
         publicHistory.docs.forEach(d=>{const x=d.data();include(x.rodada??d.id,x.rows);});
-        privateHistory.docs.forEach(d=>{
-            const x=d.data();
-            if(x.published===true)include(x.rodada??d.id,x.rows);
-        });
+        try{
+            const privateHistory=await db.collection('ranking_historico').get();
+            privateHistory.docs.forEach(d=>{
+                const x=d.data();
+                if(x.published===true)include(x.rodada??d.id,x.rows);
+            });
+        }catch(error){console.warn('[judges-profile] Histórico privado indisponível; usando histórico público',error);}
         if(extraRound!==null)include(extraRound,extraUids.map(uid=>({uid})));
         const totals=new Map();
         evaluations.docs.forEach(d=>{
-            const x=d.data(),uid=String(x.alvo||''),round=String(x.rodada??'');
+            const x=d.data(),uid=String(x.alvo||''),round=roundKey(x.rodada);
             if(!allowed.get(round)?.has(uid)||!Array.isArray(x.nota)||x.nota.length!==5)return;
             const values=x.nota.map(Number);
             if(values.some(v=>!Number.isFinite(v)||v<0||v>10))return;
             if(!totals.has(uid))totals.set(uid,{sum:[0,0,0,0,0],count:0});
             const t=totals.get(uid);values.forEach((v,i)=>t.sum[i]+=v);t.count++;
         });
+        console.info('[judges-profile] Rodadas publicadas:',allowed.size,'Designers com avaliações:',totals.size);
         return new Map([...totals].map(([uid,t])=>[uid,t.sum.map(v=>Math.round(v/t.count*10))]));
     }
     async function fauSyncPublishedCriteriaToProfiles(profiles){
