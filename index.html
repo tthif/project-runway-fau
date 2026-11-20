@@ -3501,7 +3501,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const uid=currentUser.uid;
         const locked=!!(globalState.rodada || globalState.themeId);
         renderView(`<section class="fau-my-profile max-w-3xl mx-auto space-y-5">
-          <header class="fau-profile-hero"><p class="fau-profile-kicker">PROJECT RUNWAY: FAU · MY PROFILE</p><p class="fau-profile-eyebrow">THE DESIGNER LEGACY</p><h2 class="fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><div id="fauProfileStatus" class="fau-profile-status">Minha trajetória na passarela</div><div id="fauMyLegacyStats" class="fau-profile-stats"><span>Carregando conquistas…</span></div><div id="fauMyLegacyTimeline" class="fau-profile-timeline"></div></header>
+          <div id="fauMyLegacyCard" class="fau-hall-profile"><div class="fau-hall-profile-head"><h2 class="font-cinzel text-white fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><span id="fauProfileStatus" class="fau-hall-out" hidden>ELIMINADO</span></div><div id="fauMyLegacyStats" class="fau-hall-counts"><span>Carregando conquistas…</span></div><p id="fauMyLegacyMeta" class="fau-hall-meta"></p><div id="fauMyLegacyTimeline" class="fau-hall-achievements"></div></div>
           ${!locked?`<details class="fau-profile-panel"><summary>EDITAR IDENTIDADE</summary><div class="space-y-3 mt-4"><label class="block space-y-2"><span class="text-xs text-fashion-gold">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></label><label class="block space-y-2"><span class="text-xs text-fashion-gold">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs">SALVAR IDENTIDADE</button></div></details>`:''}
           <div id="fauMyAggregate" class="fau-profile-panel" role="status">Consultando seu desempenho privado…</div>
           <section class="fau-profile-panel space-y-4"><p class="fau-profile-kicker">JUDGES’ PROFILE</p><h3 class="font-cinzel text-xl text-white">Meu desempenho</h3><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section>
@@ -3510,7 +3510,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         </section>`);
         // Legacy público: somente rankings publicados e títulos oficialmente publicados.
         (async()=>{
-          const stats=$('#fauMyLegacyStats'),timeline=$('#fauMyLegacyTimeline'),status=$('#fauProfileStatus');
+          const stats=$('#fauMyLegacyStats'),timeline=$('#fauMyLegacyTimeline'),status=$('#fauProfileStatus'),meta=$('#fauMyLegacyMeta'),card=$('#fauMyLegacyCard');
           try{
             const rs=await db.collection('ranking_historico_publico').get();
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
@@ -3531,18 +3531,20 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const icons=entries.filter(({r})=>String(titleMap.get(String(r.round))?.icon||'')===String(uid)).length;
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
             const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
-            const chip=(n,label)=>`<div class="fau-profile-stat"><strong>${n}</strong><span>${label}</span></div>`;
-            stats.innerHTML=chip(wins,'WIN')+chip(titlesAvailable?icons:'—','Ícone da Moda')+chip(highlights,'Destaques')+chip(played.length,'Rodadas');
-            status.textContent=out?'ELIMINADO':'NA COMPETIÇÃO';status.classList.toggle('is-out',out);
+            const chip=(label)=>`<span>${esc(label)}</span>`;
+            stats.innerHTML=chip(`${wins} ${wins===1?'Winner':'Winners'}`)+chip(titlesAvailable?`${icons} ${icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível');
+            meta.textContent=`${played.length} ${played.length===1?'rodada disputada':'rodadas disputadas'} · ${highlights} ${highlights===1?'destaque':'destaques'} no ranking`;
+            status.hidden=!out;
+            card.classList.toggle('is-out',out);
+            card.classList.toggle('has-title',wins+icons>0);
             const moments=[];
             entries.forEach(({r,row})=>{
               const st=String(row.status||'').trim().toUpperCase();
               const icon=String(titleMap.get(String(r.round))?.icon||'')===String(uid);
-              const labels=[st==='WIN'?'Winner da Rodada':st==='OUT'?'Eliminado':st||'Participação'];
-              if(icon)labels.push('Ícone da Moda');
-              moments.push(`<div class="fau-profile-moment"><span>${esc(fauWeekLabel(r.round))}</span><strong>${esc(labels.join(' · '))}</strong></div>`);
+              if(st==='WIN')moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Winner da Rodada</span>`);
+              if(icon)moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Ícone da Moda</span>`);
             });
-            timeline.innerHTML=moments.length?moments.join(''):'<p class="text-sm text-gray-400">Sua história está sendo escrita.</p>';
+            timeline.innerHTML=moments.length?moments.reverse().join(''):'<span class="fau-hall-empty">Nenhum título conquistado</span>';
           }catch(e){console.warn('Profile legacy unavailable',e);if(stats?.isConnected)stats.textContent='Não foi possível carregar as conquistas publicadas.';}
         })();
         $('#fauBackHome')?.addEventListener('click',()=>navigate('home'));
