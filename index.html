@@ -881,6 +881,25 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-my-profile .fau-profile-fact.is-eliminated strong{color:#e6a1ae}
 @media(max-width:480px){.fau-my-profile .fau-profile-facts{grid-template-columns:1fr 1fr}.fau-my-profile .fau-profile-fact:last-child:nth-child(odd){grid-column:1/-1}}
 </style>
+<style id="fau-legacy-complete-2026">
+.fau-my-profile #fauMyLegacyCard{background:radial-gradient(ellipse at 95% 0%,rgba(111,24,48,.25),transparent 60%),#171217;border:1px solid #a47b62;border-radius:22px;padding:clamp(18px,4vw,30px);box-shadow:0 15px 45px #0005}
+.fau-my-profile .fau-legacy-kicker{font-size:10px;letter-spacing:.24em;color:#d1b38b;margin-bottom:10px}
+.fau-my-profile #fauMyLegacyStats{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}
+.fau-my-profile #fauMyLegacyStats span{border:1px solid #aa8555;border-radius:100px;padding:8px 13px;color:#e9c997;font-size:11px;font-weight:600;background:#241b20}
+.fau-my-profile #fauMyLegacyStats .fau-fdm{border-color:#90465b;color:#edacb9}
+.fau-my-profile #fauMyLegacyMeta{font-size:12px;line-height:1.8;color:#d3c4ca}
+.fau-my-profile #fauMyCriteria{min-width:0}
+.fau-criteria-wrap{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);align-items:center;gap:22px}
+.fau-criteria-ring{width:175px;height:175px;max-width:100%;border-radius:50%;display:grid;place-items:center;margin:auto;background:conic-gradient(#edbd7b var(--pct),#3d2630 0);padding:13px}
+.fau-criteria-ring-inner{background:#1c151b;border-radius:50%;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.fau-criteria-ring-inner strong{font:600 43px 'Cormorant Garamond',serif;color:#f0eae1}
+.fau-criteria-ring-inner small{font-size:10px;letter-spacing:.12em;color:#d1b38b}
+.fau-criteria-row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(60px,1.5fr) 42px;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #49313c;font-size:11px;color:#e8dce0}
+.fau-criteria-track{height:9px;border-radius:20px;background:#382831;overflow:hidden}.fau-criteria-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#a34461,#f1c687)}
+.fau-criteria-row strong{color:#f0cf9b;text-align:right;font-size:12px}
+.fau-my-profile .fau-my-score{margin:16px 0}
+@media(max-width:580px){.fau-criteria-wrap{grid-template-columns:1fr;gap:12px}.fau-criteria-ring{width:150px;height:150px}.fau-criteria-row{grid-template-columns:minmax(92px,1fr) minmax(60px,1.2fr) 39px;gap:7px}.fau-my-profile #fauMyLegacyStats span{font-size:10px;padding:8px 10px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3507,7 +3526,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     function fauCriteriaChart(levels){
         if(!Array.isArray(levels)||levels.length!==5)return '<p class="text-sm text-gray-400">Seu perfil de avaliação estará disponível após a publicação dos resultados.</p>';
         const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
-        return `<div class="space-y-4" aria-label="Desempenho relativo nos cinco critérios, sem notas numéricas">${names.map((name,i)=>`<div><div class="text-xs text-gray-200 mb-2">${name}</div><div class="h-3 rounded-full bg-fashion-700 overflow-hidden" role="img" aria-label="${name}: desempenho representado visualmente"><div class="h-full rounded-full" style="width:${Math.max(0,Math.min(100,Number(levels[i])||0))}%;background:linear-gradient(90deg,#8e3446,#d1b38b)"></div></div></div>`).join('')}</div><p class="text-xs text-gray-400 mt-4">Comparação visual das suas médias por critério nas rodadas publicadas. Notas e valores permanecem confidenciais.</p>`;
+        const values=levels.map(v=>Math.max(0,Math.min(100,Number(v)||0)));
+        const overall=Math.round(values.reduce((a,b)=>a+b,0)/5);
+        return `<div class="fau-criteria-wrap" aria-label="Desempenho percentual privado nos cinco critérios"><div class="fau-criteria-ring" style="--pct:${overall}%" role="img" aria-label="Índice geral ${overall} por cento"><div class="fau-criteria-ring-inner"><small>ÍNDICE GERAL</small><strong>${overall}%</strong></div></div><div>${names.map((name,i)=>`<div class="fau-criteria-row"><span>${name}</span><div class="fau-criteria-track" role="img" aria-label="${name}: ${Math.round(values[i])} por cento"><div class="fau-criteria-fill" style="width:${values[i]}%"></div></div><strong>${Math.round(values[i])}%</strong></div>`).join('')}</div></div><p class="text-xs text-gray-400 mt-4">Percentuais calculados a partir das médias dos jurados nas rodadas publicadas. Dados visíveis apenas no seu perfil e para a produção.</p>`;
     }
     // 3. HISTÓRICO DA TEMPORADA & GALERIA DE ELIMINAÇÕES
     // Personal dossier: only the authenticated designer's own aggregate, never another person's.
@@ -3516,9 +3537,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const uid=currentUser.uid;
         const locked=!!(globalState.rodada || globalState.themeId);
         renderView(`<section class="fau-my-profile max-w-3xl mx-auto space-y-5">
-          <div id="fauMyLegacyCard" class="fau-hall-profile"><div class="fau-hall-profile-head"><h2 class="font-cinzel text-white fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><span id="fauProfileStatus" class="fau-hall-out" hidden>ELIMINADO</span></div><div id="fauMyLegacyStats" class="fau-hall-counts"><span>Carregando conquistas…</span></div><p id="fauMyLegacyMeta" class="fau-hall-meta"></p><div id="fauMyLegacyHighlights" class="fau-profile-facts"></div><div id="fauMyScore" class="fau-my-score" role="status"><small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>—</strong><span>Aguardando resultado oficial</span></div><div id="fauMyLegacyTimeline" class="fau-hall-achievements"></div></div>
+          <div id="fauMyLegacyCard" class="fau-hall-profile"><p class="fau-legacy-kicker">THE DESIGNER LEGACY</p><div class="fau-hall-profile-head"><h2 class="font-cinzel text-white fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><span id="fauProfileStatus" class="fau-hall-out" hidden>ELIMINADO</span></div><div id="fauMyLegacyStats" class="fau-hall-counts"><span>Carregando conquistas…</span></div><p id="fauMyLegacyMeta" class="fau-hall-meta"></p><div id="fauMyLegacyHighlights" class="fau-profile-facts"></div><div id="fauMyScore" class="fau-my-score" role="status"><small>PONTUAÇÃO ACUMULADA · PRIVADA</small><strong>—</strong><span>Aguardando resultado oficial</span></div><section class="fau-profile-panel space-y-3" aria-label="Desempenho privado dos jurados"><div class="flex items-center justify-between gap-3"><p class="fau-profile-kicker">MEU DESEMPENHO NOS CRITÉRIOS DOS JURADOS</p><small class="text-fashion-gold">PRIVADO</small></div><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section><div id="fauMyLegacyTimeline" class="fau-hall-achievements"></div></div>
           ${!locked?`<details class="fau-profile-panel"><summary>EDITAR IDENTIDADE</summary><div class="space-y-3 mt-4"><label class="block space-y-2"><span class="text-xs text-fashion-gold">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></label><label class="block space-y-2"><span class="text-xs text-fashion-gold">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs">SALVAR IDENTIDADE</button></div></details>`:''}
-          <section class="fau-profile-panel space-y-4"><p class="fau-profile-kicker">JUDGES’ PROFILE</p><h3 class="font-cinzel text-xl text-white">Meu desempenho</h3><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section>
           <section class="fau-profile-panel space-y-3"><p class="fau-profile-kicker">MY RUNWAY JOURNEY</p><h3 class="font-cinzel text-xl text-white">Minha trajetória completa</h3><p class="text-sm text-gray-300">Classificações oficiais e conquistas da temporada.</p><button type="button" id="fauMyTrackRecord" class="rounded border border-fashion-gold/50 px-4 py-3 text-xs text-fashion-gold">VER TRACK RECORD</button></section>
           <button id="fauBackHome" type="button" class="border border-fashion-700 rounded-lg px-5 py-3 text-xs text-gray-200">VOLTAR AO SEASON HUB</button>
         </section>`);
@@ -3544,10 +3564,11 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const titleResults=await Promise.allSettled(rounds.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
             const titleMap=new Map();titleResults.forEach((res,i)=>{if(res.status==='fulfilled'&&res.value.exists&&res.value.data()?.published===true)titleMap.set(String(rounds[i].round),res.value.data());});
             const icons=entries.filter(({r})=>String(titleMap.get(String(r.round))?.icon||'')===String(uid)).length;
+            const fora=entries.filter(({r})=>String(titleMap.get(String(r.round))?.fora||titleMap.get(String(r.round))?.fdm||'')===String(uid)).length;
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
             const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
             const chip=(label)=>`<span>${esc(label)}</span>`;
-            stats.innerHTML=chip(`${wins} ${wins===1?'Winner':'Winners'}`)+chip(titlesAvailable?`${icons} ${icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível');
+            stats.innerHTML=chip(`${wins} ${wins===1?'Winner':'Winners'}`)+chip(titlesAvailable?`${icons} ${icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível')+(titlesAvailable?`<span class="fau-fdm">${fora} Fora de Moda</span>`:'');
             meta.textContent=`${played.length} ${played.length===1?'rodada disputada':'rodadas disputadas'} · ${highlights} ${highlights===1?'destaque':'destaques'} no ranking · ${bottoms} ${bottoms===1?'vez':'vezes'} no BOTTOM`;
             const facts=$('#fauMyLegacyHighlights');
             if(facts){
@@ -3564,8 +3585,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             entries.forEach(({r,row})=>{
               const st=String(row.status||'').trim().toUpperCase();
               const icon=String(titleMap.get(String(r.round))?.icon||'')===String(uid);
+              const isFora=String(titleMap.get(String(r.round))?.fora||titleMap.get(String(r.round))?.fdm||'')===String(uid);
               if(st==='WIN')moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Winner da Rodada</span>`);
               if(icon)moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Ícone da Moda</span>`);
+              if(isFora)moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Fora de Moda</span>`);
             });
             timeline.innerHTML=moments.length?moments.reverse().join(''):'<span class="fau-hall-empty">Nenhum título conquistado</span>';
           }catch(e){console.warn('Profile legacy unavailable',e);if(stats?.isConnected)stats.textContent='Não foi possível carregar as conquistas publicadas.';}
