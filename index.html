@@ -1211,7 +1211,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     // Rótulos editoriais: nunca usar o identificador técnico da rodada na interface.
     const fauRoundLabel = () => {
         const theme = SEASON_THEMES[globalState?.themeId];
-        if (theme) return [theme.code, theme.title].filter(Boolean).join(' — ');
+        if (theme) {
+            const code=String(theme.code||'').trim(), title=String(theme.title||'').trim();
+            return code && title && code.toLowerCase()!==title.toLowerCase() && !code.toLowerCase().endsWith('— '+title.toLowerCase()) ? code+' — '+title : (code||title);
+        }
         return globalState?.rodada ? 'DESAFIO EM ANDAMENTO' : 'AGUARDANDO A PRÓXIMA RODADA';
     };
     const fauRoundCode = () => SEASON_THEMES[globalState?.themeId]?.code || 'THE CHALLENGE';
@@ -2369,16 +2372,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         document.body.appendChild(modal);
         const list=$('#publicThemeClues'), count=$('#fauVaultCount');
         let entries=[], filter='all',previousFocus=null;
+        const isUsed=e=>e.data.used===true;
         const paint=()=>{
             if(!list?.isConnected)return;
-            const shown=entries.filter(e=>filter==='all'||(filter==='used'?e.data.used:!e.data.used));
+            const shown=entries.filter(e=>filter==='all'||(filter==='used'?isUsed(e):!isUsed(e)));
             count.textContent=`${shown.length} de ${entries.length} pistas`;
             list.innerHTML=shown.map((e)=>{
                 const v=e.data, revealed=!!v.revealedName;
                 const title=revealed?v.revealedName:`MYSTERY ${String(e.number).padStart(2,'0')}`;
                 return `<button type="button" data-vault-id="${esc(e.id)}" class="fau-vault-card text-left bg-fashion-900 border border-fashion-700 rounded-xl overflow-hidden group focus:outline-none focus:ring-2 focus:ring-fashion-gold" aria-label="Ampliar pista ${e.number}: ${esc(title)}">
                   <div class="fau-vault-photo bg-fashion-950 relative overflow-hidden">${v.photo?`<img src="${esc(v.photo)}" alt="Pista visual ${e.number}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">`:'<div class="h-full flex items-center justify-center text-gray-500 text-xs p-3 text-center">Aguardando fotografia</div>'}<span class="absolute top-2 left-2 bg-black/75 text-fashion-gold text-[10px] px-2 py-1 rounded">${String(e.number).padStart(2,'0')}</span></div>
-                  <div class="p-3 space-y-1"><h3 class="font-cinzel text-fashion-gold text-xs leading-snug break-words">${esc(title)}</h3><p class="text-[10px] tracking-wide ${v.used?'text-gray-400':'text-gray-300'}">${v.used?'ARQUIVADO':'AINDA EM JOGO'}</p></div>
+                  <div class="p-3 space-y-1"><h3 class="font-cinzel text-fashion-gold text-xs leading-snug break-words">${esc(title)}</h3><p class="text-[10px] tracking-wide ${isUsed(e)?'text-gray-400':'text-gray-300'}">${isUsed(e)?'ARQUIVADO':'AINDA EM JOGO'}</p></div>
                 </button>`;
             }).join('')||'<p class="text-gray-400 text-sm col-span-full text-center py-10">Nenhuma pista nesta categoria.</p>';
         };
@@ -2394,7 +2398,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             previousFocus?.focus?.();
         };
         const showPhoto=(id)=>{
-            const shown=entries.filter(e=>filter==='all'||(filter==='used'?e.data.used:!e.data.used)).filter(e=>!!e.data.photo);
+            const shown=entries.filter(e=>filter==='all'||(filter==='used'?isUsed(e):!isUsed(e))).filter(e=>!!e.data.photo);
             const index=shown.findIndex(e=>e.id===id);
             if(index<0)return;
             const item=shown[index];activeId=item.id;
@@ -2406,7 +2410,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             modal.querySelector('#fauVaultNext').disabled=shown.length<2;
         };
         const movePhoto=(direction)=>{
-            const shown=entries.filter(e=>filter==='all'||(filter==='used'?e.data.used:!e.data.used)).filter(e=>!!e.data.photo);
+            const shown=entries.filter(e=>filter==='all'||(filter==='used'?isUsed(e):!isUsed(e))).filter(e=>!!e.data.photo);
             if(!shown.length)return;
             const index=shown.findIndex(e=>e.id===activeId);
             showPhoto(shown[(index+direction+shown.length)%shown.length].id);
@@ -7094,7 +7098,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             $('#btnPoderRevelar').onclick=safeExec(async()=>{
                 if(!productionConfirm(`Revelar ${t.title} ao público? Esta ação encerra o segredo.`))return;
                 await db.doc('config/estado').set({proxTema:{nome:t.title,themeId:id}},{merge:true});
-                await vaultPublic.doc(id).set({used:true},{merge:true});
                 $('#newThemeId').value=id; $('#newThemeId').dispatchEvent(new Event('change'));
                 $('#newRoundId').value=slug(t.title); refreshRoundSummary();
                 showToast('🎭 Tema revelado! O desafio foi selecionado para a próxima rodada.'); await vaultRefresh();
@@ -7118,7 +7121,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const elimDupla = elimTipo === 'double';
             const naoEliminatoria = elimTipo === 'none';
 
-            await db.doc('config/estado').set({
+            const roundBatch=db.batch();
+            roundBatch.set(db.doc('config/estado'),{
                 rodada: rid,
                 themeId: $('#newThemeId').value || null,
                 prazo: pzTimestamp,
@@ -7134,6 +7138,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 proxTema: null, proxOpcoes: [], poderUid: null, poderNome: null,
                 modos: { ...(globalState.modos || {}), [rid]: scoringMode }
             }, { merge: true });
+            if(selectedTheme && SEASON_THEMES[selectedTheme]){
+                roundBatch.set(vaultPublic.doc(selectedTheme),{used:true},{merge:true});
+            }
+            await roundBatch.commit();
 
             showToast(`Rodada ${rid} iniciada! (${naoEliminatoria ? 'Não Eliminatória' : elimDupla ? 'Eliminação Dupla' : 'Elimina 1'})`);
         });
