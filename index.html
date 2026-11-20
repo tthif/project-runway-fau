@@ -3363,6 +3363,31 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         });
     };
 
+    // Perfil: apenas proporções visuais agregadas de rodadas oficialmente publicadas.
+    // O cliente Designer nunca consulta a coleção privada de avaliações.
+    async function fauPublishedCriteriaProfiles(extraRound=null,extraUids=[]){
+        const [history, evaluations]=await Promise.all([
+            db.collection('ranking_historico').get(),db.collection('avaliacoes').get()
+        ]);
+        const allowed=new Map();
+        history.docs.forEach(d=>{const x=d.data();if(x.published===true)allowed.set(String(x.rodada??d.id),new Set((x.rows||[]).map(r=>String(r.uid))));});
+        if(extraRound!==null)allowed.set(String(extraRound),new Set(extraUids.map(String)));
+        const totals=new Map();
+        evaluations.docs.forEach(d=>{
+            const x=d.data(),uid=String(x.alvo||''),round=String(x.rodada??'');
+            if(!allowed.get(round)?.has(uid)||!Array.isArray(x.nota)||x.nota.length!==5)return;
+            const values=x.nota.map(Number);
+            if(values.some(v=>!Number.isFinite(v)||v<0||v>10))return;
+            if(!totals.has(uid))totals.set(uid,{sum:[0,0,0,0,0],count:0});
+            const t=totals.get(uid);values.forEach((v,i)=>t.sum[i]+=v);t.count++;
+        });
+        return new Map([...totals].map(([uid,t])=>[uid,t.sum.map(v=>Math.round(v/t.count*10))]));
+    }
+    function fauCriteriaChart(levels){
+        if(!Array.isArray(levels)||levels.length!==5)return '<p class="text-sm text-gray-400">Seu perfil de avaliação estará disponível após a publicação dos resultados.</p>';
+        const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
+        return `<div class="space-y-4" aria-label="Desempenho relativo nos cinco critérios, sem notas numéricas">${names.map((name,i)=>`<div><div class="text-xs text-gray-200 mb-2">${name}</div><div class="h-3 rounded-full bg-fashion-700 overflow-hidden" role="img" aria-label="${name}: desempenho representado visualmente"><div class="h-full rounded-full" style="width:${Math.max(0,Math.min(100,Number(levels[i])||0))}%;background:linear-gradient(90deg,#8e3446,#d1b38b)"></div></div></div>`).join('')}</div><p class="text-xs text-gray-400 mt-4">Comparação visual das suas médias por critério nas rodadas publicadas. Notas e valores permanecem confidenciais.</p>`;
+    }
     // 3. HISTÓRICO DA TEMPORADA & GALERIA DE ELIMINAÇÕES
     // Personal dossier: only the authenticated designer's own aggregate, never another person's.
     VIEWS.meu_perfil = async () => {
@@ -3378,6 +3403,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             `<label class="block space-y-2"><span class="text-xs text-fashion-gold tracking-widest">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu personagem na competição"><span class="block text-xs text-gray-400">Use um nome fictício para não revelar sua identidade real.</span></label><label class="block space-y-2"><span class="text-xs text-fashion-gold tracking-widest">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Qual é sua visão de moda?">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" class="text-xs text-gray-300" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs tracking-widest">SALVAR IDENTIDADE</button>`}
           </div>
           <div id="fauMyAggregate" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-6" role="status">Consultando seu desempenho privado…</div>
+          <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">JUDGES’ PROFILE</p><h3 class="font-cinzel text-xl text-white">Seu desempenho nos 5 critérios</h3><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section>
           <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-3"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR RUNWAY LEGACY</p><h3 class="font-cinzel text-xl text-white">Histórico e conquistas</h3><p class="text-sm text-gray-300">Acompanhe suas classificações oficiais e a evolução da sua trajetória. Resultados ainda não publicados permanecem em sigilo.</p><button type="button" id="fauMyTrackRecord" class="rounded border border-fashion-gold/50 px-4 py-3 text-xs text-fashion-gold">VER MEU TRACK RECORD</button></section>
           <button id="fauBackHome" type="button" class="border border-fashion-700 rounded-lg px-5 py-3 text-xs text-gray-200">VOLTAR AO SEASON HUB</button>
         </section>`);
@@ -3409,6 +3435,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const data=summary.exists?summary.data():null,avg=Number(data?.acumulado);
                 const valid=!!data&&Number.isFinite(avg)&&avg>=0;
                 const slot=$('#fauMyAggregate');
+                const chart=$('#fauMyCriteria');if(chart)chart.innerHTML=fauCriteriaChart(data?.criteriosVisuais);
                 if(slot)slot.innerHTML=`<p class="text-[10px] tracking-[.25em] text-fashion-gold">SEASON PERFORMANCE · PRIVATE</p><p class="font-cinzel text-5xl text-white mt-3">${valid?avg.toFixed(2):'—'}<span class="text-lg text-gray-400"> pontos</span></p><p class="text-gray-400 text-xs mt-3">${valid?'Seu acumulado oficial, calculado pela produção.':'Seu acumulado ainda não foi publicado pela produção.'}</p>`;
             });
         }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyAggregate');if(slot)slot.textContent='Não foi possível carregar seu acumulado.';}
@@ -6286,6 +6313,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
             container.innerHTML = `
                 <p class="text-xs text-gray-400 mb-3">Gerencie nomes, biografias, funções e acesso. Excluir perfil não apaga a conta do Firebase Authentication nem o histórico da temporada. A função ADM é definida pela coleção protegida admins, não pelo seletor de cargos.</p>
+                <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-4 mb-5" id="fauAdminCriteriaPanel">
+                    <p class="text-[10px] tracking-widest text-fashion-gold">JUDGES’ PROFILE · ADMIN</p>
+                    <h3 class="font-cinzel text-xl text-white mt-2">Médias dos 5 critérios · Todos os Designers</h3>
+                    <p class="text-xs text-gray-400 my-3">Dados das rodadas publicadas e sincronizadas. Visão exclusiva da produção.</p>
+                    <div id="fauAdminCriteriaGrid" class="grid sm:grid-cols-2 gap-3"><p class="text-xs text-gray-400">Carregando avaliações…</p></div>
+                </section>
                 <div class="fau-profile-grid">
                     ${docs.map(p => {
                         const isSelf = p.id === currentUser.uid;
@@ -6315,6 +6348,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     }).join('')}
                 </div>
             `;
+            // Painel privado da produção: os dados são obtidos apenas no contexto ADM.
+            // Não expor estas médias no documento público nem no perfil dos Designers.
+            const criteriaGrid=container.querySelector('#fauAdminCriteriaGrid');
+            if(criteriaGrid && isAdmin){
+                db.collection('desempenho_privado').get().then(snapshot=>{
+                    if(!criteriaGrid.isConnected)return;
+                    const privateData=new Map(snapshot.docs.map(d=>[d.id,d.data()]));
+                    const designers=docs.filter(p=>p.role==='estilista');
+                    criteriaGrid.innerHTML=designers.length?designers.map(p=>{
+                        const levels=privateData.get(p.id)?.criteriosVisuais;
+                        const available=Array.isArray(levels)&&levels.length===5;
+                        const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
+                        return `<article class="rounded-lg border border-fashion-700 bg-fashion-950 p-4"><h4 class="text-white font-semibold mb-3">${esc(p.ate||'Designer')}</h4>${available?names.map((name,i)=>{
+                            const pct=Math.max(0,Math.min(100,Number(levels[i])||0));
+                            return `<div class="mb-3"><div class="flex justify-between gap-2 text-xs mb-1"><span class="text-gray-300">${name}</span><strong class="text-fashion-gold">${(pct/10).toFixed(1).replace('.',',')}</strong></div><div class="h-2 rounded-full bg-fashion-700 overflow-hidden"><div class="h-full rounded-full" style="width:${pct}%;background:linear-gradient(90deg,#8e3446,#d1b38b)"></div></div></div>`;
+                        }).join(''):'<p class="text-xs text-gray-400">Aguardando sincronização das avaliações publicadas.</p>'}</article>`;
+                    }).join(''):'<p class="text-xs text-gray-400">Nenhum Designer cadastrado.</p>';
+                }).catch(error=>{
+                    console.warn('Falha ao consultar médias privadas',error);
+                    if(criteriaGrid.isConnected)criteriaGrid.innerHTML='<p class="text-xs text-red-300">Não foi possível consultar as médias. Verifique as permissões de leitura do ADM.</p>';
+                });
+            }
         });
 
         // Checklist factual: evita apresentar etapas como concluídas sem confirmação.
@@ -6669,10 +6724,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const rows=[...byUid].filter(([uid])=>known.has(uid));
           if(!rows.length)throw new Error('Nenhuma avaliação corresponde aos UIDs dos perfis. Nada foi alterado.');
           if(!productionConfirm('SINCRONIZAR '+rows.length+' ACUMULADOS PRIVADOS?\n\nSomente avaliações de rodadas publicadas serão consideradas. Não altera ranking, votos, resultados ou a Week atual.'))return;
+          const criteriaProfiles=await fauPublishedCriteriaProfiles();
           let count=0,batch=db.batch();
           for(const [uid,data] of rows){
             batch.set(db.doc('desempenho_privado/'+uid),{
               acumulado:Number(data.total.toFixed(2)),
+              criteriosVisuais:criteriaProfiles.get(uid)||null,
               rodada:globalState.rodada,
               ultimaRodada:data.rounds.sort((a,b)=>Number(b)-Number(a))[0],
               atualizadoEm:now()
@@ -6720,6 +6777,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(!productionConfirm(`PUBLICAR TUDO DA RODADA ${round}?\nWIN: ${label(winner.uid)}\nÍcone da Moda: ${label(iconResult.uid)}\nFora de Moda: ${label(fora)}\nRanking: ${rows.length} Designers\n\nO site exibirá classificações, sem notas individuais.`))return;
           // Calcula os totais privados apenas no momento da publicação oficial.
           const privateStandings=await computeSeasonStandings();
+          const criteriaProfiles=await fauPublishedCriteriaProfiles(round,rows.map(r=>r.uid));
           const privateByUid=new Map(privateStandings.map(x=>[x.uid,x]));
           const stamp=now(),batch=db.batch();
           const publicRows=rows.map(({uid,ate,status})=>({uid,ate,status}));
@@ -6742,6 +6800,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           for(const [uid,score] of privateByUid){
             batch.set(db.doc(`desempenho_privado/${uid}`),{
               acumulado:score.tot,rodada:globalState.rodada,
+              criteriosVisuais:criteriaProfiles.get(uid)||null,
               ultimaRodada:score.rd,atualizadoEm:stamp
             },{merge:true});
           }
