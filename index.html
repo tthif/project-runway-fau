@@ -2820,7 +2820,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
                 <div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
-                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed">${(()=>{const raw=String(getTheme()?.mandate || 'Aguarde as instruções da produção.');const parts=raw.split(/(?=Envie imagem completa gerada por IA|Cinco critérios de 0 a 10|NÃO HÁ ELIMINAÇÃO)/i).filter(Boolean);return parts.map((part,i)=>`<p class="${i?'mt-3 pt-3 border-t border-fashion-700/50':''}">${esc(part.trim())}</p>`).join('')})()}</div></details>
+                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(String(globalState.regras?.trim() || getTheme()?.mandate || 'Aguarde as instruções da produção.'))}</div></details>
                 </section>
 
                 <section class="fau-submission-suite" aria-label="Envio do desafio">
@@ -5557,6 +5557,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     </div>
                     <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">Regras especiais desta rodada (aparecem para todos)</span>
                         <textarea id="newRoundRules" rows="3" placeholder="Opcional. Ex: O look precisa ter a cor vermelha." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
+                    <section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3" aria-label="Editor do briefing publicado">
+                      <h4 class="text-fashion-gold font-semibold text-sm">EDITAR BRIEFING DA RODADA ATIVA</h4>
+                      <p class="text-xs text-gray-300">Altere o texto que os Designers veem na Workroom, mesmo depois de iniciar a rodada. Quebras de linha e emojis são preservados. Não altera prazo, notas ou demais regras.</p>
+                      <textarea id="fauActiveBriefEditor" rows="10" class="w-full bg-fashion-900 border border-fashion-700 rounded-lg p-3 text-white text-sm" placeholder="Escreva ou cole o briefing completo..."></textarea>
+                      <div class="flex flex-wrap gap-2"><button type="button" id="fauLoadActiveBrief" class="border border-fashion-gold/50 text-fashion-gold rounded-lg px-4 py-2 text-xs">RECARREGAR TEXTO PUBLICADO</button><button type="button" id="fauSaveActiveBrief" class="bg-fashion-gold text-black font-semibold rounded-lg px-4 py-2 text-xs">SALVAR E PUBLICAR</button></div>
+                      <p id="fauActiveBriefStatus" class="text-xs text-gray-400" role="status">Somente a produção pode publicar alterações.</p>
+                    </section>
                     <section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3" aria-label="Validação antes de publicar">
                       <div class="flex justify-between items-center gap-2"><h4 class="font-cinzel text-fashion-gold text-sm">PRE-FLIGHT CHECK · PRODUCTION</h4><span id="fauPreflightStatus" class="text-xs text-gray-300" role="status" aria-live="polite">Aguardando configuração</span></div>
                       <ul id="fauPreflightItems" class="text-xs space-y-2" aria-label="Checklist de publicação"></ul>
@@ -7453,6 +7460,30 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         let fauPreviousTheme=globalState.themeId||'';
         const fauSavedRules=typeof globalState.regras==='string'?globalState.regras:null;
         $('#newThemeId').value=fauPreviousTheme;
+        // Editor independente da rodada em andamento: não inicia outra rodada.
+        const activeBriefEditor=$('#fauActiveBriefEditor');
+        const activeBriefStatus=$('#fauActiveBriefStatus');
+        const loadActiveBrief=()=>{
+            activeBriefEditor.value=typeof globalState.regras==='string' && globalState.regras.trim()
+                ? globalState.regras : (SEASON_THEMES[globalState.themeId]?.mandate||'');
+            activeBriefStatus.textContent=globalState.rodada?'Texto da rodada ativa carregado.':'Nenhuma rodada ativa.';
+        };
+        loadActiveBrief();
+        $('#fauLoadActiveBrief').onclick=loadActiveBrief;
+        $('#fauSaveActiveBrief').onclick=safeExec(async()=>{
+            if(!isAdmin)throw new Error('Apenas o Admin pode editar o briefing.');
+            if(!globalState.rodada)throw new Error('Não existe uma rodada ativa.');
+            const content=activeBriefEditor.value.trim();
+            if(!content)throw new Error('O briefing não pode ficar vazio.');
+            if(content.length>30000)throw new Error('Limite de 30.000 caracteres.');
+            if(!productionConfirm('Publicar o novo briefing da rodada ativa para todos os Designers?'))return;
+            const btn=$('#fauSaveActiveBrief');btn.disabled=true;
+            try{
+                await db.doc('config/estado').update({regras:content});
+                activeBriefStatus.textContent='Briefing publicado com sucesso.';
+                showToast('Briefing atualizado para todos os Designers.');
+            }finally{btn.disabled=false;}
+        });
         const fauRulesInput=$('#newRoundRules');
         const fauDefaultRules=id=>SEASON_THEMES[id]?.mandate||'';
         const fauReadDraft=id=>{
