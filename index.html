@@ -3574,10 +3574,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     });
                     const colors={WIN:'text-amber-200',HIGH:'text-violet-200',TOP:'text-violet-200',SAFE:'text-emerald-200',LOW:'text-orange-200',BOTTOM:'text-rose-300',OUT:'text-rose-300'};
                     slot.classList.remove('font-mono');
-                    slot.innerHTML=`<p class="text-xs text-gray-300 leading-relaxed mb-4">Todas as rodadas em uma tabela. Designers ativos seguem o ranking da última rodada publicada; eliminados aparecem abaixo, do mais recente ao primeiro. Notas confidenciais não são exibidas.</p>
-                    <div class="overflow-x-auto"><table class="w-full text-center border-collapse text-xs" aria-label="Track Record da temporada">
+                    slot.innerHTML=`<div class="overflow-x-auto"><table class="w-full text-center border-collapse text-xs" aria-label="Track Record da temporada">
                       <thead><tr class="bg-fashion-950 text-fashion-gold border-b border-fashion-700"><th class="sticky left-0 z-10 bg-fashion-950 p-3 text-left min-w-[135px]">DESIGNER</th>${rounds.map((r,i)=>`<th class="p-3 min-w-[76px]" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
-                      <tbody>${roster.map(p=>`<tr class="border-b border-fashion-700 ${p.eliminatedRound>=0?'opacity-75':''}"><th scope="row" class="sticky left-0 bg-fashion-900 p-3 text-left font-semibold text-white">${esc(p.name)}${p.eliminatedRound>=0?' <span class="text-rose-300 text-[10px]">OUT</span>':''}</th>${rounds.map((r,i)=>{const v=p.history.get(i)||'—';return `<td class="p-3 font-bold ${colors[v]||'text-gray-500'}">${esc(v)}</td>`;}).join('')}</tr>`).join('')}</tbody>
+                      <tbody>${roster.map(p=>`<tr class="border-b border-fashion-700 ${p.eliminatedRound>=0?'opacity-75':''}"><th scope="row" class="sticky left-0 bg-fashion-900 p-3 text-left font-semibold text-white">${esc(p.name)}</th>${rounds.map((r,i)=>{const v=p.history.get(i)||'—';return `<td class="p-3 font-bold ${colors[v]||'text-gray-500'}">${esc(v)}</td>`;}).join('')}</tr>`).join('')}</tbody>
                     </table></div>`;
                 }
             } catch(err) {
@@ -3850,22 +3849,43 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         if(!body?.isConnected)return;
         const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>Array.isArray(d.data().rows)).map(d=>({round:d.id,...d.data()})):[];
         const titles=titlesResult.status==='fulfilled'?titlesResult.value.docs.filter(d=>d.data().published===true).map(d=>({round:d.id,...d.data()})):[];
+        const titlesAccessible=titlesResult.status==='fulfilled';
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
         // Exibir as despedidas da mais recente para a mais antiga.
         // O ranking histórico público é a fonte da rodada de eliminação;
         // empates na mesma rodada (ou ausência de data) usam ordem alfabética.
+        // Cada OUT pertence à primeira rodada em que foi registrado.
+        // Publicações posteriores podem repetir OUT para antigos eliminados;
+        // essas repetições NÃO alteram a ordem de eliminação.
+        const orderedRanks=[...ranks].sort((a,b)=>{
+          const an=Number(a.rodada),bn=Number(b.rodada);
+          if(Number.isFinite(an)&&Number.isFinite(bn)&&an!==bn)return an-bn;
+          return fauArchiveSort(a.round,b.round);
+        });
         const outRounds=new Map();
-        [...ranks].sort((a,b)=>fauArchiveSort(a.round,b.round)).forEach((r,order)=>{
+        orderedRanks.forEach((r,order)=>{
           (r.rows||[]).forEach(row=>{
-            if(row.uid && /\bOUT\b|ELIMINAD/i.test(String(row.status||'')))
-              outRounds.set(row.uid,order);
+            const uid=String(row.uid||row.id||'');
+            if(uid && /\bOUT\b|ELIMINAD/i.test(String(row.status||'')) && !outRounds.has(uid))
+              outRounds.set(uid,order);
+          });
+        });
+        // Para registros antigos sem OUT no histórico, usar a última rodada
+        // em que o Designer aparece no ranking como referência de despedida.
+        const lastParticipation=new Map();
+        orderedRanks.forEach((r,order)=>{
+          (r.rows||[]).forEach(row=>{
+            const uid=String(row.uid||row.id||'');
+            if(uid && !/\bOUT\b|ELIMINAD/i.test(String(row.status||'')))
+              lastParticipation.set(uid,order);
           });
         });
         const eliminated=castResult.status==='fulfilled'?castResult.value.docs
           .map(d=>({uid:d.id,...d.data()}))
           .filter(p=>p.out===true&&!p.disabled)
           .sort((a,b)=>{
-            const ar=outRounds.get(a.uid),br=outRounds.get(b.uid);
+            const ar=outRounds.get(String(a.uid))??lastParticipation.get(String(a.uid));
+            const br=outRounds.get(String(b.uid))??lastParticipation.get(String(b.uid));
             if(ar!==undefined&&br!==undefined&&ar!==br)return br-ar;
             if(ar!==undefined&&br===undefined)return -1;
             if(br!==undefined&&ar===undefined)return 1;
@@ -3901,7 +3921,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             p.rounds.add(round);
             const status=String(r.status||'').toUpperCase().replace(/\bTOP\b/g,'HIGH').replace(/^WIN.*$/,'WIN');
             if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'Winner da Rodada'});awards.push({round,uid:r.uid,name:r.ate,type:'Winner da Rodada'});}
-            if(/\b(HIGH|TOP)\b/.test(status))p.highs++;
+            if(/\b(WIN|HIGH|TOP)\b/.test(status))p.highs++;
           });
           if(title?.icon){
             const uid=title.icon,match=rows.find(r=>r.uid===uid);
@@ -3925,7 +3945,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         }).join('');
         const profiles=[...people.values()].sort((a,b)=>(b.wins+b.icons)-(a.wins+a.icons)||a.name.localeCompare(b.name,'pt-BR')).map(p=>
           `<article class="border border-fashion-700 rounded-xl bg-fashion-950 p-4"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>
-          <p class="text-xs text-fashion-gold mt-2">${p.wins} Winner da Rodada · ${p.icons} Ícone da Moda</p>
+          <p class="text-xs text-fashion-gold mt-2">${p.wins} Winner da Rodada · ${titlesAccessible?p.icons:'—'} Ícone da Moda</p>
           <p class="text-xs text-gray-400 mt-1">${p.rounds.size} ${p.rounds.size===1?'rodada registrada':'rodadas registradas'} · ${p.highs} destaques entre os melhores</p>
           <p class="text-xs text-gray-300 mt-2">${p.achievements.map(a=>`${esc(weekLabel(a.round))}: ${esc(a.type)}`).join(' · ')||'História em construção'}</p></article>`).join('');
         const story=[...rounds].reverse().map(({round,rank,title},index)=>{
