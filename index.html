@@ -3366,9 +3366,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     // Perfil: apenas proporções visuais agregadas de rodadas oficialmente publicadas.
     // O cliente Designer nunca consulta a coleção privada de avaliações.
     async function fauPublishedCriteriaProfiles(extraRound=null,extraUids=[]){
-        // O histórico público comprova a publicação; o privado é um complemento opcional.
-        // Não bloquear todos os gráficos se o histórico privado não puder ser consultado.
-        const [publicHistory, evaluations]=await Promise.all([
+        // Somente a produção executa esta função: avaliações individuais nunca vão ao cliente Designer.
+        if(!isAdmin)throw new Error('Consulta de avaliações restrita à produção.');
+        const [publicHistory,evaluations]=await Promise.all([
             db.collection('ranking_historico_publico').get(),
             db.collection('avaliacoes').get()
         ]);
@@ -3387,18 +3387,23 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const x=d.data();
                 if(x.published===true)include(x.rodada??d.id,x.rows);
             });
-        }catch(error){console.warn('[judges-profile] Histórico privado indisponível; usando histórico público',error);}
+        }catch(error){console.warn('[judges-profile] Histórico privado indisponível',error);}
         if(extraRound!==null)include(extraRound,extraUids.map(uid=>({uid})));
         const totals=new Map();
+        let validScores=0, unmatched=0, malformed=0;
         evaluations.docs.forEach(d=>{
-            const x=d.data(),uid=String(x.alvo||''),round=roundKey(x.rodada);
-            if(!allowed.get(round)?.has(uid)||!Array.isArray(x.nota)||x.nota.length!==5)return;
-            const values=x.nota.map(Number);
-            if(values.some(v=>!Number.isFinite(v)||v<0||v>10))return;
+            const x=d.data(),uid=String(x.alvo??x.uid??''),round=roundKey(x.rodada);
+            if(!allowed.get(round)?.has(uid)){unmatched++;return;}
+            const raw=Array.isArray(x.nota)?x.nota:(Array.isArray(x.notas)?x.notas:null);
+            if(!raw||raw.length!==5){malformed++;return;}
+            const values=raw.map(Number);
+            if(values.some(v=>!Number.isFinite(v)||v<0||v>10)){malformed++;return;}
             if(!totals.has(uid))totals.set(uid,{sum:[0,0,0,0,0],count:0});
-            const t=totals.get(uid);values.forEach((v,i)=>t.sum[i]+=v);t.count++;
+            const t=totals.get(uid);values.forEach((v,i)=>t.sum[i]+=v);t.count++;validScores++;
         });
-        console.info('[judges-profile] Rodadas publicadas:',allowed.size,'Designers com avaliações:',totals.size);
+        const diagnostic={publishedRounds:allowed.size,evaluations:evaluations.size,validScores,unmatched,malformed,designers:totals.size};
+        window.fauCriteriaDiagnostic=diagnostic;
+        console.info('[judges-profile] Diagnóstico',diagnostic);
         return new Map([...totals].map(([uid,t])=>[uid,t.sum.map(v=>Math.round(v/t.count*10))]));
     }
     async function fauSyncPublishedCriteriaToProfiles(profiles){
@@ -6389,6 +6394,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     if(!criteriaGrid.isConnected)return;
                     const designers=docs.filter(p=>p.role==='estilista');
                     const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
+                    const diag=window.fauCriteriaDiagnostic||{};
+                    const diagnosticNote=`<p class=\"text-xs text-gray-400 sm:col-span-2\">Diagnóstico ADM: ${diag.publishedRounds??0} rodadas publicadas · ${diag.evaluations??0} avaliações encontradas · ${diag.validScores??0} avaliações correspondentes · ${diag.unmatched??0} sem correspondência de rodada/UID · ${diag.malformed??0} com formato inválido.</p>`;
                     criteriaGrid.innerHTML=designers.length?designers.map(p=>{
                         const levels=privateData.get(p.id);
                         const available=Array.isArray(levels)&&levels.length===5;
@@ -6396,7 +6403,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                             const pct=Math.max(0,Math.min(100,Number(levels[i])||0));
                             return `<div class="mb-3"><div class="flex justify-between gap-2 text-xs mb-1"><span class="text-gray-300">${name}</span><strong class="text-fashion-gold">${(pct/10).toFixed(1).replace('.',',')}</strong></div><div class="h-2 rounded-full bg-fashion-700 overflow-hidden"><div class="h-full rounded-full" style="width:${pct}%;background:linear-gradient(90deg,#8e3446,#d1b38b)"></div></div></div>`;
                         }).join(''):'<p class="text-xs text-gray-400">Ainda não há avaliações válidas em rodadas oficialmente publicadas.</p>'}</article>`;
-                    }).join(''):'<p class="text-xs text-gray-400">Nenhum Designer cadastrado.</p>';
+                    }).join('')+diagnosticNote:'<p class="text-xs text-gray-400">Nenhum Designer cadastrado.</p>';
                 }).catch(error=>{
                     console.warn('Falha ao consultar médias privadas',error);
                     if(criteriaGrid.isConnected)criteriaGrid.innerHTML='<p class="text-xs text-red-300">Não foi possível consultar as médias. Verifique as permissões de leitura do ADM.</p>';
