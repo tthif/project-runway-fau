@@ -844,6 +844,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-lb-concept{position:absolute;bottom:0;left:0;right:0;max-height:75%;overflow:auto;background:#211820;border-top:1px solid #b99b74;border-radius:16px 16px 0 0;padding:20px;z-index:5;box-shadow:0 -15px 50px #0009}.fau-lb-concept[hidden]{display:none}.fau-lb-concept>div{display:flex;align-items:center;justify-content:space-between;gap:8px}.fau-lb-concept small{font-size:10px;letter-spacing:.2em;color:#d5b58a}.fau-lookbook-stories .fau-lb-concept button{font-size:11px;padding:7px}.fau-lb-concept h3{font-family:Georgia,serif;color:white;font-size:22px;margin:16px 0}.fau-lb-concept p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.65;color:#e5dce3}
 @media(max-width:480px){.fau-lookbook-stories{padding:0!important}.fau-lb-story{width:100%;height:100dvh;border:0;border-radius:0}}
 </style>
+<style>
+.fau-story-results{display:grid;gap:12px;margin-top:12px}
+.fau-story-result{display:flex;flex-direction:column;gap:3px;padding:0 0 11px;border-bottom:1px solid rgba(201,167,125,.14)}
+.fau-story-result:last-child{border-bottom:0;padding-bottom:0}
+.fau-story-result span{font-size:10px;letter-spacing:.13em;color:#c9a77d;font-weight:600}
+.fau-story-result strong{font-size:15px;line-height:1.5;color:#f1e8e6;font-weight:500}
+.fau-story-out span{color:#d18a94}
+</style>
+<style id="fau-my-profile-editorial">
+.fau-my-profile .fau-profile-hero{border:1px solid rgba(209,179,139,.43);border-radius:22px;padding:clamp(20px,5vw,36px);background:radial-gradient(ellipse at 90% 0%,rgba(130,45,64,.22),transparent 65%),linear-gradient(145deg,#241b23,#151216)}
+.fau-my-profile .fau-profile-kicker{font-size:10px;letter-spacing:.2em;color:#d1b38b}.fau-my-profile .fau-profile-eyebrow{font-size:11px;letter-spacing:.24em;color:#bda6a9;margin-top:20px}.fau-my-profile .fau-profile-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(38px,8vw,62px);line-height:1.05;color:#f7eee7;margin:12px 0}.fau-my-profile .fau-profile-status{color:#d1b38b;font-size:11px;letter-spacing:.12em;margin:18px 0}.fau-my-profile .fau-profile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fau-my-profile .fau-profile-stat{border:1px solid #56434a;border-radius:12px;padding:13px 6px;text-align:center;display:flex;flex-direction:column;gap:4px}.fau-my-profile .fau-profile-stat strong{font-size:24px;color:#e1c39c;font-weight:600}.fau-my-profile .fau-profile-stat span{font-size:10px;color:#c5b7bf}.fau-my-profile .fau-profile-timeline{margin-top:20px;display:grid;gap:8px}.fau-my-profile .fau-profile-moment{border-left:3px solid #c9a77d;background:rgba(209,179,139,.07);padding:11px 13px;display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;font-size:12px}.fau-my-profile .fau-profile-moment span{color:#cdb38d}.fau-my-profile .fau-profile-moment strong{color:#eee6e8;font-weight:500}.fau-my-profile .fau-profile-panel{border:1px solid rgba(209,179,139,.25);border-radius:18px;background:#1b171d;padding:22px}.fau-my-profile details summary{color:#d1b38b;cursor:pointer;font-size:12px;letter-spacing:.08em}@media(max-width:430px){.fau-my-profile .fau-profile-stat strong{font-size:20px}.fau-my-profile .fau-profile-stat span{font-size:9px}.fau-my-profile .fau-profile-stats{gap:5px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3478,19 +3490,44 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         if(currentUser.role!=='estilista') {navigate('home');return;}
         const uid=currentUser.uid;
         const locked=!!(globalState.rodada || globalState.themeId);
-        renderView(`<section class="max-w-3xl mx-auto space-y-5">
-          <p class="text-fashion-gold text-[10px] tracking-[.3em]">MY PROFILE</p>
-          <h2 class="font-cinzel text-3xl text-white">YOUR DESIGNER IDENTITY</h2>
-          <p class="text-gray-300 text-sm">${locked?'Sua identidade está definida para esta temporada.':'Defina seu nome fictício e seu manifesto antes da estreia.'}</p>
-          <div class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-4">
-            ${locked?`<div><p class="text-xs tracking-widest text-fashion-gold">NOME DE DESIGNER</p><h3 class="font-cinzel text-xl text-white mt-2">${esc(currentUser.ate||'Designer')}</h3></div><div><p class="text-xs tracking-widest text-fashion-gold">MANIFESTO</p><p id="fauProfileManifesto" class="text-sm text-gray-300 whitespace-pre-wrap mt-2">${esc(currentUser.bio||'Nenhum manifesto definido.')}</p></div><p class="text-xs text-gray-400">Edição encerrada após a estreia.</p>`:
-            `<label class="block space-y-2"><span class="text-xs text-fashion-gold tracking-widest">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Seu personagem na competição"><span class="block text-xs text-gray-400">Use um nome fictício para não revelar sua identidade real.</span></label><label class="block space-y-2"><span class="text-xs text-fashion-gold tracking-widest">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white" placeholder="Qual é sua visão de moda?">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" class="text-xs text-gray-300" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs tracking-widest">SALVAR IDENTIDADE</button>`}
-          </div>
-          <div id="fauMyAggregate" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-6" role="status">Consultando seu desempenho privado…</div>
-          <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">JUDGES’ PROFILE</p><h3 class="font-cinzel text-xl text-white">Seu desempenho nos 5 critérios</h3><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section>
-          <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-5 space-y-3"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR RUNWAY LEGACY</p><h3 class="font-cinzel text-xl text-white">Histórico e conquistas</h3><p class="text-sm text-gray-300">Acompanhe suas classificações oficiais e a evolução da sua trajetória. Resultados ainda não publicados permanecem em sigilo.</p><button type="button" id="fauMyTrackRecord" class="rounded border border-fashion-gold/50 px-4 py-3 text-xs text-fashion-gold">VER MEU TRACK RECORD</button></section>
+        renderView(`<section class="fau-my-profile max-w-3xl mx-auto space-y-5">
+          <header class="fau-profile-hero"><p class="fau-profile-kicker">PROJECT RUNWAY: FAU · MY PROFILE</p><p class="fau-profile-eyebrow">THE DESIGNER LEGACY</p><h2 class="fau-profile-name">${esc(currentUser.ate||'Designer')}</h2><div id="fauProfileStatus" class="fau-profile-status">Minha trajetória na passarela</div><div id="fauMyLegacyStats" class="fau-profile-stats"><span>Carregando conquistas…</span></div><div id="fauMyLegacyTimeline" class="fau-profile-timeline"></div></header>
+          ${!locked?`<details class="fau-profile-panel"><summary>EDITAR IDENTIDADE</summary><div class="space-y-3 mt-4"><label class="block space-y-2"><span class="text-xs text-fashion-gold">NOME DE DESIGNER</span><input id="fauProfileNameInput" value="${esc(currentUser.ate==='Público'?'':currentUser.ate||'')}" maxlength="70" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white"></label><label class="block space-y-2"><span class="text-xs text-fashion-gold">MANIFESTO · OPCIONAL</span><textarea id="fauProfileBioInput" maxlength="300" rows="3" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-white">${esc(currentUser.bio||'')}</textarea><span id="fauProfileBioCount" class="block text-right text-xs text-gray-400">0 / 300</span></label><p id="fauProfileSaveStatus" role="status"></p><button id="fauProfileSaveIdentity" class="w-full bg-fashion-gold text-black font-bold rounded-lg py-3 text-xs">SALVAR IDENTIDADE</button></div></details>`:''}
+          <div id="fauMyAggregate" class="fau-profile-panel" role="status">Consultando seu desempenho privado…</div>
+          <section class="fau-profile-panel space-y-4"><p class="fau-profile-kicker">JUDGES’ PROFILE</p><h3 class="font-cinzel text-xl text-white">Meu desempenho</h3><div id="fauMyCriteria">Aguardando resultados oficiais…</div></section>
+          <section class="fau-profile-panel space-y-3"><p class="fau-profile-kicker">MY RUNWAY JOURNEY</p><h3 class="font-cinzel text-xl text-white">Minha trajetória completa</h3><p class="text-sm text-gray-300">Classificações oficiais e conquistas da temporada.</p><button type="button" id="fauMyTrackRecord" class="rounded border border-fashion-gold/50 px-4 py-3 text-xs text-fashion-gold">VER TRACK RECORD</button></section>
           <button id="fauBackHome" type="button" class="border border-fashion-700 rounded-lg px-5 py-3 text-xs text-gray-200">VOLTAR AO SEASON HUB</button>
         </section>`);
+        // Legacy público: somente rankings publicados e títulos oficialmente publicados.
+        (async()=>{
+          const stats=$('#fauMyLegacyStats'),timeline=$('#fauMyLegacyTimeline'),status=$('#fauProfileStatus');
+          try{
+            const rs=await db.collection('ranking_historico_publico').get();
+            if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
+            const rounds=rs.docs.map(d=>({round:d.id,...d.data()})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true}));
+            const name=String(currentUser.ate||'').trim().toLocaleLowerCase('pt-BR');
+            const entries=rounds.map(r=>({r,row:r.rows.find(x=>String(x.uid||'')===String(uid)||(!x.uid&&String(x.ate||'').trim().toLocaleLowerCase('pt-BR')===name))})).filter(x=>x.row);
+            const played=entries.filter(x=>!/^OUT$/i.test(String(x.row.status||'').trim()));
+            const wins=played.filter(x=>/^WIN$/i.test(String(x.row.status||'').trim())).length;
+            const highlights=played.filter(x=>/^(WIN|HIGH|TOP)$/i.test(String(x.row.status||'').trim())).length;
+            const out=entries.some(x=>/^OUT$/i.test(String(x.row.status||'').trim()));
+            const titleResults=await Promise.allSettled(rounds.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
+            const titleMap=new Map();titleResults.forEach((res,i)=>{if(res.status==='fulfilled'&&res.value.exists&&res.value.data()?.published===true)titleMap.set(String(rounds[i].round),res.value.data());});
+            const icons=entries.filter(({r})=>String(titleMap.get(String(r.round))?.icon||'')===String(uid)).length;
+            if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
+            const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
+            const chip=(n,label)=>`<div class="fau-profile-stat"><strong>${n}</strong><span>${label}</span></div>`;
+            stats.innerHTML=chip(wins,'WIN')+chip(titlesAvailable?icons:'—','Ícone da Moda')+chip(highlights,'Destaques')+chip(played.length,'Rodadas');
+            status.textContent=out?'OUT · LEGADO NA TEMPORADA':'IN · NA COMPETIÇÃO';
+            const moments=[];
+            entries.forEach(({r,row},i)=>{
+              const st=String(row.status||'').trim().toUpperCase();
+              const icon=String(titleMap.get(String(r.round))?.icon||'')===String(uid);
+              if(st==='WIN'||icon||st==='OUT')moments.push(`<div class="fau-profile-moment"><span>${esc(fauWeekLabel(r.round))}</span><strong>${[st==='WIN'?'Winner da Rodada':null,icon?'Ícone da Moda':null,st==='OUT'?'Eliminado':null].filter(Boolean).join(' · ')}</strong></div>`);
+            });
+            timeline.innerHTML=moments.length?moments.join(''):'<p class="text-sm text-gray-400">Sua história está sendo escrita.</p>';
+          }catch(e){console.warn('Profile legacy unavailable',e);if(stats?.isConnected)stats.textContent='Não foi possível carregar as conquistas publicadas.';}
+        })();
         $('#fauBackHome')?.addEventListener('click',()=>navigate('home'));
         $('#fauMyTrackRecord')?.addEventListener('click',()=>navigate('historico'));
         if(!locked){
@@ -4042,20 +4079,36 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="fau-hall-achievements">${accolades}</div>
           </article>`;
         }).join('');
+        // Season Story: cada eliminação é atribuída somente ao primeiro
+        // episódio em que o Designer aparece como OUT no ranking oficial.
+        // OUT repetidos em rankings seguintes não são novas eliminações.
+        const firstOutByUid=new Map();
+        rounds.forEach(({round,rank})=>{
+          (Array.isArray(rank?.rows)?rank.rows:[]).forEach(r=>{
+            const uid=String(r.uid||r.id||'');
+            if(uid && /\bOUT\b|ELIMINAD/i.test(String(r.status||'')) && !firstOutByUid.has(uid))
+              firstOutByUid.set(uid,round);
+          });
+        });
         const story=[...rounds].reverse().map(({round,rank,title},index)=>{
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
-          const winners=rows.filter(r=>/\bWIN\b/i.test(r.status||''));
-          const out=rows.filter(r=>/\bOUT\b|ELIMINAD/i.test(r.status||''));
-          const icon=title?.icon?rows.find(r=>r.uid===title.icon):null;
-          const lines=[
-            winners.length?'Winner da Rodada · '+winners.map(x=>esc(x.ate)).join(', '):'',
-            icon?'Ícone da Moda · '+esc(icon.ate):'',
-            out.length?'Eliminados · '+out.map(x=>esc(x.ate)).join(', '):''
+          const winners=rows.filter(r=>/\bWIN\b/i.test(String(r.status||'')));
+          const out=rows.filter(r=>{
+            const uid=String(r.uid||r.id||'');
+            return uid && firstOutByUid.get(uid)===round && /\bOUT\b|ELIMINAD/i.test(String(r.status||''));
+          }).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'}));
+          const icon=title?.icon?rows.find(r=>String(r.uid||r.id||'')===String(title.icon)):null;
+          const participants=rows.filter(r=>!(/\bOUT\b|ELIMINAD/i.test(String(r.status||'')) && firstOutByUid.get(String(r.uid||r.id||''))!==round));
+          const items=[
+            winners.length?`<div class="fau-story-result"><span>WINNER DA RODADA</span><strong>${winners.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:'',
+            icon?`<div class="fau-story-result"><span>ÍCONE DA MODA</span><strong>${esc(icon.ate||'Designer')}</strong></div>`:'',
+            out.length?`<div class="fau-story-result fau-story-out"><span>${out.length===1?'ELIMINADO DO EPISÓDIO':'ELIMINADOS DO EPISÓDIO'}</span><strong>${out.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:''
           ].filter(Boolean);
           return `<article class="fau-archive-chapter">
-            <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'CAPÍTULO MAIS RECENTE · ':''}${esc(weekLabel(round))}</p>
-            <h4 class="font-cinzel text-white mt-2">${esc(weekLabel(round))}</h4><p class="text-xs text-gray-400 mb-3">${rows.length} ${rows.length===1?'Designer no resultado':'Designers no resultado'}</p>
-            ${lines.length?lines.map(l=>`<p class="text-gray-300 text-sm mt-1">${l}</p>`).join(''):'<p class="text-gray-400 text-sm mt-1">Aguardando resultados oficiais.</p>'}
+            <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'CAPÍTULO MAIS RECENTE':'CAPÍTULO DA TEMPORADA'}</p>
+            <h4 class="font-cinzel text-white mt-2">${esc(weekLabel(round))}</h4>
+            <p class="text-xs text-gray-400 mt-1 mb-3">${participants.length} ${participants.length===1?'Designer no episódio':'Designers no episódio'}</p>
+            <div class="fau-story-results">${items.length?items.join(''):'<p class="text-gray-400 text-sm">Aguardando resultados oficiais.</p>'}</div>
           </article>`;
         }).join('');
         const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).length;
