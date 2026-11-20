@@ -1213,7 +1213,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const theme = SEASON_THEMES[globalState?.themeId];
         if (theme) {
             const code=String(theme.code||'').trim(), title=String(theme.title||'').trim();
-            return code && title && code.toLowerCase()!==title.toLowerCase() && !code.toLowerCase().endsWith('— '+title.toLowerCase()) ? code+' — '+title : (code||title);
+            const normalizedCode=code.replace(/\s*[—–-]\s*/g,' ').trim().toLowerCase();
+            const normalizedTitle=title.replace(/\s*[—–-]\s*/g,' ').trim().toLowerCase();
+            return !code ? title : (!title || normalizedCode===normalizedTitle || normalizedCode.endsWith(' '+normalizedTitle) ? code : code+' — '+title);
         }
         return globalState?.rodada ? 'DESAFIO EM ANDAMENTO' : 'AGUARDANDO A PRÓXIMA RODADA';
     };
@@ -2372,7 +2374,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         document.body.appendChild(modal);
         const list=$('#publicThemeClues'), count=$('#fauVaultCount');
         let entries=[], filter='all',previousFocus=null;
-        const isUsed=e=>e.data.used===true;
+        const isUsed=e=>e.data.used===true || (!!globalState?.rodada && globalState.themeId===e.id);
         const paint=()=>{
             if(!list?.isConnected)return;
             const shown=entries.filter(e=>filter==='all'||(filter==='used'?isUsed(e):!isUsed(e)));
@@ -2441,6 +2443,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             showPhoto(item.id);modal.hidden=false;document.body.style.overflow='hidden';
             modal.querySelector('#fauVaultClose').focus();
         });
+        const vaultStateUnsub=db.doc('config/estado').onSnapshot(()=>paint());
+        unsubsTab.push(vaultStateUnsub);
         const unsub=db.collection('theme_vault_public').onSnapshot(snap=>{
             if(!list.isConnected)return;
             entries=snap.docs.sort((a,b)=>a.id.localeCompare(b.id)).map((d,i)=>({id:d.id,number:i+1,data:d.data()||{}}));
