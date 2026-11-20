@@ -3535,33 +3535,50 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if (!rounds.length) {
                     slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
                 } else {
-                    // The Track Record is a chronological archive of each WEEK's official
-                    // ranking, in the exact published order (not an alphabetical roster).
-                    const statusLabel = raw => String(raw||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
-                    const statusClass = raw => {
-                        const v=statusLabel(raw);
-                        return /^WIN/.test(v)?'text-amber-200':/^(HIGH|TOP)/.test(v)?'text-violet-200':/^SAFE/.test(v)?'text-emerald-200':/^LOW/.test(v)?'text-orange-200':/^(BOTTOM|OUT)/.test(v)?'text-rose-300':'text-gray-200';
-                    };
+                    // One public season matrix. Only published rankings are read.
+                    const cleanStatus = raw => String(raw||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
+                    const normalizeName = name => String(name||'').trim().toLocaleLowerCase('pt-BR');
+                    const collator = new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
                     const weekLabel = (r,i) => {
                         const raw=String(r.round||'');
                         const num=Number(raw.match(/(?:week|w)\s*0*(\d+)/i)?.[1] || (/^\d+$/.test(raw)?raw:0));
-                        const n=num||i+1;return n===1?'WEEK 01 — THE FIRST GARMENT':n===2?'WEEK 02 — A NEW FORM':`WEEK ${String(n).padStart(2,'0')}`;
+                        const n=num||i+1;
+                        return `W${String(n).padStart(2,'0')}`;
                     };
+                    const people=new Map();
+                    rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
+                        const uid=String(entry.uid||'').trim();
+                        const name=String(entry.ate||'Designer').trim();
+                        const key=uid ? `uid:${uid}` : `name:${normalizeName(name)}`;
+                        if(!people.has(key)) people.set(key,{name,history:new Map(),lastSeen:-1,lastRank:Infinity,eliminatedRound:-1});
+                        const person=people.get(key);
+                        person.name=name;
+                        const status=cleanStatus(entry.status);
+                        person.history.set(roundIndex,status);
+                        person.lastSeen=roundIndex;
+                        person.lastRank=position;
+                        if(/\bOUT\b/.test(status))person.eliminatedRound=roundIndex;
+                    }));
+                    const lastIndex=rounds.length-1;
+                    const roster=[...people.values()];
+                    // A designer absent from later official rounds has left the competition.
+                    // OUT is also honored when explicitly published in a ranking.
+                    roster.forEach(p=>{
+                        if(p.eliminatedRound<0 && p.lastSeen<lastIndex)p.eliminatedRound=p.lastSeen;
+                    });
+                    roster.sort((a,b)=>{
+                        const aOut=a.eliminatedRound>=0, bOut=b.eliminatedRound>=0;
+                        if(aOut!==bOut)return aOut?1:-1;
+                        if(aOut)return b.eliminatedRound-a.eliminatedRound || collator.compare(a.name,b.name);
+                        return a.lastRank-b.lastRank || collator.compare(a.name,b.name);
+                    });
+                    const colors={WIN:'text-amber-200',HIGH:'text-violet-200',TOP:'text-violet-200',SAFE:'text-emerald-200',LOW:'text-orange-200',BOTTOM:'text-rose-300',OUT:'text-rose-300'};
                     slot.classList.remove('font-mono');
-                    slot.innerHTML=`<div class="space-y-6">
-                        <p class="text-xs text-gray-300 leading-relaxed">Ranking oficial de cada rodada, do primeiro ao último colocado. As notas individuais e o acumulado permanecem confidenciais.</p>
-                        ${rounds.map((r,i)=>`<section class="rounded-xl border border-fashion-700 overflow-hidden" aria-label="Ranking ${weekLabel(r,i)}">
-                            <div class="px-4 py-4 bg-fashion-950 border-b border-fashion-700 flex items-center justify-between gap-3">
-                                <h3 class="font-cinzel text-xl text-fashion-gold">${weekLabel(r,i)}</h3>
-                                <span class="text-[10px] tracking-widest text-gray-400">RANKING OFICIAL</span>
-                            </div>
-                            <div class="divide-y divide-fashion-700">${r.rows.map((x,rank)=>`<div class="flex items-center gap-3 px-3 sm:px-4 py-3 ${rank===0?'bg-amber-900/10':''}">
-                                <span class="w-8 shrink-0 text-center font-semibold text-fashion-gold tabular-nums">${statusLabel(x.status)==='OUT'?'—':String(rank+1).padStart(2,'0')}</span>
-                                <span class="min-w-0 flex-1 text-sm text-white font-medium break-words">${esc(x.ate||'Designer')}</span>
-                                <span class="shrink-0 text-xs font-bold tracking-wide ${statusClass(x.status)}">${esc(statusLabel(x.status))}</span>
-                            </div>`).join('')}</div>
-                        </section>`).join('')}
-                    </div>`;
+                    slot.innerHTML=`<p class="text-xs text-gray-300 leading-relaxed mb-4">Todas as rodadas em uma tabela. Designers ativos seguem o ranking da última rodada publicada; eliminados aparecem abaixo, do mais recente ao primeiro. Notas confidenciais não são exibidas.</p>
+                    <div class="overflow-x-auto"><table class="w-full text-center border-collapse text-xs" aria-label="Track Record da temporada">
+                      <thead><tr class="bg-fashion-950 text-fashion-gold border-b border-fashion-700"><th class="sticky left-0 z-10 bg-fashion-950 p-3 text-left min-w-[135px]">DESIGNER</th>${rounds.map((r,i)=>`<th class="p-3 min-w-[76px]" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
+                      <tbody>${roster.map(p=>`<tr class="border-b border-fashion-700 ${p.eliminatedRound>=0?'opacity-75':''}"><th scope="row" class="sticky left-0 bg-fashion-900 p-3 text-left font-semibold text-white">${esc(p.name)}${p.eliminatedRound>=0?' <span class="text-rose-300 text-[10px]">OUT</span>':''}</th>${rounds.map((r,i)=>{const v=p.history.get(i)||'—';return `<td class="p-3 font-bold ${colors[v]||'text-gray-500'}">${esc(v)}</td>`;}).join('')}</tr>`).join('')}</tbody>
+                    </table></div>`;
                 }
             } catch(err) {
                 console.warn('Public Track Record unavailable',err);
@@ -3681,8 +3698,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 <tbody>${cumulativeRows.map((row,index)=>`<tr class="border-b border-fashion-800 ${row.out?'opacity-60':''}"><td class="p-3 text-fashion-gold font-bold tabular-nums">${index+1}</td><td class="p-3 text-white font-medium">${esc(row.ate||'Designer')}${row.out?' <span class="text-red-300 text-[10px]">OUT</span>':''}</td><td class="p-3 text-center tabular-nums">${row.roundsCount}</td><td class="p-3 text-right font-semibold text-fashion-gold tabular-nums">${row.cumulative.toFixed(2)}</td></tr>`).join('')}</tbody></table>`;
         }
 
-        // Track Record: ordenar pela classificação da ÚLTIMA rodada, nunca pelo P.P.E.
-        // Priorizar a ordem oficial publicada; na ausência dela, usar a nota da rodada.
+        // The private matrix follows the same ordering as the public matrix.
+        // Official ranking of the latest round determines active designers;
+        // eliminated designers are grouped at the bottom in reverse elimination order.
         const latestRound = rodadas[rodadas.length - 1];
         const latestOfficial = resolveHistory(latestRound, rodadas.length - 1);
         const officialPositions = new Map();
@@ -3691,7 +3709,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if (entry.uid) officialPositions.set(String(entry.uid), index);
             });
         }
+        const eliminatedAtRound = new Map();
+        rodadas.forEach((round,index)=>{
+            const history=resolveHistory(round,index);
+            if(!Array.isArray(history?.rows))return;
+            history.rows.forEach(entry=>{
+                if(entry.uid && /\bOUT\b/i.test(String(entry.status||'')))
+                    eliminatedAtRound.set(String(entry.uid),index);
+            });
+        });
+        rowsData.forEach(row=>{
+            if(row.out && !eliminatedAtRound.has(String(row.uid))){
+                const last=rodadas.reduce((found,round,index)=>row.rounds[round]?index:found,-1);
+                eliminatedAtRound.set(String(row.uid),last);
+            }
+        });
+        const nameOrder = new Intl.Collator('pt-BR',{sensitivity:'base'});
         rowsData.sort((a, b) => {
+            const aOut=!!a.out || eliminatedAtRound.has(String(a.uid));
+            const bOut=!!b.out || eliminatedAtRound.has(String(b.uid));
+            if(aOut!==bOut)return aOut?1:-1;
+            if(aOut)return (eliminatedAtRound.get(String(b.uid))??-1)-(eliminatedAtRound.get(String(a.uid))??-1)
+                || nameOrder.compare(String(a.ate||''),String(b.ate||''));
             const aPosition = officialPositions.get(String(a.uid));
             const bPosition = officialPositions.get(String(b.uid));
             if (aPosition !== undefined && bPosition !== undefined) return aPosition - bPosition;
@@ -3702,7 +3741,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if (Number.isFinite(aScore) && Number.isFinite(bScore)) return bScore - aScore;
             if (Number.isFinite(aScore)) return -1;
             if (Number.isFinite(bScore)) return 1;
-            return String(a.ate || '').localeCompare(String(b.ate || ''), 'pt-BR');
+            return nameOrder.compare(String(a.ate||''),String(b.ate||''));
         });
 
         let html = `
@@ -3812,7 +3851,26 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>Array.isArray(d.data().rows)).map(d=>({round:d.id,...d.data()})):[];
         const titles=titlesResult.status==='fulfilled'?titlesResult.value.docs.filter(d=>d.data().published===true).map(d=>({round:d.id,...d.data()})):[];
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
-        const eliminated=castResult.status==='fulfilled'?castResult.value.docs.map(d=>({uid:d.id,...d.data()})).filter(p=>p.out===true&&!p.disabled).sort((a,b)=>(a.ate||'').localeCompare(b.ate||'','pt-BR')):[];
+        // Exibir as despedidas da mais recente para a mais antiga.
+        // O ranking histórico público é a fonte da rodada de eliminação;
+        // empates na mesma rodada (ou ausência de data) usam ordem alfabética.
+        const outRounds=new Map();
+        [...ranks].sort((a,b)=>fauArchiveSort(a.round,b.round)).forEach((r,order)=>{
+          (r.rows||[]).forEach(row=>{
+            if(row.uid && /\bOUT\b|ELIMINAD/i.test(String(row.status||'')))
+              outRounds.set(row.uid,order);
+          });
+        });
+        const eliminated=castResult.status==='fulfilled'?castResult.value.docs
+          .map(d=>({uid:d.id,...d.data()}))
+          .filter(p=>p.out===true&&!p.disabled)
+          .sort((a,b)=>{
+            const ar=outRounds.get(a.uid),br=outRounds.get(b.uid);
+            if(ar!==undefined&&br!==undefined&&ar!==br)return br-ar;
+            if(ar!==undefined&&br===undefined)return -1;
+            if(br!==undefined&&ar===undefined)return 1;
+            return String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'});
+          }):[];
         const eliminatedCards=eliminated.map(p=>{
           const ownLooks=publications.filter(x=>x.uid===p.uid&&typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
           const latest=ownLooks.sort((a,b)=>String(b.round||'').localeCompare(String(a.round||''),'pt-BR',{numeric:true}))[0];
