@@ -5094,6 +5094,28 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     }
     // 7. THE ELIMINATION POOL — voto secreto e definitivo
     VIEWS.berlinda = async () => {
+        if (isAdmin) {
+            const pool = Array.isArray(globalState.berlinda) ? globalState.berlinda : [];
+            const photos = pool.length ? await fauPortraitDirectory() : new Map();
+            const open = !!globalState.urna && pool.length === 3;
+            const cards = pool.map((b,i)=>`<div class="flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-4">${fauPortraitMarkup(b.uid,photos,true)}<div class="flex-1"><p class="text-[10px] tracking-widest text-fashion-gold">INDICADO ${String(i+1).padStart(2,'0')}</p><p class="font-cinzel text-white text-xl">${esc(b.ate)}</p></div></div>`).join('');
+            renderView(`<div class="max-w-2xl mx-auto space-y-5 pb-12">
+              <div class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4"><p class="text-fashion-gold text-xs tracking-widest">VISUALIZAÇÃO DO ADM · SOMENTE LEITURA</p><p class="text-sm text-gray-300 mt-2">Veja a experiência dos Designers sem registrar votos. ${open?'A urna está aberta.':'A urna ainda não está aberta.'}</p><button type="button" id="fauAdminPoolControl" class="mt-3 border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Ir para o painel de controle</button></div>
+              <header class="rounded-2xl bg-fashion-900 border border-fashion-red/40 p-8 text-center space-y-3"><div class="text-4xl">⚖️</div><p class="text-fashion-red text-xs tracking-widest">THE FINAL SAY · SECRET BALLOT</p><h2 class="font-cinzel text-3xl text-white">THE ELIMINATION POOL</h2><p class="text-sm text-gray-300">${open?'Escolha quem merece continuar.':'A votação de salvação ainda não foi liberada.'}</p></header>
+              ${pool.length===3?`<div class="flex flex-wrap gap-2"><button type="button" data-admin-pool-view="voter" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Quem pode votar</button><button type="button" data-admin-pool-view="nominee" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Quem está no Pool</button><button type="button" data-admin-pool-view="voted" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Após votar</button></div><section id="fauAdminPoolRolePreview" class="rounded-xl bg-fashion-900 border border-fashion-700 p-5 space-y-4"></section>`:`<section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-6 text-center text-sm text-gray-300">O Elimination Pool oficial ainda não tem três indicados. Publique o ranking e forme o Pool antes de abrir a urna. A prévia simulada fica em ADM → Episódio → Prévias da rodada.</section>`}
+            </div>`);
+            document.getElementById('fauAdminPoolControl')?.addEventListener('click',()=>navigate('direcao'));
+            const stage=document.getElementById('fauAdminPoolRolePreview');
+            if(stage){
+              const renderRole=(role)=>{
+                document.querySelectorAll('[data-admin-pool-view]').forEach(b=>{const active=b.dataset.adminPoolView===role;b.classList.toggle('border-fashion-gold',active);b.classList.toggle('text-fashion-gold',active);});
+                stage.innerHTML=role==='nominee'?`<h3 class="font-cinzel text-red-200 text-2xl">SEU DESTINO AINDA NÃO ESTÁ DECIDIDO</h3><p class="text-sm text-gray-300">Você está no Elimination Pool e não pode votar. Os outros Designers decidirão quem merece continuar.</p>${cards}`:`<h3 class="font-cinzel text-fashion-gold text-xl">${role==='voted'?'VOTO REGISTRADO · ENVELOPE LACRADO':'ESCOLHA UM DESIGNER PARA SALVAR'}</h3><p class="text-xs text-gray-300">${role==='voted'?'Seu voto foi recebido. O resultado só será revelado pela produção.':'Esta é uma simulação da cabine. Nenhum voto será registrado.'}</p>${cards}<button type="button" disabled class="w-full bg-fashion-gold text-black opacity-50 rounded-lg p-3 text-xs font-bold">${role==='voted'?'VOTO REGISTRADO ✓':'CONFIRMAR VOTO PARA SALVAR · PRÉVIA'}</button>`;
+              };
+              document.querySelectorAll('[data-admin-pool-view]').forEach(b=>b.addEventListener('click',()=>renderRole(b.dataset.adminPoolView)));
+              renderRole('voter');
+            }
+            return;
+        }
         if (!isCastVoter()) { renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 border border-fashion-gold/30 p-10 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">🔒 THE ELIMINATION POOL</h2><p class="text-gray-300 text-sm mt-3">A votação para salvar é exclusiva dos estilistas elegíveis.</p></div>');return; }
         if(globalState.themeId==='theme_rest_in_style'){renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 p-8 text-center"><h2 class="font-cinzel text-fashion-gold">🕯️ THE LAST JUDGMENT</h2><p class="text-sm text-gray-300 mt-3">Esta dinâmica utiliza a avaliação especial dos looks, não o voto de salvação.</p></div>');return;}
         const pool=globalState.berlinda||[], round=globalState.rodada;
