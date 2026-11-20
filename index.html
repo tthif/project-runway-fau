@@ -3572,7 +3572,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                         if(aOut)return b.eliminatedRound-a.eliminatedRound || collator.compare(a.name,b.name);
                         return a.lastRank-b.lastRank || collator.compare(a.name,b.name);
                     });
-                    const colors={WIN:'text-amber-200',HIGH:'text-violet-200',TOP:'text-violet-200',SAFE:'text-emerald-200',LOW:'text-orange-200',BOTTOM:'text-rose-300',OUT:'text-rose-300'};
+                    const colors={WIN:'text-[#F4A340]',HIGH:'text-[#C99A56]',TOP:'text-[#C99A56]',SAFE:'text-[#A9A3AA]',LOW:'text-[#C77B49]',BOTTOM:'text-[#E16A85]',OUT:'text-[#B84A55]'};
                     slot.classList.remove('font-mono');
                     slot.innerHTML=`<div class="overflow-x-auto"><table class="w-full text-center border-collapse text-xs" aria-label="Track Record da temporada">
                       <thead><tr class="bg-fashion-950 text-fashion-gold border-b border-fashion-700"><th class="sticky left-0 z-10 bg-fashion-950 p-3 text-left min-w-[135px]">DESIGNER</th>${rounds.map((r,i)=>`<th class="p-3 min-w-[76px]" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
@@ -3769,24 +3769,24 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
                 if (row.out && !rData) {
                     badgeText = 'OUT';
-                    badgeClass = 'bg-red-950 text-red-400 font-bold';
+                    badgeClass = 'text-[#B84A55] font-bold';
                 } else if (rData) {
                     const classification = officialStatuses.get(r)?.get(row.uid) || previewStatuses.get(r)?.get(row.uid);
                     badgeText = classification || '—';
                     const classes = {
-                        WIN:'bg-amber-700 text-amber-50 font-bold',
-                        TOP:'bg-yellow-900 text-yellow-100 font-bold',
-                        HIGH:'bg-yellow-900 text-yellow-100 font-bold',
-                        LOW:'bg-orange-950 text-orange-200 font-bold',
-                        SAFE:'bg-fashion-800 text-gray-200',
-                        BOTTOM:'bg-rose-950 text-rose-200 font-bold',
-                        OUT:'bg-red-950 text-red-300 font-bold',
-                        '—':'bg-fashion-950 text-gray-600'
+                        WIN:'text-[#F4A340] font-bold',
+                        TOP:'text-[#C99A56] font-bold',
+                        HIGH:'text-[#C99A56] font-bold',
+                        LOW:'text-[#C77B49] font-bold',
+                        SAFE:'text-[#A9A3AA] font-bold',
+                        BOTTOM:'text-[#E16A85] font-bold',
+                        OUT:'text-[#B84A55] font-bold',
+                        '—':'text-gray-600'
                     };
                     badgeClass = classes[badgeText] || classes['—'];
                 }
 
-                html += `<td class="p-2 border-r border-fashion-800"><span class="px-2 py-1 rounded text-[10px] inline-block uppercase ${badgeClass}">${badgeText}</span></td>`;
+                html += `<td class="p-2 border-r border-fashion-800"><span class="text-[10px] inline-block uppercase ${badgeClass}">${badgeText}</span></td>`;
             });
             html += `</tr>`;
         });
