@@ -4949,8 +4949,25 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             return VIEWS.berlinda();
         }
         if (globalState.urna && (!Array.isArray(globalState.berlinda) || globalState.berlinda.length !== 3) && isAdmin) {
-            renderView(`<section class="max-w-2xl mx-auto rounded-2xl border border-amber-500/60 bg-fashion-900 p-7 space-y-4"><p class="text-xs tracking-widest text-fashion-gold">THE VOTING ROOM · DIAGNÓSTICO ADM</p><h2 class="font-cinzel text-2xl text-white">Urna aberta, mas Elimination Pool não formado</h2><p class="text-sm text-gray-300">A urna está aberta, porém existem ${Array.isArray(globalState.berlinda)?globalState.berlinda.length:0} de 3 indicados no Elimination Pool oficial. A votação de salvação não pode aparecer aos Designers até que os três sejam confirmados.</p><p class="text-sm text-gray-300">Entre em ADM → Episódio → Publicação oficial, apure e publique o ranking para formar o Pool. Depois volte à The Voting Room.</p><button type="button" id="fauGoFixPool" class="border border-fashion-gold text-fashion-gold px-4 py-3 rounded-lg">Ir para o painel ADM</button></section>`);
-            document.getElementById('fauGoFixPool')?.addEventListener('click',()=>navigate('direcao'));
+            renderView(`<section class="max-w-2xl mx-auto rounded-2xl border border-fashion-gold/50 bg-fashion-900 p-7 space-y-4"><p class="text-xs tracking-widest text-fashion-gold">THE VOTING ROOM · ADM</p><h2 class="font-cinzel text-2xl text-white">Preparando o Elimination Pool</h2><p id="fauAutoPoolStatus" class="text-sm text-gray-300">A urna já está aberta. Identificando os três indicados pelas notas da rodada e pelo acumulado, sem publicar o ranking.</p><button type="button" id="fauAutoPoolRetry" class="border border-fashion-gold text-fashion-gold px-4 py-3 rounded-lg">Atualizar os três indicados</button></section>`);
+            const resolve = async () => {
+                const status=document.getElementById('fauAutoPoolStatus');
+                const retry=document.getElementById('fauAutoPoolRetry');
+                if(retry)retry.disabled=true;
+                try {
+                    const pool=await fauResolveStandardPool();
+                    // Apenas corrige a urna já aberta; não publica ranking ou notas.
+                    await db.doc('config/estado').update({berlinda:pool});
+                    if(status)status.textContent='Três indicados confirmados: '+pool.map(x=>x.ate).join(' · ')+'. Atualizando a cabine...';
+                    globalState.berlinda=pool;
+                    await VIEWS.berlinda();
+                } catch(err) {
+                    if(status)status.textContent='Não foi possível formar automaticamente: '+(err.message||String(err));
+                    if(retry)retry.disabled=false;
+                }
+            };
+            document.getElementById('fauAutoPoolRetry')?.addEventListener('click',resolve);
+            await resolve();
             return;
         }
         // A cabine só abre com o desfile publicado e fecha assim que o Pool é formado.
@@ -5102,6 +5119,75 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
       const size=small?'fau-result-portrait-small':'fau-result-portrait';
       return src?`<img class="${size}" src="${esc(src)}" alt="Retrato do Designer" loading="lazy">`:`<span class="${size} fau-result-portrait-placeholder" aria-hidden="true"><i class="fa-solid fa-user"></i></span>`;
     }
+    // Apuração compartilhada entre a direção e a The Voting Room.
+        const computeSeasonStandings = async () => {
+            const [profilesSnap, evalsSnap] = await Promise.all([
+                db.collection('perfis').where('role', '==', 'estilista').get(),
+                db.collection('avaliacoes').get()
+            ]);
+
+            const supremeRankingState=globalState.themeId==='theme_next_supreme' ? await supremeState() : null;
+            if(supremeRankingState && supremeRankingState.phase!=='selected') throw new Error('A Supreme Vote precisa ser concluída antes de apurar o ranking.');
+            const supremeWinners=new Map((supremeRankingState?.winners||[]).map(w=>[w.uid,`${globalState.rodada}_${w.uid}_${w.slot-1}`]));
+            const evaluationsByLook = {};
+            evalsSnap.docs.forEach(d => {
+                const data = d.data();
+                if(supremeRankingState && data.rodada===globalState.rodada && supremeWinners.get(data.alvo)!==data.look) return;
+                ((evaluationsByLook[data.alvo] ??= {})[data.look] ??= { r: data.rodada, scores: [] }).scores.push(data.total);
+            });
+
+            const absencesSnap = globalState.themeId === 'theme_traitors' ? await db.collection('ausencias_rodada').where('rodada','==',globalState.rodada || 'sem-rodada').get() : null;
+            const absentUids = new Set(absencesSnap ? absencesSnap.docs.map(d=>d.data().uid) : []);
+            const activeStylists = profilesSnap.docs.filter(d => !d.data().out && !d.data().disabled && !absentUids.has(d.id));
+            if (globalState.themeId === 'theme_beauty_eye') {
+                const lookSnap = await db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada').get();
+                const slotsByUid = {};
+                lookSnap.docs.forEach(d => {const l=d.data(); (slotsByUid[l.uid] ??= new Set()).add(l.slot);});
+                const missing = activeStylists.filter(d => {
+                    const slots=slotsByUid[d.id];
+                    if (!slots?.has(1) || !slots?.has(2)) return true;
+                    const scored=Object.values(evaluationsByLook[d.id] || {}).filter(x=>x.r===globalState.rodada && x.scores.length);
+                    return scored.length < 2;
+                });
+                if (missing.length) throw new Error('Beauty: os dois looks de cada estilista precisam estar enviados e avaliados antes da apuração: '+missing.map(d=>d.data().ate||d.id).join(', '));
+            }
+            const rows = activeStylists.map(doc => {
+                let totalAccumulated = 0;
+                let currentRoundScore = 0;
+                const looksObj = evaluationsByLook[doc.id] || {};
+
+                const perRound = {};
+                for (const lookKey in looksObj) {
+                    const lookData = looksObj[lookKey];
+                    const avg = lookData.scores.reduce((a, b) => a + b, 0) / lookData.scores.length;
+                    const pr = (perRound[lookData.r] ??= { sum: 0, n: 0 });
+                    pr.sum += avg; pr.n++;
+                }
+                for (const r in perRound) {
+                    // Rodadas antigas (sem modo salvo) continuam somando, como antes.
+                    const isBeautyRound = r === globalState.rodada && globalState.themeId === 'theme_beauty_eye';
+                    const v = !isBeautyRound && globalState.modos?.[r] === 'media' ? perRound[r].sum / perRound[r].n : perRound[r].sum;
+                    if (r === globalState.rodada) currentRoundScore += v;
+                    if (globalState.fase !== 'final' || r === globalState.rodada) totalAccumulated += v;
+                }
+
+                return { uid: doc.id, ate: doc.data().ate, tot: Number(totalAccumulated.toFixed(2)), rd: Number(currentRoundScore.toFixed(2)) };
+            });
+
+            return rows.sort((a, b) => b.tot - a.tot || b.rd - a.rd);
+        };
+
+    const fauResolveStandardPool = async () => {
+        if (!isAdmin) throw new Error('Apenas o ADM pode confirmar os indicados.');
+        if (['theme_traitors','theme_tarantino','theme_plaid_bay','theme_rest_in_style'].includes(globalState.themeId) || globalState.fase !== 'normal' || globalState.elimTipo === 'none' || globalState.naoEliminatoria) throw new Error('Esta rodada exige a mecânica específica do desafio.');
+        const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd || b.tot-a.tot);
+        if(standings.length<4 || standings.some(x=>!Number.isFinite(x.rd)||!Number.isFinite(x.tot))) throw new Error('Não há notas suficientes para formar o Elimination Pool.');
+        const bottom=standings.slice(-2);
+        const third=[...standings].sort((a,b)=>a.tot-b.tot || a.rd-b.rd).find(x=>x.uid!==standings[0].uid && !bottom.some(y=>y.uid===x.uid));
+        const pool=[...bottom,third].filter(Boolean).map(x=>({uid:x.uid,ate:x.ate}));
+        if(pool.length!==3 || new Set(pool.map(x=>x.uid)).size!==3) throw new Error('Não foi possível identificar três indicados diferentes.');
+        return pool;
+    };
     // 7. THE ELIMINATION POOL — voto secreto e definitivo
     VIEWS.berlinda = async () => {
         if (isAdmin) {
@@ -5119,7 +5205,14 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(stage){
               const renderRole=(role)=>{
                 document.querySelectorAll('[data-admin-pool-view]').forEach(b=>{const active=b.dataset.adminPoolView===role;b.classList.toggle('border-fashion-gold',active);b.classList.toggle('text-fashion-gold',active);});
-                stage.innerHTML=role==='nominee'?`<h3 class="font-cinzel text-red-200 text-2xl">SEU DESTINO AINDA NÃO ESTÁ DECIDIDO</h3><p class="text-sm text-gray-300">Você está no Elimination Pool e não pode votar. Os outros Designers decidirão quem merece continuar.</p>${cards}`:`<h3 class="font-cinzel text-fashion-gold text-xl">${role==='voted'?'VOTO REGISTRADO · ENVELOPE LACRADO':'ESCOLHA UM DESIGNER PARA SALVAR'}</h3><p class="text-xs text-gray-300">${role==='voted'?'Seu voto foi recebido. O resultado só será revelado pela produção.':'Esta é uma simulação da cabine. Nenhum voto será registrado.'}</p>${cards}<button type="button" disabled class="w-full bg-fashion-gold text-black opacity-50 rounded-lg p-3 text-xs font-bold">${role==='voted'?'VOTO REGISTRADO ✓':'CONFIRMAR VOTO PARA SALVAR · PRÉVIA'}</button>`;
+                const previewCards=pool.map((b,i)=>`<label class="fau-save-option flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-4 ${role==='voter'?'cursor-pointer':'cursor-default'}"><input type="radio" name="fauAdminPreviewSave" value="${esc(b.uid)}" ${role!=='voter'?'disabled':''} class="accent-yellow-500 w-5 h-5">${fauPortraitMarkup(b.uid,photos,true)}<div class="flex-1"><div class="text-[10px] text-gray-400 tracking-widest">INDICADO ${String(i+1).padStart(2,'0')}</div><div class="font-cinzel text-white text-lg">${esc(b.ate)}</div><p class="text-xs text-gray-400 mt-1">Quero salvar este Designer.</p></div></label>`).join('');
+                stage.innerHTML=role==='nominee'?`<h3 class="font-cinzel text-red-200 text-2xl">SEU DESTINO AINDA NÃO ESTÁ DECIDIDO</h3><p class="text-sm text-gray-300">Você está no Elimination Pool e não pode votar. Os outros Designers decidirão quem merece continuar.</p>${cards}`:`<h3 class="font-cinzel text-fashion-gold text-xl">${role==='voted'?'VOTO REGISTRADO · ENVELOPE LACRADO':'ESCOLHA UM DESIGNER PARA SALVAR'}</h3><p class="text-xs text-gray-300">${role==='voted'?'Seu voto foi recebido. O resultado só será revelado pela produção.':'Prévia interativa do participante. A escolha abaixo não registra nenhum voto.'}</p>${previewCards}<p id="fauAdminPreviewChoice" class="text-xs text-fashion-gold">${role==='voted'?'Envelope lacrado.':'Selecione um dos três indicados para testar a interface.'}</p><button type="button" disabled class="w-full bg-fashion-gold text-black opacity-50 rounded-lg p-3 text-xs font-bold">${role==='voted'?'VOTO REGISTRADO ✓':'CONFIRMAR VOTO PARA SALVAR · SOMENTE PRÉVIA'}</button>`;
+                stage.querySelectorAll('input[name="fauAdminPreviewSave"]').forEach(input=>input.addEventListener('change',()=>{
+                  const selected=pool.find(b=>b.uid===input.value);
+                  const status=stage.querySelector('#fauAdminPreviewChoice');
+                  if(status)status.textContent=`Prévia: você escolheu salvar ${selected?.ate||'este Designer'}. Nenhum voto foi enviado.`;
+                  stage.querySelectorAll('.fau-save-option').forEach(label=>label.classList.toggle('fau-ballot-selected',!!label.querySelector('input:checked')));
+                }));
               };
               document.querySelectorAll('[data-admin-pool-view]').forEach(b=>b.addEventListener('click',()=>renderRole(b.dataset.adminPoolView)));
               renderRole('voter');
@@ -5930,63 +6023,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           if(b){renderFauPrivatePreview(b.dataset.fauPreview);return;}
           if(e.target.id==='fauPrivatePreviewRefresh')renderFauPrivatePreview(fauPreviewMode);
         });
-        const computeSeasonStandings = async () => {
-            const [profilesSnap, evalsSnap] = await Promise.all([
-                db.collection('perfis').where('role', '==', 'estilista').get(),
-                db.collection('avaliacoes').get()
-            ]);
-
-            const supremeRankingState=globalState.themeId==='theme_next_supreme' ? await supremeState() : null;
-            if(supremeRankingState && supremeRankingState.phase!=='selected') throw new Error('A Supreme Vote precisa ser concluída antes de apurar o ranking.');
-            const supremeWinners=new Map((supremeRankingState?.winners||[]).map(w=>[w.uid,`${globalState.rodada}_${w.uid}_${w.slot-1}`]));
-            const evaluationsByLook = {};
-            evalsSnap.docs.forEach(d => {
-                const data = d.data();
-                if(supremeRankingState && data.rodada===globalState.rodada && supremeWinners.get(data.alvo)!==data.look) return;
-                ((evaluationsByLook[data.alvo] ??= {})[data.look] ??= { r: data.rodada, scores: [] }).scores.push(data.total);
-            });
-
-            const absencesSnap = globalState.themeId === 'theme_traitors' ? await db.collection('ausencias_rodada').where('rodada','==',globalState.rodada || 'sem-rodada').get() : null;
-            const absentUids = new Set(absencesSnap ? absencesSnap.docs.map(d=>d.data().uid) : []);
-            const activeStylists = profilesSnap.docs.filter(d => !d.data().out && !d.data().disabled && !absentUids.has(d.id));
-            if (globalState.themeId === 'theme_beauty_eye') {
-                const lookSnap = await db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada').get();
-                const slotsByUid = {};
-                lookSnap.docs.forEach(d => {const l=d.data(); (slotsByUid[l.uid] ??= new Set()).add(l.slot);});
-                const missing = activeStylists.filter(d => {
-                    const slots=slotsByUid[d.id];
-                    if (!slots?.has(1) || !slots?.has(2)) return true;
-                    const scored=Object.values(evaluationsByLook[d.id] || {}).filter(x=>x.r===globalState.rodada && x.scores.length);
-                    return scored.length < 2;
-                });
-                if (missing.length) throw new Error('Beauty: os dois looks de cada estilista precisam estar enviados e avaliados antes da apuração: '+missing.map(d=>d.data().ate||d.id).join(', '));
-            }
-            const rows = activeStylists.map(doc => {
-                let totalAccumulated = 0;
-                let currentRoundScore = 0;
-                const looksObj = evaluationsByLook[doc.id] || {};
-
-                const perRound = {};
-                for (const lookKey in looksObj) {
-                    const lookData = looksObj[lookKey];
-                    const avg = lookData.scores.reduce((a, b) => a + b, 0) / lookData.scores.length;
-                    const pr = (perRound[lookData.r] ??= { sum: 0, n: 0 });
-                    pr.sum += avg; pr.n++;
-                }
-                for (const r in perRound) {
-                    // Rodadas antigas (sem modo salvo) continuam somando, como antes.
-                    const isBeautyRound = r === globalState.rodada && globalState.themeId === 'theme_beauty_eye';
-                    const v = !isBeautyRound && globalState.modos?.[r] === 'media' ? perRound[r].sum / perRound[r].n : perRound[r].sum;
-                    if (r === globalState.rodada) currentRoundScore += v;
-                    if (globalState.fase !== 'final' || r === globalState.rodada) totalAccumulated += v;
-                }
-
-                return { uid: doc.id, ate: doc.data().ate, tot: Number(totalAccumulated.toFixed(2)), rd: Number(currentRoundScore.toFixed(2)) };
-            });
-
-            return rows.sort((a, b) => b.tot - a.tot || b.rd - a.rd);
-        };
-
         // THE BLACK BANQUET: duas lideranças imunizadas, um WIN oficial geral.
         const computeTraitorsPool = async standings => {
             if (!isAdmin) throw new Error('Apenas a produção pode apurar as facções.');
@@ -6914,17 +6950,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 if (specialThemes.includes(globalState.themeId) || globalState.fase !== 'normal' || globalState.elimTipo === 'none' || globalState.naoEliminatoria) {
                     throw new Error('Esta rodada possui regras especiais. Confirme os três indicados pelo fluxo próprio antes de abrir a urna.');
                 }
-                const standings = (await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd);
-                if (standings.length < 4 || standings.some(x=>!Number.isFinite(x.rd)||!Number.isFinite(x.tot))) {
-                    throw new Error('Não há avaliações válidas suficientes para formar os três indicados. Confira as notas dos jurados.');
-                }
-                const winUid = standings[0].uid;
-                const bottom = standings.slice(-2);
-                const accumulated = [...standings].sort((a,b)=>a.tot-b.tot)
-                    .find(x=>x.uid!==winUid && !bottom.some(y=>y.uid===x.uid));
-                poolToOpen = [...bottom, accumulated].filter(Boolean).map(x=>({uid:x.uid,ate:x.ate}));
-                if(poolToOpen.length!==3 || new Set(poolToOpen.map(x=>x.uid)).size!==3)
-                    throw new Error('Não foi possível determinar três indicados distintos. Confira a apuração.');
+                poolToOpen = await fauResolveStandardPool();
             }
             if (!globalState.urna && globalState.themeId!=='theme_rest_in_style' && poolToOpen.length!==3)
                 throw new Error('O Elimination Pool precisa ter três indicados para abrir a votação.');
