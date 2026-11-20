@@ -1482,7 +1482,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
     };
 
     const ABAS_POR_PERFIL = {
-        estilista: ['meu_perfil', 'work', 'runway', 'tribunal', 'berlinda', 'conf'],
+        estilista: ['meu_perfil', 'work', 'runway', 'tribunal', 'conf'],
         jurado: ['bancada', 'runway', 'conf'],
         plateia: ['runway', 'conf'],
         admin: ['direcao', 'testlab', 'work', 'bancada', 'runway', 'tribunal', 'conf']
@@ -2299,7 +2299,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 choices.push(['cast','ACOMPANHAR O ELENCO','Veja quem continua na competição.']);
             } else {
                 if(flow.submissionsOpen) choices.push(['work','ENVIAR SUA CRIAÇÃO','Entre no Workroom para enviar ou editar seu look antes do prazo.']);
-                if(poolOpen && !isInPool) choices.push(['berlinda','VOTAR PARA SALVAR','O Elimination Pool está aberto. Registre seu voto secreto.']);
+                if(poolOpen && !isInPool) choices.push(['tribunal','VOTAR PARA SALVAR','O Elimination Pool está aberto. Registre seu voto secreto.']);
                 else if(poolOpen && isInPool) choices.push(['tribunal','ACOMPANHAR A VOTAÇÃO','Você está no Elimination Pool e não pode votar na própria salvação.']);
                 else if(castVotingOpen) choices.push(['tribunal','REGISTRAR SEUS VOTOS','Entre na Voting Room e participe da votação secreta.']);
                 if(flow.runwayOpen) choices.push(['runway','ASSISTIR AO DESFILE','Veja as criações publicadas e seus conceitos.']);
@@ -4943,6 +4943,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 renderView('<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-8 text-center"><h2 class="font-cinzel text-fashion-gold">🕯️ THE LAST JUDGMENT</h2><p class="text-gray-300 text-sm mt-3">A cerimônia está sob controle da produção. Aguarde a próxima revelação.</p></div>');return;
             }
         }
+        // The Voting Room centraliza os votos do elenco e a salvação.
+        // Quando o Pool é formado, mostra a urna de salvação (ou seu estado fechado).
+        if (Array.isArray(globalState.berlinda) && globalState.berlinda.length > 0 && globalState.themeId !== 'theme_rest_in_style') {
+            return VIEWS.berlinda();
+        }
+        if (globalState.urna && (!Array.isArray(globalState.berlinda) || globalState.berlinda.length !== 3) && isAdmin) {
+            renderView(`<section class="max-w-2xl mx-auto rounded-2xl border border-amber-500/60 bg-fashion-900 p-7 space-y-4"><p class="text-xs tracking-widest text-fashion-gold">THE VOTING ROOM · DIAGNÓSTICO ADM</p><h2 class="font-cinzel text-2xl text-white">Urna aberta, mas Elimination Pool não formado</h2><p class="text-sm text-gray-300">A urna está aberta, porém existem ${Array.isArray(globalState.berlinda)?globalState.berlinda.length:0} de 3 indicados no Elimination Pool oficial. A votação de salvação não pode aparecer aos Designers até que os três sejam confirmados.</p><p class="text-sm text-gray-300">Entre em ADM → Episódio → Publicação oficial, apure e publique o ranking para formar o Pool. Depois volte à The Voting Room.</p><button type="button" id="fauGoFixPool" class="border border-fashion-gold text-fashion-gold px-4 py-3 rounded-lg">Ir para o painel ADM</button></section>`);
+            document.getElementById('fauGoFixPool')?.addEventListener('click',()=>navigate('direcao'));
+            return;
+        }
         // A cabine só abre com o desfile publicado e fecha assim que o Pool é formado.
         // O prazo de entrega do Workroom não interfere no período de votação.
         const castBallotOpen = () => !!globalState.rodada && !!globalState.liberado && !(Array.isArray(globalState.berlinda) && globalState.berlinda.length);
@@ -5100,7 +5110,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const open = !!globalState.urna && pool.length === 3;
             const cards = pool.map((b,i)=>`<div class="flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-4">${fauPortraitMarkup(b.uid,photos,true)}<div class="flex-1"><p class="text-[10px] tracking-widest text-fashion-gold">INDICADO ${String(i+1).padStart(2,'0')}</p><p class="font-cinzel text-white text-xl">${esc(b.ate)}</p></div></div>`).join('');
             renderView(`<div class="max-w-2xl mx-auto space-y-5 pb-12">
-              <div class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4"><p class="text-fashion-gold text-xs tracking-widest">VISUALIZAÇÃO DO ADM · SOMENTE LEITURA</p><p class="text-sm text-gray-300 mt-2">Veja a experiência dos Designers sem registrar votos. ${open?'A urna está aberta.':'A urna ainda não está aberta.'}</p><button type="button" id="fauAdminPoolControl" class="mt-3 border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Ir para o painel de controle</button></div>
+              <div class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4"><p class="text-fashion-gold text-xs tracking-widest">VISUALIZAÇÃO DO ADM · SOMENTE LEITURA</p><p class="text-sm text-gray-300 mt-2">Prévia da votação de salvação na The Voting Room. Veja a experiência dos Designers sem registrar votos. ${open?'A urna está aberta.':'A urna ainda não está aberta.'}</p><button type="button" id="fauAdminPoolControl" class="mt-3 border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Ir para o painel de controle</button></div>
               <header class="rounded-2xl bg-fashion-900 border border-fashion-red/40 p-8 text-center space-y-3"><div class="text-4xl">⚖️</div><p class="text-fashion-red text-xs tracking-widest">THE FINAL SAY · SECRET BALLOT</p><h2 class="font-cinzel text-3xl text-white">THE ELIMINATION POOL</h2><p class="text-sm text-gray-300">${open?'Escolha quem merece continuar.':'A votação de salvação ainda não foi liberada.'}</p></header>
               ${pool.length===3?`<div class="flex flex-wrap gap-2"><button type="button" data-admin-pool-view="voter" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Quem pode votar</button><button type="button" data-admin-pool-view="nominee" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Quem está no Pool</button><button type="button" data-admin-pool-view="voted" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Após votar</button></div><section id="fauAdminPoolRolePreview" class="rounded-xl bg-fashion-900 border border-fashion-700 p-5 space-y-4"></section>`:`<section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-6 text-center text-sm text-gray-300">O Elimination Pool oficial ainda não tem três indicados. Publique o ranking e forme o Pool antes de abrir a urna. A prévia simulada fica em ADM → Episódio → Prévias da rodada.</section>`}
             </div>`);
@@ -5120,7 +5130,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         if(globalState.themeId==='theme_rest_in_style'){renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 p-8 text-center"><h2 class="font-cinzel text-fashion-gold">🕯️ THE LAST JUDGMENT</h2><p class="text-sm text-gray-300 mt-3">Esta dinâmica utiliza a avaliação especial dos looks, não o voto de salvação.</p></div>');return;}
         const pool=globalState.berlinda||[], round=globalState.rodada;
         const poolPhotos=pool.length?await fauPortraitDirectory():new Map();
-        if(!globalState.urna||!pool.length){renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 border border-fashion-gold/30 p-10 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">🔒 THE ELIMINATION POOL</h2><p class="text-sm text-gray-300 mt-3">A produção ainda não abriu a votação de salvação.</p></div>');return;}
+        if(!globalState.urna||pool.length!==3){renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 border border-fashion-gold/30 p-10 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">🔒 THE ELIMINATION POOL</h2><p class="text-sm text-gray-300 mt-3">A votação de salvação ainda não foi aberta pela produção. Volte aqui quando a urna estiver aberta.</p></div>');return;}
         if(pool.some(x=>x.uid===currentUser.uid)){
           renderView(`<div class="max-w-2xl mx-auto py-8 space-y-6 fau-elimination-enter">
             <div class="relative overflow-hidden rounded-3xl border border-red-800/60 bg-fashion-950 p-8 md:p-12 text-center space-y-5">
@@ -6896,8 +6906,30 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const state=(await db.doc(`tarantino_double_kill/${globalState.rodada}`).get()).data();
                 if(!state || state.phase!=='duel_ready') throw new Error('Primeiro confirme o First Kill e prepare o Bottom 2.');
             }
-            if (!productionConfirm(globalState.urna ? 'Encerrar votação agora?' : 'ABRIR votação para os participantes?')) return;
-            await db.doc('config/estado').update({ urna: !globalState.urna });
+            // Ao abrir a urna, formar e publicar os três indicados diretamente das notas
+            // da rodada, sem exigir a publicação prévia do ranking completo.
+            let poolToOpen = Array.isArray(globalState.berlinda) ? globalState.berlinda : [];
+            if (!globalState.urna && poolToOpen.length !== 3 && globalState.themeId !== 'theme_rest_in_style') {
+                const specialThemes = ['theme_traitors','theme_tarantino','theme_plaid_bay'];
+                if (specialThemes.includes(globalState.themeId) || globalState.fase !== 'normal' || globalState.elimTipo === 'none' || globalState.naoEliminatoria) {
+                    throw new Error('Esta rodada possui regras especiais. Confirme os três indicados pelo fluxo próprio antes de abrir a urna.');
+                }
+                const standings = (await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd);
+                if (standings.length < 4 || standings.some(x=>!Number.isFinite(x.rd)||!Number.isFinite(x.tot))) {
+                    throw new Error('Não há avaliações válidas suficientes para formar os três indicados. Confira as notas dos jurados.');
+                }
+                const winUid = standings[0].uid;
+                const bottom = standings.slice(-2);
+                const accumulated = [...standings].sort((a,b)=>a.tot-b.tot)
+                    .find(x=>x.uid!==winUid && !bottom.some(y=>y.uid===x.uid));
+                poolToOpen = [...bottom, accumulated].filter(Boolean).map(x=>({uid:x.uid,ate:x.ate}));
+                if(poolToOpen.length!==3 || new Set(poolToOpen.map(x=>x.uid)).size!==3)
+                    throw new Error('Não foi possível determinar três indicados distintos. Confira a apuração.');
+            }
+            if (!globalState.urna && globalState.themeId!=='theme_rest_in_style' && poolToOpen.length!==3)
+                throw new Error('O Elimination Pool precisa ter três indicados para abrir a votação.');
+            if (!productionConfirm(globalState.urna ? 'Encerrar votação agora?' : `ABRIR a urna e mostrar estes três indicados na The Voting Room?\n\n${poolToOpen.map(x=>x.ate).join(' • ')}`)) return;
+            await db.doc('config/estado').update(globalState.urna ? {urna:false} : {urna:true,berlinda:poolToOpen});
             await productionLog('ballot_visibility_changed', {open:!globalState.urna});
             showToast('Status da urna atualizado.');
         });
