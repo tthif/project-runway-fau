@@ -3848,16 +3848,25 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         ]);
         if(!body?.isConnected)return;
         const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>Array.isArray(d.data().rows)).map(d=>({round:d.id,...d.data()})):[];
-        // A leitura da coleção inteira pode ser negada pelas regras, mesmo quando
-        // documentos de rodadas publicadas são legíveis individualmente.
-        let titles=titlesResult.status==='fulfilled'?titlesResult.value.docs.filter(d=>d.data().published===true).map(d=>({round:d.id,...d.data()})):[];
-        let titlesAccessible=titlesResult.status==='fulfilled';
-        if(!titlesAccessible){
-          const individual=await Promise.allSettled(ranks.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
-          titles=individual.filter(x=>x.status==='fulfilled'&&x.value.exists&&x.value.data()?.published===true)
-            .map(x=>({round:x.value.id,...x.value.data()}));
-          titlesAccessible=individual.length>0&&individual.every(x=>x.status==='fulfilled');
+        // Consultas de coleção e de documentos individuais podem ter permissões distintas.
+        // Buscar cada rodada oficial evita perder títulos por causa de uma listagem negada.
+        const titleByRound=new Map();
+        if(titlesResult.status==='fulfilled'){
+          titlesResult.value.docs.forEach(d=>{
+            if(d.data()?.published===true)titleByRound.set(String(d.id),{round:d.id,...d.data()});
+          });
         }
+        const titleChecks=await Promise.allSettled(ranks.map(r=>
+          db.collection('fau_titulos_publicos').doc(String(r.round)).get()
+        ));
+        titleChecks.forEach((result,index)=>{
+          if(result.status!=='fulfilled'||!result.value.exists)return;
+          const data=result.value.data();
+          if(data?.published===true)titleByRound.set(String(ranks[index].round),{round:ranks[index].round,...data});
+        });
+        const titles=[...titleByRound.values()];
+        const titlesAccessible=titlesResult.status==='fulfilled'||
+          (titleChecks.length>0&&titleChecks.every(x=>x.status==='fulfilled'));
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
         // Exibir as despedidas da mais recente para a mais antiga.
         // O ranking histórico público é a fonte da rodada de eliminação;
@@ -4031,7 +4040,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           <p class="text-gray-400 text-sm">Cada rodada tem sua história. Relembre os resultados e os momentos que marcaram a competição.</p>
           <div class="fau-archive-timeline space-y-3">${story||'<p class="text-gray-400 text-sm">Os capítulos aparecerão após a publicação dos primeiros resultados.</p>'}</div></section>
           ${ranksResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O histórico público não está acessível com as permissões atuais. Nenhuma nota privada será consultada.</p>':''}
-          ${titlesResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Os títulos publicados não estão acessíveis com as permissões atuais.</p>':''}
+          ${!titlesAccessible?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar todos os títulos publicados. Verifique as regras de leitura de fau_titulos_publicos.</p>':''}
           ${castResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar o elenco público para o Hall dos Eliminados.</p>':''}
           ${publicationsResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O acervo de imagens publicadas não está acessível com as permissões atuais.</p>':''}`;
         let trackLoaded=false;
