@@ -5761,9 +5761,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               if(!g.poderUid||!options.length){body.innerHTML='<p class="text-sm text-gray-300">A escolha ainda não foi aberta. Assim que você abrir o poder, a prévia mostrará as mesmas opções que o Ícone verá.</p>';return;}
               let chosen=false;
               try{const doc=await db.doc('escolhas/'+g.rodada).get();chosen=doc.exists&&!!doc.data()?.opcaoId;}catch(e){}
-              const clues=await Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_private').doc(o.id).get();return doc.exists?(doc.data()?.clue||''):'';}catch(e){return '';}}));
+              const [clues,photos]=await Promise.all([
+                chosen?Promise.resolve([]):Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_private').doc(o.id).get();return doc.exists?(doc.data()?.clue||''):'';}catch(e){return '';}})),
+                chosen?Promise.resolve([]):Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_public').doc(o.id).get();return doc.exists?(doc.data()?.photo||''):'';}catch(e){return '';}}))
+              ]);
               if(token!==previewToken||preview.hidden)return;
-              body.innerHTML='<p class="text-fashion-gold font-cinzel tracking-widest text-sm">THE ICON&#39;S CHOICE</p><p class="text-sm text-gray-300">Você tem o poder. Explore as pistas e escolha o próximo desafio.</p>'+(chosen?'<p class="text-fashion-gold text-sm">🔒 Escolha registrada. Aguarde a revelação da produção.</p>':'')+'<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">'+options.map((o,i)=>'<div class="rounded-lg border border-fashion-gold/30 bg-fashion-900 overflow-hidden"><div class="aspect-[4/5] bg-fashion-950">'+(o.photo?'<img src="'+escapePreview(o.photo)+'" alt="Pista '+(i+1)+'" class="w-full h-full object-cover">':'')+'</div><div class="p-3 space-y-2"><strong class="block font-cinzel text-fashion-gold">MYSTERY '+String(i+1).padStart(2,'0')+'</strong>'+(chosen?'':'<p class="text-gray-300 text-xs">'+escapePreview(clues[i]||'Pista em preparação…')+'</p><span class="block text-center bg-fashion-gold/70 text-black rounded py-2 text-xs font-semibold" aria-label="Botão ilustrativo, desativado">Escolher esta pista</span>')+'</div></div>').join('')+'</div>';
+              body.innerHTML='<p class="text-fashion-gold font-cinzel tracking-widest text-sm">THE ICON&#39;S CHOICE</p><p class="text-sm text-gray-300">Você tem o poder. Explore as pistas e escolha o próximo desafio.</p>'+(chosen?'<p class="text-fashion-gold text-sm">🔒 Escolha registrada. Aguarde a revelação da produção.</p>':'')+'<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">'+options.map((o,i)=>'<div class="rounded-lg border border-fashion-gold/30 bg-fashion-900 overflow-hidden"><div class="aspect-[4/5] bg-fashion-950">'+(!chosen&&photos[i]?'<img src="'+escapePreview(photos[i])+'" alt="Pista '+(i+1)+'" class="w-full h-full object-cover">':'')+'</div><div class="p-3 space-y-2"><strong class="block font-cinzel text-fashion-gold">MYSTERY '+String(i+1).padStart(2,'0')+'</strong>'+(chosen?'':'<p class="text-gray-300 text-xs">'+escapePreview(clues[i]||'Pista em preparação…')+'</p><span class="block text-center bg-fashion-gold/70 text-black rounded py-2 text-xs font-semibold" aria-label="Botão ilustrativo, desativado">Escolher esta pista</span>')+'</div></div>').join('')+'</div>';
             };
             // Integração nativa à Central de Comandos: sem card ou título duplicado.
             const commandCenter=episode.querySelector('#fauUnifiedOperations');
@@ -7037,7 +7040,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
         vaultRefresh().catch(e=>{$('#vaultList').textContent='Não foi possível abrir o Vault: '+e.message});
         $('#btnPoderAbrir').onclick = safeExec(async () => {
             const available=await vaultPublic.where('used','==',false).get();
-            const opcoes=available.docs.filter(d=>SEASON_THEMES[d.id]).map(d=>({id:d.id,photo:d.data().photo}));
+            const opcoes=available.docs.filter(d=>SEASON_THEMES[d.id]).map(d=>({id:d.id}));
             if(!opcoes.length)throw new Error('Cadastre temas disponíveis no The Theme Vault.');
             const standings = (await computeSeasonStandings()).sort((a, b) => b.rd - a.rd);
             const votes = await tallyVotes('veto');
@@ -8581,20 +8584,20 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
     (() => {
         const card=document.getElementById('poderCard');
-        let chosen=null,unsub=null,choiceKey='',last='',privateClues={};
+        let chosen=null,unsub=null,choiceKey='',last='',privateClues={},publicPhotos={};
         const render=()=>{
             const g=globalState;
             if(!currentUser||!g?.rodada){card.classList.add('hidden');return;}
             const owner=g.poderUid===currentUser.uid;
-            if(!owner||chosen||g.proxTema)privateClues={};
-            const key=[g.rodada,g.poderUid,g.proxTema?.themeId,chosen,JSON.stringify(g.proxOpcoes||[]),Object.keys(privateClues).length].join('|');
+            if(!owner||chosen||g.proxTema){privateClues={};publicPhotos={};}
+            const key=[g.rodada,g.poderUid,g.proxTema?.themeId,chosen,JSON.stringify(g.proxOpcoes||[]),Object.keys(privateClues).length,Object.keys(publicPhotos).length].join('|');
             if(key===last)return;last=key;
             let html='';
             if(g.proxTema)html=`<div class="text-fashion-gold font-cinzel tracking-[.25em]">🎭 THE RESULTS SHOW · THE REVEAL</div><div class="font-cinzel text-white text-xl mt-2">${esc(g.proxTema.nome)}</div><p class="text-gray-400">O próximo desafio foi revelado pela produção.</p>`;
             else if(g.poderUid&&(g.proxOpcoes||[]).length){
                 html=`<div class="text-fashion-gold font-cinzel tracking-[.25em]">👑 THE ICON'S CHOICE</div><p class="text-gray-300 mt-2">${owner?'Você tem o poder. Explore as pistas e escolha o próximo desafio.':'O próximo desafio está nas mãos de '+esc(g.poderNome||'um estilista')+'. Qual pista será escolhida?'}</p>`;
                 if(owner&&chosen)html+='<p class="text-fashion-gold mt-3">🔒 Escolha registrada. Aguarde a revelação da produção.</p>';
-                html+=`<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">${g.proxOpcoes.map((o,i)=>`<div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 overflow-hidden"><div class="aspect-[4/5] bg-fashion-900">${o.photo?`<img src="${esc(o.photo)}" alt="Pista ${i+1}" class="w-full h-full object-cover">`:''}</div><div class="p-3 space-y-2"><strong class="block font-cinzel text-fashion-gold">MYSTERY ${String(i+1).padStart(2,'0')}</strong>${owner&&!chosen?`<p class="text-gray-300 text-xs">${esc(privateClues[o.id]||'Pista em preparação…')}</p><button data-op="${esc(o.id)}" class="w-full bg-fashion-gold text-black rounded py-2 font-semibold">Escolher esta pista</button>`:''}</div></div>`).join('')}</div>`;
+                html+=`<div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">${g.proxOpcoes.map((o,i)=>`<div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 overflow-hidden"><div class="aspect-[4/5] bg-fashion-900">${owner&&!chosen&&publicPhotos[o.id]?`<img src="${esc(publicPhotos[o.id])}" alt="Pista ${i+1}" class="w-full h-full object-cover">`:''}</div><div class="p-3 space-y-2"><strong class="block font-cinzel text-fashion-gold">MYSTERY ${String(i+1).padStart(2,'0')}</strong>${owner&&!chosen?`<p class="text-gray-300 text-xs">${esc(privateClues[o.id]||'Pista em preparação…')}</p><button data-op="${esc(o.id)}" class="w-full bg-fashion-gold text-black rounded py-2 font-semibold">Escolher esta pista</button>`:''}</div></div>`).join('')}</div>`;
             }
             card.innerHTML=html;card.classList.toggle('hidden',!html);
         };
@@ -8633,7 +8636,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     if(!Array.isArray(state.proxOpcoes)||!state.proxOpcoes.some(item=>item.id===optionId))throw new Error('Esta pista não está disponível.');
                     tx.set(choiceRef,{rodada:round,uid,opcaoId:optionId,t:Date.now()});
                 });
-                chosen=optionId;privateClues={};last='';render();syncVaultChoice();showToast('Escolha lacrada. Aguarde a revelação oficial.');
+                chosen=optionId;privateClues={};publicPhotos={};last='';render();syncVaultChoice();showToast('Escolha lacrada. Aguarde a revelação oficial.');
             }
             catch(err){showToast('Não foi possível registrar: '+err.message);}
         };
@@ -8641,9 +8644,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const g=globalState,owner=currentUser&&g?.poderUid===currentUser.uid;
             const key=owner?g.rodada:'';
             if(key!==choiceKey){
-                choiceKey=key;chosen=null;privateClues={};last='';if(unsub){unsub();unsub=null;}
+                choiceKey=key;chosen=null;privateClues={};publicPhotos={};last='';if(unsub){unsub();unsub=null;}
                 if(key){
-                    unsub=db.doc(`escolhas/${key}`).onSnapshot(sn=>{chosen=sn.exists?sn.data().opcaoId:null;if(chosen)privateClues={};last='';render();syncVaultChoice();},()=>{});
+                    unsub=db.doc(`escolhas/${key}`).onSnapshot(sn=>{chosen=sn.exists?sn.data().opcaoId:null;if(chosen){privateClues={};publicPhotos={};}last='';render();syncVaultChoice();},()=>{});
                     // A escolha lacrada não pode reexibir pistas, inclusive após recarregar.
                     // Consultar a escolha antes de buscar qualquer texto privado.
                     (async()=>{
@@ -8656,6 +8659,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                             }));
                             if(choiceKey!==key||chosen)return;
                             privateClues=Object.fromEntries(clues);
+                            const photos=await Promise.all((g.proxOpcoes||[]).map(async o=>{
+                                try{const sn=await db.collection('theme_vault_public').doc(o.id).get();return [o.id,sn.exists?(sn.data().photo||''):''];}
+                                catch(e){return [o.id,''];}
+                            }));
+                            if(choiceKey!==key||chosen)return;
+                            publicPhotos=Object.fromEntries(photos);
                             last='';render();syncVaultChoice();
                         }catch(e){/* Sem confirmação de autorização, não carregar pistas. */}
                     })();
