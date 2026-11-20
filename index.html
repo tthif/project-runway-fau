@@ -6316,7 +6316,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 <section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-4 mb-5" id="fauAdminCriteriaPanel">
                     <p class="text-[10px] tracking-widest text-fashion-gold">JUDGES’ PROFILE · ADMIN</p>
                     <h3 class="font-cinzel text-xl text-white mt-2">Médias dos 5 critérios · Todos os Designers</h3>
-                    <p class="text-xs text-gray-400 my-3">Dados das rodadas publicadas e sincronizadas. Visão exclusiva da produção.</p>
+                    <p class="text-xs text-gray-400 my-3">Médias calculadas diretamente das avaliações das rodadas oficialmente publicadas. Visão exclusiva da produção.</p>
                     <div id="fauAdminCriteriaGrid" class="grid sm:grid-cols-2 gap-3"><p class="text-xs text-gray-400">Carregando avaliações…</p></div>
                 </section>
                 <div class="fau-profile-grid">
@@ -6352,18 +6352,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             // Não expor estas médias no documento público nem no perfil dos Designers.
             const criteriaGrid=container.querySelector('#fauAdminCriteriaGrid');
             if(criteriaGrid && isAdmin){
-                db.collection('desempenho_privado').get().then(snapshot=>{
+                fauPublishedCriteriaProfiles().then(privateData=>{
                     if(!criteriaGrid.isConnected)return;
-                    const privateData=new Map(snapshot.docs.map(d=>[d.id,d.data()]));
                     const designers=docs.filter(p=>p.role==='estilista');
+                    const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
                     criteriaGrid.innerHTML=designers.length?designers.map(p=>{
-                        const levels=privateData.get(p.id)?.criteriosVisuais;
+                        const levels=privateData.get(p.id);
                         const available=Array.isArray(levels)&&levels.length===5;
-                        const names=['Criatividade','Conceito','Qualidade visual','Styling','Interpretação'];
                         return `<article class="rounded-lg border border-fashion-700 bg-fashion-950 p-4"><h4 class="text-white font-semibold mb-3">${esc(p.ate||'Designer')}</h4>${available?names.map((name,i)=>{
                             const pct=Math.max(0,Math.min(100,Number(levels[i])||0));
                             return `<div class="mb-3"><div class="flex justify-between gap-2 text-xs mb-1"><span class="text-gray-300">${name}</span><strong class="text-fashion-gold">${(pct/10).toFixed(1).replace('.',',')}</strong></div><div class="h-2 rounded-full bg-fashion-700 overflow-hidden"><div class="h-full rounded-full" style="width:${pct}%;background:linear-gradient(90deg,#8e3446,#d1b38b)"></div></div></div>`;
-                        }).join(''):'<p class="text-xs text-gray-400">Aguardando sincronização das avaliações publicadas.</p>'}</article>`;
+                        }).join(''):'<p class="text-xs text-gray-400">Ainda não há avaliações válidas em rodadas oficialmente publicadas.</p>'}</article>`;
                     }).join(''):'<p class="text-xs text-gray-400">Nenhum Designer cadastrado.</p>';
                 }).catch(error=>{
                     console.warn('Falha ao consultar médias privadas',error);
