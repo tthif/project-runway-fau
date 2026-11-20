@@ -6022,6 +6022,24 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 html+=sorted.length?sorted.map(([id,n])=>`<div class="flex justify-between gap-3 border-b border-fashion-700 py-2"><span>${escPreview(label(id))}${n===top?' · LIDERANDO'+(sorted.filter(x=>x[1]===top).length>1?' (EMPATE)':''):''}</span><strong>${n} voto(s)</strong></div>`).join(''):'<p>Sem votos registrados nesta modalidade.</p>';
               });
             }
+            if(mode==='save'){
+              const profilesSnap=await db.collection('perfis').get();
+              const poolIds=new Set((globalState.berlinda||[]).map(x=>String(x.uid)));
+              const eligible=profilesSnap.docs.filter(d=>{
+                const p=d.data();return p.role==='estilista'&&!p.out&&!p.disabled&&!poolIds.has(d.id);
+              }).map(d=>({uid:d.id,name:d.data().ate||label(d.id)})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+              const recorded=rows.filter(v=>v.tipo==='ber');
+              const byVoter=new Map();
+              recorded.forEach(v=>{const uid=String(v.voter||v.voterUid||'');if(uid)byVoter.set(uid,v);});
+              const voted=eligible.filter(p=>byVoter.has(p.uid));
+              const pending=eligible.filter(p=>!byVoter.has(p.uid));
+              const poolNames=Object.fromEntries((globalState.berlinda||[]).map(p=>[p.uid,p.ate]));
+              const targetName=id=>poolNames[id]||label(id);
+              html=`<div class="space-y-4"><div class="flex flex-wrap gap-3 text-sm"><strong class="text-fashion-gold">${voted.length} de ${eligible.length} votaram</strong><span class="text-gray-300">${pending.length} pendentes</span><span class="text-gray-400">Urna ${globalState.urna?'aberta':'fechada'}</span></div>
+                <section class="space-y-2"><h4 class="text-fashion-gold font-semibold">Votos registrados · quem salvou quem</h4>${voted.length?voted.map(p=>`<div class="flex flex-wrap justify-between gap-2 border-b border-fashion-700 py-2"><strong>${escPreview(p.name)}</strong><span>salvou ${escPreview(targetName(byVoter.get(p.uid).alvo))}</span></div>`).join(''):'<p class="text-gray-400">Nenhum Designer elegível votou ainda.</p>'}</section>
+                <section class="space-y-2"><h4 class="text-fashion-gold font-semibold">Ainda falta votar</h4>${pending.length?pending.map(p=>`<div class="border-b border-fashion-700 py-2">${escPreview(p.name)}</div>`).join(''):'<p class="text-fashion-gold">Todos os Designers elegíveis votaram.</p>'}</section>
+                <p class="text-gray-400">Consulta exclusiva do ADM. Não encerra a urna, não publica resultados e não mostra os votos aos Designers.</p></div>`;
+            }
             if(box.isConnected&&requestSeq===fauPreviewSequence&&String(globalState.rodada||'')===round)output.innerHTML=html;
           }catch(err){if(requestSeq===fauPreviewSequence)output.textContent='Não foi possível consultar a prévia: '+(err.message||err);}
         };
