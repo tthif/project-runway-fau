@@ -797,6 +797,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 </style>
 <style id="fau-command-director-ux">#fau-panel-episode>#fauUnifiedOperations{margin-top:0!important}#fauUnifiedOperations .fau-command-control-panel{margin-top:14px}#fauUnifiedOperations .fau-command-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#fauUnifiedOperations .fau-command-btn{min-width:0;white-space:normal;text-align:center;line-height:1.35;padding:12px 9px}#fauUnifiedOperations .fau-command-heading{display:flex;flex-wrap:wrap;align-items:start;gap:12px}#fauUnifiedOperations .fau-command-heading>div{min-width:0;flex:1 1 240px}#fauUnifiedOperations .fau-command-heading h3{overflow-wrap:normal;word-break:normal;font-size:clamp(26px,5vw,39px)}@media(max-width:480px){#fauUnifiedOperations .fau-command-stats{grid-template-columns:repeat(2,minmax(0,1fr))}#fauUnifiedOperations .fau-command-heading h3{font-size:30px}}</style>
 <style id="fau-exclusive-previews-2026">#fauPreviewViewer.hidden,#fauPoolPreviewHome.hidden,#fauPrivatePreview[hidden]{display:none!important}#fauPreviewViewer details{border:0!important}#fauPreviewViewer details>summary{display:none!important}#fauUnifiedOperations [aria-pressed="true"]{border-color:#d1b38b!important;background:rgba(209,179,139,.15)!important;color:#f0eae1!important}@media(max-width:640px){#fauPreviewViewer{padding:12px}#fauPreviewViewerTitle{font-size:13px}}</style>
+<style id="fau-icon-merged-cards">.fau-icon-choice-active #fauVaultIconChoice{display:none!important}.fau-icon-choice-active #publicThemeClues [data-vault-id][hidden]{display:none!important}.fau-icon-choice-active #publicThemeClues [data-vault-id]{cursor:default}.fau-icon-choice-active #publicThemeClues .fau-vault-photo{max-height:none;height:auto;aspect-ratio:4/4.5}.fau-icon-choice-active #publicThemeClues .fau-icon-clue button{min-height:44px}.fau-icon-choice-active [data-vault-filter]{pointer-events:none;opacity:.45}</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -2440,6 +2441,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if(!list.isConnected)return;
             entries=snap.docs.sort((a,b)=>a.id.localeCompare(b.id)).map((d,i)=>({id:d.id,number:i+1,data:d.data()||{}}));
             paint();
+            if(typeof window.fauMergeIconVault==='function')window.fauMergeIconVault();
         },err=>{if(list.isConnected)list.textContent='Não foi possível carregar as pistas: '+err.message;});
         unsubsTab.push(unsub);
     };
@@ -8602,20 +8604,44 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             card.innerHTML=html;card.classList.toggle('hidden',!html);
         };
         // Exibir o poder somente dentro do Vault, sem duplicar a lógica de votação.
+        // The Theme Vault: foto, texto e botão juntos no mesmo cartão.
         const syncVaultChoice=()=>{
             const vault=document.getElementById('fauVaultIconChoice');
+            const gallery=document.getElementById('publicThemeClues');
             const owner=!!(currentUser&&globalState?.poderUid===currentUser.uid);
-            if(!vault)return;
-            const visible=owner&&!card.classList.contains('hidden');
-            vault.classList.toggle('hidden',!visible);
-            if(visible&&vault.innerHTML!==card.innerHTML)vault.innerHTML=card.innerHTML;
+            const active=owner&&!chosen&&!globalState?.proxTema&&!!globalState?.proxOpcoes?.length;
+            if(vault)vault.classList.add('hidden');
+            if(!gallery)return;
+            const root=gallery.closest('.fau-vault');
+            root?.classList.toggle('fau-icon-choice-active',active);
+            gallery.querySelectorAll('.fau-icon-clue').forEach(el=>el.remove());
+            if(!active)return;
+            const opts=globalState.proxOpcoes||[];
+            const byId=new Map(opts.map(o=>[String(o.id),o]));
+            gallery.querySelectorAll('[data-vault-id]').forEach(card=>{
+                const id=card.dataset.vaultId;
+                if(!byId.has(id)){card.hidden=true;return;}
+                card.hidden=false;
+                const body=card.querySelector('.p-3');
+                if(!body)return;
+                const extra=document.createElement('div');
+                extra.className='fau-icon-clue space-y-3 pt-3 border-t border-fashion-gold/20';
+                const clue=document.createElement('p');
+                clue.className='text-gray-200 text-xs leading-relaxed whitespace-pre-wrap';
+                clue.textContent=privateClues[id]||'Carregando pista…';
+                const btn=document.createElement('button');
+                btn.type='button';btn.className='w-full bg-fashion-gold text-black rounded-lg py-3 px-2 text-xs font-semibold';
+                btn.textContent='Escolher esta pista';
+                btn.addEventListener('click',async e=>{
+                    e.preventDefault();e.stopPropagation();
+                    const source=[...cardOriginalButtons()].find(b=>b.dataset.op===id);
+                    if(source)source.click();
+                });
+                extra.append(clue,btn);body.append(extra);
+            });
         };
-        document.addEventListener('click',e=>{
-            const option=e.target.closest('#fauVaultIconChoice [data-op]');
-            if(!option)return;
-            const source=[...card.querySelectorAll('[data-op]')].find(b=>b.dataset.op===option.dataset.op);
-            if(source)source.click();
-        });
+        const cardOriginalButtons=()=>card.querySelectorAll('[data-op]');
+        window.fauMergeIconVault=syncVaultChoice;
         const syncChoiceTimer=setInterval(syncVaultChoice,500);
         card.onclick=async e=>{
             const b=e.target.closest('[data-op]');if(!b)return;
