@@ -6035,7 +6035,17 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               const pending=eligible.filter(p=>!byVoter.has(p.uid));
               const poolNames=Object.fromEntries((globalState.berlinda||[]).map(p=>[p.uid,p.ate]));
               const targetName=id=>poolNames[id]||label(id);
+              const tally=new Map();
+              (globalState.berlinda||[]).forEach(p=>tally.set(String(p.uid),0));
+              voted.forEach(p=>{
+                const target=String(byVoter.get(p.uid)?.alvo||'');
+                if(tally.has(target))tally.set(target,tally.get(target)+1);
+              });
+              const totalValid=[...tally.values()].reduce((a,b)=>a+b,0);
+              const partial=[...tally].sort((a,b)=>b[1]-a[1]||targetName(a[0]).localeCompare(targetName(b[0]),'pt-BR'));
+              const partialHtml=`<section class="space-y-3 rounded-xl border border-fashion-gold/30 bg-fashion-900 p-4" aria-label="Parcial privada da votação"><div class="flex flex-wrap items-center justify-between gap-2"><h4 class="text-fashion-gold font-semibold">PARCIAL DA VOTAÇÃO</h4><span class="text-xs text-gray-400">${totalValid} voto(s) válido(s) · provisório</span></div>${partial.length?partial.map(([id,n],i)=>{const pct=totalValid?100*n/totalValid:0;return `<div class="space-y-1"><div class="flex justify-between gap-2 text-sm"><strong>${i+1}º · ${escPreview(targetName(id))}</strong><span class="whitespace-nowrap">${n} voto(s)</span></div><div class="h-2 rounded-full bg-fashion-700 overflow-hidden"><div class="h-full rounded-full" style="width:${pct.toFixed(2)}%;background:${i===partial.length-1?'#8e3446':'#d1b38b'}"></div></div><p class="text-xs text-gray-400">${pct.toFixed(1).replace('.',',')}% dos votos válidos</p></div>`;}).join(''):'<p class="text-gray-400 text-sm">Nenhum Designer no Elimination Pool.</p>'}<p class="text-xs text-gray-400">Os dois mais votados são salvos. O menos votado fica sujeito à eliminação, conforme as regras de desempate. Esta parcial não oficializa resultados.</p></section>`;
               html=`<div class="space-y-4"><div class="flex flex-wrap gap-3 text-sm"><strong class="text-fashion-gold">${voted.length} de ${eligible.length} votaram</strong><span class="text-gray-300">${pending.length} pendentes</span><span class="text-gray-400">Urna ${globalState.urna?'aberta':'fechada'}</span></div>
+                ${partialHtml}
                 <section class="space-y-2"><h4 class="text-fashion-gold font-semibold">Votos registrados · quem salvou quem</h4>${voted.length?voted.map(p=>`<div class="flex flex-wrap justify-between gap-2 border-b border-fashion-700 py-2"><strong>${escPreview(p.name)}</strong><span>salvou ${escPreview(targetName(byVoter.get(p.uid).alvo))}</span></div>`).join(''):'<p class="text-gray-400">Nenhum Designer elegível votou ainda.</p>'}</section>
                 <section class="space-y-2"><h4 class="text-fashion-gold font-semibold">Ainda falta votar</h4>${pending.length?pending.map(p=>`<div class="border-b border-fashion-700 py-2">${escPreview(p.name)}</div>`).join(''):'<p class="text-fashion-gold">Todos os Designers elegíveis votaram.</p>'}</section>
                 <p class="text-gray-400">Consulta exclusiva do ADM. Não encerra a urna, não publica resultados e não mostra os votos aos Designers.</p></div>`;
