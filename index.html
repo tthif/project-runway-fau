@@ -989,7 +989,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 .fau-round-editor summary{min-height:44px;display:flex;align-items:center}
 @media(max-width:440px){.fau-setup-advanced>summary{align-items:flex-start;flex-direction:column;gap:3px}.fau-setup-advanced>summary small{text-align:left}}
 </style>
-</head>
+<style id="fau-admin-studio-style">.fau-admin-studio{color:#f0eae1}.fau-studio-hero{padding:22px;border:1px solid #6a4c59;border-radius:17px;background:radial-gradient(ellipse at 90% 0%,#53243277,transparent 65%),linear-gradient(125deg,#2a1d29,#141215)}.fau-studio-kicker,.fau-studio-time small{font-size:10px;letter-spacing:.15em;color:#d1b38b;font-weight:700}.fau-studio-hero h2{font:600 clamp(35px,7vw,54px) 'Cormorant Garamond',serif;margin:10px 0 0}.fau-studio-hero>p{font-size:12px;color:#d1b38b}.fau-studio-time{display:flex;flex-direction:column;gap:4px;border-top:1px solid #624957;margin-top:18px;padding-top:16px}.fau-studio-time strong{font:600 clamp(26px,6vw,38px) monospace;color:#f0d5a5;font-variant-numeric:tabular-nums}.fau-studio-time strong.urgent{color:#f39aa4}.fau-studio-time span{font-size:11px;color:#bfb2bc}.fau-studio-panel,.fau-studio-card{border:1px solid #51414c;background:#211b22;border-radius:14px}.fau-studio-panel>summary{padding:14px;cursor:pointer;color:#d1b38b}.fau-studio-progress{display:flex;justify-content:space-between;align-items:center}.fau-studio-progress small{font-size:10px;letter-spacing:.1em;color:#d1b38b}.fau-studio-progress h3{font-size:30px;font-weight:700}.fau-studio-progress h3 span{font-size:14px;color:#b8acb7;font-weight:400}.fau-studio-progress>strong{font-size:25px;color:#d1b38b}.fau-studio-bar{height:7px;border-radius:9px;background:#463440;overflow:hidden;margin:12px 0}.fau-studio-bar div{height:100%;background:linear-gradient(90deg,#8e3446,#d1b38b);transition:width .4s}.fau-studio-stats{display:flex;flex-wrap:wrap;gap:7px}.fau-studio-stats span{font-size:11px;padding:6px 9px;background:#151216;border-radius:7px}.fau-studio-toolbar{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap}.fau-studio-filters{display:flex;gap:5px}.fau-studio-filters button{font-size:11px;border:1px solid #65515d;border-radius:8px;padding:9px 11px}.fau-studio-filters button.active{background:#d1b38b;color:#141215;font-weight:700}.fau-studio-toolbar input{background:#211b22;border:1px solid #65515d;border-radius:8px;padding:10px;color:white;font-size:12px;width:min(100%,230px)}.fau-studio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px}.fau-studio-card{padding:13px;min-width:0}.fau-studio-card.complete{border-color:#79634e}.fau-studio-person{display:flex;gap:10px;align-items:center;min-width:0}.fau-studio-person img,.fau-studio-avatar{width:45px;height:50px;flex-shrink:0;object-fit:cover;border-radius:7px;background:#332630}.fau-studio-avatar{display:grid;place-items:center}.fau-studio-person>div:nth-child(2){min-width:0;flex:1}.fau-studio-person h3{font:600 21px 'Cormorant Garamond',serif;overflow-wrap:anywhere}.fau-studio-person small{font-size:11px;color:#b8acb7}.fau-studio-person b{font-size:9px;border:1px solid #79634e;border-radius:99px;padding:5px 7px;color:#d1b38b;white-space:nowrap}.fau-studio-card.pending .fau-studio-person b{border-color:#63505b;color:#b8acb7}.fau-studio-looks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px;margin-top:12px}.fau-studio-looks img,.fau-studio-noimage{width:100%;aspect-ratio:3/4;object-fit:contain;background:#100d11;border-radius:7px}.fau-studio-looks strong{display:block;font-size:13px;margin-top:7px;overflow-wrap:anywhere}.fau-studio-looks details{font-size:12px;margin-top:5px}.fau-studio-looks summary{color:#d1b38b;cursor:pointer}.fau-studio-looks details p{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:8px;line-height:1.6}.fau-studio-wait{font-size:12px;color:#a99ca7;padding-top:15px}.fau-studio-foot,.fau-studio-empty{font-size:11px;color:#b5a9b3;text-align:center;padding:12px}@media(max-width:640px){.fau-studio-toolbar input{width:100%}.fau-studio-hero{padding:18px}}</style></head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -2921,17 +2921,32 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             // Production-only, read-only Workroom: never expose Designer submission actions to ADM.
             const round = globalState.rodada;
             const deadline = globalState.prazo ? new Date(globalState.prazo) : null;
-            renderView(`<section class="space-y-4 max-w-5xl mx-auto" id="fauAdminWorkroom">
-              <header class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-4 space-y-2">
-                <div class="flex items-center justify-between gap-3 flex-wrap"><span class="text-xs tracking-widest text-fashion-gold">THE WORKROOM · PRODUÇÃO</span><span class="text-[10px] rounded-full border border-fashion-gold/40 px-3 py-1 text-fashion-gold">VISUALIZAÇÃO ADM</span></div>
-                <h2 class="font-cinzel text-xl text-white">${esc(fauRoundLabel())}</h2>
-                <p class="text-xs text-gray-300">Acompanhe as entregas sem alterar ou enviar looks pelos Designers.</p>
-                <p id="fauAdminWorkroomDeadline" class="text-xs text-fashion-gold">${deadline && !Number.isNaN(deadline.getTime()) ? 'Prazo: '+deadline.toLocaleString('pt-BR') : 'Prazo definido no Control Room'}</p>
-              </header>
-              ${globalState.themeId==='w02_new_form'?'<div id="fauAdminMutationSummary" class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-4 text-xs text-gray-300">Sincronizando envelopes...</div>':''}
-              <div id="fauAdminWorkroomCount" class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 text-sm text-gray-300">Sincronizando entregas...</div>
-              <div id="fauAdminWorkroomList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"><p class="text-gray-400 text-sm">Carregando elenco...</p></div>
+            renderView(`<section class="fau-admin-studio space-y-4 max-w-5xl mx-auto" id="fauAdminWorkroom">
+              <div class="fau-studio-hero">
+                <div class="fau-studio-eyebrow"><span class="fau-live-dot"></span> PRODUCTION MONITOR <span class="fau-studio-private">ACESSO ADM</span></div>
+                <h2>THE WORKROOM</h2>
+                <p class="fau-studio-round">${esc(fauRoundLabel())}</p>
+                <div class="fau-studio-deadline"><span>ENCERRAMENTO DAS ENTREGAS</span><strong id="fauAdminWorkroomTimer">--:--:--</strong><small id="fauAdminWorkroomDeadline">${deadline && !Number.isNaN(deadline.getTime()) ? deadline.toLocaleString('pt-BR') : 'Prazo definido no Control Room'}</small></div>
+              </div>
+              ${globalState.themeId==='w02_new_form'?'<details class="fau-studio-panel"><summary>THE MUTATION MACHINE · Envelopes <i class="fa-solid fa-chevron-down"></i></summary><div id="fauAdminMutationSummary" class="p-4 text-xs text-gray-300">Sincronizando envelopes...</div></details>':''}
+              <div id="fauAdminWorkroomCount" class="fau-studio-panel p-4">Sincronizando entregas...</div>
+              <div class="fau-studio-toolbar">
+                <div class="fau-studio-filters" role="group" aria-label="Filtrar entregas">
+                  <button type="button" data-filter="all" class="is-active">Todos</button><button type="button" data-filter="pending">Pendentes</button><button type="button" data-filter="complete">Concluídos</button>
+                </div>
+                <input id="fauAdminWorkroomSearch" type="search" placeholder="Buscar Designer..." aria-label="Buscar Designer">
+              </div>
+              <div id="fauAdminWorkroomList" class="fau-studio-grid"><p class="text-gray-400 text-sm">Carregando elenco...</p></div>
+              <p class="fau-studio-footer"><i class="fa-solid fa-lock"></i> Monitoramento exclusivo da produção. Os envios não podem ser alterados aqui.</p>
             </section>`);
+            const studio=document.getElementById('fauAdminWorkroom');
+            let studioFilter='all',studioSearch='';
+            studio.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{studioFilter=b.dataset.filter;studio.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('is-active',x===b));paint();});
+            studio.querySelector('#fauAdminWorkroomSearch').oninput=e=>{studioSearch=e.target.value.toLocaleLowerCase('pt-BR');paint();};
+            if(deadline && !Number.isNaN(deadline.getTime())){
+                const updateStudioClock=()=>{const el=document.getElementById('fauAdminWorkroomTimer');if(!el||!el.isConnected)return false;const ms=Math.max(0,deadline.getTime()-Date.now()),h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,sec=Math.floor(ms/1000)%60;el.textContent=ms?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:'PRAZO ENCERRADO';el.classList.toggle('is-urgent',ms>0&&ms<3600000);return true;};
+                updateStudioClock();const studioClockInterval=setInterval(()=>{if(!updateStudioClock())clearInterval(studioClockInterval);},1000);
+            }else document.getElementById('fauAdminWorkroomTimer').textContent='SEM PRAZO';
             if(!round){$('#fauAdminWorkroomCount').textContent='Nenhuma rodada ativa.';$('#fauAdminWorkroomList').innerHTML='';return;}
             if(globalState.themeId==='w02_new_form'){
                 let mutationRows=[], mutationProfiles=[];
@@ -2962,14 +2977,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const required=globalState.fase==='final'?4:(Number(globalState.numSubmissoes)||1);
                 const eligible=designers.filter(d=>!d.disabled&&!d.out&&!d.eliminado&&d.ativo!==false&&String(d.status||'').toUpperCase()!=='OUT');
                 const completed=eligible.filter(d=>(byUid.get(d.uid)||[]).length>=required).length;
-                counter.innerHTML=`<strong class="text-fashion-gold">${completed} de ${eligible.length}</strong> Designers concluíram as entregas · <strong>${eligible.length-completed}</strong> ainda faltam. <span class="block text-xs text-gray-400 mt-1">Informações individuais visíveis somente para a produção.</span>`;
-                list.innerHTML=eligible.map(d=>{
-                    const entries=(byUid.get(d.uid)||[]).sort((a,b)=>(a.slot||0)-(b.slot||0));
-                    return `<article class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-3">
-                      <div class="flex items-center gap-3">${d.fotoElenco?`<img src="${esc(d.fotoElenco)}" alt="" class="w-12 h-12 object-cover rounded-lg">`:`<div class="w-12 h-12 rounded-lg bg-fashion-950 border border-fashion-700 flex items-center justify-center">✂</div>`}<div class="min-w-0 flex-1"><h3 class="font-cinzel text-fashion-gold text-sm break-words">${esc(d.ate||'Designer')}</h3><p class="text-xs text-gray-400">${entries.length} de ${required} look(s) · ${entries.length>=required?'ENTREGA COMPLETA':'PENDENTE'}</p></div></div>
-                      ${entries.length?`<div class="grid grid-cols-2 gap-2">${entries.map(l=>`<div class="space-y-1">${l.url?`<img src="${esc(l.url)}" alt="Look enviado por ${esc(d.ate||'Designer')}" loading="lazy" class="w-full aspect-[3/4] object-contain bg-black rounded-md">`:'<div class="aspect-[3/4] bg-black rounded-md"></div>'}<p class="text-xs text-gray-200 break-words">${esc(l.titulo||'Sem título')}</p><details class="text-xs text-gray-300"><summary class="cursor-pointer text-fashion-gold">Ler conceito</summary><p class="mt-2 whitespace-pre-wrap break-words">${esc(l.mem||'')}</p></details></div>`).join('')}</div>`:'<p class="text-xs text-gray-400">Nenhum look enviado nesta rodada.</p>'}
-                    </article>`;
-                }).join('')||'<p class="text-sm text-gray-400">Nenhum Designer ativo cadastrado.</p>';
+                const pct=eligible.length?Math.round(completed/eligible.length*100):0;
+                counter.innerHTML=`<div class="fau-studio-progress"><div><small>STATUS DAS ENTREGAS</small><h3>${completed} <span>/ ${eligible.length} Designers</span></h3></div><strong>${pct}%</strong></div><div class="fau-studio-bar"><div style="width:${pct}%"></div></div><div class="fau-studio-stats"><span>${completed} concluídos</span><span>${eligible.length-completed} pendentes</span><span>${looks.length} looks recebidos</span></div>`;
+                const visible=eligible.filter(d=>{const n=(byUid.get(d.uid)||[]).length;return (studioFilter==='all'||(studioFilter==='complete'?n>=required:n<required))&&String(d.ate||d.nome||'').toLocaleLowerCase('pt-BR').includes(studioSearch);});
+                list.innerHTML=visible.map(d=>{
+                    const entries=(byUid.get(d.uid)||[]).sort((a,b)=>(a.slot||0)-(b.slot||0));const done=entries.length>=required;
+                    return `<article class="fau-studio-card ${done?'complete':'pending'}"><div class="fau-studio-person">${d.fotoElenco?`<img src="${esc(d.fotoElenco)}" alt="">`:'<div class="fau-studio-avatar">✂</div>'}<div><h3>${esc(d.ate||'Designer')}</h3><small>${entries.length} de ${required} ${required===1?'look':'looks'}</small></div><b>${done?'CONCLUÍDO':'PENDENTE'}</b></div>${entries.length?`<div class="fau-studio-looks">${entries.map(l=>`<div>${l.url?`<img src="${esc(l.url)}" alt="Look de ${esc(d.ate||'Designer')}" loading="lazy">`:'<div class="fau-studio-noimage">Imagem indisponível</div>'}<strong>${esc(l.titulo||'Sem título')}</strong><details><summary>Ver conceito</summary><p>${esc(l.mem||'Sem conceito informado.')}</p></details></div>`).join('')}</div>`:'<p class="fau-studio-wait">◷ Aguardando criação...</p>'}</article>`;
+                }).join('')||'<p class="fau-studio-empty">Nenhum Designer encontrado neste filtro.</p>';
             };
             sub(db.collection('perfis').where('role','==','estilista'),snap=>{designers=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR'));readyProfiles=true;paint();});
             sub(db.collection('looks').where('rodada','==',round),snap=>{looks=snap.docs.map(d=>({id:d.id,...d.data()}));readyLooks=true;paint();});
