@@ -8904,15 +8904,47 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 return `${tied.length>1?`<p class="text-amber-200 text-sm border border-amber-600/60 rounded-lg p-3">EMPATE NA LIDERANÇA · ${tied.map(x=>name(x.uid)).join(' · ')}</p>`:`<p class="text-fashion-gold text-sm">LÍDER · ${name(tied[0].uid)}</p>`}
                     <div class="space-y-2">${ordered.map((x,i)=>`<div class="flex justify-between items-center gap-3 rounded-lg border ${Math.abs(x.value-top)<0.000001?'border-fashion-gold/60 bg-fashion-gold/10':'border-fashion-700 bg-fashion-900'} px-3 py-2"><span class="text-sm">${i+1}. ${name(x.uid)}${tied.length>1&&Math.abs(x.value-top)<0.000001?' · EMPATE':''}</span><strong class="text-fashion-gold whitespace-nowrap">${unit==='pontos'?x.value.toLocaleString('pt-BR',{maximumFractionDigits:2}):x.value} ${unit}</strong></div>`).join('')}</div>`;
             };
-            const voteSection = async (type, title) => {
-                const counts = await tallyVotes(type);
-                const items = Object.entries(counts).map(([uid,value])=>({uid,value:Number(value)}));
-                const total=items.reduce((sum,x)=>sum+x.value,0);
-                return `<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><div class="flex justify-between gap-2 items-center"><h4 class="font-cinzel text-fashion-gold">${title}</h4><span class="text-xs text-gray-400">${total} votos</span></div>${renderRanking(items,'votos','Nenhum voto registrado.')}</section>`;
-            };
-            const votes = await Promise.all([voteSection('veto','Ícone da Moda'),voteSection('fdm','Fora de Moda'),voteSection('ber','Votos de salvamento')]);
+            const voteCounts=await Promise.all(['veto','fdm','ber'].map(type=>tallyVotes(type)));
             const iconResult=await fauResolveIcon(round);
-            const iconPreview=`<section class="rounded-xl border border-fashion-gold/60 bg-fashion-950 p-4 space-y-2"><h4 class="font-cinzel text-fashion-gold">DESEMPATE OFICIAL · ÍCONE DA MODA</h4><p class="text-sm">${iconResult.uid?'Resultado: <strong>'+name(iconResult.uid)+'</strong>':'Resultado: <strong>Em apuração / sem título</strong>'}</p><p class="text-xs text-gray-300">${esc(iconResult.reason)}</p>${iconResult.tied.length>1?`<p class="text-xs text-gray-400">Empatados nos votos: ${iconResult.tied.map(name).join(' · ')}</p>`:''}</section>`;
+            const resolveForaPreview=async()=>{
+                const entries=Object.entries(voteCounts[1]).filter(([,v])=>Number(v)>0);
+                if(!entries.length)return {uid:null,reason:'Aguardando os primeiros votos.',tied:[],pending:true};
+                const highest=Math.max(...entries.map(([,v])=>Number(v)));
+                const tied=entries.filter(([,v])=>Number(v)===highest).map(([uid])=>uid);
+                if(tied.length===1)return {uid:tied[0],reason:'Maior número de votos.',tied};
+                const all=await db.collection('avaliacoes').get();
+                const score=(docs)=>{
+                    const scores=new Map();
+                    docs.forEach(doc=>{
+                        const d=doc.data();if(!tied.includes(d.alvo))return;
+                        const v=Array.isArray(d.nota)&&d.nota.length===5?d.nota.reduce((a,b)=>a+Number(b),0):Number(d.total);
+                        if(!Number.isFinite(v))return;
+                        const key=String(d.look||d.alvo),group=scores.get(d.alvo)||new Map();
+                        group.set(key,[...(group.get(key)||[]),v]);scores.set(d.alvo,group);
+                    });
+                    return new Map([...scores].map(([uid,looks])=>[uid,[...looks.values()].reduce((sum,arr)=>sum+arr.reduce((a,b)=>a+b,0)/arr.length,0)]));
+                };
+                const current=score(all.docs.filter(d=>String(d.data().rodada)===String(round)));
+                if(tied.some(uid=>!current.has(uid)))return {uid:null,reason:'Empate nos votos. Aguardando notas de todos os envolvidos.',tied,pending:true};
+                const worst=Math.min(...tied.map(uid=>current.get(uid)));
+                const finalists=tied.filter(uid=>Math.abs(current.get(uid)-worst)<0.000001);
+                if(finalists.length===1)return {uid:finalists[0],reason:'Desempate: pior desempenho dos jurados nesta rodada.',tied};
+                const previous=score(all.docs.filter(d=>String(d.data().rodada)!==String(round)));
+                const min=Math.min(...finalists.map(uid=>previous.get(uid)||0));
+                const last=finalists.filter(uid=>Math.abs((previous.get(uid)||0)-min)<0.000001);
+                return last.length===1?{uid:last[0],reason:'Desempate: pior acumulado anterior à rodada.',tied}:{uid:null,reason:'Empate persistente após os critérios disponíveis. Título indefinido.',tied,pending:true};
+            };
+            const foraResult=await resolveForaPreview();
+            const voteSection=(counts,title,result,tone)=>{
+                const items=Object.entries(counts).filter(([,v])=>Number(v)>0).map(([uid,v])=>({uid,value:Number(v)})).sort((a,b)=>b.value-a.value);
+                const total=items.reduce((sum,x)=>sum+x.value,0),max=items[0]?.value||0;
+                const highlight=tone==='red'?'#b85c71':'#d1b38b';
+                return `<section class="fau-live-title-card rounded-2xl border border-fashion-gold/40 bg-fashion-950 p-5 space-y-4" style="background:radial-gradient(ellipse at 100% 0%,${tone==='red'?'rgba(142,52,70,.2)':'rgba(209,179,139,.15)'},transparent 65%),#141215">
+                  <div class="flex items-center justify-between gap-3"><div><p class="text-[10px] tracking-[.22em] text-gray-400">VOTAÇÃO CONFIDENCIAL · PRÉVIA</p><h4 class="font-cinzel text-xl text-fashion-gold mt-1">${title}</h4></div><span class="text-xs text-gray-300">${total} voto(s)</span></div>
+                  <div class="rounded-xl border border-fashion-gold/30 p-4" aria-live="polite"><p class="text-[10px] tracking-widest text-gray-400">${result.uid?'LIDERANÇA PROVISÓRIA':'RESULTADO INDEFINIDO'}</p><p class="font-cinzel text-3xl text-white mt-2">${result.uid?name(result.uid):'Em apuração'}</p><p class="text-xs mt-2 text-gray-300">${esc(result.reason)}</p>${result.tied?.length>1?`<p class="text-xs mt-2" style="color:${highlight}">Empate nos votos: ${result.tied.map(name).join(' · ')}</p>`:''}</div>
+                  <div class="space-y-3">${items.length?items.map((x,i)=>`<div><div class="flex justify-between gap-2 text-xs mb-1"><span>${i+1}º · ${name(x.uid)}${x.uid===result.uid?' · LÍDER':''}</span><strong>${x.value} · ${total?(x.value*100/total).toFixed(1).replace('.',','):0}%</strong></div><div class="h-2 rounded-full bg-fashion-700 overflow-hidden"><div class="h-full rounded-full transition-all duration-500" style="width:${x.value/max*100}%;background:${x.uid===result.uid?highlight:'#746673'}"></div></div></div>`).join(''):'<p class="text-sm text-gray-400">Nenhum voto registrado.</p>'}</div><p class="text-[11px] text-gray-400">A liderança pode mudar com novos votos ou avaliações. Nada foi publicado.</p></section>`;
+            };
+            const votes=[voteSection(voteCounts[0],'Ícone da Moda',iconResult,'gold'),voteSection(voteCounts[1],'Fora de Moda',foraResult,'red'),`<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><h4 class="font-cinzel text-fashion-gold">Votos de salvamento</h4>${renderRanking(Object.entries(voteCounts[2]).map(([uid,value])=>({uid,value:Number(value)})),'votos','Nenhum voto registrado.')}</section>`];
             const byDesigner = new Map();
             jurySnap.docs.forEach(doc=>{
                 const a=doc.data();
@@ -8927,23 +8959,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const juryItems=[...byDesigner.values()].map(x=>({uid:x.uid,value:x.totals.reduce((a,b)=>a+b,0)/x.totals.length,judges:x.totals.length,criteria:x.criteria.map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length)}));
             const fmt=n=>n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
             const juryHtml=`<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><h4 class="font-cinzel text-fashion-gold">Judges' Scores · Ranking provisório</h4><p class="text-xs text-gray-400">Média das avaliações válidas por Designer. O ranking pode mudar enquanto houver notas pendentes.</p>${renderRanking(juryItems,'pontos','Nenhuma avaliação completa registrada.')}${juryItems.length?`<details class="border border-fashion-700 rounded-lg p-3"><summary class="cursor-pointer text-fashion-gold text-sm">Ver médias por critério e quantidade de jurados</summary><div class="space-y-3 mt-3">${juryItems.sort((a,b)=>b.value-a.value).map(x=>`<div class="border-b border-fashion-700 pb-2 text-sm"><strong>${name(x.uid)}</strong><p class="text-xs text-gray-400">${x.judges} avaliação(ões) · ${CRITERIOS.map((c,i)=>`${esc(c)}: ${fmt(x.criteria[i])}`).join(' · ')}</p></div>`).join('')}</div></details>`:''}</section>`;
-            $('#adminOutput').innerHTML=`<section class="space-y-4"><div><h3 class="font-cinzel text-fashion-gold text-xl">LIVE RESULTS · Central de Apuração</h3><p class="text-xs text-gray-400 mt-1">${esc(fauWeekLabel(String(round)))} · Consulta confidencial, somente leitura. O Ícone é desempatado com as notas já salvas, mesmo antes da publicação. Prévias podem mudar.</p></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${iconPreview}${votes[0]}${votes[1]}${juryHtml}${votes[2]}</div><p class="text-xs text-gray-400">Os votos de salvamento aparecem quando o Elimination Pool estiver aberto e houver votos registrados.</p><button id="btnRefreshLiveVoting" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar resultados</button></section>`;
+            $('#adminOutput').innerHTML=`<section class="space-y-4"><div><h3 class="font-cinzel text-fashion-gold text-xl">LIVE RESULTS · Central de Apuração</h3><p class="text-xs text-gray-400 mt-1">${esc(fauWeekLabel(String(round)))} · Consulta confidencial, somente leitura. O Ícone é desempatado com as notas já salvas, mesmo antes da publicação. Prévias podem mudar.</p></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${votes[0]}${votes[1]}${juryHtml}${votes[2]}</div><p class="text-xs text-gray-400">Os votos de salvamento aparecem quando o Elimination Pool estiver aberto e houver votos registrados.</p><button id="btnRefreshLiveVoting" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar resultados</button></section>`;
             $('#btnRefreshLiveVoting').onclick=()=>$('#btnLiveVoting').click();
         });
 
+        // A prévia dos votos do elenco utiliza a mesma apuração e os mesmos
+        // desempates da Central de Apuração, sem publicar qualquer resultado.
         $('#btnApurarTribunal').onclick = safeExec(async () => {
-            const atelierMap = await getAtelierNamesMap();
-            let outputHtml = '';
-
-            for (const [tipo, rotulo] of [['veto', 'Ícone da Moda (Melhor Look)'], ['fdm', 'Fora de Moda (Pior Look)']]) {
-                const tally = Object.entries(await tallyVotes(tipo)).sort((a, b) => b[1] - a[1]);
-                outputHtml += `
-                    <div class="mb-3">
-                        <strong>${rotulo}:</strong> ${tally.map(([uid, c]) => `${esc(atelierMap[uid])} (${c} votos)`).join(', ') || 'Nenhum voto.'}
-                    </div>
-                `;
-            }
-            $('#adminOutput').innerHTML = outputHtml;
+            const liveButton = $('#btnLiveVoting');
+            if (!liveButton || typeof liveButton.onclick !== 'function')
+                throw new Error('Central de Apuração indisponível.');
+            await liveButton.onclick();
         });
 
         $('#btnApurarBerlinda').onclick = safeExec(async () => {
