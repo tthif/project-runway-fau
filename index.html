@@ -5902,7 +5902,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div><span>JÚRI</span><strong>${globalState.notasEncerradas?'Notas encerradas':'Notas abertas'}</strong></div>
                     <div><span>URNA</span><strong>${globalState.urna?'Aberta':'Fechada'}</strong></div>
                   </div>
-                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-workroom="${globalState.prazo&&now()>globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-jury="${stageAtLeast('judging')&&!globalState.notasEncerradas?'open':stageAtLeast('judging')?'closed':'waiting'}" data-scores="${globalState.notasEncerradas?'done':'open'}" data-critique="${globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting'}" data-urn="${globalState.urna?'open':'closed'}" data-pool="${Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?'done':'waiting'}" aria-label="Roteiro da produção">
+                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-no-elimination="${globalState.themeId==='w01_first_garment'||globalState.naoEliminatoria||globalState.semEliminacao||globalState.elimTipo==='none'?'yes':'no'}" data-workroom="${globalState.prazo&&now()>globalState.prazo?'expired':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-jury="${stageAtLeast('judging')&&!globalState.notasEncerradas?'open':stageAtLeast('judging')?'closed':'waiting'}" data-scores="${globalState.notasEncerradas?'done':'open'}" data-critique="${globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting'}" data-urn="${globalState.urna?'open':'closed'}" data-pool="${Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?'done':'waiting'}" aria-label="Roteiro da produção">
                     <div class="fau-guide-head"><span>SEU ROTEIRO DE PRODUÇÃO</span><h3>O que fazer agora?</h3><p>Siga as ações oficiais em ordem. Use as prévias para acompanhar os detalhes, sem conferências duplicadas.</p></div>
                     <div class="fau-guide-progress"><div id="fauGuideProgressText" aria-live="polite">Verificando etapas…</div><div class="fau-guide-track"><div id="fauGuideProgressFill"></div></div></div>
                     <div id="fauGuideNext" class="fau-guide-next" aria-live="polite"></div>
@@ -10276,41 +10276,52 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
  const stages=[
   {title:'Encerrar entregas',desc:'Finalize o Workroom após o prazo de envio.',action:'btnEndTimer',label:'Encerrar entregas',key:'workroom'},
   {title:'Publicar a passarela',desc:'Disponibilize os looks para o episódio.',action:'btnTogglePublic',label:'Publicar passarela',key:'runway'},
-  {title:'Liberar notas dos jurados',desc:'Abra a fase The Judges’ Panel para o júri avaliar.',action:'fau-guide-open-jury',label:'Liberar avaliações',key:'jury'},
-  {title:'Encerrar notas',desc:'Encerre as avaliações quando todos os jurados terminarem.',action:'fauToggleScoreWindow',label:'Encerrar notas',key:'scores'},
-  {title:'Abrir críticas',desc:'Libere os comentários dos jurados selecionados.',action:'fauToggleCritiqueWindow',label:'Abrir críticas',key:'critiqueOpen'},
+  {title:'Liberar notas dos jurados',desc:'Abra The Judges’ Panel para o júri avaliar.',action:'fau-guide-open-jury',label:'Liberar avaliações',key:'jury'},
+  {title:'Encerrar notas',desc:'Confira os jurados pendentes na prévia antes de encerrar.',action:'fauToggleScoreWindow',label:'Encerrar notas',key:'scores'},
+  {title:'Abrir críticas',desc:'Configure as vagas de crítica antes de abrir o período.',action:'fauToggleCritiqueWindow',label:'Abrir críticas',key:'critiqueOpen'},
   {title:'Encerrar críticas',desc:'Finalize o período de comentários.',action:'fauToggleCritiqueWindow',label:'Encerrar críticas',key:'critiqueDone'},
+  {title:'Publicar críticas',desc:'Opcional: publique os textos autorizados para a plateia.',action:'fauCritiquePublish',label:'Publicar críticas',optional:true},
   {title:'Registrar Ícone e Fora de Moda',desc:'Registre os títulos oficiais usando os votos do elenco.',action:'fauOfficialPublish',label:'Registrar títulos'},
-  {title:'Registrar Elimination Pool',desc:'Defina os três indicados oficialmente antes da votação de salvação.',action:'btnPreviewPool',label:'Abrir painel do Pool',key:'pool'},
-  {title:'Abrir urna de salvação',desc:'Libere a votação somente depois de definir o Pool.',action:'btnToggleUrn',label:'Abrir urna',key:'urnOpen'},
-  {title:'Fechar urna',desc:'Acompanhe quem falta votar nas prévias antes de encerrar.',action:'btnToggleUrn',label:'Fechar urna',key:'urnClosed'},
-  {title:'Confirmar o OUT',desc:'Confira os votos de salvação e confirme oficialmente o eliminado.',action:'btnApurarBerlinda',label:'Ver votos e confirmar OUT'},
+  {title:'Registrar Elimination Pool',desc:'Defina os três indicados oficialmente antes da votação de salvação.',action:'btnPreviewPool',label:'Abrir painel do Pool',key:'pool',elimination:true},
+  {title:'Abrir urna de salvação',desc:'Libere a votação somente depois de definir o Pool.',action:'btnToggleUrn',label:'Abrir urna',key:'urnOpen',elimination:true},
+  {title:'Fechar urna',desc:'Acompanhe quem falta votar nas prévias antes de encerrar.',action:'btnToggleUrn',label:'Fechar urna',elimination:true},
+  {title:'Confirmar o OUT',desc:'Confira os votos e confirme oficialmente o eliminado.',action:'btnApurarBerlinda',label:'Ver votos e confirmar OUT',elimination:true},
   {title:'Publicar resultados',desc:'Publique os resultados oficiais da rodada.',action:'fauPublishAllResults',label:'Publicar resultados'}
  ];
  const escapeHtml=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  // Não usar marcações locais como prova de execução de operações no Firestore.
  function render(){
   const root=document.getElementById('fauEpisodeGuide');if(!root)return;
+  const noElimination=root.dataset.noElimination==='yes';
   const state={workroom:root.dataset.workroom==='done',runway:root.dataset.runway==='done',jury:root.dataset.jury!=='waiting',scores:root.dataset.scores==='done',critiqueOpen:root.dataset.critique!=='waiting',critiqueDone:root.dataset.critique==='done',pool:root.dataset.pool==='done',urnOpen:root.dataset.urn==='open'};
-  // A urna fechada, por si só, não prova que chegou a ser aberta e encerrada.
-  const known=stages.map(st=>st.key?Boolean(state[st.key]):false);
-  let next=known.findIndex(x=>!x);if(next<0)next=stages.length-1;
-  // Se a urna já estiver aberta, não deixar a fase dos títulos (não verificável neste painel) bloquear o roteiro.
-  if(state.urnOpen)next=9;
-  else if(state.pool&&next===6)next=8;
-  // Após as críticas, títulos não são confirmados por este resumo: permitir acessar o Pool.
-  const done=known.filter(Boolean).length;
+  // O prazo vencido não comprova um clique de encerramento; a urna fechada não comprova uma votação concluída.
+  // Estados posteriores podem ter sido herdados de uma rodada anterior: não os pintar de verde fora de sequência.
+  const status=[];let blocked=false;
+  stages.forEach((st,i)=>{
+   if(st.optional){status[i]='optional';return;}
+   if(st.elimination&&noElimination){status[i]='skipped';return;}
+   if(!st.key){status[i]='unverified';blocked=true;return;}
+   if(!blocked&&state[st.key])status[i]='done';
+   else {status[i]=state[st.key]?'inconsistent':'pending';blocked=true;}
+  });
+  const next=status.findIndex((v,i)=>v==='pending'||v==='inconsistent'||v==='unverified');
+  const done=status.filter(v=>v==='done').length;
+  const applicable=status.filter(v=>v!=='optional'&&v!=='skipped').length;
   const progress=document.getElementById('fauGuideProgressText');
-  if(progress)progress.textContent=done+' estados confirmados automaticamente · '+(next===9&&state.urnOpen?'Urna aberta: acompanhe os votos':'Próxima ação: '+stages[next].title);
-  const fill=document.getElementById('fauGuideProgressFill');if(fill)fill.style.width=(100*done/stages.length)+'%';
+  if(progress)progress.textContent=done+' de '+applicable+' etapas verificadas · '+(next<0?'Revise a publicação final':'Próxima ação: '+stages[next].title);
+  const fill=document.getElementById('fauGuideProgressFill');if(fill)fill.style.width=(applicable?100*done/applicable:0)+'%';
   const makeAction=(st,i,primary)=>'<button type="button" class="'+(primary?'primary':'')+'" data-fau-guide="action" data-guide-step="'+i+'" data-guide-target="'+escapeHtml(st.action)+'">'+escapeHtml(st.label)+'</button>';
-  const active=stages[next],nextBox=document.getElementById('fauGuideNext');
-  if(nextBox)nextBox.innerHTML='<strong>PRÓXIMA AÇÃO · ETAPA '+String(next+1).padStart(2,'0')+'</strong><h4>'+escapeHtml(active.title)+'</h4><p>'+escapeHtml(active.desc)+'</p>'+makeAction(active,next,true);
-  const remaining=document.getElementById('fauGuideRemaining');if(remaining)remaining.textContent='· '+done+' estados confirmados';
+  const nextBox=document.getElementById('fauGuideNext');
+  if(nextBox){if(next<0)nextBox.innerHTML='<strong>ROTEIRO REVISADO</strong><h4>Consulte a publicação oficial</h4><p>Algumas operações só podem ser confirmadas pelos registros da apuração. Não são marcadas automaticamente sem evidência.</p>';
+   else nextBox.innerHTML='<strong>PRÓXIMA AÇÃO · ETAPA '+String(next+1).padStart(2,'0')+'</strong><h4>'+escapeHtml(stages[next].title)+'</h4><p>'+escapeHtml(stages[next].desc)+'</p>'+makeAction(stages[next],next,true);}
+  const remaining=document.getElementById('fauGuideRemaining');if(remaining)remaining.textContent='· '+done+' de '+applicable+' verificadas';
   const steps=document.getElementById('fauGuideSteps');if(!steps)return;
-  // Preservar os detalhes abertos quando a interface for atualizada.
   const opened=new Set([...steps.querySelectorAll('details[open]')].map(x=>x.dataset.index));
-  steps.innerHTML=stages.map((st,i)=>'<details data-index="'+i+'" class="fau-guide-step '+(known[i]?'is-done':i===next?'is-next':'')+'" '+(opened.has(String(i))?'open':'')+'><summary class="fau-guide-step-top"><span class="fau-guide-step-number">'+(known[i]?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+(known[i]?'REGISTRADO':i===next?'AGORA':'PENDENTE')+'</span><span class="fau-guide-chevron">⌄</span></summary><div class="fau-guide-step-body"><p>'+escapeHtml(st.desc)+'</p><div class="fau-guide-step-actions">'+makeAction(st,i,false)+'</div></div></details>').join('');
+  steps.innerHTML=stages.map((st,i)=>{
+   const v=status[i],complete=v==='done',skipped=v==='skipped',optional=v==='optional',active=i===next;
+   const label=complete?'CONFIRMADO':skipped?'NÃO SE APLICA':optional?'OPCIONAL':v==='inconsistent'?'REVISAR':v==='unverified'?'VERIFICAR':active?'AGORA':'PENDENTE';
+   return '<details data-index="'+i+'" class="fau-guide-step '+(complete?'is-done':active?'is-next':'')+'" '+(opened.has(String(i))?'open':'')+'><summary class="fau-guide-step-top"><span class="fau-guide-step-number">'+(complete?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+label+'</span><span class="fau-guide-chevron">⌄</span></summary><div class="fau-guide-step-body"><p>'+escapeHtml(st.desc)+'</p>'+(v==='inconsistent'?'<p>Existe um estado posterior registrado, mas as etapas anteriores não estão confirmadas.</p>':'')+(v==='unverified'?'<p>Este painel não possui comprovante automático dessa operação. Confira o registro oficial antes de prosseguir.</p>':'')+(!skipped?'<div class="fau-guide-step-actions">'+makeAction(st,i,false)+'</div>':'')+'</div></details>';
+  }).join('');
  }
  document.addEventListener('click',function(e){
   const b=e.target.closest('[data-fau-guide],#fauGuideRefresh');if(!b)return;
@@ -10318,6 +10329,10 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
   if(b.id==='fauGuideRefresh'){render();return;}
   if(b.dataset.fauGuide!=='action')return;
   const idx=Number(b.dataset.guideStep),id=b.dataset.guideTarget;
+  if(root.dataset.noElimination==='yes'&&stages[idx]?.elimination){alert('Esta rodada não possui eliminação.');return;}
+  if(idx===0&&root.dataset.workroom==='expired'&&!confirm('O prazo venceu. Confirme se deseja encerrar as entregas oficialmente.'))return;
+  if(idx===3&&root.dataset.scores==='done'){alert('As notas já estão encerradas. Use o controle oficial caso precise reabri-las.');return;}
+  if(idx===2&&root.dataset.jury!=='waiting'){alert('A avaliação dos jurados já foi liberada.');return;}
   if(id==='fau-guide-open-jury'){
    if(root.dataset.runway!=='done'){alert('Publique a passarela antes de liberar as avaliações.');return;}
    if(root.dataset.jury!=='waiting'){alert('A fase de avaliação dos jurados já foi liberada.');return;}
@@ -10333,8 +10348,8 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
   if(button.disabled){alert('Esta ação está indisponível no momento.');return;}
   if(id==='btnToggleUrn'){
    const open=root.dataset.urn==='open';
-   if(idx===8&&open){alert('A urna já está aberta.');return;}
-   if(idx===9&&!open){alert('A urna está fechada. Confira a situação oficial antes de prosseguir.');return;}
+   if(idx===9&&open){alert('A urna já está aberta.');return;}
+   if(idx===10&&!open){alert('A urna está fechada. Confira a situação oficial antes de prosseguir.');return;}
    if(!confirm(open?'Confirma fechar a urna de salvação?':'Confirma abrir a urna de salvação?'))return;
   }
   if(id==='fauToggleCritiqueWindow'){
@@ -10342,6 +10357,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    if(idx===4&&open){alert('As críticas já estão abertas.');return;}
    if(idx===5&&!open){alert('As críticas não estão abertas. Confira o estado da rodada.');return;}
   }
+  if(id==='btnTogglePublic'&&root.dataset.runway==='done'){alert('A passarela já está publicada. Para ocultá-la, use o controle oficial.');return;}
   button.scrollIntoView({behavior:'smooth',block:'center'});button.click();
  });
  const obs=new MutationObserver(()=>{if(document.getElementById('fauEpisodeGuide'))render()});
