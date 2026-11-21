@@ -4280,13 +4280,25 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const name=String(matched?.ate||((typeof person==='object'&&person)?person.ate||person.nome:'')||'').trim();
             return [id||name.toLocaleLowerCase('pt-BR'),name];
           }).filter(([key,name])=>key&&name)).values()];
+          // Resultado oficial da votação, distinto das desclassificações.
+          const voteOut=Array.isArray(rank?.eliminatedByVote)?rank.eliminatedByVote:[];
+          const voteOutPeople=[...new Map(voteOut.map(person=>{
+            const uid=String(typeof person==='string'?person:person?.uid||person?.id||'').trim();
+            const match=rows.find(r=>String(r.uid||r.id||'')===uid);
+            const name=String(match?.ate||(typeof person==='object'?person?.ate||person?.nome:'')||'').trim();
+            return [uid||name.toLocaleLowerCase('pt-BR'),name];
+          }).filter(([uid,name])=>uid&&name)).values()];
+          const voteOutIds=new Set(voteOut.map(person=>String(typeof person==='string'?person:person?.uid||person?.id||'')));
+          const disqualified=out.filter(person=>!voteOutIds.has(String(person.uid||person.id||'')));
           const participants=rows.filter(r=>!(/\bOUT\b|ELIMINAD/i.test(String(r.status||'')) && firstOutByUid.get(String(r.uid||r.id||''))!==round));
           const items=[
             winners.length?`<div class="fau-story-result"><span>WINNER DA RODADA</span><strong>${winners.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:'',
             icon?`<div class="fau-story-result"><span>ÍCONE DA MODA</span><strong>${esc(icon.ate||'Designer')}</strong></div>`:'',
             foraName?`<div class="fau-story-result"><span>FORA DE MODA</span><strong>${esc(foraName)}</strong></div>`:'',
             poolPeople.length?`<div class="fau-story-result"><span>ELIMINATION POOL</span><strong>${poolPeople.map(esc).join(', ')}</strong></div>`:(!noPool&&currentUser?.role==='admin'?`<div class="fau-story-result"><span>ELIMINATION POOL</span><p class="text-xs text-gray-400 mt-1">Indicações antigas não registradas no histórico.</p><button type="button" class="fau-story-repair-pool mt-2 border border-fashion-gold/50 rounded-lg px-3 py-2 text-xs text-fashion-gold" data-round="${esc(roundId)}">REGISTRAR OS 3 INDICADOS</button></div>`:''),
-            out.length?`<div class="fau-story-result fau-story-out"><span>${out.length===1?'ELIMINADO DO EPISÓDIO':'ELIMINADOS DO EPISÓDIO'}</span><strong>${out.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:''
+            voteOutPeople.length?`<div class="fau-story-result fau-story-out"><span>${voteOutPeople.length===1?'ELIMINADO PELA VOTAÇÃO':'ELIMINADOS PELA VOTAÇÃO'}</span><strong>${voteOutPeople.map(esc).join(', ')}</strong></div>`:'',
+            disqualified.length?`<div class="fau-story-result fau-story-out"><span>${disqualified.length===1?'DESCLASSIFICADO DO EPISÓDIO':'DESCLASSIFICADOS DO EPISÓDIO'}</span><strong>${disqualified.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:'',
+            !noPool&&poolPeople.length&&voteOutPeople.length===0&&currentUser?.role==='admin'?`<button type="button" class="fau-story-recover-vote mt-2 border border-fashion-gold/50 rounded-lg px-3 py-2 text-xs text-fashion-gold" data-round="${esc(roundId)}">RECUPERAR RESULTADO DA URNA</button>`:''
           ].filter(Boolean);
           return `<article class="fau-archive-chapter">
             <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'CAPÍTULO MAIS RECENTE':'CAPÍTULO DA TEMPORADA'}</p>
@@ -4295,6 +4307,40 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="fau-story-results">${items.length?items.join(''):'<p class="text-gray-400 text-sm">Aguardando resultados oficiais.</p>'}</div>
           </article>`;
         }).join('');
+        // Para episódios anteriores à persistência do veredito, consultar votos
+        // privados somente como ADM e publicar apenas o resultado confirmado.
+        if(!window.__fauStoryVoteRecoveryBound){
+          window.__fauStoryVoteRecoveryBound=true;
+          document.addEventListener('click',async event=>{
+            const btn=event.target.closest?.('.fau-story-recover-vote');
+            if(!btn||currentUser?.role!=='admin')return;
+            btn.disabled=true;
+            try{
+              const round=String(btn.dataset.round||'');
+              const ref=db.collection('ranking_historico_publico').doc(round);
+              const [history,votes,profiles]=await Promise.all([
+                ref.get(),db.collection('votos').where('rodada','==',round).where('tipo','==','ber').get(),
+                db.collection('perfis').where('role','==','estilista').get()
+              ]);
+              const data=history.data()||{};
+              const pool=Array.isArray(data.eliminationPool)?data.eliminationPool:[];
+              if(pool.length!==3)throw new Error('O Pool oficial desta rodada precisa ter três indicados.');
+              const counts={};votes.docs.forEach(d=>{const uid=String(d.data()?.alvo||'');if(uid)counts[uid]=(counts[uid]||0)+1;});
+              const profilesByUid=new Map(profiles.docs.map(d=>[d.id,d.data()]));
+              const nominees=pool.map(p=>({uid:String(p.uid||p.id||''),ate:String(p.ate||p.nome||'Designer')}));
+              const eliminated=nominees.filter(p=>profilesByUid.get(p.uid)?.out===true);
+              const summary=nominees.map(p=>`${p.ate}: ${counts[p.uid]||0} voto(s) para salvar${profilesByUid.get(p.uid)?.out?' · OUT':''}`).join('\n');
+              if(eliminated.length!==1)throw new Error('Não foi possível identificar um único eliminado confirmado entre os indicados. Verifique o histórico antes de publicar.\n'+summary);
+              const lowest=Math.min(...nominees.map(p=>counts[p.uid]||0));
+              if((counts[eliminated[0].uid]||0)!==lowest)throw new Error('Os votos não confirmam esse resultado. Verifique desempates ou decisões especiais.\n'+summary);
+              if(!confirm(`RESULTADO DA URNA · ${fauWeekLabel(round)}\n\n${summary}\n\nPublicar ${eliminated[0].ate} como eliminado pela votação?`))return;
+              await ref.set({eliminatedByVote:eliminated},{merge:true});
+              showToast('Resultado oficial da votação recuperado. Atualize o arquivo.');
+              VIEWS.legado();
+            }catch(error){console.error('Recuperar votação',error);showToast(error.message||'Não foi possível recuperar a votação.');}
+            finally{btn.disabled=false;}
+          });
+        }
         // Recuperação administrativa de rodadas antigas: nunca deduzir Pool a partir de BOTTOM.
         // O ADM informa os três indicados reais, validados contra o ranking daquela WEEK.
         if(!window.__fauStoryPoolRepairBound){
@@ -9063,6 +9109,18 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 const [execAct, val] = btn.dataset.exec.split('|');
                 if (execAct === 'elim') {
                     await db.doc(`perfis/${val}`).update({ out: true });
+                    // Persistir o veredito confirmado da urna no histórico público da WEEK.
+                    // A desclassificação administrativa não passa por este botão.
+                    const verdictRound=String(globalState.rodada||'').trim();
+                    if(verdictRound){
+                        const historyRef=db.collection('ranking_historico_publico').doc(verdictRound);
+                        await db.runTransaction(async tx=>{
+                            const snap=await tx.get(historyRef),old=snap.data()||{};
+                            const previous=Array.isArray(old.eliminatedByVote)?old.eliminatedByVote:[];
+                            const entry={uid:val,ate:atelierMap[val]||globalState.berlinda?.find(x=>x.uid===val)?.ate||'Designer'};
+                            tx.set(historyRef,{eliminatedByVote:[...previous.filter(x=>String(typeof x==='string'?x:x.uid)!==String(val)),entry]},{merge:true});
+                        });
+                    }
                     await fauPublishOutIdentity(val);
                     showToast(`${atelierMap[val]} está OUT.`);
                 }
