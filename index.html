@@ -5897,7 +5897,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div class="fau-guide-head"><span>SEU ROTEIRO DE PRODUÇÃO</span><h3>O que fazer agora?</h3><p>Acompanhe o episódio do início ao resultado. Cada etapa tem uma ação direta e uma conferência antes de avançar.</p></div>
                     <div class="fau-guide-progress"><div id="fauGuideProgressText" aria-live="polite">Verificando etapas…</div><div class="fau-guide-track"><div id="fauGuideProgressFill"></div></div></div>
                     <div id="fauGuideNext" class="fau-guide-next" aria-live="polite"></div><div class="fau-guide-live-actions" aria-label="Ações essenciais da rodada"><button type="button" data-fau-guide="urn-smart">ABRIR / FECHAR URNA</button><button type="button" data-fau-guide="out-direct">VER VOTOS E CONFIRMAR OUT</button><button type="button" data-fau-guide="history">CORRIGIR HISTÓRICO</button></div>
-                    <div id="fauGuideSteps" class="fau-guide-steps"></div>
+                    <details id="fauGuideTimeline" class="fau-guide-timeline"><summary>Ver todas as etapas <span id="fauGuideRemaining"></span></summary><div id="fauGuideSteps" class="fau-guide-steps"></div></details>
                     <div class="fau-guide-footer"><button type="button" id="fauGuideRefresh">↻ Atualizar situação</button><button type="button" data-fau-guide="history">Corrigir histórico antigo</button><span>As conferências marcadas são lembretes deste navegador, não registros oficiais. Resultados e votos só são confirmados pelos controles do sistema.</span></div>
                   </section>
                   <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>PRÉVIAS DA RODADA</strong><span>Somente ADM · Não altera a rodada</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-preview="jury" class="fau-command-btn">Notas e ranking</button><button type="button" id="btnPreviewPool" class="fau-command-btn">Elimination Pool</button><button type="button" data-fau-preview="cast" class="fau-command-btn">Ícone / Fora de Moda</button><button type="button" data-fau-preview="save" class="fau-command-btn">Votação de salvação</button></div><div id="fauPreviewViewer" class="hidden mt-4 rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4" aria-label="Visualizador de prévias"><div class="flex items-center justify-between gap-3 mb-3"><strong id="fauPreviewViewerTitle" class="text-fashion-gold text-sm">Prévia privada</strong><button type="button" id="fauClosePreview" class="fau-command-btn" aria-label="Fechar prévia">Fechar ✕</button></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div></div>
@@ -10205,6 +10205,30 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 @media(min-width:680px){.fau-guide-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.fau-guide-next button{width:auto}}
  .fau-guide-live-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fau-guide-live-actions button{border:1px solid #a48a66;background:#30242c;color:#f0eae1;border-radius:10px;padding:14px 10px;font-weight:750;font-size:12px;line-height:1.35;min-height:58px}.fau-guide-live-actions button:nth-child(2){background:#793444;border-color:#b66b77}.fau-guide-live-actions button:last-child{grid-column:1/-1;background:#211b23;border-style:dashed}.fau-episode-guide{scroll-margin-top:18px}.fau-guide-step.is-next{box-shadow:0 0 0 1px rgba(209,179,139,.35),0 0 25px rgba(209,179,139,.09)}
 </style>
+<style id="fau-episode-guide-compact-mobile">
+.fau-guide-timeline{border-top:1px solid rgba(209,179,139,.23);padding-top:12px}
+.fau-guide-timeline>summary{cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;color:#e4cba4;font-size:13px;font-weight:700;padding:10px 2px;list-style:none}
+.fau-guide-timeline>summary::-webkit-details-marker,.fau-guide-step>summary::-webkit-details-marker{display:none}
+.fau-guide-timeline>summary span{font-size:11px;color:#b9adb7;font-weight:400}
+.fau-guide-timeline:not([open]) .fau-guide-steps{display:none}
+.fau-guide-steps{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:6px!important;margin-top:10px}
+.fau-guide-step{display:block!important;padding:0!important;border-radius:9px!important;min-width:0}
+.fau-guide-step>summary{cursor:pointer;padding:11px 12px;list-style:none;min-height:49px}
+.fau-guide-step-body{padding:0 12px 12px;display:grid;gap:9px}
+.fau-guide-step-body p{margin:0}
+.fau-guide-step-chevron{color:#c9b293}
+.fau-guide-chevron{color:#d1b38b;font-size:18px;line-height:1;flex-shrink:0}
+.fau-guide-step[open] .fau-guide-chevron{transform:rotate(180deg)}
+.fau-guide-step.is-done{background:#19231e!important}
+.fau-guide-step.is-done .fau-guide-step-status{color:#a9c7af}
+.fau-guide-step-status{white-space:nowrap;font-size:9px!important;letter-spacing:.01em}
+.fau-guide-step-number{width:26px;height:26px;flex-basis:26px}
+.fau-guide-next{padding:13px!important}
+.fau-guide-next h4{font-size:18px!important}
+.fau-guide-live-actions button{min-height:48px!important;padding:10px 7px!important;font-size:11px!important}
+.fau-guide-footer{margin-top:0}
+@media(max-width:600px){.fau-episode-guide{gap:12px!important;padding:14px!important}.fau-guide-head h3{font-size:29px!important}.fau-guide-head p{font-size:11px}.fau-guide-step-title{font-size:12px!important}.fau-guide-step-top{gap:7px!important}.fau-guide-step-status{font-size:9px!important}.fau-guide-footer span{font-size:10px}}
+</style>
 <style id="fau-runway-designer-name-tight">
 /* Keep the designer label directly against the photo, without a blank band. */
 #runwayGrid .fau-collection-card{padding:0!important;overflow:hidden!important}
@@ -10247,15 +10271,23 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
  const escapeHtml=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function render(){
   const root=document.getElementById('fauEpisodeGuide');if(!root)return;
-  const round=root.dataset.round,storageKey='fau-production-guide-v2-'+round;
+  const round=root.dataset.round,storageKey='fau-production-guide-v3-'+round;
   let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{}}catch(e){}
-  const actual=stages.map((st,i)=>st.key==='workroom'?root.dataset.workroom==='done':st.key==='runway'?root.dataset.runway==='done':st.key==='scores'?root.dataset.scores==='done':!!saved[i]);
+  // A etapa só pode estar concluída se TODAS as anteriores estiverem concluídas.
+  // O fechamento das notas isoladamente não prova que o ranking foi conferido.
+  const actual=[];
+  stages.forEach((st,i)=>{
+   const previousDone=i===0||actual[i-1]===true;
+   const recorded=st.key==='workroom'?root.dataset.workroom==='done':st.key==='runway'?root.dataset.runway==='done':st.key==='scores'?root.dataset.scores==='done':!!saved[i];
+   actual.push(previousDone&&recorded);
+  });
   const first=actual.findIndex(x=>!x),next=first<0?stages.length-1:first,done=actual.filter(Boolean).length;
-  document.getElementById('fauGuideProgressText').textContent=done+' de '+stages.length+' etapas conferidas · '+(first<0?'Roteiro concluído':'Próxima: '+stages[next].title);
+  document.getElementById('fauGuideProgressText').textContent=done+' de '+stages.length+' etapas concluídas ou conferidas · '+(first<0?'Roteiro concluído':'Próxima: '+stages[next].title);
   document.getElementById('fauGuideProgressFill').style.width=(100*done/stages.length)+'%';
   const makeAction=(st,i,primary)=>`<button type="button" class="${primary?'primary':''}" data-fau-guide="${st.history?'history':st.preview?'preview':'action'}" data-guide-step="${i}" ${st.action?'data-guide-target="'+escapeHtml(st.action)+'"':''} ${st.preview?'data-guide-preview="'+escapeHtml(st.preview)+'"':''}>${escapeHtml(st.label)}</button>`;
   const active=stages[next];document.getElementById('fauGuideNext').innerHTML='<strong>'+(first<0?'EPISÓDIO CONFERIDO':'PRÓXIMA AÇÃO · ETAPA '+String(next+1).padStart(2,'0'))+'</strong><h4>'+escapeHtml(first<0?'Revisar o episódio':active.title)+'</h4><p>'+escapeHtml(first<0?'Confira se os registros oficiais estão completos antes de iniciar a próxima rodada.':active.desc)+'</p>'+makeAction(active,next,true);
-  document.getElementById('fauGuideSteps').innerHTML=stages.map((st,i)=>'<article class="fau-guide-step '+(actual[i]?'is-done':i===next?'is-next':'')+'"><div class="fau-guide-step-top"><span class="fau-guide-step-number">'+(actual[i]?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+(actual[i]?'CONFERIDO':i===next?'AGORA':'PENDENTE')+'</span></div><p>'+escapeHtml(st.desc)+'</p><div class="fau-guide-step-actions">'+makeAction(st,i,false)+(st.manual?'<button type="button" data-fau-guide="mark" data-guide-step="'+i+'">'+(actual[i]?'Desmarcar conferência':'Marcar como conferido')+'</button>':'')+'</div></article>').join('');
+  document.getElementById('fauGuideRemaining').textContent='· '+done+'/'+stages.length+' concluídas';
+  document.getElementById('fauGuideSteps').innerHTML=stages.map((st,i)=>'<details class="fau-guide-step '+(actual[i]?'is-done':i===next?'is-next':'')+'"><summary class="fau-guide-step-top"><span class="fau-guide-step-number">'+(actual[i]?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+(actual[i]?(st.manual?'CONFERIDO':'CONCLUÍDO'):i===next?'AGORA':'PENDENTE')+'</span><span class="fau-guide-chevron">⌄</span></summary><div class="fau-guide-step-body"><p>'+escapeHtml(st.desc)+'</p><div class="fau-guide-step-actions">'+makeAction(st,i,false)+(st.manual?'<button type="button" data-fau-guide="mark" data-guide-step="'+i+'">'+(actual[i]?'Desmarcar conferência':'Marcar como conferido')+'</button>':'')+'</div></div></details>').join('');
  }
  document.addEventListener('click',function(e){
   const b=e.target.closest('[data-fau-guide],#fauGuideRefresh');if(!b)return;
@@ -10263,7 +10295,8 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
   if(b.id==='fauGuideRefresh'){render();return;}
   const kind=b.dataset.fauGuide,idx=Number(b.dataset.guideStep),st=stages[idx];
   if(kind==='mark'){
-   const key='fau-production-guide-v2-'+root.dataset.round;let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){}
+   if(idx>0){const preceding=document.querySelectorAll('#fauGuideSteps .fau-guide-step');if(!preceding[idx-1]?.classList.contains('is-done')){alert('Conclua a etapa anterior antes de marcar esta como conferida.');return;}}
+   const key='fau-production-guide-v3-'+root.dataset.round;let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){}
    saved[idx]=!saved[idx];try{localStorage.setItem(key,JSON.stringify(saved))}catch(e){}render();return;
   }
   if(kind==='urn-smart'){const target=document.getElementById('btnToggleUrn');if(!target||target.disabled){alert('Controle da urna indisponível.');return;}if(!confirm('Você vai alterar a situação da urna da rodada atual. Confirma?'))return;target.click();return;}
