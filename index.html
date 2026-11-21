@@ -5893,6 +5893,13 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div><span>JÚRI</span><strong>${globalState.notasEncerradas?'Notas encerradas':'Notas abertas'}</strong></div>
                     <div><span>URNA</span><strong>${globalState.urna?'Aberta':'Fechada'}</strong></div>
                   </div>
+                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-workroom="${globalState.prazo&&now()>globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-scores="${globalState.notasEncerradas?'done':'open'}" data-critique="${globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting'}" data-urn="${globalState.urna?'open':'closed'}" aria-label="Roteiro da produção">
+                    <div class="fau-guide-head"><span>SEU ROTEIRO DE PRODUÇÃO</span><h3>O que fazer agora?</h3><p>Acompanhe o episódio do início ao resultado. Cada etapa tem uma ação direta e uma conferência antes de avançar.</p></div>
+                    <div class="fau-guide-progress"><div id="fauGuideProgressText" aria-live="polite">Verificando etapas…</div><div class="fau-guide-track"><div id="fauGuideProgressFill"></div></div></div>
+                    <div id="fauGuideNext" class="fau-guide-next" aria-live="polite"></div><div class="fau-guide-live-actions" aria-label="Ações essenciais da rodada"><button type="button" data-fau-guide="urn-smart">ABRIR / FECHAR URNA</button><button type="button" data-fau-guide="out-direct">VER VOTOS E CONFIRMAR OUT</button><button type="button" data-fau-guide="history">CORRIGIR HISTÓRICO</button></div>
+                    <div id="fauGuideSteps" class="fau-guide-steps"></div>
+                    <div class="fau-guide-footer"><button type="button" id="fauGuideRefresh">↻ Atualizar situação</button><button type="button" data-fau-guide="history">Corrigir histórico antigo</button><span>As conferências marcadas são lembretes deste navegador, não registros oficiais. Resultados e votos só são confirmados pelos controles do sistema.</span></div>
+                  </section>
                   <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>PRÉVIAS DA RODADA</strong><span>Somente ADM · Não altera a rodada</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-preview="jury" class="fau-command-btn">Notas e ranking</button><button type="button" id="btnPreviewPool" class="fau-command-btn">Elimination Pool</button><button type="button" data-fau-preview="cast" class="fau-command-btn">Ícone / Fora de Moda</button><button type="button" data-fau-preview="save" class="fau-command-btn">Votação de salvação</button></div><div id="fauPreviewViewer" class="hidden mt-4 rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4" aria-label="Visualizador de prévias"><div class="flex items-center justify-between gap-3 mb-3"><strong id="fauPreviewViewerTitle" class="text-fashion-gold text-sm">Prévia privada</strong><button type="button" id="fauClosePreview" class="fau-command-btn" aria-label="Fechar prévia">Fechar ✕</button></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div></div>
                   <section id="fauHistoryRepair" class="fau-command-control-panel space-y-3" aria-label="Corrigir histórico de rodadas anteriores">
                     <div class="fau-command-previews-heading"><strong>CORRIGIR HISTÓRICO</strong><span>Sem alterar a rodada aberta</span></div>
@@ -10189,6 +10196,15 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 @media(max-width:600px){#mainView:has(#runwayGrid) > .space-y-8{gap:10px!important}}
 </style>
 
+<style id="fau-episode-guide-style">
+.fau-episode-guide{border:1px solid #a48a66;border-radius:18px;padding:clamp(16px,3vw,25px);background:radial-gradient(ellipse at 100% 0%,rgba(142,52,70,.22),transparent 65%),#1a151b;color:#f0eae1;display:grid;gap:16px}
+.fau-guide-head>span{font-size:10px;letter-spacing:.19em;color:#d1b38b;font-weight:700}.fau-guide-head h3{font:600 clamp(29px,6vw,43px)/1.1 'Cormorant Garamond',serif;margin:7px 0}.fau-guide-head p,.fau-guide-footer span{font-size:12px;color:#c9bdc7;line-height:1.55}
+.fau-guide-progress{display:grid;gap:9px;font-size:12px;color:#e1c79e}.fau-guide-track{height:7px;border-radius:20px;background:#40343e;overflow:hidden}.fau-guide-track>div{height:100%;background:linear-gradient(90deg,#986e46,#e2c48b);width:0;transition:width .25s}
+.fau-guide-next{border:1px solid #d1b38b;border-radius:13px;padding:16px;background:rgba(209,179,139,.09)}.fau-guide-next strong{display:block;font-size:11px;letter-spacing:.1em;color:#e1c48c}.fau-guide-next h4{font-size:21px;font-weight:700;margin:5px 0}.fau-guide-next p{font-size:12px;color:#e1d7dd;margin-bottom:12px}.fau-guide-next button{background:#d1b38b;color:#191218;font-weight:800;border-radius:9px;padding:11px 14px;width:100%;text-align:center}
+.fau-guide-steps{display:grid;gap:9px}.fau-guide-step{border:1px solid #584953;background:#211b23;border-radius:12px;padding:13px;display:grid;gap:8px}.fau-guide-step.is-next{border-color:#d1b38b}.fau-guide-step.is-done{border-color:#516958;background:#19241e}.fau-guide-step-top{display:flex;align-items:center;gap:10px}.fau-guide-step-number{border:1px solid #9d8262;border-radius:50%;height:30px;width:30px;display:grid;place-items:center;flex-shrink:0;font-size:11px;color:#e2c48b}.fau-guide-step-title{font-size:13px;font-weight:700;flex:1}.fau-guide-step-status{font-size:10px;color:#d1b38b}.fau-guide-step p{font-size:11px;color:#c7bbc4}.fau-guide-step-actions{display:flex;gap:8px;flex-wrap:wrap}.fau-guide-step-actions button,.fau-guide-footer button{padding:9px 11px;border-radius:8px;border:1px solid #8d765e;color:#f0eae1;font-size:11px;font-weight:600}.fau-guide-step-actions button.primary{background:#d1b38b;color:#191218}.fau-guide-step-actions button:disabled{opacity:.45}.fau-guide-footer{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.fau-guide-footer span{flex-basis:100%}
+@media(min-width:680px){.fau-guide-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.fau-guide-next button{width:auto}}
+ .fau-guide-live-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.fau-guide-live-actions button{border:1px solid #a48a66;background:#30242c;color:#f0eae1;border-radius:10px;padding:14px 10px;font-weight:750;font-size:12px;line-height:1.35;min-height:58px}.fau-guide-live-actions button:nth-child(2){background:#793444;border-color:#b66b77}.fau-guide-live-actions button:last-child{grid-column:1/-1;background:#211b23;border-style:dashed}.fau-episode-guide{scroll-margin-top:18px}.fau-guide-step.is-next{box-shadow:0 0 0 1px rgba(209,179,139,.35),0 0 25px rgba(209,179,139,.09)}
+</style>
 <style id="fau-runway-designer-name-tight">
 /* Keep the designer label directly against the photo, without a blank band. */
 #runwayGrid .fau-collection-card{padding:0!important;overflow:hidden!important}
@@ -10210,6 +10226,66 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
      const containingPanel=target.closest('[role=\"tabpanel\"]');if(containingPanel){const tab=document.querySelector('#fauDirectorTabs button[data-director-tab=\"'+containingPanel.id.replace('fau-panel-','')+'\"]');if(tab)tab.click();}for(const disclosure of (function*(el){while(el){if(el.tagName==='DETAILS')yield el;el=el.parentElement;}})(target)){disclosure.open=true;}if(target.disabled){if(msg)msg.textContent='Controle indisponível nesta etapa.';return;}target.click();if(msg)msg.textContent='Ação solicitada. Confira o estado atualizado antes de prosseguir.';}
    else{target.scrollIntoView({behavior:'smooth',block:'center'});if(msg)msg.textContent='Seção de produção localizada abaixo.';}
  });
+</script>
+<script id="fau-episode-guide-logic">
+(function(){
+ const stages=[
+  {title:'Encerrar entregas',desc:'Confira os looks enviados antes de encerrar o Workroom.',action:'btnEndTimer',label:'Encerrar entregas',key:'workroom'},
+  {title:'Publicar a passarela',desc:'Libere os looks para o desfile e o julgamento.',action:'btnTogglePublic',label:'Publicar passarela',key:'runway'},
+  {title:'Conferir notas e ranking',desc:'Verifique as notas dos jurados e a classificação antes de fechar.',action:'btnApurarRanking',label:'Calcular / conferir notas',manual:true},
+  {title:'Encerrar notas',desc:'Só encerre quando todos os jurados terminarem.',action:'fauToggleScoreWindow',label:'Encerrar notas',key:'scores'},
+  {title:'Abrir e concluir críticas',desc:'Libere as críticas dos Designers previstos e encerre quando terminar.',action:'fauToggleCritiqueWindow',label:'Abrir / encerrar críticas',manual:true},
+  {title:'Registrar Ícone e Fora de Moda',desc:'Confira os votos do elenco e registre os títulos oficiais.',action:'fauOfficialPublish',label:'Registrar títulos',manual:true},
+  {title:'Registrar Elimination Pool',desc:'Confirme os três indicados antes de abrir a votação de salvação.',action:'btnPreviewPool',label:'Conferir indicados',manual:true},
+  {title:'Abrir urna de salvação',desc:'Confirme os três indicados e abra a urna para os Designers votarem.',action:'btnToggleUrn',label:'Abrir urna',manual:true},
+  {title:'Conferir todos os votos',desc:'Veja quem votou e quem falta. Não encerre antes de conferir.',preview:'save',label:'Ver votação de salvação',manual:true},
+  {title:'Fechar urna',desc:'Verifique quem ainda falta votar antes de encerrar.',action:'btnToggleUrn',label:'Fechar urna',manual:true},
+  {title:'Confirmar o eliminado',desc:'Apure os votos de salvação e confirme oficialmente o OUT.',action:'btnApurarBerlinda',label:'Ver votos e confirmar OUT',manual:true},
+  {title:'Publicar os resultados',desc:'Confira ranking, títulos, Pool e OUT antes da publicação.',action:'fauPublishAllResults',label:'Publicar resultados',manual:true},
+  {title:'Revisar o histórico',desc:'Verifique se o episódio ficou completo no The Season Story.',history:true,label:'Ver histórico',manual:true}
+ ];
+ const escapeHtml=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function render(){
+  const root=document.getElementById('fauEpisodeGuide');if(!root)return;
+  const round=root.dataset.round,storageKey='fau-production-guide-v2-'+round;
+  let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{}}catch(e){}
+  const actual=stages.map((st,i)=>st.key==='workroom'?root.dataset.workroom==='done':st.key==='runway'?root.dataset.runway==='done':st.key==='scores'?root.dataset.scores==='done':!!saved[i]);
+  const first=actual.findIndex(x=>!x),next=first<0?stages.length-1:first,done=actual.filter(Boolean).length;
+  document.getElementById('fauGuideProgressText').textContent=done+' de '+stages.length+' etapas conferidas · '+(first<0?'Roteiro concluído':'Próxima: '+stages[next].title);
+  document.getElementById('fauGuideProgressFill').style.width=(100*done/stages.length)+'%';
+  const makeAction=(st,i,primary)=>`<button type="button" class="${primary?'primary':''}" data-fau-guide="${st.history?'history':st.preview?'preview':'action'}" data-guide-step="${i}" ${st.action?'data-guide-target="'+escapeHtml(st.action)+'"':''} ${st.preview?'data-guide-preview="'+escapeHtml(st.preview)+'"':''}>${escapeHtml(st.label)}</button>`;
+  const active=stages[next];document.getElementById('fauGuideNext').innerHTML='<strong>'+(first<0?'EPISÓDIO CONFERIDO':'PRÓXIMA AÇÃO · ETAPA '+String(next+1).padStart(2,'0'))+'</strong><h4>'+escapeHtml(first<0?'Revisar o episódio':active.title)+'</h4><p>'+escapeHtml(first<0?'Confira se os registros oficiais estão completos antes de iniciar a próxima rodada.':active.desc)+'</p>'+makeAction(active,next,true);
+  document.getElementById('fauGuideSteps').innerHTML=stages.map((st,i)=>'<article class="fau-guide-step '+(actual[i]?'is-done':i===next?'is-next':'')+'"><div class="fau-guide-step-top"><span class="fau-guide-step-number">'+(actual[i]?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+(actual[i]?'CONFERIDO':i===next?'AGORA':'PENDENTE')+'</span></div><p>'+escapeHtml(st.desc)+'</p><div class="fau-guide-step-actions">'+makeAction(st,i,false)+(st.manual?'<button type="button" data-fau-guide="mark" data-guide-step="'+i+'">'+(actual[i]?'Desmarcar conferência':'Marcar como conferido')+'</button>':'')+'</div></article>').join('');
+ }
+ document.addEventListener('click',function(e){
+  const b=e.target.closest('[data-fau-guide],#fauGuideRefresh');if(!b)return;
+  const root=document.getElementById('fauEpisodeGuide');if(!root)return;
+  if(b.id==='fauGuideRefresh'){render();return;}
+  const kind=b.dataset.fauGuide,idx=Number(b.dataset.guideStep),st=stages[idx];
+  if(kind==='mark'){
+   const key='fau-production-guide-v2-'+root.dataset.round;let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){}
+   saved[idx]=!saved[idx];try{localStorage.setItem(key,JSON.stringify(saved))}catch(e){}render();return;
+  }
+  if(kind==='urn-smart'){const target=document.getElementById('btnToggleUrn');if(!target||target.disabled){alert('Controle da urna indisponível.');return;}if(!confirm('Você vai alterar a situação da urna da rodada atual. Confirma?'))return;target.click();return;}
+  if(kind==='out-direct'){const target=document.getElementById('btnApurarBerlinda');if(!target){alert('Controle de eliminação indisponível.');return;}target.click();target.scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(kind==='history'){
+   const target=document.getElementById('fauHistoryRepair');if(target){target.scrollIntoView({behavior:'smooth',block:'start'});target.style.outline='2px solid #d1b38b';setTimeout(()=>target.style.outline='',1600);}return;
+  }
+  if(kind==='preview'){document.querySelector('[data-fau-preview="'+b.dataset.guidePreview+'"]')?.click();return;}
+  if(kind==='action'){
+   const id=b.dataset.guideTarget,button=document.getElementById(id);
+   if(!button){alert('Controle não disponível nesta etapa. Confira os controles oficiais abaixo.');return;}
+   const panel=button.closest('[role="tabpanel"]');if(panel){document.querySelector('#fauDirectorTabs button[data-director-tab="'+panel.id.replace('fau-panel-','')+'"]')?.click();}
+   for(let el=button.parentElement;el;el=el.parentElement){if(el.tagName==='DETAILS')el.open=true;}
+   if(button.disabled){alert('Essa ação está indisponível agora. Confira a situação da rodada.');return;}
+   if(id==='btnToggleUrn'){const open=root.dataset.urn==='open';if((idx===7&&open)||(idx===9&&!open)){alert(open?'A urna já está aberta. Para fechar, use a etapa Fechar urna.':'A urna já está fechada. Para abrir, use a etapa Abrir urna.');return;}if(!confirm(open?'Confirma fechar a urna da rodada atual?':'Confirma abrir a urna da rodada atual?'))return;}
+   button.scrollIntoView({behavior:'smooth',block:'center'});button.click();
+  }
+ });
+ const obs=new MutationObserver(()=>{if(document.getElementById('fauEpisodeGuide'))render()});
+ obs.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:false});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
+})();
 </script>
 </body>
 </html>
