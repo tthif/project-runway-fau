@@ -5915,7 +5915,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     <div><span>JÚRI</span><strong>${globalState.notasEncerradas?'Notas encerradas':'Notas abertas'}</strong></div>
                     <div><span>URNA</span><strong>${globalState.urna?'Aberta':'Fechada'}</strong></div>
                   </div>
-                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-no-elimination="${globalState.themeId==='w01_first_garment'||globalState.naoEliminatoria||globalState.semEliminacao||globalState.elimTipo==='none'?'yes':'no'}" data-workroom="${globalState.prazo&&now()>=globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-jury="${stageAtLeast('judging')&&!globalState.notasEncerradas?'open':stageAtLeast('judging')?'closed':'waiting'}" data-scores="${globalState.notasEncerradas?'done':'open'}" data-critique="${globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting'}" data-urn="${globalState.urna?'open':'closed'}" data-icon-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.veto===true?'yes':'no'}" data-fora-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.fdm===true?'yes':'no'}" data-pool="${Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?'done':'waiting'}" aria-label="Roteiro da produção">
+                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-legacy-flags="${!globalState.liberado && (globalState.notasEncerradas || globalState.criticasAbertas || globalState.criticasEncerradas || (globalState.workflowStage && globalState.workflowStage!=='creation'))?'yes':'no'}" data-no-elimination="${globalState.themeId==='w01_first_garment'||globalState.naoEliminatoria||globalState.semEliminacao||globalState.elimTipo==='none'?'yes':'no'}" data-workroom="${globalState.prazo&&now()>=globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-jury="${(String(globalState.workflowStageRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.workflowStageRound)) && stageAtLeast('judging') ? 'open':'waiting'}" data-scores="${(String(globalState.juryStateRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.juryStateRound)) && globalState.notasEncerradas?'done':'open'}" data-critique="${(String(globalState.critiqueStateRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.critiqueStateRound)) ? (globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting') : 'waiting'}" data-urn="${globalState.urna?'open':'closed'}" data-icon-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.veto===true?'yes':'no'}" data-fora-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.fdm===true?'yes':'no'}" data-pool="${Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?'done':'waiting'}" aria-label="Roteiro da produção">
                     <div class="fau-guide-head"><span>SEU ROTEIRO DE PRODUÇÃO</span><h3>O que fazer agora?</h3><p>Siga as ações oficiais em ordem. Use as prévias para acompanhar os detalhes, sem conferências duplicadas.</p></div>
                     <div class="fau-guide-progress"><div id="fauGuideProgressText" aria-live="polite">Verificando etapas…</div><div class="fau-guide-track"><div id="fauGuideProgressFill"></div></div></div>
                     <div id="fauGuideNext" class="fau-guide-next" aria-live="polite"></div>
@@ -6806,11 +6806,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <details class="border-t border-fashion-800 pt-2"><summary class="cursor-pointer text-xs text-emerald-300">✓ Já enviaram (${done.length})</summary><div class="flex flex-wrap gap-1.5 mt-2">${names(done)}</div></details>
           </article>`;
         };
-        document.getElementById('fauToggleScoreWindow')?.addEventListener('click',safeExec(async()=>{const closing=!globalState.notasEncerradas;if(!confirm(closing?'Encerrar o prazo de notas para todos os jurados?':'Reabrir o prazo de notas para todos os jurados?'))return;await db.doc('config/estado').update({notasEncerradas:closing});showToast(closing?'Notas encerradas':'Notas reabertas');}));
+        document.getElementById('fauToggleScoreWindow')?.addEventListener('click',safeExec(async()=>{const closing=!globalState.notasEncerradas;if(!confirm(closing?'Encerrar o prazo de notas para todos os jurados?':'Reabrir o prazo de notas para todos os jurados?'))return;await db.doc('config/estado').update({notasEncerradas:closing,juryStateRound:String(globalState.rodada)});showToast(closing?'Notas encerradas':'Notas reabertas');}));
         document.getElementById('fauToggleCritiqueWindow')?.addEventListener('click',safeExec(async()=>{
             const opening=!globalState.criticasAbertas||globalState.criticasEncerradas;
             if(!confirm(opening?'Abrir críticas para os Designers elegíveis, sem revelar classificações?':'Encerrar críticas para todos os jurados?'))return;
-            const update={criticasAbertas:opening,criticasEncerradas:!opening};
+            const update={criticasAbertas:opening,criticasEncerradas:!opening,critiqueStateRound:String(globalState.rodada)};
             if(opening){
                 const round=String(globalState.rodada||'');
                 if(!round)throw new Error('Nenhuma rodada ativa.');
@@ -7654,7 +7654,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           if(target==='runway' && globalState.prazo && now()<globalState.prazo && !productionConfirm('O prazo ainda está aberto. Deseja mesmo marcar a fase de desfile? Isso NÃO publica as imagens.'))return;
           if(target==='results' && !productionConfirm('Entrar na fase de resultados? As notas e votações não serão reveladas automaticamente.'))return;
           if(target!=='results' && !productionConfirm(`Mudar a fase editorial para ${FLOW_STAGES.find(x=>x.id===target).title}? Os controles de publicação continuam separados.`))return;
-          await db.doc('config/estado').set({workflowStage:target,workflowStageUpdatedBy:currentUser.uid,workflowStageUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+          await db.doc('config/estado').set({workflowStage:target,workflowStageRound:String(globalState.rodada||''),workflowStageUpdatedBy:currentUser.uid,workflowStageUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
           await productionLog('season_flow_stage_changed',{from:currentFlowStage(),to:target,round:globalState.rodada||null});
           showToast('Etapa oficial atualizada.');
         }));
@@ -7854,6 +7854,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 liberado: false,
                 urna: false,
                 berlinda: [],
+                // Estados operacionais pertencem à rodada iniciada, não à anterior.
+                notasEncerradas: false,
+                criticasAbertas: false,
+                criticasEncerradas: false,
+                critiqueCall: null,
+                critiqueTopCount: 0,
+                critiqueBottomCount: 0,
+                workflowStage: 'creation',
+                workflowStageRound: rid,
+                juryStateRound: rid,
+                critiqueStateRound: rid,
                 regras: $('#newRoundRules').value.trim(),
                 briefing: $('#newRoundBriefing').value.trim() || (SEASON_THEMES[$('#newThemeId').value]?.mandate || ''),
                 proxTema: null, proxOpcoes: [], poderUid: null, poderNome: null,
@@ -10287,7 +10298,6 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 (function(){
  // O roteiro apresenta comandos reais. As prévias permanecem na seção própria.
  const stages=[
-  {title:'Encerrar entregas',desc:'Finalize o Workroom após o prazo de envio.',action:'btnEndTimer',label:'Encerrar entregas',key:'workroom'},
   {title:'Publicar a passarela',desc:'Disponibilize os looks para o episódio.',action:'btnTogglePublic',label:'Publicar passarela',key:'runway'},
   {title:'Liberar notas dos jurados',desc:'Abra The Judges’ Panel para o júri avaliar.',action:'fau-guide-open-jury',label:'Liberar avaliações',key:'jury'},
   {title:'Encerrar notas',desc:'Confira os jurados pendentes na prévia antes de encerrar.',action:'fauToggleScoreWindow',label:'Encerrar notas',key:'scores'},
@@ -10307,6 +10317,14 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
  function render(){
   const root=document.getElementById('fauEpisodeGuide');if(!root)return;
   const noElimination=root.dataset.noElimination==='yes';
+  // Uma rodada antiga pode ter herdado flags globais. Oferecer reparo explícito, nunca apagar automaticamente.
+  if(root.dataset.legacyFlags==='yes' && !document.getElementById('fauGuideLegacyRepair')){
+    const box=document.createElement('div');box.id='fauGuideLegacyRepair';box.className='fau-guide-next';
+    box.innerHTML='<strong>ESTADOS ANTIGOS DETECTADOS</strong><p>A passarela está fechada, mas existem flags globais de notas/críticas ou fase avançada. Corrija somente se a rodada atual ainda não iniciou o julgamento.</p><button type="button" id="fauRepairRoundStates">Corrigir estados desta rodada</button>';
+    root.appendChild(box);
+  }
+  const repair=document.getElementById('fauGuideLegacyRepair');
+  if(repair)repair.hidden=root.dataset.runway==='done'||root.dataset.legacyFlags!=='yes';
   const state={workroom:root.dataset.workroom==='done',runway:root.dataset.runway==='done',jury:root.dataset.jury!=='waiting',scores:root.dataset.scores==='done',critiqueOpen:root.dataset.critique!=='waiting',critiqueDone:root.dataset.critique==='done',pool:root.dataset.pool==='done',urnOpen:root.dataset.urn==='open',urnClosed:root.dataset.urnClosed==='yes',outConfirmed:root.dataset.outConfirmed==='yes',resultsPublished:root.dataset.resultsPublished==='yes',castClosed:root.dataset.iconClosed==='yes'&&root.dataset.foraClosed==='yes',iconClosed:root.dataset.iconClosed==='yes',foraClosed:root.dataset.foraClosed==='yes'};
   // Cada operação é avaliada independentemente: júri e votação do elenco podem ocorrer em paralelo.
   // Um estado desconhecido nunca é apresentado como concluído; não bloqueia operações independentes.
@@ -10346,7 +10364,6 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
   if(b.dataset.fauGuide!=='action')return;
   const idx=Number(b.dataset.guideStep),id=b.dataset.guideTarget;
   if(root.dataset.noElimination==='yes'&&stages[idx]?.elimination){alert('Esta rodada não possui eliminação.');return;}
-  if(idx===0&&root.dataset.workroom==='open'&&!confirm('O prazo venceu. Confirme se deseja encerrar as entregas oficialmente.'))return;
   if(stages[idx]?.key==='scores'&&root.dataset.scores==='done'){alert('As notas já estão encerradas. Use o controle oficial caso precise reabri-las.');return;}
   if(stages[idx]?.key==='jury'&&root.dataset.jury!=='waiting'){alert('A avaliação dos jurados já foi liberada.');return;}
   if(id==='fau-guide-open-jury'){
@@ -10383,8 +10400,24 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    if(stages[idx]?.key==='critiqueOpen'&&open){alert('As críticas já estão abertas.');return;}
    if(stages[idx]?.key==='critiqueDone'&&!open){alert('As críticas não estão abertas. Confira o estado da rodada.');return;}
   }
+  if(id==='btnTogglePublic'&&root.dataset.workroom!=='done'){alert('O prazo de entregas ainda está em andamento. Aguarde o encerramento automático ou encerre antecipadamente pelo controle de prazo.');return;}
   if(id==='btnTogglePublic'&&root.dataset.runway==='done'){alert('A passarela já está publicada. Para ocultá-la, use o controle oficial.');return;}
   button.scrollIntoView({behavior:'smooth',block:'center'});button.click();
+ });
+ document.addEventListener('click',async function(e){
+  if(e.target.id!=='fauRepairRoundStates')return;
+  const root=document.getElementById('fauEpisodeGuide');
+  if(!root || root.dataset.runway==='done' || root.dataset.legacyFlags!=='yes')return;
+  if(!confirm('A rodada atual ainda NÃO teve passarela nem julgamento? Isso reabrirá notas, limpará o estado de críticas e retornará a fase para criação. Não altera notas, looks ou histórico de outras rodadas.'))return;
+  try{
+    const ref=db.doc('config/estado');
+    await db.runTransaction(async tx=>{
+      const snap=await tx.get(ref),d=snap.data()||{};
+      if(String(d.rodada)!==root.dataset.round || d.liberado)throw new Error('A rodada mudou ou a passarela já foi publicada. Recarregue a página.');
+      tx.update(ref,{notasEncerradas:false,criticasAbertas:false,criticasEncerradas:false,critiqueCall:null,workflowStage:'creation',workflowStageRound:String(d.rodada),juryStateRound:String(d.rodada),critiqueStateRound:String(d.rodada)});
+    });
+    alert('Estados operacionais da rodada corrigidos.');
+  }catch(err){alert('Não foi possível corrigir: '+(err.message||err));}
  });
  const obs=new MutationObserver(()=>{if(document.getElementById('fauEpisodeGuide'))render()});
  obs.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:false});
