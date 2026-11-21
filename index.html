@@ -7038,6 +7038,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                             ${(['estilista','jurado'].includes(p.role)||isSelf)?`<label class="fau-admin-photo-label"> <i class="fa-solid fa-camera"></i> ${p.fotoElenco?'Trocar fotografia':'Adicionar fotografia'}<input type="file" accept="image/jpeg,image/png,image/webp" data-cast-upload="${esc(p.id)}" aria-label="Selecionar foto de ${esc(p.ate||'Participante')}"></label>`:''}
                             <div class="fau-profile-meta"><span>Função atual: <strong>${esc(p.role || 'plateia')}</strong></span>${isSelf?'<span>Seu perfil</span>':''}</div>
                             <div class="fau-profile-primary">
+                                ${p.role==='estilista'?`<button data-act="admin-submit-look" data-uid="${p.id}" data-name="${esc(p.ate||'Designer')}" class="fau-profile-btn fau-profile-edit"><i class="fa-solid fa-image" aria-hidden="true"></i> Enviar look</button>`:''}
                                 <button data-act="reset-random-password" data-uid="${p.id}" data-name="${esc(p.ate||p.username||'Usuário')}" class="fau-profile-btn fau-profile-edit"><i class="fa-solid fa-key" aria-hidden="true"></i> Alterar senha</button>
                                 <details class="fau-profile-more"><summary>Gerenciar <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
                                     <div class="fau-profile-controls">
@@ -9164,6 +9165,58 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const uid = btn.dataset.uid;
             if (!isAdmin || !auth.currentUser) throw new Error('Apenas a produção pode gerenciar usuários.');
             if (['save-role','toggle-status','delete-profile','edit-profile'].includes(act) && (!uid || uid === auth.currentUser.uid)) throw new Error('Não é permitido alterar sua própria conta neste painel.');
+
+            if (act === 'admin-submit-look') {
+                if(!uid)throw new Error('Designer não identificado.');
+                const profileSnap=await db.doc(`perfis/${uid}`).get();
+                if(!profileSnap.exists||profileSnap.data().role!=='estilista')throw new Error('Este usuário não é um Designer.');
+                if(!globalState.rodada)throw new Error('Nenhuma rodada ativa.');
+                const name=profileSnap.data().ate||btn.dataset.name||'Designer';
+                const round=globalState.rodada;
+                const theme=getTheme();
+                const limit=Number(theme?.numSubmissoes||globalState.numSubmissoes||1);
+                const existingSnap=await db.collection('looks').where('rodada','==',round).where('uid','==',uid).get();
+                const existing=existingSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.slot||0)-(b.slot||0));
+                const dialog=document.createElement('div');
+                dialog.className='fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-3 overflow-y-auto';
+                dialog.innerHTML=`<section role="dialog" aria-modal="true" aria-label="Enviar look pelo Designer" class="w-full max-w-lg rounded-xl border border-fashion-gold bg-fashion-900 p-5 space-y-4 text-white my-auto">
+                    <div class="flex justify-between gap-3 items-start"><div><p class="text-[10px] tracking-widest text-fashion-gold">WORKROOM · PRODUÇÃO</p><h3 class="font-cinzel text-2xl">Enviar look pelo Designer</h3><p class="text-sm text-gray-300 mt-1">${esc(name)} · Rodada ${esc(String(round))}</p></div><button type="button" data-close aria-label="Fechar" class="border border-fashion-700 rounded px-3 py-2">✕</button></div>
+                    <label class="block text-sm">Entrega<select data-slot class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-3 text-white">${Array.from({length:Math.max(1,limit)},(_,i)=>`<option value="${i}">Look ${i+1}${existing.some(l=>(Number(l.slot)||1)===i+1)?' · Editar existente':' · Novo envio'}</option>`).join('')}</select></label>
+                    <label class="block text-sm">Foto (JPG, PNG ou WebP · até 5 MB)<input data-photo type="file" accept="image/jpeg,image/png,image/webp" class="block w-full mt-1 text-sm"></label>
+                    <img data-preview alt="Prévia do look existente" class="hidden max-h-36 rounded object-contain" />
+                    <label class="block text-sm">Título<input data-title maxlength="150" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-3 text-white" placeholder="Título da criação"></label>
+                    <label class="block text-sm">Conceito<textarea data-concept maxlength="500" rows="5" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-3 text-white" placeholder="Conceito do look"></textarea><span data-count class="text-xs text-gray-400">0/500</span></label>
+                    <p class="text-xs text-gray-400">O envio será registrado em nome do Designer. Uma entrega existente pode ser atualizada sem substituir outros looks.</p>
+                    <button data-save type="button" class="w-full bg-fashion-gold text-black font-bold rounded p-3">Salvar entrega</button>
+                </section>`;
+                document.body.appendChild(dialog);
+                const q=sel=>dialog.querySelector(sel);
+                const update=()=>{const slot=Number(q('[data-slot]').value)+1;const look=existing.find(l=>(Number(l.slot)||1)===slot);q('[data-title]').value=look?.titulo||'';q('[data-concept]').value=look?.mem||'';q('[data-photo]').value='';q('[data-preview]').classList.toggle('hidden',!look?.url);if(look?.url)q('[data-preview]').src=look.url;q('[data-count]').textContent=q('[data-concept]').value.length+'/500';};
+                q('[data-close]').onclick=()=>dialog.remove();q('[data-slot]').onchange=update;q('[data-concept]').oninput=()=>q('[data-count]').textContent=q('[data-concept]').value.length+'/500';update();
+                q('[data-save]').onclick=async()=>{
+                    const save=q('[data-save]');if(save.disabled)return;
+                    try{
+                        const slot=Number(q('[data-slot]').value)+1;
+                        const previous=existing.find(l=>(Number(l.slot)||1)===slot);
+                        const file=q('[data-photo]').files[0];
+                        const title=q('[data-title]').value.trim();const concept=q('[data-concept]').value.trim();
+                        if(!title||!concept||(!file&&!previous?.url))throw new Error('Preencha foto, título e conceito.');
+                        if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024))throw new Error('Use JPG, PNG ou WebP de até 5 MB.');
+                        if(concept.length>500)throw new Error('O conceito deve ter até 500 caracteres.');
+                        save.disabled=true;save.textContent='SALVANDO...';
+                        const photo=file?await compressImageToBase64(file):previous.url;
+                        const id=previous?.id||`${round}_${uid}_${slot-1}`;
+                        const lookRef=db.doc(`looks/${id}`);
+                        const data={uid,ate:name,rodada:round,themeId:theme?.id||globalState.themeId||null,slot,titulo:title,mem:concept,url:photo,t:previous?.t||now(),adminSubmitted:true,adminUpdatedAt:now()};
+                        const batch=db.batch();
+                        batch.set(lookRef,data,{merge:true});
+                        batch.set(db.doc(`envios/${id}`),{rodada:round,uid},{merge:true});
+                        await batch.commit();
+                        dialog.remove();showToast(previous?'Entrega do Designer atualizada.':'Look enviado pelo Designer com sucesso.');
+                    }catch(error){showToast(error.message||'Não foi possível salvar.');console.error(error);}finally{save.disabled=false;save.textContent='Salvar entrega';}
+                };
+                return;
+            }
 
             if (act === 'reset-random-password') {
                 if (!uid) throw new Error('Selecione um usuário válido.');
