@@ -4265,6 +4265,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               (!firstOutByUid.has(uid) && castOutUids.has(uid) && lastPlayedRound.get(uid)===round);
           }).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'}));
           const icon=title?.icon?rows.find(r=>String(r.uid||r.id||'')===String(title.icon)):null;
+          const foraId=String(title?.fora||title?.fdm||'').trim();
+          const fora=foraId?rows.find(r=>String(r.uid||r.id||'')===foraId):null;
+          const foraName=fora?.ate||castProfiles.find(p=>String(p.uid)===foraId)?.ate||'';
           // The Season Story: exibir somente indicados oficialmente registrados.
           // A primeira WEEK não teve Elimination Pool, mesmo com BOTTOM no ranking.
           const roundId=String(round||'').trim();
@@ -4281,7 +4284,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const items=[
             winners.length?`<div class="fau-story-result"><span>WINNER DA RODADA</span><strong>${winners.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:'',
             icon?`<div class="fau-story-result"><span>ÍCONE DA MODA</span><strong>${esc(icon.ate||'Designer')}</strong></div>`:'',
-            poolPeople.length?`<div class="fau-story-result"><span>ELIMINATION POOL</span><strong>${poolPeople.map(esc).join(', ')}</strong></div>`:'',
+            foraName?`<div class="fau-story-result"><span>FORA DE MODA</span><strong>${esc(foraName)}</strong></div>`:'',
+            poolPeople.length?`<div class="fau-story-result"><span>ELIMINATION POOL</span><strong>${poolPeople.map(esc).join(', ')}</strong></div>`:(!noPool&&currentUser?.role==='admin'?`<div class="fau-story-result"><span>ELIMINATION POOL</span><p class="text-xs text-gray-400 mt-1">Indicações antigas não registradas no histórico.</p><button type="button" class="fau-story-repair-pool mt-2 border border-fashion-gold/50 rounded-lg px-3 py-2 text-xs text-fashion-gold" data-round="${esc(roundId)}">REGISTRAR OS 3 INDICADOS</button></div>`:''),
             out.length?`<div class="fau-story-result fau-story-out"><span>${out.length===1?'ELIMINADO DO EPISÓDIO':'ELIMINADOS DO EPISÓDIO'}</span><strong>${out.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:''
           ].filter(Boolean);
           return `<article class="fau-archive-chapter">
@@ -4291,6 +4295,37 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             <div class="fau-story-results">${items.length?items.join(''):'<p class="text-gray-400 text-sm">Aguardando resultados oficiais.</p>'}</div>
           </article>`;
         }).join('');
+        // Recuperação administrativa de rodadas antigas: nunca deduzir Pool a partir de BOTTOM.
+        // O ADM informa os três indicados reais, validados contra o ranking daquela WEEK.
+        if(!window.__fauStoryPoolRepairBound){
+          window.__fauStoryPoolRepairBound=true;
+          document.addEventListener('click',async event=>{
+            const btn=event.target.closest?.('.fau-story-repair-pool');
+            if(!btn||currentUser?.role!=='admin')return;
+            const round=String(btn.dataset.round||'');
+            try{
+              const ref=db.collection('ranking_historico_publico').doc(round);
+              const snap=await ref.get(),data=snap.data()||{};
+              if(!snap.exists||!Array.isArray(data.rows))throw new Error('Ranking oficial não encontrado.');
+              if(Array.isArray(data.eliminationPool)&&data.eliminationPool.length===3){showToast('Os três indicados já estão registrados. Atualize a página.');return;}
+              const answer=prompt('Informe os 3 Designers que realmente entraram no Elimination Pool da '+fauWeekLabel(round)+', separados por vírgula. Não inclua quem apenas ficou no BOTTOM sem Pool.');
+              if(answer===null)return;
+              const names=answer.split(',').map(x=>x.trim()).filter(Boolean);
+              if(names.length!==3)throw new Error('Informe exatamente três nomes separados por vírgula.');
+              const norm=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLocaleLowerCase('pt-BR');
+              const selected=names.map(name=>{
+                const matches=data.rows.filter(row=>norm(row.ate||row.nome)===norm(name));
+                if(matches.length!==1||!matches[0].uid)throw new Error('Designer não encontrado de forma única no ranking: '+name);
+                return {uid:matches[0].uid,ate:matches[0].ate||matches[0].nome};
+              });
+              if(new Set(selected.map(x=>String(x.uid))).size!==3)throw new Error('Os três indicados precisam ser diferentes.');
+              if(!confirm('Confirmar os indicados oficiais da '+fauWeekLabel(round)+'?\n'+selected.map(x=>x.ate).join('\n')))return;
+              await ref.set({eliminationPool:selected},{merge:true});
+              showToast('Elimination Pool registrado no histórico. Atualize o Season Hub.');
+              btn.closest('.fau-story-result').querySelector('p').textContent='Registro salvo. Atualize a página para ver os nomes.';
+            }catch(error){showToast(error.message||'Não foi possível registrar o Elimination Pool.');}
+          });
+        }
         const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).length;
         const availableRounds=[...new Set([...rounds.map(r=>r.round),...publications.map(p=>roundKey(p.round))])].filter(Boolean).sort((a,b)=>fauArchiveSort(b,a));
         // Lookbook: capítulos em ordem cronológica inversa; dentro de cada
