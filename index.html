@@ -950,6 +950,19 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #fauUnifiedOperations #fauHistoryRepair button{width:100%}
 @media(min-width:680px){#fauUnifiedOperations #fauHistoryRepair .flex.flex-wrap{grid-template-columns:minmax(0,1fr) auto}#fauUnifiedOperations #fauHistoryRepair button{width:auto}}
 </style>
+<style id="fau-command-ux-correction-2026">
+/* Hierarquia legível no celular: título em linha própria, episódio abaixo. */
+#fauUnifiedOperations .fau-command-heading{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:12px!important}
+#fauUnifiedOperations .fau-command-heading>div{flex:none!important;width:100%!important;min-width:0!important}
+#fauUnifiedOperations .fau-command-heading h3{font-size:clamp(27px,6vw,36px)!important;line-height:1.16!important;overflow-wrap:break-word!important;margin:7px 0 0!important}
+#fauUnifiedOperations .fau-command-round{align-self:flex-start;max-width:100%;margin:0!important}
+#fauUnifiedOperations .fau-extra-controls{border-top:1px solid rgba(209,179,139,.22);padding-top:18px}
+#fauUnifiedOperations .fau-extra-controls .fau-command-control-panel{border-top:0!important;margin-top:0!important;padding-top:0!important}
+#fauUnifiedOperations .fau-guide-step.is-review{background:#29211e!important;border-color:#9d7855!important}
+#fauUnifiedOperations .fau-guide-step.is-review .fau-guide-step-status{color:#e5bd82!important}
+/* O atalho flutuante não deve cobrir o roteiro e os controles do ADM. */
+body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -5895,7 +5908,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 
 
                 <section id="fauUnifiedOperations" class="fau-command-center" aria-label="Central de comandos">
-                  <header class="fau-command-heading"><div><p class="fau-command-eyebrow">PRODUÇÃO · CONTROLE DO EPISÓDIO</p><h3>Central de Comandos</h3><p>Prévia, controle e acompanhamento da rodada.</p></div><span class="fau-command-round">${esc(getTheme()?.title || getTheme()?.nome || getTheme()?.titulo || globalState.rodada || 'Rodada atual')}</span></header>
+                  <header class="fau-command-heading"><div><p class="fau-command-eyebrow">PRODUÇÃO · EPISÓDIO</p><h3>Central de Comandos</h3></div><span class="fau-command-round">${esc(getTheme()?.title || getTheme()?.nome || getTheme()?.titulo || globalState.rodada || 'Rodada atual')}</span></header>
                   <div class="fau-command-stats" aria-label="Resumo do episódio">
                     <div><span>WORKROOM</span><strong>${globalState.prazo&&now()>globalState.prazo?'Encerrado':'Em andamento'}</strong></div>
                     <div><span>RUNWAY</span><strong>${globalState.liberado?'Publicado':'Não publicado'}</strong></div>
@@ -5910,9 +5923,9 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div class="fau-guide-footer"><button type="button" id="fauGuideRefresh">↻ Atualizar situação</button><span>O progresso mostra apenas estados identificáveis da rodada. Etapas sem registro verificável não são marcadas como concluídas automaticamente.</span></div>
                   </section>
                   <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>PRÉVIAS DA RODADA</strong><span>Somente ADM · Não altera a rodada</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-preview="jury" class="fau-command-btn">Notas e ranking</button><button type="button" id="btnPreviewPool" class="fau-command-btn">Elimination Pool</button><button type="button" data-fau-preview="cast" class="fau-command-btn">Ícone / Fora de Moda</button><button type="button" data-fau-preview="save" class="fau-command-btn">Votação de salvação</button></div><div id="fauPreviewViewer" class="hidden mt-4 rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4" aria-label="Visualizador de prévias"><div class="flex items-center justify-between gap-3 mb-3"><strong id="fauPreviewViewerTitle" class="text-fashion-gold text-sm">Prévia privada</strong><button type="button" id="fauClosePreview" class="fau-command-btn" aria-label="Fechar prévia">Fechar ✕</button></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div></div>
-                  <details class="fau-command-status-details fau-extra-controls"><summary>Ajustes opcionais</summary>
+                  <section class="fau-extra-controls" aria-label="Ajustes e apresentação">
                   <div class="fau-command-control-panel" aria-label="Direção e publicação"><div class="fau-command-previews-heading"><strong>AJUSTES E APRESENTAÇÃO</strong><span>Ferramentas opcionais</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-command="btnAdd15Min" class="fau-command-btn">+15 min no prazo</button><button type="button" data-fau-command="fauBroadcastLoad" class="fau-command-btn">Preparar críticas</button><button type="button" data-fau-command="btnLiveBroadcast" class="fau-command-btn">Tela de anúncio</button></div><p class="fau-command-footnote">Ações oficiais usam os controles existentes e suas confirmações. Confira a prévia antes de publicar.</p></div>
-                  </details>
+                  </section>
                   <section id="fauHistoryRepair" class="fau-command-control-panel space-y-3" aria-label="Corrigir histórico de rodadas anteriores">
                     <div class="fau-command-previews-heading"><strong>CORRIGIR HISTÓRICO</strong><span>Sem alterar a rodada aberta</span></div>
                     <div class="flex flex-wrap gap-2 items-center"><select id="fauRepairRound" class="flex-1 min-w-0 bg-fashion-950 border border-fashion-700 rounded p-3 text-white text-xs"><option value="">Carregar rodadas anteriores…</option></select><button type="button" id="fauRepairInspect" class="fau-command-btn">VERIFICAR HISTÓRICO</button></div>
@@ -10301,7 +10314,9 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    if(st.optional)return 'optional';
    if(st.elimination&&noElimination)return 'skipped';
    if(!st.key)return 'unverified';
-   if(state[st.key])return 'done';
+   // Registros de júri/críticas sem passarela publicada são inconsistentes com o episódio atual.
+   // Não sinalizar conclusão verde nem apagar dados persistidos.
+   if(state[st.key])return (!state.runway && ['jury','scores','critiqueOpen','critiqueDone','castClosed','pool','urnOpen'].includes(st.key))?'inconsistent':'done';
    if(['urnClosed','outConfirmed','resultsPublished'].includes(st.key))return 'unverified';
    return 'pending';
   });
@@ -10321,7 +10336,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
   steps.innerHTML=stages.map((st,i)=>{
    const v=status[i],complete=v==='done',skipped=v==='skipped',optional=v==='optional',active=i===next;
    const label=complete?'CONFIRMADO':skipped?'NÃO SE APLICA':optional?'OPCIONAL':v==='inconsistent'?'REVISAR':v==='unverified'?'VERIFICAR':active?'AGORA':'PENDENTE';
-   return '<details data-index="'+i+'" class="fau-guide-step '+(complete?'is-done':active?'is-next':'')+'" '+(opened.has(String(i))?'open':'')+'><summary class="fau-guide-step-top"><span class="fau-guide-step-number">'+(complete?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+label+'</span><span class="fau-guide-chevron">⌄</span></summary><div class="fau-guide-step-body"><p>'+escapeHtml(st.desc)+'</p>'+(v==='inconsistent'?'<p>Existe um estado posterior registrado, mas as etapas anteriores não estão confirmadas.</p>':'')+(v==='unverified'?'<p>Este painel não possui comprovante automático dessa operação. Confira o registro oficial antes de prosseguir.</p>':'')+(!skipped?'<div class="fau-guide-step-actions">'+makeAction(st,i,false)+'</div>':'')+'</div></details>';
+   return '<details data-index="'+i+'" class="fau-guide-step '+(complete?'is-done':v==='inconsistent'?'is-review':active?'is-next':'')+'" '+(opened.has(String(i))?'open':'')+'><summary class="fau-guide-step-top"><span class="fau-guide-step-number">'+(complete?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+label+'</span><span class="fau-guide-chevron">⌄</span></summary><div class="fau-guide-step-body"><p>'+escapeHtml(st.desc)+'</p>'+(v==='inconsistent'?'<p>Há registros de uma fase posterior, mas a passarela desta rodada não está publicada. Verifique se são dados antigos antes de prosseguir.</p>':'')+(v==='unverified'?'<p>Este painel não possui comprovante automático dessa operação. Confira o registro oficial antes de prosseguir.</p>':'')+(!skipped?'<div class="fau-guide-step-actions">'+makeAction(st,i,false)+'</div>':'')+'</div></details>';
   }).join('');
  }
  document.addEventListener('click',function(e){
