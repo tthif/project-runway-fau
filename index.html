@@ -5915,7 +5915,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     <div><span>JÚRI</span><strong>${globalState.notasEncerradas?'Notas encerradas':'Notas abertas'}</strong></div>
                     <div><span>URNA</span><strong>${globalState.urna?'Aberta':'Fechada'}</strong></div>
                   </div>
-                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-legacy-flags="${!globalState.liberado && (globalState.notasEncerradas || globalState.criticasAbertas || globalState.criticasEncerradas || (globalState.workflowStage && globalState.workflowStage!=='creation'))?'yes':'no'}" data-no-elimination="${globalState.themeId==='w01_first_garment'||globalState.naoEliminatoria||globalState.semEliminacao||globalState.elimTipo==='none'?'yes':'no'}" data-workroom="${globalState.prazo&&now()>=globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-jury="${(String(globalState.workflowStageRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.workflowStageRound)) && stageAtLeast('judging') ? 'open':'waiting'}" data-scores="${(String(globalState.juryStateRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.juryStateRound)) && globalState.notasEncerradas?'done':'open'}" data-critique="${(String(globalState.critiqueStateRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.critiqueStateRound)) ? (globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting') : 'waiting'}" data-urn="${globalState.urna?'open':'closed'}" data-icon-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.veto===true?'yes':'no'}" data-fora-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.fdm===true?'yes':'no'}" data-pool="${Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?'done':'waiting'}" aria-label="Roteiro da produção">
+                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-legacy-flags="${!globalState.liberado && (globalState.notasEncerradas || globalState.criticasAbertas || globalState.criticasEncerradas || (globalState.workflowStage && globalState.workflowStage!=='creation'))?'yes':'no'}" data-no-elimination="${globalState.themeId==='w01_first_garment'||globalState.naoEliminatoria||globalState.semEliminacao||globalState.elimTipo==='none'?'yes':'no'}" data-deadline="${Number(globalState.prazo)||0}" data-workroom="${globalState.prazo&&now()>=globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-jury="${(String(globalState.workflowStageRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.workflowStageRound)) && stageAtLeast('judging') ? 'open':'waiting'}" data-scores="${(String(globalState.juryStateRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.juryStateRound)) && globalState.notasEncerradas?'done':'open'}" data-critique="${(String(globalState.critiqueStateRound||'')===String(globalState.rodada) || (globalState.liberado && !globalState.critiqueStateRound)) ? (globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting') : 'waiting'}" data-urn="${globalState.urna?'open':'closed'}" data-icon-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.veto===true?'yes':'no'}" data-fora-closed="${globalState.castVoteLocks?.[String(globalState.rodada)]?.fdm===true?'yes':'no'}" data-pool="${Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?'done':'waiting'}" aria-label="Roteiro da produção">
                     <div class="fau-guide-head"><span>SEU ROTEIRO DE PRODUÇÃO</span><h3>O que fazer agora?</h3><p>Siga as ações oficiais em ordem. Use as prévias para acompanhar os detalhes, sem conferências duplicadas.</p></div>
                     <div class="fau-guide-progress"><div id="fauGuideProgressText" aria-live="polite">Verificando etapas…</div><div class="fau-guide-track"><div id="fauGuideProgressFill"></div></div></div>
                     <div id="fauGuideNext" class="fau-guide-next" aria-live="polite"></div>
@@ -10298,6 +10298,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 (function(){
  // O roteiro apresenta comandos reais. As prévias permanecem na seção própria.
  const stages=[
+  {title:'Encerrar entregas',desc:'O prazo encerra automaticamente ao zerar. Se todos já enviaram, você pode encerrar antes.',action:'btnEndTimer',label:'Encerrar antecipadamente',key:'workroom'},
   {title:'Publicar a passarela',desc:'Disponibilize os looks para o episódio.',action:'btnTogglePublic',label:'Publicar passarela',key:'runway'},
   {title:'Liberar notas dos jurados',desc:'Abra The Judges’ Panel para o júri avaliar.',action:'fau-guide-open-jury',label:'Liberar avaliações',key:'jury'},
   {title:'Encerrar notas',desc:'Confira os jurados pendentes na prévia antes de encerrar.',action:'fauToggleScoreWindow',label:'Encerrar notas',key:'scores'},
@@ -10316,6 +10317,8 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
  // Não usar marcações locais como prova de execução de operações no Firestore.
  function render(){
   const root=document.getElementById('fauEpisodeGuide');if(!root)return;
+  const deadline=Number(root.dataset.deadline)||0;
+  if(deadline>0)root.dataset.workroom=Date.now()>=deadline?'done':'open';
   const noElimination=root.dataset.noElimination==='yes';
   // Uma rodada antiga pode ter herdado flags globais. Oferecer reparo explícito, nunca apagar automaticamente.
   if(root.dataset.legacyFlags==='yes' && !document.getElementById('fauGuideLegacyRepair')){
@@ -10400,6 +10403,11 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    if(stages[idx]?.key==='critiqueOpen'&&open){alert('As críticas já estão abertas.');return;}
    if(stages[idx]?.key==='critiqueDone'&&!open){alert('As críticas não estão abertas. Confira o estado da rodada.');return;}
   }
+  if(id==='btnEndTimer'){
+   const deadline=Number(root.dataset.deadline)||0;
+   if(deadline>0&&Date.now()>=deadline){root.dataset.workroom='done';render();return;}
+   if(!confirm('Encerrar as entregas agora, antes do prazo? Os Designers não poderão mais enviar nem editar looks.'))return;
+  }
   if(id==='btnTogglePublic'&&root.dataset.workroom!=='done'){alert('O prazo de entregas ainda está em andamento. Aguarde o encerramento automático ou encerre antecipadamente pelo controle de prazo.');return;}
   if(id==='btnTogglePublic'&&root.dataset.runway==='done'){alert('A passarela já está publicada. Para ocultá-la, use o controle oficial.');return;}
   button.scrollIntoView({behavior:'smooth',block:'center'});button.click();
@@ -10419,6 +10427,8 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
     alert('Estados operacionais da rodada corrigidos.');
   }catch(err){alert('Não foi possível corrigir: '+(err.message||err));}
  });
+ // Atualiza a etapa automaticamente no instante em que o prazo termina, sem exigir ação do ADM.
+ setInterval(()=>{const root=document.getElementById('fauEpisodeGuide');if(!root)return;const deadline=Number(root.dataset.deadline)||0;if(deadline>0&&Date.now()>=deadline&&root.dataset.workroom!=='done'){root.dataset.workroom='done';render();}},1000);
  const obs=new MutationObserver(()=>{if(document.getElementById('fauEpisodeGuide'))render()});
  obs.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:false});
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
