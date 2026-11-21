@@ -7038,14 +7038,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                             ${(['estilista','jurado'].includes(p.role)||isSelf)?`<label class="fau-admin-photo-label"> <i class="fa-solid fa-camera"></i> ${p.fotoElenco?'Trocar fotografia':'Adicionar fotografia'}<input type="file" accept="image/jpeg,image/png,image/webp" data-cast-upload="${esc(p.id)}" aria-label="Selecionar foto de ${esc(p.ate||'Participante')}"></label>`:''}
                             <div class="fau-profile-meta"><span>Função atual: <strong>${esc(p.role || 'plateia')}</strong></span>${isSelf?'<span>Seu perfil</span>':''}</div>
                             <div class="fau-profile-primary">
-                                <button data-act="edit-profile" data-uid="${p.id}" class="fau-profile-btn fau-profile-edit">Editar perfil</button>
+                                <button data-act="reset-random-password" data-uid="${p.id}" data-name="${esc(p.ate||p.username||'Usuário')}" class="fau-profile-btn fau-profile-edit"><i class="fa-solid fa-key" aria-hidden="true"></i> Alterar senha</button>
                                 <details class="fau-profile-more"><summary>Gerenciar <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
                                     <div class="fau-profile-controls">
                                         <label for="fau-role-${p.id}">Função do usuário</label>
                                         <div class="fau-profile-role-row"><select id="fau-role-${p.id}" data-role-select="${p.id}" ${isSelf?'disabled':''}>
                                             <option value="estilista" ${p.role==='estilista'?'selected':''}>Designer</option><option value="jurado" ${p.role==='jurado'?'selected':''}>Jurado</option><option value="plateia" ${p.role==='plateia'?'selected':''}>Público</option>
                                         </select><button data-act="save-role" data-uid="${p.id}" ${isSelf?'disabled':''} class="fau-profile-btn">Salvar função</button></div>
-                                        <div class="fau-profile-actions"><button data-act="reset-random-password" data-uid="${p.id}" data-name="${esc(p.ate||p.username||'Usuário')}" class="fau-profile-btn fau-profile-edit"><i class="fa-solid fa-key" aria-hidden="true"></i> Nova senha aleatória</button><button data-act="toggle-status" data-uid="${p.id}" data-current="${isDisabled?'true':'false'}" ${isSelf?'disabled':''} class="fau-profile-btn">${isDisabled?'Ativar':'Desativar'}</button>
+                                        <div class="fau-profile-actions"><button data-act="edit-profile" data-uid="${p.id}" class="fau-profile-btn fau-profile-edit">Editar perfil</button><button data-act="toggle-status" data-uid="${p.id}" data-current="${isDisabled?'true':'false'}" ${isSelf?'disabled':''} class="fau-profile-btn">${isDisabled?'Ativar':'Desativar'}</button>
                                         <button data-act="delete-profile" data-uid="${p.id}" data-name="${esc(p.ate)}" ${isSelf?'disabled':''} class="fau-profile-btn fau-profile-danger">Excluir perfil</button></div>
                                     </div>
                                 </details>
@@ -9168,7 +9168,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if (act === 'reset-random-password') {
                 if (!uid) throw new Error('Selecione um usuário válido.');
                 const name=btn.dataset.name||'este usuário';
-                if (!confirm(`Gerar e aplicar uma nova senha aleatória para ${name}? A senha anterior deixará de funcionar imediatamente.`)) return;
+                if (!confirm(`Redefinir a senha de ${name}? Uma senha segura será gerada e a anterior deixará de funcionar.`)) return;
                 btn.disabled=true;
                 try {
                     const result=await firebase.app().functions('us-central1').httpsCallable('adminResetRandomPassword')({uid});
@@ -9182,7 +9182,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     dialog.querySelector('[data-close]').onclick=()=>dialog.remove();
                     dialog.querySelector('input').focus();
                 } catch(error) {
-                    if(error.code==='functions/not-found'||error.code==='functions/unavailable') throw new Error('A função segura de redefinição ainda não está publicada no Firebase. Consulte o arquivo de instalação.');
+                    if(['functions/not-found','functions/unavailable','functions/internal'].includes(error.code)) throw new Error('Não foi possível alterar a senha. A função adminResetRandomPassword precisa estar publicada e disponível no Firebase. Nenhuma alteração foi confirmada.');
                     throw error;
                 } finally {btn.disabled=false;}
                 return;
