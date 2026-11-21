@@ -4265,10 +4265,23 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               (!firstOutByUid.has(uid) && castOutUids.has(uid) && lastPlayedRound.get(uid)===round);
           }).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'}));
           const icon=title?.icon?rows.find(r=>String(r.uid||r.id||'')===String(title.icon)):null;
+          // The Season Story: exibir somente indicados oficialmente registrados.
+          // A primeira WEEK não teve Elimination Pool, mesmo com BOTTOM no ranking.
+          const roundId=String(round||'').trim();
+          const roundTheme=String(rank?.themeId||rank?.temaId||rank?.theme||rank?.tema||'').toLowerCase();
+          const noPool=/^0*1$/.test(roundId)||roundTheme==='w01_first_garment'||rank?.naoEliminatoria===true||rank?.semEliminacao===true||rank?.elimTipo==='none';
+          const officialPool=!noPool&&Array.isArray(rank?.eliminationPool)?rank.eliminationPool:[];
+          const poolPeople=[...new Map(officialPool.map(person=>{
+            const id=String(typeof person==='string'?person:(person?.uid||person?.id||'')).trim();
+            const matched=rows.find(r=>String(r.uid||r.id||'')===id);
+            const name=String(matched?.ate||((typeof person==='object'&&person)?person.ate||person.nome:'')||'').trim();
+            return [id||name.toLocaleLowerCase('pt-BR'),name];
+          }).filter(([key,name])=>key&&name)).values()];
           const participants=rows.filter(r=>!(/\bOUT\b|ELIMINAD/i.test(String(r.status||'')) && firstOutByUid.get(String(r.uid||r.id||''))!==round));
           const items=[
             winners.length?`<div class="fau-story-result"><span>WINNER DA RODADA</span><strong>${winners.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:'',
             icon?`<div class="fau-story-result"><span>ÍCONE DA MODA</span><strong>${esc(icon.ate||'Designer')}</strong></div>`:'',
+            poolPeople.length?`<div class="fau-story-result"><span>ELIMINATION POOL</span><strong>${poolPeople.map(esc).join(', ')}</strong></div>`:'',
             out.length?`<div class="fau-story-result fau-story-out"><span>${out.length===1?'ELIMINADO DO EPISÓDIO':'ELIMINADOS DO EPISÓDIO'}</span><strong>${out.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:''
           ].filter(Boolean);
           return `<article class="fau-archive-chapter">
