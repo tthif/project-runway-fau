@@ -3602,9 +3602,19 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const highlights=played.filter(x=>/^(WIN|HIGH|TOP)$/i.test(String(x.row.status||'').trim())).length;
             // O Elimination Pool inclui também o indicado pelo acumulado, que pode estar SAFE/LOW/HIGH.
             // Não inferir participação no Pool a partir da classificação BOTTOM.
-            const poolRounds=rounds.filter(r=>Array.isArray(r.eliminationPool));
+            // WEEK 01 — THE FIRST GARMENT foi não eliminatória: BOTTOM não gera Pool.
+            // Para outras semanas, somente listas oficiais registradas contam.
+            const fauNoPoolRound=r=>{
+              const id=String(r.round||'').trim();
+              const theme=String(r.themeId||r.temaId||r.theme||r.tema||'').toLowerCase();
+              return id==='1'||id==='01'||/^0*1$/.test(id)||theme==='w01_first_garment'||
+                r.naoEliminatoria===true||r.semEliminacao===true||r.elimTipo==='none';
+            };
+            const eligiblePoolRounds=rounds.filter(r=>!fauNoPoolRound(r));
+            const poolRounds=eligiblePoolRounds.filter(r=>Array.isArray(r.eliminationPool));
             const poolCount=poolRounds.filter(r=>r.eliminationPool.some(x=>String(typeof x==='string'?x:(x?.uid||''))===String(uid)||(!x?.uid&&String(x?.ate||'').trim().toLocaleLowerCase('pt-BR')===name))).length;
-            const poolHistoryComplete=rounds.every(r=>Array.isArray(r.eliminationPool));
+            const poolHistoryComplete=eligiblePoolRounds.every(r=>Array.isArray(r.eliminationPool));
+            const poolDisplay=poolHistoryComplete?String(poolCount):(poolCount>0?`${poolCount}+`:'—');
             const out=entries.some(x=>/^OUT$/i.test(String(x.row.status||'').trim()));
             const titleResults=await Promise.allSettled(rounds.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
             const titleMap=new Map();titleResults.forEach((res,i)=>{if(res.status==='fulfilled'&&res.value.exists&&res.value.data()?.published===true)titleMap.set(String(rounds[i].round),res.value.data());});
@@ -3614,7 +3624,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
             const chip=(label)=>`<span>${esc(label)}</span>`;
             stats.innerHTML=chip(`${wins} ${wins===1?'Winner':'Winners'}`)+chip(titlesAvailable?`${icons} ${icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível')+(titlesAvailable?`<span class="fau-fdm">${fora} Fora de Moda</span>`:'');
-            meta.innerHTML=[['RODADAS DISPUTADAS',played.length],['DESTAQUES NO RANKING',highlights],['VEZES NO ELIMINATION POOL',poolHistoryComplete?poolCount:'—'],['ÚLTIMA CLASSIFICAÇÃO',played.length?String(played[played.length-1].row.status||'SAFE').toUpperCase():'—']].map(([label,value])=>`<span class="fau-legacy-metric"><small>${esc(label)}</small><strong>${esc(String(value))}</strong></span>`).join('');
+            meta.innerHTML=[['RODADAS DISPUTADAS',played.length],['DESTAQUES NO RANKING',highlights],['VEZES NO ELIMINATION POOL',poolDisplay],['ÚLTIMA CLASSIFICAÇÃO',played.length?String(played[played.length-1].row.status||'SAFE').toUpperCase():'—']].map(([label,value])=>`<span class="fau-legacy-metric"><small>${esc(label)}</small><strong>${esc(String(value))}</strong></span>`).join('');
             const facts=$('#fauMyLegacyHighlights');
             if(facts){
               const last=played[played.length-1];
@@ -3638,7 +3648,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               const movement=lastRank&&prevRank?(prevRank.position>lastRank.position?`Subiu ${prevRank.position-lastRank.position} ${prevRank.position-lastRank.position===1?'posição':'posições'}`:prevRank.position<lastRank.position?`Caiu ${lastRank.position-prevRank.position} ${lastRank.position-prevRank.position===1?'posição':'posições'}`:'Manteve a posição'):'Sem comparação anterior';
               const bestRank=validRanked.length?validRanked.reduce((a,b)=>b.position<a.position?b:a):null;
               const worstRank=validRanked.length?validRanked.reduce((a,b)=>b.position>a.position?b:a):null;
-              const verifiedPool=rounds.filter(r=>Array.isArray(r.eliminationPool)&&r.eliminationPool.some(x=>String(typeof x==='string'?x:(x?.uid||''))===String(uid)||(!x?.uid&&String(x?.ate||'').trim().toLocaleLowerCase('pt-BR')===name)));
+              const verifiedPool=poolRounds.filter(r=>r.eliminationPool.some(x=>String(typeof x==='string'?x:(x?.uid||''))===String(uid)||(!x?.uid&&String(x?.ate||'').trim().toLocaleLowerCase('pt-BR')===name)));
               const w=540,h=168,pad=30,maxPos=Math.max(2,...validRanked.map(x=>x.position));
               const pts=validRanked.map((x,i)=>({x:pad+(validRanked.length===1?(w-2*pad)/2:i*(w-2*pad)/(validRanked.length-1)),y:pad+(x.position-1)*(h-2*pad)/(maxPos-1),...x}));
               const line=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
@@ -3650,7 +3660,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
               }else{
                 journey.hidden=false;
                 const extremes=`<div class="fau-journey-extremes"><div class="fau-journey-extreme"><small>MELHOR COLOCAÇÃO</small><strong>${bestRank.position}º</strong><span>${esc(bestRank.week)} · ${esc(bestRank.status)}</span></div><div class="fau-journey-extreme"><small>PIOR COLOCAÇÃO</small><strong>${worstRank.position}º</strong><span>${esc(worstRank.week)} · ${esc(worstRank.status)}</span></div></div>`;
-                const poolDetails=verifiedPool.length||poolHistoryComplete?`<details class="mt-4"><summary>HISTÓRICO DO ELIMINATION POOL · ${poolHistoryComplete?poolCount:'—'}</summary>${verifiedPool.length?`<div class="fau-journey-pool">${verifiedPool.map(r=>`<div class="fau-journey-pool-item">${esc(fauWeekLabel(r.round))} · ${entries.some(e=>String(e.r.round)===String(r.round)&&/^OUT$/i.test(String(e.row.status)))?'Eliminado':'Indicado ao Pool'}</div>`).join('')}</div>`:'<p class="fau-journey-caption">Nenhuma indicação registrada.</p>'}${!poolHistoryComplete?'<p class="fau-journey-caption">Histórico parcial: nem todas as rodadas têm os indicados registrados.</p>':''}</details>`:'';
+                const poolDetails=verifiedPool.length||poolHistoryComplete?`<details class="mt-4"><summary>HISTÓRICO DO ELIMINATION POOL · ${poolDisplay}</summary>${verifiedPool.length?`<div class="fau-journey-pool">${verifiedPool.map(r=>`<div class="fau-journey-pool-item">${esc(fauWeekLabel(r.round))} · ${entries.some(e=>String(e.r.round)===String(r.round)&&/^OUT$/i.test(String(e.row.status)))?'Eliminado':'Indicado ao Pool'}</div>`).join('')}</div>`:'<p class="fau-journey-caption">Nenhuma indicação registrada.</p>'}${!poolHistoryComplete?'<p class="fau-journey-caption">Histórico parcial: nem todas as rodadas têm os indicados registrados.</p>':''}</details>`:'';
                 const positionSlot=$('#fauMyPositions');if(positionSlot)positionSlot.innerHTML=extremes;
                 journey.innerHTML=`<h3>EVOLUÇÃO NA COMPETIÇÃO</h3>${graph}${lastRank?`<p class="fau-journey-detail">Última rodada: <strong>${esc(lastRank.status)}</strong> · ${esc(movement)}</p>`:''}${poolDetails}`;
               }
@@ -5471,6 +5481,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                 try {
                     const pool=await fauResolveStandardPool();
                     // Apenas corrige a urna já aberta; não publica ranking ou notas.
+                    if(globalState.rodada)await db.collection('ranking_historico_publico').doc(String(globalState.rodada)).set({eliminationPool:pool.map(({uid,ate})=>({uid,ate}))},{merge:true});
                     await db.doc('config/estado').update({berlinda:pool});
                     if(status)status.textContent='Três indicados confirmados: '+pool.map(x=>x.ate).join(' · ')+'. Atualizando a cabine...';
                     globalState.berlinda=pool;
@@ -7293,7 +7304,7 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           batch.set(db.doc('ranking/atual'),{rodada:globalState.rodada,rows,classificationSlots});
           batch.set(db.collection('ranking_historico').doc(round),{rodada:globalState.rodada,rows,classificationSlots,published:true,announcedWhatsApp:true,announcedAt:stamp,announcedBy:currentUser.uid},{merge:true});
           batch.set(db.doc('ranking_publico/atual'),{rodada:globalState.rodada,rows:publicRows});
-          batch.set(db.collection('ranking_historico_publico').doc(round),{rodada:globalState.rodada,rows:publicRows,...(Array.isArray(globalState.berlinda)?{eliminationPool:globalState.berlinda.map(x=>({uid:x.uid,ate:x.ate}))}:{})},{merge:true});
+          batch.set(db.collection('ranking_historico_publico').doc(round),{rodada:globalState.rodada,rows:publicRows,...((globalState.themeId==='w01_first_garment'||globalState.naoEliminatoria||globalState.semEliminacao||globalState.elimTipo==='none')?{eliminationPool:[]}:(Array.isArray(globalState.berlinda)?{eliminationPool:globalState.berlinda.map(x=>({uid:x.uid,ate:x.ate}))}:{}))},{merge:true});
           batch.set(db.collection('fau_titulos_publicos').doc(round),{...titles,round,icon:iconResult.uid,fora,published:true,updatedAt:stamp,updatedBy:currentUser.uid},{merge:true});
           batch.set(db.doc('config/estado'),{rankingLiberado:true,winUid:winner.uid},{merge:true});
           // Dados privados: cada perfil recebe somente o próprio acumulado.
@@ -7558,6 +7569,10 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             if (!globalState.urna && globalState.themeId!=='theme_rest_in_style' && poolToOpen.length!==3)
                 throw new Error('O Elimination Pool precisa ter três indicados para abrir a votação.');
             if (!productionConfirm(globalState.urna ? 'Encerrar votação agora?' : `ABRIR a urna e mostrar estes três indicados na The Voting Room?\n\n${poolToOpen.map(x=>x.ate).join(' • ')}`)) return;
+            if(!globalState.urna && poolToOpen.length){
+                const poolRound=String(globalState.rodada||'');
+                if(poolRound)await db.collection('ranking_historico_publico').doc(poolRound).set({eliminationPool:poolToOpen.map(({uid,ate})=>({uid,ate}))},{merge:true});
+            }
             await db.doc('config/estado').update(globalState.urna ? {urna:false} : {urna:true,berlinda:poolToOpen});
             await productionLog('ballot_visibility_changed', {open:!globalState.urna});
             showToast('Status da urna atualizado.');
