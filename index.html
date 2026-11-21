@@ -6068,33 +6068,26 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 </div>
 
                 <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-4">
-                    <h3 class="font-cinzel text-white text-base">Nova Rodada</h3><label class="block text-xs text-gray-300 mt-3">Desafio oficial (twists independentes)<select id="newThemeId" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2 text-white"><option value="">Rodada personalizada</option>${Object.values(SEASON_THEMES).map(t => `<option value="${esc(t.id)}">${esc(String(t.title||'').replace(/^\s*WEEK\s*(?:\d+)?\s*[—–-]\s*/i,'').trim())}</option>`).join('')}</select></label><details id="themePreviewDetails" class="mt-3 rounded-xl border border-fashion-700 bg-fashion-950/60 p-4"><summary class="cursor-pointer text-fashion-gold text-xs font-semibold tracking-widest">Ver resumo do tema</summary><div id="themePreview" class="text-sm text-gray-300 mt-3 whitespace-pre-line leading-relaxed"></div></details>
-                    <details class="bg-fashion-950 border border-fashion-700 rounded p-3 text-xs text-gray-300">
-                        <summary class="cursor-pointer text-fashion-gold font-cinzel">Como funciona a rodada</summary>
-                        <ol class="list-decimal ml-5 mt-2 space-y-1">
-                            <li>Crie a rodada aqui embaixo: escolha o tipo, o nome do tema e o prazo.</li>
-                            <li>Os Designers enviam os looks. O prazo encerra automaticamente; você também pode encerrar antes.</li>
-                            <li>Os jurados dão as notas no Judges&#39; Panel.</li>
-                            <li>Publique a passarela, acompanhe as notas e críticas e depois apure o ranking.</li>
-                            <li>Ícone e Fora de Moda abrem com a passarela. A urna de salvação é aberta depois de definir o Elimination Pool.</li>
-                        </ol>
-                    </details>
-                    <div class="fau-setup-step"><span class="fau-setup-step-number">01</span><div><strong>Escolha o formato</strong><p>Um toque define as regras principais da rodada.</p></div></div>
-                    <div class="space-y-1">
-                        <span class="text-[10px] uppercase tracking-wider text-gray-400">Tipo de rodada</span>
-                        <div id="presetChips" class="flex flex-wrap gap-2 text-[11px]">
-                            ${[['normal','Padrão'],['dupla','📸📸 2 fotos'],['livre','✨ Não eliminatória'],['double','⚠️ Eliminação dupla'],['top5','🔥 Top 5'],['final','🏁 Grande Final']].map(([k, l]) => `<button type="button" data-preset="${k}" class="preset-chip px-3 py-1.5 rounded border border-fashion-700 bg-fashion-950 text-gray-300">${l}</button>`).join('')}
-                        </div>
+                    <div class="fau-new-round-heading"><p class="text-[10px] uppercase tracking-[.2em] text-fashion-gold">PRODUÇÃO · PRÓXIMO EPISÓDIO</p><h3 class="font-cinzel text-white text-xl mt-1">Criar nova rodada</h3><p class="text-xs text-gray-400 mt-1">Escolha o desafio, ajuste as regras e confira tudo antes de iniciar.</p></div>
+                    <div class="fau-setup-step"><span class="fau-setup-step-number">01</span><div><strong>Escolha o desafio</strong><p>O tema preenche o identificador e os textos automaticamente.</p></div></div>
+                    <label class="block text-xs text-gray-300">Desafio
+                      <select id="newThemeId" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2 text-white"><option value="">Rodada personalizada</option>${Object.values(SEASON_THEMES).map(t => `<option value="${esc(t.id)}">${esc(String(t.title||'').replace(/^\s*WEEK\s*(?:\d+)?\s*[—–-]\s*/i,'').trim())}</option>`).join('')}</select>
+                    </label>
+                    <div id="themePreview" class="hidden" aria-hidden="true"></div>
+                    <div class="space-y-2"><div class="flex items-center justify-between gap-2"><span class="text-[10px] uppercase tracking-wider text-gray-400">Configuração rápida</span><span class="text-[10px] text-gray-500">Personalize em Ajustes avançados</span></div>
+                      <div id="presetChips" class="flex flex-wrap gap-2 text-[11px]">
+                        ${[['normal','Padrão'],['dupla','2 fotos'],['livre','Sem eliminação'],['double','Eliminação dupla'],['top5','Top 5'],['final','Grande Final']].map(([k, l]) => `<button type="button" data-preset="${k}" class="preset-chip px-3 py-1.5 rounded border border-fashion-700 bg-fashion-950 text-gray-300">${l}</button>`).join('')}
+                      </div>
                     </div>
                     <div class="fau-setup-step"><span class="fau-setup-step-number">02</span><div><strong>Defina o tema e o prazo</strong><p>O contador encerra as entregas sozinho. Você também pode antecipar.</p></div></div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Identificador da rodada</span><input id="newRoundId" placeholder="ex: thefirstsin" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></label>
+                        <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Identificador (preenchido pelo tema)</span><input id="newRoundId" placeholder="ex: thefirstsin" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></label>
                         <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Prazo de entrega</span><input id="newRoundDeadline" type="datetime-local" value="${roundPz}" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></label>
                     </div>
                     <div class="flex flex-wrap gap-2 text-[11px] items-center"><span class="text-gray-500">Prazo rápido:</span>
                         ${[2, 24, 48, 72].map(h => `<button type="button" data-addh="${h}" class="px-2 py-1 rounded bg-fashion-800 border border-fashion-600 text-fashion-gold">+${h}h</button>`).join('')}
                     </div>
-                    <details class="fau-setup-advanced"><summary><span>⚙ Ajustes avançados</span><small>Fase, fotos, eliminação e notas</small></summary><div class="fau-setup-advanced-body">
+                    <details class="fau-setup-advanced"><summary><span>⚙ Ajustes avançados</span><small>Personalize as regras</small></summary><div class="fau-setup-advanced-body">
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                         <label class="space-y-1 block"><span class="text-[10px] uppercase tracking-wider text-gray-400">Fase</span>
                             <select id="newRoundPhase" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="normal">Padrão</option><option value="top5">Top 5</option><option value="final">Grande Final</option></select></label>
@@ -6106,11 +6099,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                             <select id="newRoundSoma" class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"><option value="media">Média (máx. 50)</option><option value="soma">Soma das fotos</option></select></label>
                     </div>
                     </div></details>
-                    <div class="fau-setup-step"><span class="fau-setup-step-number">03</span><div><strong>Prepare a apresentação</strong><p>Esses textos só serão publicados quando a rodada começar.</p></div></div>
+                    <div class="fau-setup-step"><span class="fau-setup-step-number">03</span><div><strong>Revise os textos</strong><p>O resumo aparece no Season Hub; o briefing, na Workroom.</p></div></div>
                     <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">Resumo para o Season Hub · nova rodada</span>
                         <textarea id="newRoundRules" rows="3" placeholder="Resumo curto do desafio, exigências e regras especiais." class="bg-fashion-950 border border-fashion-700 rounded p-2 text-white w-full"></textarea></label>
                     <label class="space-y-1 block text-xs"><span class="text-[10px] uppercase tracking-wider text-gray-400">Briefing para a Workroom · nova rodada</span><textarea id="newRoundBriefing" rows="6" placeholder="Briefing completo que aparecerá na Workroom ao iniciar a rodada." class="bg-fashion-950 border border-fashion-700 rounded p-3 text-white w-full"></textarea></label>
-                    <p class="text-xs text-fashion-gold">Esses textos serão publicados somente quando você iniciar a nova rodada.</p>
                     <section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3" aria-label="Validação antes de publicar">
                       <div class="flex justify-between items-center gap-2"><h4 class="font-cinzel text-fashion-gold text-sm">Verificação antes de iniciar</h4><span id="fauPreflightStatus" class="text-xs text-gray-300" role="status" aria-live="polite">Aguardando configuração</span></div>
                       <ul id="fauPreflightItems" class="text-xs space-y-2" aria-label="Checklist de publicação"></ul>
@@ -7779,6 +7771,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             document.querySelectorAll('.preset-chip').forEach(c => c.classList.toggle('!border-fashion-gold', c.dataset.preset === k));
             document.querySelectorAll('.preset-chip').forEach(c => c.classList.toggle('!text-fashion-gold', c.dataset.preset === k));
             refreshRoundSummary();
+            document.querySelectorAll(['newRoundPhase','newRoundSubmissions','newRoundElimType','newRoundSoma'].map(id=>'#'+id).join(',')).forEach(el=>el.dispatchEvent(new Event('change',{bubbles:true})));
         };
         document.querySelectorAll('.preset-chip').forEach(c => c.onclick = () => applyPreset(c.dataset.preset));
         document.querySelectorAll('[data-addh]').forEach(c => c.onclick = () => {
@@ -8158,7 +8151,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }finally{btn.disabled=false;}
         });
         const fauRulesInput=$('#newRoundRules');
-        const fauDefaultRules=id=>'';
+        const fauDefaultRules=id=>{const t=SEASON_THEMES[id];return t ? [t.subtitle,t.mandate].filter(Boolean).join(' — ') : '';};
         const fauReadDraft=id=>{
             try {return window.localStorage.getItem(fauRulesKey(id));}catch(e){return null;}
         };
@@ -8178,9 +8171,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }
             const t=SEASON_THEMES[id];
             $('#newRoundBriefing').value=t?.mandate||'';
-            $('#themePreview').textContent=t?(t.id==='w02_new_form'?t.mandate:`${t.subtitle} — ${t.mandate}`):'Configure manualmente.';
+            $('#themePreview').textContent=t?(t.id==='w02_new_form'?t.mandate:`${t.subtitle||''}${t.subtitle&&t.mandate?' — ':''}${t.mandate||''}`):'Selecione um desafio para visualizar o resumo.';
+
             if(t){
                 $('#newRoundId').value=t.id;
+                $('#newRoundId').dispatchEvent(new Event('input',{bubbles:true}));
                 $('#newRoundSubmissions').value=t.numSubmissoes;
                 $('#newRoundSoma').value=t.id==='theme_beauty_eye'?'soma':'media';
                 $('#newRoundSoma').disabled=t.id==='theme_beauty_eye'||t.id==='w01_first_garment';
@@ -8188,7 +8183,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 $('#newRoundElimType').value=t.elimTipo==='finale'?'normal':t.elimTipo==='double'?'double':t.elimTipo==='none'?'none':'single';
                 $('#newRoundElimType').disabled=t.id==='w01_first_garment';
                 if(t.fixedOrder===99)$('#newRoundPhase').value='final';
+            } else {
+                $('#newRoundId').value='';
+                ['newRoundSubmissions','newRoundSoma','newRoundElimType'].forEach(key=>$('#'+key).disabled=false);
+                applyPreset('normal');
             }
+            document.querySelectorAll('.preset-chip').forEach(c=>{
+                const locked=!!t && (t.id==='theme_beauty_eye'||t.id==='w01_first_garment');
+                c.disabled=locked;
+                c.title=locked?'Este desafio possui regras oficiais fixas':'';
+            });
             refreshRoundSummary();
             renderDirectorPreview();
         };
