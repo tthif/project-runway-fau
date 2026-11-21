@@ -10473,5 +10473,45 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
 })();
 </script>
+
+<script id="fau-theme-selection-reliability">
+/* Sincronização independente do catálogo: não depende da conclusão das rotinas do ADM. */
+(()=>{
+ 'use strict';
+ const byId=id=>document.getElementById(id);
+ const getTheme=id=>typeof SEASON_THEMES!=='undefined'?SEASON_THEMES[id]:null;
+ const key=id=>'fau_round_rules_draft_'+(id||'custom');
+ const defaults=t=>t?[t.subtitle,t.mandate].filter(Boolean).join(' — '):'';
+ let previous=null;
+ function sync(force=false){
+   const select=byId('newThemeId'),idField=byId('newRoundId'),rules=byId('newRoundRules'),brief=byId('newRoundBriefing');
+   if(!select||!idField||!rules||!brief)return;
+   const id=select.value,t=getTheme(id);
+   if(!force&&previous===id)return;
+   if(previous!==null&&previous!==id){try{localStorage.setItem(key(previous),rules.value)}catch(_){}}
+   previous=id;
+   idField.value=t?.id||'';
+   let draft=null;try{draft=localStorage.getItem(key(id))}catch(_){}
+   rules.value=draft!==null?draft:defaults(t);
+   brief.value=t?.mandate||'';
+   const preview=byId('themePreview');if(preview)preview.textContent=defaults(t)||'Desafio personalizado';
+   if(t){
+     const set=(field,value)=>{const el=byId(field);if(el)el.value=value};
+     set('newRoundSubmissions',t.numSubmissoes||1);
+     set('newRoundSoma',id==='theme_beauty_eye'?'soma':'media');
+     set('newRoundElimType',t.elimTipo==='double'?'double':t.elimTipo==='none'?'none':'single');
+     if(t.fixedOrder===99)set('newRoundPhase','final');
+   }
+   for(const field of [idField,rules,brief])field.dispatchEvent(new Event('input',{bubbles:true}));
+   const summary=byId('roundSummary');if(summary){const n=byId('newRoundSubmissions')?.value||1;const elim=byId('newRoundElimType')?.value||'single';summary.textContent=`▶ ${idField.value||'tema personalizado'} · ${n} foto(s) · ${{single:'1 OUT',double:'2 OUT',none:'ninguém sai'}[elim]||'1 OUT'} · nota por ${byId('newRoundSoma')?.value==='soma'?'soma':'média'}`;}
+ }
+ document.addEventListener('change',e=>{if(e.target?.id==='newThemeId')sync();},true);
+ document.addEventListener('input',e=>{if(e.target?.id==='newRoundRules'&&previous!==null){try{localStorage.setItem(key(previous),e.target.value)}catch(_){}}});
+ // O formulário é montado novamente ao navegar entre abas.
+ const observer=new MutationObserver(()=>{const select=byId('newThemeId');if(!select){previous=null;return;}if(previous===null)sync(true);});
+ const start=()=>{observer.observe(byId('mainView')||document.body,{childList:true,subtree:true});if(byId('newThemeId'))sync(true)};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
 </body>
 </html>
