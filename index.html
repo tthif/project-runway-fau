@@ -5902,28 +5902,16 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                     <div><span>JÚRI</span><strong>${globalState.notasEncerradas?'Notas encerradas':'Notas abertas'}</strong></div>
                     <div><span>URNA</span><strong>${globalState.urna?'Aberta':'Fechada'}</strong></div>
                   </div>
-                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-workroom="${globalState.prazo&&now()>globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-scores="${globalState.notasEncerradas?'done':'open'}" data-critique="${globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting'}" data-urn="${globalState.urna?'open':'closed'}" aria-label="Roteiro da produção">
-                    <div class="fau-guide-head"><span>SEU ROTEIRO DE PRODUÇÃO</span><h3>O que fazer agora?</h3><p>Acompanhe o episódio do início ao resultado. Cada etapa tem uma ação direta e uma conferência antes de avançar.</p></div>
+                  <section id="fauEpisodeGuide" class="fau-episode-guide" data-round="${esc(String(globalState.rodada||'sem-rodada'))}" data-workroom="${globalState.prazo&&now()>globalState.prazo?'done':'open'}" data-runway="${globalState.liberado?'done':'open'}" data-jury="${stageAtLeast('judging')&&!globalState.notasEncerradas?'open':stageAtLeast('judging')?'closed':'waiting'}" data-scores="${globalState.notasEncerradas?'done':'open'}" data-critique="${globalState.criticasEncerradas?'done':globalState.criticasAbertas?'open':'waiting'}" data-urn="${globalState.urna?'open':'closed'}" data-pool="${Array.isArray(globalState.berlinda)&&globalState.berlinda.length===3?'done':'waiting'}" aria-label="Roteiro da produção">
+                    <div class="fau-guide-head"><span>SEU ROTEIRO DE PRODUÇÃO</span><h3>O que fazer agora?</h3><p>Siga as ações oficiais em ordem. Use as prévias para acompanhar os detalhes, sem conferências duplicadas.</p></div>
                     <div class="fau-guide-progress"><div id="fauGuideProgressText" aria-live="polite">Verificando etapas…</div><div class="fau-guide-track"><div id="fauGuideProgressFill"></div></div></div>
                     <div id="fauGuideNext" class="fau-guide-next" aria-live="polite"></div>
                     <details id="fauGuideTimeline" class="fau-guide-timeline"><summary>Ver todas as etapas <span id="fauGuideRemaining"></span></summary><div id="fauGuideSteps" class="fau-guide-steps"></div></details>
-                    <div class="fau-guide-footer"><button type="button" id="fauGuideRefresh">↻ Atualizar situação</button><span>As conferências marcadas são lembretes deste navegador, não registros oficiais. Resultados e votos só são confirmados pelos controles do sistema.</span></div>
+                    <div class="fau-guide-footer"><button type="button" id="fauGuideRefresh">↻ Atualizar situação</button><span>O progresso mostra apenas estados identificáveis da rodada. Etapas sem registro verificável não são marcadas como concluídas automaticamente.</span></div>
                   </section>
                   <div class="fau-command-previews"><div class="fau-command-previews-heading"><strong>PRÉVIAS DA RODADA</strong><span>Somente ADM · Não altera a rodada</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-preview="jury" class="fau-command-btn">Notas e ranking</button><button type="button" id="btnPreviewPool" class="fau-command-btn">Elimination Pool</button><button type="button" data-fau-preview="cast" class="fau-command-btn">Ícone / Fora de Moda</button><button type="button" data-fau-preview="save" class="fau-command-btn">Votação de salvação</button></div><div id="fauPreviewViewer" class="hidden mt-4 rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4" aria-label="Visualizador de prévias"><div class="flex items-center justify-between gap-3 mb-3"><strong id="fauPreviewViewerTitle" class="text-fashion-gold text-sm">Prévia privada</strong><button type="button" id="fauClosePreview" class="fau-command-btn" aria-label="Fechar prévia">Fechar ✕</button></div><div id="fauPoolPreviewHome" class="hidden" aria-live="polite"></div><details id="fauPrivatePreview" hidden><summary>Prévia de apuração</summary><div id="fauPrivatePreviewContent" class="mt-3 text-xs text-gray-200 space-y-2" aria-live="polite">Carregando...</div><button type="button" id="fauPrivatePreviewRefresh" class="fau-command-btn mt-3">Atualizar prévia</button></details></div></div>
-                  <details class="fau-command-status-details fau-extra-controls"><summary>Controles adicionais e ajustes</summary>
-                  <div class="fau-command-control-panel" aria-label="Controles complementares"><div class="fau-command-previews-heading"><strong>CONTROLES COMPLEMENTARES</strong><span>Para ajustes fora do roteiro</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-command="btnEndTimer" class="fau-command-btn fau-command-btn-critical" ${globalState.prazo&&now()>globalState.prazo?'disabled':''}>Encerrar entregas</button><button type="button" data-fau-command="btnTogglePublic" class="fau-command-btn">${globalState.liberado?'Ocultar passarela':'Publicar passarela'}</button><button type="button" data-fau-command="fauToggleScoreWindow" class="fau-command-btn">${globalState.notasEncerradas?'Reabrir notas':'Encerrar notas'}</button><button type="button" data-fau-command="fauToggleCritiqueWindow" class="fau-command-btn">${globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas'}</button><button type="button" data-fau-command="btnToggleUrn" class="fau-command-btn">${globalState.urna?'Fechar urna':'Abrir urna'}</button><button type="button" data-fau-command="fauDeskLoad" class="fau-command-btn">Consultar resultados</button><button type="button" data-fau-command="fauDeskPublish" class="fau-command-btn fau-command-btn-critical">Publicação oficial</button></div></div>
-                  <div class="fau-command-control-panel" aria-label="Direção e publicação"><div class="fau-command-previews-heading"><strong>DIRIGIR E PUBLICAR</strong><span>Atalhos para os controles oficiais</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-command="btnAdd15Min" class="fau-command-btn">+15 min no prazo</button><button type="button" data-fau-command="fauBroadcastLoad" class="fau-command-btn">Preparar críticas</button><button type="button" data-fau-command="fauOfficialLoad" class="fau-command-btn">Conferir títulos</button><button type="button" data-fau-command="fauOfficialPublish" class="fau-command-btn">Registrar títulos</button><button type="button" data-fau-command="fauPublishAllResults" class="fau-command-btn fau-command-btn-critical">Publicar resultados</button><button type="button" data-fau-command="btnLiveBroadcast" class="fau-command-btn">Tela de anúncio</button></div><p class="fau-command-footnote">Ações oficiais usam os controles existentes e suas confirmações. Confira a prévia antes de publicar.</p></div>
-                  </details>
-                  <details class="fau-command-status-details"><summary>Ver etapas e situação da rodada</summary>
-                  <div class="fau-command-grid">
-                    ${[
-                      ['01','WORKROOM','Entregas e prazo',globalState.prazo&&now()>globalState.prazo?'Prazo encerrado':'Envios em andamento',globalState.prazo&&now()>globalState.prazo?[]:[['Encerrar envios','btnEndTimer','danger']]],
-                      ['02','RUNWAY','Passarela',globalState.liberado?'Desfile publicado':'Looks ocultos',[[globalState.liberado?'Ocultar desfile':'Publicar desfile','btnTogglePublic','danger']]],
-                      ['03','JÚRI','Avaliações e críticas',globalState.notasEncerradas?'Notas encerradas':'Notas abertas',[[globalState.notasEncerradas?'Reabrir notas':'Encerrar notas','fauToggleScoreWindow','danger'],[globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas','fauToggleCritiqueWindow','standard'],['Prévia das notas','jury','preview']]],
-                      ['04','VOTAÇÃO','Votos e salvação',globalState.urna?'Urna aberta':'Urna fechada',[[globalState.urna?'Trancar urna':'Abrir urna','btnToggleUrn','danger'],['Ícone / Fora de Moda','cast','preview'],['Prévia da salvação','save','preview']]],
-                      ['05','RESULTADOS','Conferência e publicação','Acesso restrito', [['Ver ranking','fauDeskLoad','preview'],['Abrir publicação','fauDeskPublish','danger']]]
-                    ].map(([number,title,subtitle,status,actions])=>`<article class="fau-command-card"><div class="fau-command-card-top"><span class="fau-command-number">${number}</span><div><h4>${title}</h4><p>${subtitle}</p></div></div><div class="fau-command-status"><span class="fau-command-dot"></span>${status}</div><div class="fau-command-muted">Ações disponíveis acima</div></article>`).join('')}
-                  </div>
+                  <details class="fau-command-status-details fau-extra-controls"><summary>Ajustes opcionais</summary>
+                  <div class="fau-command-control-panel" aria-label="Direção e publicação"><div class="fau-command-previews-heading"><strong>AJUSTES E APRESENTAÇÃO</strong><span>Ferramentas opcionais</span></div><div class="fau-command-quick-grid"><button type="button" data-fau-command="btnAdd15Min" class="fau-command-btn">+15 min no prazo</button><button type="button" data-fau-command="fauBroadcastLoad" class="fau-command-btn">Preparar críticas</button><button type="button" data-fau-command="btnLiveBroadcast" class="fau-command-btn">Tela de anúncio</button></div><p class="fau-command-footnote">Ações oficiais usam os controles existentes e suas confirmações. Confira a prévia antes de publicar.</p></div>
                   </details>
                   <section id="fauHistoryRepair" class="fau-command-control-panel space-y-3" aria-label="Corrigir histórico de rodadas anteriores">
                     <div class="fau-command-previews-heading"><strong>CORRIGIR HISTÓRICO</strong><span>Sem alterar a rodada aberta</span></div>
@@ -5951,7 +5939,6 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
                   <div id="fauLiveInfo" class="text-xs text-gray-300 rounded-lg bg-fashion-950 border border-fashion-700 p-3" role="status"></div>
                 </section>
 
-                <section class="bg-fashion-900 border border-fashion-700 rounded-xl p-4 space-y-2" aria-label="Episode Checklist"><p class="text-[10px] text-fashion-gold tracking-widest">🎬 EPISODE CHECKLIST · PRÓXIMA AÇÃO</p><div class="grid sm:grid-cols-2 gap-2 text-xs"><p>${globalState.themeId?'✓':'○'} Desafio configurado</p><p>${globalState.liberado?'✓':'○'} Passarela liberada</p><p>${globalState.urna?'✓':'○'} Votações abertas</p><p>${globalState.berlinda?.length?'✓':'○'} Elimination Pool definido</p></div><p class="text-[11px] text-gray-400">Acompanhe os envios acima; apure as notas e só depois convoque as críticas. As revelações continuam sob seu controle.</p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Critique Call"><div><p class="text-[10px] tracking-[.25em] text-fashion-gold">🎤 THE CRITIQUE CALL · PRODUCTION</p><h3 class="font-cinzel text-lg">Críticas pendentes</h3><p class="text-xs text-gray-400">Após publicar o ranking, convoque os jurados. Textos chegam automaticamente pelo site; áudios do WhatsApp são confirmados aqui com um toque. Nenhuma crítica é publicada automaticamente.</p></div><div class="grid sm:grid-cols-2 gap-3"><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das notas</p><p class="text-xs text-gray-400">${globalState.notasEncerradas?'Encerrado':'Aberto'} · controlar edição das avaliações</p><button type="button" id="fauToggleScoreWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.notasEncerradas?'Reabrir notas':'Encerrar notas'}</button></div><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das críticas</p><p class="text-xs text-gray-400">${globalState.criticasEncerradas?'Encerrado':'Aberto'} · controlar edição dos textos</p><button type="button" id="fauToggleCritiqueWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas'}</button><div class="flex gap-2 mt-2"><label class="text-xs text-gray-300">HIGH (inclui WIN) <input id="fauCritiqueTopCount" type="number" min="0" max="30" value="${Number(globalState.critiqueTopCount||0)}" class="w-16 p-2 rounded border border-fashion-700 bg-fashion-950"></label><label class="text-xs text-gray-300">BOTTOM + LOW (total) <input id="fauCritiqueBottomCount" type="number" min="0" max="30" value="${Number(globalState.critiqueBottomCount||0)}" class="w-16 p-2 rounded border border-fashion-700 bg-fashion-950"></label><button id="fauSaveCritiqueCounts" type="button" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs">Salvar vagas</button></div><p class="text-[10px] text-gray-400">BOTTOM = sempre os dois últimos; 4 vagas = 2 BOTTOM + 2 LOW, 5 vagas = 2 BOTTOM + 3 LOW. 0 = distribuição automática. WIN atual e WIN anterior também são convocados.</p></div></div><div id="fauCritiqueAdmin" class="space-y-3"><p class="text-xs text-gray-400">Carregando...</p></div><div class="flex flex-wrap gap-2"><button id="fauCritiquePublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Publicar críticas com texto</button><button id="fauCritiqueHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar críticas</button></div><p id="fauCritiquePublishStatus" class="text-xs text-gray-400">Áudios do WhatsApp só aparecem publicamente se você registrar uma transcrição.</p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="The Results Desk" id="fauResultsDesk"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS DESK · PRODUCTION ONLY</p><h3 class="font-cinzel text-xl">Apuração & WhatsApp</h3><p class="text-xs text-gray-300">Confira o ranking oficial, prepare o anúncio e copie para o WhatsApp. Nenhum resultado será revelado no site antes de você confirmar a publicação.</p></div><div class="flex flex-wrap gap-2"><button type="button" id="fauDeskLoad" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Ver resultado — somente ADM</button><button type="button" id="fauDeskCopy" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar para WhatsApp</button></div><div id="fauBroadcast" class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3"><div><p class="text-[10px] tracking-widest text-fashion-gold">WHATSAPP BROADCAST · ADM</p><h4 class="font-cinzel text-lg">Ranking + críticas individuais</h4><p class="text-xs text-gray-400">Disponível após abrir as críticas. Assim que as notas forem encerradas, calcula o ranking privado com WIN/HIGH/SAFE/LOW/BOTTOM, sem exigir apuração ou publicação oficial. As críticas continuam separadas por jurado. Áudios recebidos no WhatsApp são identificados para encaminhamento manual.</p></div><button type="button" id="fauBroadcastLoad" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Preparar sequência de publicação</button><div id="fauBroadcastContent" class="space-y-3" aria-live="polite"></div></div><div id="fauDeskPrivateSummary" class="text-xs text-gray-300 bg-fashion-950 border border-fashion-700 rounded-lg p-4" aria-live="polite">Carregue os resultados para conferir os dados da rodada.</div><label class="block text-xs text-gray-300">Texto do anúncio — editável antes de copiar<textarea id="fauDeskWhatsApp" rows="10" class="mt-2 w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-sm text-gray-100" placeholder="Carregue os resultados para gerar um rascunho. Revise o texto antes de publicar no WhatsApp."></textarea></label><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-4 space-y-3"><p class="text-xs text-fashion-gold font-semibold">PUBLICAÇÃO OFICIAL NO SITE</p><p class="text-xs text-gray-300">Um clique calcula os resultados disponíveis e publica WIN, ranking, Ícone da Moda e Fora de Moda. Sem apuração manual.</p><label class="flex gap-2 text-xs text-gray-200 items-start"><input type="checkbox" id="fauDeskAnnounced" class="mt-0.5"> <span>Já anunciei os resultados no WhatsApp e conferi os nomes, desempates e dinâmica especial.</span></label><button type="button" id="fauPublishAllResults" class="bg-fashion-gold text-black font-bold rounded px-4 py-3 text-sm w-full">PUBLICAR RESULTADOS OFICIAIS — WIN, RANKING, ÍCONE E FORA DE MODA</button><p class="text-[11px] text-gray-400">Calcula automaticamente quando necessário. Em caso de empate não resolvido, avisa antes de publicar. As notas individuais continuam privadas.</p><button type="button" id="fauSyncAggregate" class="border border-fashion-gold text-fashion-gold rounded px-4 py-3 text-xs w-full">SINCRONIZAR ACUMULADOS PRIVADOS</button><p id="fauSyncAggregateStatus" class="text-xs text-gray-300" role="status">Recupera somente avaliações de rodadas oficialmente publicadas. Não altera o ranking nem a Week atual.</p><button type="button" id="fauDeskPublish" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Somente confirmar ranking já publicado</button></div><p id="fauDeskStatus" class="text-xs text-gray-300" role="status"></p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Auto Fashion Archive"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👗 THE FASHION ARCHIVE · ONE-CLICK CURATION</p><h3 class="font-cinzel text-lg">Publicar os looks da rodada</h3><p class="text-xs text-gray-400">Depois de liberar o desfile, copie as criações da rodada para o acervo público. Evita cadastro manual e não inclui notas, votos ou prompts. Operação idempotente: repetir não duplica os looks.</p><button id="fauArchiveSync" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold">📸 Arquivar looks liberados</button><button id="fauArchiveBackfill" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold ml-2">Sincronizar Weeks já publicadas</button><p id="fauArchiveSyncStatus" class="text-xs text-gray-400" role="status"></p></section>
@@ -6214,12 +6201,8 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
             const urnButton=root.querySelector('#btnToggleUrn');
             const urnCard=urnButton?.closest('.rounded-lg')||urnButton?.closest('.rounded');
             if(urnCard){urnCard.classList.add('fau-salvation-control');castControls.querySelector('.grid')?.append(urnCard);}
-            const quick=document.createElement('div');
-            quick.className='flex flex-wrap gap-2 pt-3 border-t border-fashion-700';
-            quick.innerHTML='<button type="button" id="fauUnifiedPreview" class="rounded border border-fashion-gold text-fashion-gold px-4 py-3 text-xs font-semibold">VER APURAÇÃO PRIVADA · NOTAS E VOTOS</button><button type="button" id="fauUnifiedTitles" class="rounded border border-fashion-700 text-white px-4 py-3 text-xs">CONFERIR TÍTULOS</button><p class="w-full text-xs text-gray-400">As três urnas estão aqui. A prévia não publica resultados nem altera votos.</p>';
-            castControls.append(quick);
-            quick.querySelector('#fauUnifiedPreview').onclick=()=>root.querySelector('#btnLiveVoting')?.click();
-            quick.querySelector('#fauUnifiedTitles').onclick=()=>root.querySelector('#fauOfficialLoad')?.click();
+            // Prévias já estão na Central: não criar atalhos duplicados de apuração.
+
           }
           const critique=root.querySelector('#fauCritiqueAdmin')?.closest('section');if(critique)judgingPanel.append(critique);
           // Keep publication alongside the episode command center, not in a hidden archive.
@@ -6327,12 +6310,31 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const episodeComments=episode.querySelector('#fauAdminJurorComments');
           const episodePublication=episode.querySelector('#fauEpisodeResultsDisclosure');
           // A seção de cópia das críticas vem depois do julgamento e antes da publicação.
-          if(episodeComments)episode.append(episodeComments);
+          if(episodeComments){
+            const commentsFold=makeFold('fauEpisodeCommentsDisclosure','Críticas recebidas','Consultar e copiar comentários dos jurados',[episodeComments]);
+            if(commentsFold)episode.append(commentsFold);
+          }
           if(episodePublication)episode.append(episodePublication);
           if(optional.parentElement===episode)episode.append(optional);
           // Elenco: ações de cadastro e consulta na frente; gestão técnica recolhida.
           const castAccounts=makeFold('fauCastAccounts','Contas e permissões','Acessos, papéis e manutenção de usuários',pick(cast,['#profileManagerContainer']),false);
           if(castAccounts)cast.append(castAccounts);
+          // Uma visão do elenco e duas áreas de manutenção, sem tabelas concorrentes na tela.
+          const castSummary=cast.querySelector('#castQuickList')?.closest('section');
+          if(castSummary && castSummary.parentElement===cast){
+            const duplicate=makeFold('fauCastIdentity','Identificação e consulta','Nomes reais e identificação dos Designers',[castSummary]);
+            if(duplicate)cast.append(duplicate);
+          }
+          const castRoster=cast.querySelector('#fauDesignerRoster');
+          if(castRoster && castRoster.parentElement===cast){
+            const rosterFold=makeFold('fauCastRosterDisclosure','Inscrições e participantes','Acompanhar inscrições e situação do elenco',[castRoster],true);
+            if(rosterFold)cast.append(rosterFold);
+          }
+          const castLoose=[...cast.children].filter(el=>el.tagName!=='HEADER'&&el.tagName!=='DETAILS');
+          if(castLoose.length){
+            const castExtra=makeFold('fauCastExtra','Outras ações do elenco','Cadastro e operações administrativas ocasionais',castLoose);
+            if(castExtra)cast.append(castExtra);
+          }
           // THE ICON'S CHOICE: comandos da escolha pertencem à direção do episódio;
           // o cadastro das pistas permanece em Bastidores.
           const iconOpen=root.querySelector('#btnPoderAbrir');
@@ -6433,6 +6435,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
           const episodeHeading=document.createElement('div');episodeHeading.className='fau-hq-compact-intro';
           episodeHeading.innerHTML='<h3 class="font-cinzel text-lg text-fashion-gold">Episódio</h3><p class="text-xs text-gray-400">Prepare, acompanhe, julgue e publique a rodada.</p>';
           episode.prepend(episodeHeading);
+          // Deixar a Central como superfície principal; os módulos legados continuam acessíveis.
+          const operationalLoose=[...episode.children].filter(el=>el!==episodeHeading&&el.id!=='fauUnifiedOperations'&&el.tagName!=='DETAILS');
+          if(operationalLoose.length){
+            const extras=makeFold('fauEpisodeSecondary','Controles específicos','Recursos de produção que não fazem parte do roteiro principal',operationalLoose);
+            if(extras)episode.append(extras);
+          }
           const tabs=shell.querySelector('#fauDirectorTabs');
           const activate=id=>{
             if(!groups.some(g=>g.id===id))id='episode';
@@ -10264,67 +10272,77 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 </script>
 <script id="fau-episode-guide-logic">
 (function(){
+ // O roteiro apresenta comandos reais. As prévias permanecem na seção própria.
  const stages=[
-  {title:'Encerrar entregas',desc:'Confira os looks enviados antes de encerrar o Workroom.',action:'btnEndTimer',label:'Encerrar entregas',key:'workroom'},
-  {title:'Publicar a passarela',desc:'Libere os looks para o desfile e o julgamento.',action:'btnTogglePublic',label:'Publicar passarela',key:'runway'},
-  {title:'Conferir notas e ranking',desc:'Verifique as notas dos jurados e a classificação antes de fechar.',action:'btnApurarRanking',label:'Calcular / conferir notas',manual:true},
-  {title:'Encerrar notas',desc:'Só encerre quando todos os jurados terminarem.',action:'fauToggleScoreWindow',label:'Encerrar notas',key:'scores'},
-  {title:'Abrir e concluir críticas',desc:'Libere as críticas dos Designers previstos e encerre quando terminar.',action:'fauToggleCritiqueWindow',label:'Abrir / encerrar críticas',manual:true},
-  {title:'Registrar Ícone e Fora de Moda',desc:'Confira os votos do elenco e registre os títulos oficiais.',action:'fauOfficialPublish',label:'Registrar títulos',manual:true},
-  {title:'Registrar Elimination Pool',desc:'Confirme os três indicados antes de abrir a votação de salvação.',action:'btnPreviewPool',label:'Conferir indicados',manual:true},
-  {title:'Abrir urna de salvação',desc:'Confirme os três indicados e abra a urna para os Designers votarem.',action:'btnToggleUrn',label:'Abrir urna',manual:true},
-  {title:'Conferir todos os votos',desc:'Veja quem votou e quem falta. Não encerre antes de conferir.',preview:'save',label:'Ver votação de salvação',manual:true},
-  {title:'Fechar urna',desc:'Verifique quem ainda falta votar antes de encerrar.',action:'btnToggleUrn',label:'Fechar urna',manual:true},
-  {title:'Confirmar o eliminado',desc:'Apure os votos de salvação e confirme oficialmente o OUT.',action:'btnApurarBerlinda',label:'Ver votos e confirmar OUT',manual:true},
-  {title:'Publicar os resultados',desc:'Confira ranking, títulos, Pool e OUT antes da publicação.',action:'fauPublishAllResults',label:'Publicar resultados',manual:true},
-  {title:'Revisar o episódio',desc:'Confira os resultados publicados e os registros desta rodada no The Season Story.',action:'ctrlArchive',label:'Consultar o episódio',manual:true}
+  {title:'Encerrar entregas',desc:'Finalize o Workroom após o prazo de envio.',action:'btnEndTimer',label:'Encerrar entregas',key:'workroom'},
+  {title:'Publicar a passarela',desc:'Disponibilize os looks para o episódio.',action:'btnTogglePublic',label:'Publicar passarela',key:'runway'},
+  {title:'Liberar notas dos jurados',desc:'Abra a fase The Judges’ Panel para o júri avaliar.',action:'fau-guide-open-jury',label:'Liberar avaliações',key:'jury'},
+  {title:'Encerrar notas',desc:'Encerre as avaliações quando todos os jurados terminarem.',action:'fauToggleScoreWindow',label:'Encerrar notas',key:'scores'},
+  {title:'Abrir críticas',desc:'Libere os comentários dos jurados selecionados.',action:'fauToggleCritiqueWindow',label:'Abrir críticas',key:'critiqueOpen'},
+  {title:'Encerrar críticas',desc:'Finalize o período de comentários.',action:'fauToggleCritiqueWindow',label:'Encerrar críticas',key:'critiqueDone'},
+  {title:'Registrar Ícone e Fora de Moda',desc:'Registre os títulos oficiais usando os votos do elenco.',action:'fauOfficialPublish',label:'Registrar títulos'},
+  {title:'Registrar Elimination Pool',desc:'Defina os três indicados oficialmente antes da votação de salvação.',action:'btnPreviewPool',label:'Abrir painel do Pool',key:'pool'},
+  {title:'Abrir urna de salvação',desc:'Libere a votação somente depois de definir o Pool.',action:'btnToggleUrn',label:'Abrir urna',key:'urnOpen'},
+  {title:'Fechar urna',desc:'Acompanhe quem falta votar nas prévias antes de encerrar.',action:'btnToggleUrn',label:'Fechar urna',key:'urnClosed'},
+  {title:'Confirmar o OUT',desc:'Confira os votos de salvação e confirme oficialmente o eliminado.',action:'btnApurarBerlinda',label:'Ver votos e confirmar OUT'},
+  {title:'Publicar resultados',desc:'Publique os resultados oficiais da rodada.',action:'fauPublishAllResults',label:'Publicar resultados'}
  ];
  const escapeHtml=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ // Não usar marcações locais como prova de execução de operações no Firestore.
  function render(){
   const root=document.getElementById('fauEpisodeGuide');if(!root)return;
-  const round=root.dataset.round,storageKey='fau-production-guide-v3-'+round;
-  let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}')||{}}catch(e){}
-  // A etapa só pode estar concluída se TODAS as anteriores estiverem concluídas.
-  // O fechamento das notas isoladamente não prova que o ranking foi conferido.
-  const actual=[];
-  stages.forEach((st,i)=>{
-   const previousDone=i===0||actual[i-1]===true;
-   const recorded=st.key==='workroom'?root.dataset.workroom==='done':st.key==='runway'?root.dataset.runway==='done':st.key==='scores'?root.dataset.scores==='done':!!saved[i];
-   actual.push(previousDone&&recorded);
-  });
-  const first=actual.findIndex(x=>!x),next=first<0?stages.length-1:first,done=actual.filter(Boolean).length;
-  document.getElementById('fauGuideProgressText').textContent=done+' de '+stages.length+' etapas concluídas ou conferidas · '+(first<0?'Roteiro concluído':'Próxima: '+stages[next].title);
-  document.getElementById('fauGuideProgressFill').style.width=(100*done/stages.length)+'%';
-  const makeAction=(st,i,primary)=>`<button type="button" class="${primary?'primary':''}" data-fau-guide="${st.history?'history':st.preview?'preview':'action'}" data-guide-step="${i}" ${st.action?'data-guide-target="'+escapeHtml(st.action)+'"':''} ${st.preview?'data-guide-preview="'+escapeHtml(st.preview)+'"':''}>${escapeHtml(st.label)}</button>`;
-  const active=stages[next];document.getElementById('fauGuideNext').innerHTML='<strong>'+(first<0?'EPISÓDIO CONFERIDO':'PRÓXIMA AÇÃO · ETAPA '+String(next+1).padStart(2,'0'))+'</strong><h4>'+escapeHtml(first<0?'Revisar o episódio':active.title)+'</h4><p>'+escapeHtml(first<0?'Confira se os registros oficiais estão completos antes de iniciar a próxima rodada.':active.desc)+'</p>'+makeAction(active,next,true);
-  document.getElementById('fauGuideRemaining').textContent='· '+done+'/'+stages.length+' concluídas';
-  document.getElementById('fauGuideSteps').innerHTML=stages.map((st,i)=>'<details class="fau-guide-step '+(actual[i]?'is-done':i===next?'is-next':'')+'"><summary class="fau-guide-step-top"><span class="fau-guide-step-number">'+(actual[i]?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+(actual[i]?(st.manual?'CONFERIDO':'CONCLUÍDO'):i===next?'AGORA':'PENDENTE')+'</span><span class="fau-guide-chevron">⌄</span></summary><div class="fau-guide-step-body"><p>'+escapeHtml(st.desc)+'</p><div class="fau-guide-step-actions">'+makeAction(st,i,false)+(st.manual?'<button type="button" data-fau-guide="mark" data-guide-step="'+i+'">'+(actual[i]?'Desmarcar conferência':'Marcar como conferido')+'</button>':'')+'</div></div></details>').join('');
+  const state={workroom:root.dataset.workroom==='done',runway:root.dataset.runway==='done',jury:root.dataset.jury!=='waiting',scores:root.dataset.scores==='done',critiqueOpen:root.dataset.critique!=='waiting',critiqueDone:root.dataset.critique==='done',pool:root.dataset.pool==='done',urnOpen:root.dataset.urn==='open'};
+  // A urna fechada, por si só, não prova que chegou a ser aberta e encerrada.
+  const known=stages.map(st=>st.key?Boolean(state[st.key]):false);
+  let next=known.findIndex(x=>!x);if(next<0)next=stages.length-1;
+  // Se a urna já estiver aberta, não deixar a fase dos títulos (não verificável neste painel) bloquear o roteiro.
+  if(state.urnOpen)next=9;
+  else if(state.pool&&next===6)next=8;
+  // Após as críticas, títulos não são confirmados por este resumo: permitir acessar o Pool.
+  const done=known.filter(Boolean).length;
+  const progress=document.getElementById('fauGuideProgressText');
+  if(progress)progress.textContent=done+' estados confirmados automaticamente · '+(next===9&&state.urnOpen?'Urna aberta: acompanhe os votos':'Próxima ação: '+stages[next].title);
+  const fill=document.getElementById('fauGuideProgressFill');if(fill)fill.style.width=(100*done/stages.length)+'%';
+  const makeAction=(st,i,primary)=>'<button type="button" class="'+(primary?'primary':'')+'" data-fau-guide="action" data-guide-step="'+i+'" data-guide-target="'+escapeHtml(st.action)+'">'+escapeHtml(st.label)+'</button>';
+  const active=stages[next],nextBox=document.getElementById('fauGuideNext');
+  if(nextBox)nextBox.innerHTML='<strong>PRÓXIMA AÇÃO · ETAPA '+String(next+1).padStart(2,'0')+'</strong><h4>'+escapeHtml(active.title)+'</h4><p>'+escapeHtml(active.desc)+'</p>'+makeAction(active,next,true);
+  const remaining=document.getElementById('fauGuideRemaining');if(remaining)remaining.textContent='· '+done+' estados confirmados';
+  const steps=document.getElementById('fauGuideSteps');if(!steps)return;
+  // Preservar os detalhes abertos quando a interface for atualizada.
+  const opened=new Set([...steps.querySelectorAll('details[open]')].map(x=>x.dataset.index));
+  steps.innerHTML=stages.map((st,i)=>'<details data-index="'+i+'" class="fau-guide-step '+(known[i]?'is-done':i===next?'is-next':'')+'" '+(opened.has(String(i))?'open':'')+'><summary class="fau-guide-step-top"><span class="fau-guide-step-number">'+(known[i]?'✓':String(i+1).padStart(2,'0'))+'</span><span class="fau-guide-step-title">'+escapeHtml(st.title)+'</span><span class="fau-guide-step-status">'+(known[i]?'REGISTRADO':i===next?'AGORA':'PENDENTE')+'</span><span class="fau-guide-chevron">⌄</span></summary><div class="fau-guide-step-body"><p>'+escapeHtml(st.desc)+'</p><div class="fau-guide-step-actions">'+makeAction(st,i,false)+'</div></div></details>').join('');
  }
  document.addEventListener('click',function(e){
   const b=e.target.closest('[data-fau-guide],#fauGuideRefresh');if(!b)return;
   const root=document.getElementById('fauEpisodeGuide');if(!root)return;
   if(b.id==='fauGuideRefresh'){render();return;}
-  const kind=b.dataset.fauGuide,idx=Number(b.dataset.guideStep),st=stages[idx];
-  if(kind==='mark'){
-   if(idx>0){const preceding=document.querySelectorAll('#fauGuideSteps .fau-guide-step');if(!preceding[idx-1]?.classList.contains('is-done')){alert('Conclua a etapa anterior antes de marcar esta como conferida.');return;}}
-   const key='fau-production-guide-v3-'+root.dataset.round;let saved={};try{saved=JSON.parse(localStorage.getItem(key)||'{}')||{}}catch(e){}
-   saved[idx]=!saved[idx];try{localStorage.setItem(key,JSON.stringify(saved))}catch(e){}render();return;
+  if(b.dataset.fauGuide!=='action')return;
+  const idx=Number(b.dataset.guideStep),id=b.dataset.guideTarget;
+  if(id==='fau-guide-open-jury'){
+   if(root.dataset.runway!=='done'){alert('Publique a passarela antes de liberar as avaliações.');return;}
+   if(root.dataset.jury!=='waiting'){alert('A fase de avaliação dos jurados já foi liberada.');return;}
+   const flowButton=document.querySelector('[data-flow-stage="judging"]');
+   if(!flowButton){alert('Controle oficial da fase do júri não disponível.');return;}
+   const panel=flowButton.closest('[role="tabpanel"]');if(panel)document.querySelector('#fauDirectorTabs button[data-director-tab="'+panel.id.replace('fau-panel-','')+'"]')?.click();
+   for(let el=flowButton.parentElement;el;el=el.parentElement)if(el.tagName==='DETAILS')el.open=true;
+   flowButton.click();return;
   }
-  if(kind==='urn-smart'){const target=document.getElementById('btnToggleUrn');if(!target||target.disabled){alert('Controle da urna indisponível.');return;}if(!confirm('Você vai alterar a situação da urna da rodada atual. Confirma?'))return;target.click();return;}
-  if(kind==='out-direct'){const target=document.getElementById('btnApurarBerlinda');if(!target){alert('Controle de eliminação indisponível.');return;}target.click();target.scrollIntoView({behavior:'smooth',block:'center'});return;}
-  if(kind==='history'){
-   const target=document.getElementById('fauHistoryRepair');if(target){target.scrollIntoView({behavior:'smooth',block:'start'});target.style.outline='2px solid #d1b38b';setTimeout(()=>target.style.outline='',1600);}return;
+  const button=document.getElementById(id);if(!button){alert('Controle oficial indisponível. Consulte os controles adicionais.');return;}
+  const panel=button.closest('[role="tabpanel"]');if(panel)document.querySelector('#fauDirectorTabs button[data-director-tab="'+panel.id.replace('fau-panel-','')+'"]')?.click();
+  for(let el=button.parentElement;el;el=el.parentElement)if(el.tagName==='DETAILS')el.open=true;
+  if(button.disabled){alert('Esta ação está indisponível no momento.');return;}
+  if(id==='btnToggleUrn'){
+   const open=root.dataset.urn==='open';
+   if(idx===8&&open){alert('A urna já está aberta.');return;}
+   if(idx===9&&!open){alert('A urna está fechada. Confira a situação oficial antes de prosseguir.');return;}
+   if(!confirm(open?'Confirma fechar a urna de salvação?':'Confirma abrir a urna de salvação?'))return;
   }
-  if(kind==='preview'){document.querySelector('[data-fau-preview="'+b.dataset.guidePreview+'"]')?.click();return;}
-  if(kind==='action'){
-   const id=b.dataset.guideTarget,button=document.getElementById(id);
-   if(!button){alert('Controle não disponível nesta etapa. Confira os controles oficiais abaixo.');return;}
-   const panel=button.closest('[role="tabpanel"]');if(panel){document.querySelector('#fauDirectorTabs button[data-director-tab="'+panel.id.replace('fau-panel-','')+'"]')?.click();}
-   for(let el=button.parentElement;el;el=el.parentElement){if(el.tagName==='DETAILS')el.open=true;}
-   if(button.disabled){alert('Essa ação está indisponível agora. Confira a situação da rodada.');return;}
-   if(id==='btnToggleUrn'){const open=root.dataset.urn==='open';if((idx===7&&open)||(idx===9&&!open)){alert(open?'A urna já está aberta. Para fechar, use a etapa Fechar urna.':'A urna já está fechada. Para abrir, use a etapa Abrir urna.');return;}if(!confirm(open?'Confirma fechar a urna da rodada atual?':'Confirma abrir a urna da rodada atual?'))return;}
-   button.scrollIntoView({behavior:'smooth',block:'center'});button.click();
+  if(id==='fauToggleCritiqueWindow'){
+   const open=root.dataset.critique==='open';
+   if(idx===4&&open){alert('As críticas já estão abertas.');return;}
+   if(idx===5&&!open){alert('As críticas não estão abertas. Confira o estado da rodada.');return;}
   }
+  button.scrollIntoView({behavior:'smooth',block:'center'});button.click();
  });
  const obs=new MutationObserver(()=>{if(document.getElementById('fauEpisodeGuide'))render()});
  obs.observe(document.getElementById('mainView')||document.body,{childList:true,subtree:false});
