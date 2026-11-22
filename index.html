@@ -5125,7 +5125,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 ${isAdmin && !globalState.liberado ? '' : runwayOpening()}
                 <section id="fauReunionPublic" class="hidden rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] text-fashion-gold tracking-[.25em]">THE REUNION · SEASON SECRETS</p><h3 class="font-cinzel text-xl">The Final Reveal</h3><div id="fauReunionCards" class="grid md:grid-cols-2 gap-3"></div></section>
                 <div id="supremeVotingBox"></div>
-                <section id="fauCeremonyPublic" class="hidden rounded-2xl border border-fashion-gold/60 bg-gradient-to-b from-fashion-900 to-black p-6 text-center space-y-4" aria-live="polite"><p class="text-[10px] tracking-[.35em] text-fashion-gold">🎬 THE RESULTS SHOW · LIVE REVEAL</p><h3 id="fauCeremonyTitle" class="font-cinzel text-2xl text-white"></h3><p id="fauCeremonyMessage" class="text-gray-300"></p><p id="fauCeremonyStep" class="text-[10px] text-fashion-gold"></p></section><div id="publishedRankingBox"></div><div id="fauCritiquePublic" class="mt-5"></div>
+                <section id="fauCeremonyPublic" class="hidden rounded-2xl border border-fashion-gold/60 bg-gradient-to-b from-fashion-900 to-black p-6 text-center space-y-4" aria-live="polite"><p class="text-[10px] tracking-[.35em] text-fashion-gold">🎬 THE RESULTS SHOW · LIVE REVEAL</p><h3 id="fauCeremonyTitle" class="font-cinzel text-2xl text-white"></h3><p id="fauCeremonyMessage" class="text-gray-300"></p><p id="fauCeremonyStep" class="text-[10px] text-fashion-gold"></p></section><div id="publishedRankingBox"></div>
                 <div id="faceOffComparisonBox" class="hidden bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg space-y-4"></div>
                 <div class="fau-runway-minihead" aria-label="Desfile"><span>THE RUNWAY</span><strong>${esc(fauRoundDisplayName())}</strong></div>
                 <div id="runwayGroups"></div>
@@ -5547,7 +5547,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             refreshRunwayUI();
         });
 
-        fauCritiquePublicMount();
+        // Críticas não são exibidas na área pública.
         sub(db.doc('ranking_publico/atual'), snap => {
             const rk = snap.data();
             const box = $('#publishedRankingBox');
