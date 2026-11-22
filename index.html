@@ -4899,7 +4899,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 </div>
 
                 <section id="fauJuryHistory" hidden class="bg-fashion-900 border border-fashion-gold/40 p-4 rounded-xl space-y-3" aria-label="Histórico das suas avaliações">
-                    <div class="flex flex-wrap items-center justify-between gap-3"><div><h3 class="font-cinzel text-fashion-gold text-lg">Suas notas por rodada</h3><p class="text-xs text-gray-400">Histórico individual e privado das avaliações salvas.</p></div><label class="text-xs text-fashion-gold">Rodada <select id="fauJuryHistoryRound" class="ml-2 p-2 rounded border border-fashion-700 bg-fashion-950 text-white"><option value="all">Todas</option></select></label></div>
+                    <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-cinzel text-fashion-gold text-base">Suas notas por rodada</h3><select id="fauJuryHistoryRound" aria-label="Filtrar rodada" class="w-full sm:w-auto max-w-full p-2 text-xs rounded border border-fashion-700 bg-fashion-950 text-white"><option value="all">Todas as rodadas</option></select></div>
                     <div id="fauJuryHistoryBody" class="space-y-4 text-xs text-gray-300" aria-live="polite"></div>
                 </section>
                 <div id="juryMatrixContainer" class="hidden bg-fashion-900 border border-fashion-gold/40 p-4 rounded-lg space-y-3">
@@ -4929,14 +4929,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     let juryHistoryLoaded=false;
     let juryHistoryRows=[];
     let juryHistoryThemes=new Map();
+    let juryHistoryRounds=[];
     const juryHistoryLabel=round=>{
         const raw=String(round);
         const themeId=juryHistoryThemes.get(raw);
-        if(themeId && SEASON_THEMES[themeId]){
-            const t=SEASON_THEMES[themeId];
-            return t.id==='theme_tarantino' ? 'WEEK — '+t.title : [t.code,t.title].filter(Boolean).join(' — ');
+        const theme=SEASON_THEMES[themeId];
+        if(theme){
+            const code=String(theme.code||'').trim(),title=String(theme.title||'').trim();
+            const clean=v=>String(v).replace(/^WEEK(?:\s+\d+)?\s*[—–-]\s*/i,'').trim().toLowerCase();
+            if(clean(code)===clean(title)||clean(code).endsWith(clean(title)))return code.startsWith('WEEK')?code:'WEEK — '+title;
+            return [code,title].filter(Boolean).join(' — ');
         }
-        if(raw===String(globalState.rodada) && SEASON_THEMES[globalState.themeId]) return fauRoundLabel();
+        if(raw===String(globalState.rodada))return fauRoundLabel();
         return fauWeekLabel(raw);
     };
     const juryHistorySort=(a,b)=>{
@@ -4952,16 +4956,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         juryHistoryRows.filter(v=>selected==='all'||String(v.rodada)===selected).forEach(v=>{
             const key=String(v.rodada);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(v);
         });
-        if(!groups.size){historyBody.innerHTML='<p class="py-4 text-gray-400">Nenhuma avaliação salva.</p>';return;}
-        historyBody.innerHTML=[...groups.entries()].sort((a,b)=>juryHistorySort(a[0],b[0])).map(([round,items])=>`
-            <section class="border border-fashion-700 rounded-lg p-3 space-y-3">
-                <h4 class="text-fashion-gold font-semibold uppercase tracking-wider">${esc(juryHistoryLabel(round))}</h4>
-                <div class="space-y-2">${items.sort((a,b)=>String(a.alvoAte||'').localeCompare(String(b.alvoAte||''),'pt-BR',{sensitivity:'base'})).map(v=>`
+        juryHistoryRounds.forEach(r=>{if((selected==='all'||selected===r)&&!groups.has(r))groups.set(r,[]);});
+        if(!groups.size){historyBody.innerHTML='<p class="py-4 text-gray-400">Nenhuma rodada encontrada.</p>';return;}
+        historyBody.innerHTML=[...groups.entries()].sort((a,b)=>juryHistorySort(b[0],a[0])).map(([round,items])=>`
+            <details class="border border-fashion-700 rounded-lg p-3" ${selected!=='all'?'open':''}>
+                <summary class="cursor-pointer text-fashion-gold font-semibold text-xs flex items-center justify-between gap-2"><span>${esc(juryHistoryLabel(round))}</span><span class="text-gray-400 whitespace-nowrap">${items.length} notas ▾</span></summary>
+                <div class="space-y-2 mt-3">${!items.length?'<p class="text-gray-400">Nenhuma avaliação individual salva nesta rodada.</p>':''}${items.sort((a,b)=>{const total=v=>Number(v.total??v.nota.reduce((sum,n)=>sum+Number(n||0),0));return total(b)-total(a)||String(a.alvoAte||'').localeCompare(String(b.alvoAte||''),'pt-BR',{sensitivity:'base'});}).map((v,index)=>`
                     <div class="border-b border-fashion-700/60 pb-2 last:border-0 flex flex-wrap justify-between items-start gap-2">
-                        <div class="min-w-0"><strong class="text-white">${esc(juryNamesByUid.get(String(v.alvo))||v.alvoAte||'Designer')}</strong><p class="text-gray-400 mt-1">${CRITERIOS.map((c,i)=>`${esc(c)}: ${Number(v.nota[i]).toFixed(1)}`).join(' · ')}</p></div>
+                        <div class="min-w-0"><strong class="text-white">${index+1}º · ${esc(juryNamesByUid.get(String(v.alvo))||v.alvoAte||'Designer')}</strong><p class="text-gray-400 mt-1">${CRITERIOS.map((c,i)=>`${esc(c)}: ${Number(v.nota[i]).toFixed(1)}`).join(' · ')}</p></div>
                         <strong class="text-fashion-gold whitespace-nowrap">${Number(v.total??v.nota.reduce((a,b)=>a+Number(b),0)).toFixed(1)} / 50</strong>
                     </div>`).join('')}</div>
-            </section>`).join('');
+            </details>`).join('');
     };
     historyButton.onclick=safeExec(async()=>{
         const opening=historyPanel.hidden;historyPanel.hidden=!opening;historyButton.setAttribute('aria-expanded',String(opening));
@@ -4970,18 +4975,35 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         try{
             const snap=await db.collection('avaliacoes').where('jurado','==',currentUser.uid).get();
             juryHistoryRows=snap.docs.map(d=>d.data()).filter(v=>v.rodada!=null&&Array.isArray(v.nota)&&v.nota.length===5);
-            // A rodada atual também pertence ao histórico se já houver notas salvas.
-            // Relacionar os IDs das rodadas com os temas dos looks, sem alterar registros históricos.
+            // Reunir rodadas publicadas, looks históricos e avaliações do próprio jurado.
+            // Não depender somente de avaliações: uma rodada pode ter ocorrido sem notas deste jurado.
             juryHistoryThemes=new Map();
-            if(juryHistoryRows.length){
-                try{
-                    const lookIds=[...new Set(juryHistoryRows.map(v=>v.look).filter(Boolean))];
-                    const docs=await Promise.all(lookIds.map(id=>db.collection('looks').doc(String(id)).get()));
-                    docs.forEach(d=>{if(d.exists){const look=d.data();if(look.rodada!=null&&look.themeId)juryHistoryThemes.set(String(look.rodada),String(look.themeId));}});
-                }catch(error){console.warn('[jury history themes]',error);}
+            const roundSet=new Set(juryHistoryRows.map(v=>String(v.rodada)));
+            try{
+                const [lookSnap,rankSnap]=await Promise.all([
+                    db.collection('looks').get(),
+                    db.collection('ranking_historico_publico').get()
+                ]);
+                lookSnap.docs.forEach(d=>{
+                    const v=d.data();
+                    if(v.rodada==null)return;
+                    const r=String(v.rodada);roundSet.add(r);
+                    if(v.themeId&&SEASON_THEMES[v.themeId])juryHistoryThemes.set(r,String(v.themeId));
+                });
+                rankSnap.docs.forEach(d=>{
+                    const v=d.data(),r=String(v.rodada??d.id);
+                    roundSet.add(r);
+                    if(v.themeId&&SEASON_THEMES[v.themeId]&&!juryHistoryThemes.has(r))juryHistoryThemes.set(r,v.themeId);
+                });
+            }catch(error){console.warn('[jury history rounds]',error);}
+            if(globalState.rodada!=null) {
+                const r=String(globalState.rodada);
+                roundSet.add(r);
+                if(globalState.themeId)juryHistoryThemes.set(r,globalState.themeId);
             }
-            const rounds=[...new Set(juryHistoryRows.map(v=>String(v.rodada)))].sort(juryHistorySort);
-            historySelect.innerHTML='<option value="all">Todas</option>'+rounds.map(r=>`<option value="${esc(r)}">${esc(juryHistoryLabel(r))}</option>`).join('');
+            juryHistoryRounds=[...roundSet].sort((a,b)=>juryHistorySort(b,a));
+            const rounds=juryHistoryRounds;
+            historySelect.innerHTML='<option value="all">Todas as rodadas</option>'+rounds.map(r=>`<option value="${esc(r)}">${esc(juryHistoryLabel(r))}</option>`).join('');
             juryHistoryLoaded=true;
             renderJuryHistory();
         }catch(error){historyBody.textContent='Não foi possível carregar o histórico. Verifique a permissão de leitura das suas avaliações.';console.warn('[jury history]',error);}
