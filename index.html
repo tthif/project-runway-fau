@@ -7644,12 +7644,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         $('#fauSyncAggregate').onclick=safeExec(async()=>{
           if(!isAdmin)throw new Error('Acesso exclusivo do ADM.');
           const status=$('#fauSyncAggregateStatus');
-          const [historySnap,evalSnap,profileSnap,penaltySnap]=await Promise.all([
-            db.collection('ranking_historico').get(),
-            db.collection('avaliacoes').get(),
-            db.collection('perfis').where('role','==','estilista').get(),
-            db.collection('penalidades_rodada').get()
-          ]);
+          // Diagnóstico por coleção: não esconder qual leitura foi negada pelo Firestore.
+          const readForSync=async(label,query)=>{
+            status.textContent='Verificando acesso: '+label+'…';
+            try{return await query.get();}
+            catch(err){
+              const detail=err?.code==='permission-denied'?'Permissão negada pelas regras do Firestore.':(err?.message||String(err));
+              status.textContent='Sincronização interrompida em '+label+': '+detail+' Nenhum acumulado foi alterado.';
+              throw new Error('Falha ao ler '+label+': '+detail);
+            }
+          };
+          const historySnap=await readForSync('ranking_historico',db.collection('ranking_historico'));
+          const evalSnap=await readForSync('avaliacoes',db.collection('avaliacoes'));
+          const profileSnap=await readForSync('perfis (Designers)',db.collection('perfis').where('role','==','estilista'));
+          const penaltySnap=await readForSync('penalidades_rodada',db.collection('penalidades_rodada'));
           const official=new Map();
           historySnap.docs.forEach(doc=>{
             const h=doc.data();
