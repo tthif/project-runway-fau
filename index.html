@@ -1233,7 +1233,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             },
             "theme_tarantino": {
                 id: "theme_tarantino",
-                code: "WEEK — TARANTINO",
+                code: "WEEK",
                 fixedOrder: null,
                 title: "TARANTINO: BLOOD, GLAMOUR & REVENGE",
                 subtitle: "Uma homenagem ao cinema de Quentin Tarantino, com glamour, vingança e personagens inesquecíveis.",
@@ -1439,7 +1439,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const code=String(theme.code||'').trim(), title=String(theme.title||'').trim();
             const normalizedCode=code.replace(/\s*[—–-]\s*/g,' ').trim().toLowerCase();
             const normalizedTitle=title.replace(/\s*[—–-]\s*/g,' ').trim().toLowerCase();
-            return !code ? title : (!title || normalizedCode===normalizedTitle || normalizedCode.endsWith(' '+normalizedTitle) ? code : code+' — '+title);
+            return !code ? title : (!title || normalizedCode===normalizedTitle || normalizedTitle.startsWith(normalizedCode.replace(/^week\s*/, '').trim()) || normalizedCode.endsWith(' '+normalizedTitle) ? (normalizedTitle.startsWith(normalizedCode.replace(/^week\s*/, '').trim()) ? 'WEEK — '+title : code) : code+' — '+title);
         }
         return globalState?.rodada ? 'DESAFIO EM ANDAMENTO' : 'AGUARDANDO A PRÓXIMA RODADA';
     };
@@ -1455,7 +1455,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             (t.fixedOrder && /^w(?:eek)?0*([0-9]+)/i.test(raw) && Number(raw.match(/^w(?:eek)?0*([0-9]+)/i)[1]) === t.fixedOrder)
         ) || (raw === String(globalState.rodada) ? SEASON_THEMES[globalState.themeId] : null);
         if (!theme) return 'RODADA';
-        return [theme.code, theme.title].filter(Boolean).join(' — ');
+        return theme.id === 'theme_tarantino' ? 'WEEK — '+theme.title : [theme.code, theme.title].filter(Boolean).join(' — ');
     };
 
     const drawKey = () => `${globalState.rodada}_${currentUser.uid}`;
@@ -4928,16 +4928,34 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     const historyBody=$('#fauJuryHistoryBody');
     let juryHistoryLoaded=false;
     let juryHistoryRows=[];
+    let juryHistoryThemes=new Map();
+    const juryHistoryLabel=round=>{
+        const raw=String(round);
+        const themeId=juryHistoryThemes.get(raw);
+        if(themeId && SEASON_THEMES[themeId]){
+            const t=SEASON_THEMES[themeId];
+            return t.id==='theme_tarantino' ? 'WEEK — '+t.title : [t.code,t.title].filter(Boolean).join(' — ');
+        }
+        if(raw===String(globalState.rodada) && SEASON_THEMES[globalState.themeId]) return fauRoundLabel();
+        return fauWeekLabel(raw);
+    };
+    const juryHistorySort=(a,b)=>{
+        const numeric=v=>{const match=String(v).match(/^(?:w(?:eek)?\s*0*)?(\d+)$/i);return match?Number(match[1]):null;};
+        const na=numeric(a),nb=numeric(b);
+        if(na!==null&&nb!==null)return na-nb;
+        if(na!==null)return -1;if(nb!==null)return 1;
+        return juryHistoryLabel(a).localeCompare(juryHistoryLabel(b),'pt-BR',{numeric:true});
+    };
     const renderJuryHistory=()=>{
         const selected=historySelect.value;
         const groups=new Map();
         juryHistoryRows.filter(v=>selected==='all'||String(v.rodada)===selected).forEach(v=>{
             const key=String(v.rodada);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(v);
         });
-        if(!groups.size){historyBody.innerHTML='<p class="py-4 text-gray-400">Nenhuma nota salva nas rodadas anteriores.</p>';return;}
-        historyBody.innerHTML=[...groups.entries()].sort((a,b)=>Number(a[0])-Number(b[0])).map(([round,items])=>`
+        if(!groups.size){historyBody.innerHTML='<p class="py-4 text-gray-400">Nenhuma avaliação salva.</p>';return;}
+        historyBody.innerHTML=[...groups.entries()].sort((a,b)=>juryHistorySort(a[0],b[0])).map(([round,items])=>`
             <section class="border border-fashion-700 rounded-lg p-3 space-y-3">
-                <h4 class="text-fashion-gold font-semibold uppercase tracking-wider">Week ${esc(String(round).padStart(2,'0'))}</h4>
+                <h4 class="text-fashion-gold font-semibold uppercase tracking-wider">${esc(juryHistoryLabel(round))}</h4>
                 <div class="space-y-2">${items.sort((a,b)=>String(a.alvoAte||'').localeCompare(String(b.alvoAte||''),'pt-BR',{sensitivity:'base'})).map(v=>`
                     <div class="border-b border-fashion-700/60 pb-2 last:border-0 flex flex-wrap justify-between items-start gap-2">
                         <div class="min-w-0"><strong class="text-white">${esc(juryNamesByUid.get(String(v.alvo))||v.alvoAte||'Designer')}</strong><p class="text-gray-400 mt-1">${CRITERIOS.map((c,i)=>`${esc(c)}: ${Number(v.nota[i]).toFixed(1)}`).join(' · ')}</p></div>
@@ -4948,17 +4966,25 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     historyButton.onclick=safeExec(async()=>{
         const opening=historyPanel.hidden;historyPanel.hidden=!opening;historyButton.setAttribute('aria-expanded',String(opening));
         if(!opening)return;
-        if(!juryHistoryLoaded){
-            historyBody.textContent='Carregando avaliações anteriores...';
-            try{
-                const snap=await db.collection('avaliacoes').where('jurado','==',currentUser.uid).get();
-                juryHistoryRows=snap.docs.map(d=>d.data()).filter(v=>v.rodada!=null&&String(v.rodada)!==String(globalState.rodada)&&Array.isArray(v.nota)&&v.nota.length===5);
-                const rounds=[...new Set(juryHistoryRows.map(v=>String(v.rodada)))].sort((a,b)=>Number(a)-Number(b));
-                historySelect.innerHTML='<option value="all">Todas</option>'+rounds.map(r=>`<option value="${esc(r)}">Week ${esc(r.padStart(2,'0'))}</option>`).join('');
-                juryHistoryLoaded=true;
-            }catch(error){historyBody.textContent='Não foi possível carregar o histórico. Verifique a permissão de leitura das suas avaliações.';console.warn('[jury history]',error);return;}
-        }
-        renderJuryHistory();
+        historyBody.textContent='Carregando avaliações salvas...';
+        try{
+            const snap=await db.collection('avaliacoes').where('jurado','==',currentUser.uid).get();
+            juryHistoryRows=snap.docs.map(d=>d.data()).filter(v=>v.rodada!=null&&Array.isArray(v.nota)&&v.nota.length===5);
+            // A rodada atual também pertence ao histórico se já houver notas salvas.
+            // Relacionar os IDs das rodadas com os temas dos looks, sem alterar registros históricos.
+            juryHistoryThemes=new Map();
+            if(juryHistoryRows.length){
+                try{
+                    const lookIds=[...new Set(juryHistoryRows.map(v=>v.look).filter(Boolean))];
+                    const docs=await Promise.all(lookIds.map(id=>db.collection('looks').doc(String(id)).get()));
+                    docs.forEach(d=>{if(d.exists){const look=d.data();if(look.rodada!=null&&look.themeId)juryHistoryThemes.set(String(look.rodada),String(look.themeId));}});
+                }catch(error){console.warn('[jury history themes]',error);}
+            }
+            const rounds=[...new Set(juryHistoryRows.map(v=>String(v.rodada)))].sort(juryHistorySort);
+            historySelect.innerHTML='<option value="all">Todas</option>'+rounds.map(r=>`<option value="${esc(r)}">${esc(juryHistoryLabel(r))}</option>`).join('');
+            juryHistoryLoaded=true;
+            renderJuryHistory();
+        }catch(error){historyBody.textContent='Não foi possível carregar o histórico. Verifique a permissão de leitura das suas avaliações.';console.warn('[jury history]',error);}
     });
     historySelect.onchange=renderJuryHistory;
 
