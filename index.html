@@ -3886,52 +3886,76 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     const cleanStatus = raw => String(raw||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
                     const normalizeName = name => String(name||'').trim().toLocaleLowerCase('pt-BR');
                     const collator = new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
-                    const weekLabel = (r,i) => {
-                        const raw=String(r.round||'');
-                        const num=Number(raw.match(/(?:week|w)\s*0*(\d+)/i)?.[1] || (/^\d+$/.test(raw)?raw:0));
-                        const n=num||i+1;
-                        return `W${String(n).padStart(2,'0')}`;
-                    };
+                    // Each published document is one chronological Week. Document IDs are
+                    // internal identifiers, not season numbers (they may repeat W01).
+                    const weekLabel = (_,i) => `W${String(i+1).padStart(2,'0')}`;
                     const people=new Map();
-                    // Histórico oficial: a classificação da semana da saída permanece.
-                    // OUT aparece na semana seguinte; depois, células fechadas.
+                    const byName=new Map();
+                    const ensurePerson=(name,uid='')=>{
+                        const normalized=normalizeName(name);
+                        const key=uid ? `uid:${uid}` : `name:${normalized}`;
+                        let person=people.get(key)||byName.get(normalized);
+                        if(!person){person={name,history:new Map(),lastSeen:-1,lastRank:Infinity,exitAt:-1};people.set(key,person);}
+                        if(uid)people.set(`uid:${uid}`,person);
+                        byName.set(normalized,person);
+                        return person;
+                    };
+                    const baseOf=v=>String(v||'').toUpperCase().match(/\b(WIN|HIGH|TOP|SAFE|LOW|BOTTOM)\b/)?.[1]||'';
+                    const departures=[
+                        {week:0,name:'Sam McLean',reason:'SEM ENVIO'},
+                        {week:0,name:'Pica Pablasso',reason:'SEM ENVIO'},
+                        {week:1,name:'Anomalia Crônica',reason:'SEM ENVIO'},
+                        {week:1,name:'Aogust Flintherin',reason:'ELIMINATION POOL'},
+                        {week:2,name:'Dolce & Banana',reason:'ELIMINATION POOL'}
+                    ];
                     rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
-                        const uid=String(entry.uid||'').trim();
                         const name=String(entry.ate||'Designer').trim();
-                        const key=uid ? `uid:${uid}` : `name:${normalizeName(name)}`;
-                        if(!people.has(key))people.set(key,{name,history:new Map(),lastSeen:-1,lastRank:Infinity,exitAfter:-1,ppe:null});
-                        const person=people.get(key);
+                        const person=ensurePerson(name,String(entry.uid||'').trim());
                         person.name=name;
                         const status=cleanStatus(entry.status);
-                        // OUT publicado na mesma semana significa que a saída foi após a avaliação.
-                        const placement=status.replace(/\bOUT\b/g,'').replace(/^[\s+·-]+|[\s+·-]+$/g,'') || '—';
-                        person.history.set(roundIndex,placement);
-                        person.lastSeen=roundIndex;
+                        // Keep the classification of the judged work, including BOTTOM.
+                        const placement=baseOf(status);
+                        if(placement)person.history.set(roundIndex,placement==='TOP'?'HIGH':placement);
+                        else if(status==='OUT')person.history.set(roundIndex,'OUT');
+                        person.lastSeen=Math.max(person.lastSeen,roundIndex);
                         person.lastRank=position;
-                        if(/\bOUT\b/.test(status))person.exitAfter=roundIndex;
-                        const ppe=Number(entry.ppe ?? entry.PPE ?? entry.mediaPontuacao);
-                        if((entry.ppe!=null||entry.PPE!=null||entry.mediaPontuacao!=null)&&Number.isFinite(ppe))person.ppe=ppe;
+                        if(/\bOUT\b/.test(status))person.exitAt=roundIndex;
                     }));
+                    // The departures confirmed by production take precedence over legacy
+                    // OUT cells that were shifted into a different Week.
+                    departures.forEach(({week,name,reason})=>{
+                        if(week>=rounds.length)return;
+                        const person=ensurePerson(name);
+                        person.exitAt=week;
+                        if(reason==='SEM ENVIO')person.history.set(week,'OUT');
+                        else person.history.set(week,'BOTTOM + OUT');
+                    });
                     const lastIndex=rounds.length-1;
-                    const roster=[...people.values()];
+                    const roster=[...new Set(people.values())];
                     roster.forEach(p=>{
-                        if(p.exitAfter<0&&p.lastSeen<lastIndex)p.exitAfter=p.lastSeen;
+                        // Do not manufacture eliminations for a Designer absent from a
+                        // ranking: only explicit official OUT or known departures count.
+                        if(p.exitAt>=0){
+                            for(let i=p.exitAt+1;i<rounds.length;i++)p.history.delete(i);
+                            const current=p.history.get(p.exitAt)||'';
+                            if(current && current!=='OUT'&&!current.includes('OUT'))p.history.set(p.exitAt,current+' + OUT');
+                        }
                     });
                     roster.sort((a,b)=>{
-                        const aOut=a.exitAfter>=0,bOut=b.exitAfter>=0;
+                        const aOut=a.exitAt>=0,bOut=b.exitAt>=0;
                         if(aOut!==bOut)return aOut?1:-1;
-                        if(aOut)return b.exitAfter-a.exitAfter || collator.compare(a.name,b.name);
-                        return a.lastRank-b.lastRank || collator.compare(a.name,b.name);
+                        if(aOut)return b.exitAt-a.exitAt||collator.compare(a.name,b.name);
+                        const aPresent=a.history.has(lastIndex),bPresent=b.history.has(lastIndex);
+                        if(aPresent!==bPresent)return aPresent?-1:1;
+                        return a.lastRank-b.lastRank||collator.compare(a.name,b.name);
                     });
-                    const baseStatus=v=>String(v||'').split(/\s*\+\s*/)[0].trim();
-                    const cssStatus=v=>({WIN:'win',HIGH:'high',TOP:'high',SAFE:'safe',LOW:'low',BOTTOM:'bottom',OUT:'out'})[baseStatus(v)]||'empty';
+                    const cssStatus=v=>({WIN:'win',HIGH:'high',TOP:'high',SAFE:'safe',LOW:'low',BOTTOM:'bottom',OUT:'out'})[baseOf(v)||String(v||'').split(/\s*\+\s*/)[0].trim()]||'empty';
                     slot.classList.remove('font-mono');
-                    slot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Cada coluna conta uma Week. A classificação permanece na semana da despedida; OUT aparece na seguinte.</p></div><span class="fau-tr-count">${rounds.length} WEEKS</span></div>
+                    slot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Cada coluna representa uma Week. BOTTOM inclui o eliminado; OUT aparece na rodada da saída.</p></div><span class="fau-tr-count">${rounds.length} WEEKS</span></div>
                       <div class="fau-tr-scroll"><table class="fau-tr-table" aria-label="Track Record da temporada">
-                      <thead><tr><th scope="col">DESIGNERS</th><th scope="col" title="Pontuação média das avaliações dos jurados">P.P.E.</th>${rounds.map((r,i)=>`<th scope="col" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
-                      <tbody>${roster.map((p,index)=>`<tr class="${p.exitAfter>=0?'fau-tr-eliminated':''}"><th scope="row"><span class="fau-tr-rank">${String(index+1).padStart(2,'0')}</span>${esc(p.name)}</th><td class="fau-tr-ppe">${p.ppe===null?'—':p.ppe.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>${rounds.map((r,i)=>{
-                        if(p.exitAfter>=0&&i>p.exitAfter+1)return '<td class="fau-tr-after" aria-label="Fora da competição"></td>';
-                        if(p.exitAfter>=0&&i===p.exitAfter+1)return '<td class="fau-tr-out">OUT</td>';
+                      <thead><tr><th scope="col">DESIGNERS</th>${rounds.map((r,i)=>`<th scope="col" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
+                      <tbody>${roster.map((p,index)=>`<tr class="${p.exitAt>=0?'fau-tr-eliminated':''}"><th scope="row"><span class="fau-tr-rank">${String(index+1).padStart(2,'0')}</span>${esc(p.name)}</th>${rounds.map((r,i)=>{
+                        if(p.exitAt>=0&&i>p.exitAt)return '<td class="fau-tr-after" aria-label="Fora da competição"></td>';
                         const v=p.history.get(i)||'—';
                         return `<td class="fau-tr-${cssStatus(v)}">${esc(v)}</td>`;
                       }).join('')}</tr>`).join('')}</tbody></table></div>
@@ -4103,6 +4127,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     eliminatedAtRound.set(String(entry.uid),index);
             });
         });
+        const confirmedDepartures = [
+            [0,'Sam McLean','OUT'],[0,'Pica Pablasso','OUT'],
+            [1,'Anomalia Crônica','OUT'],[1,'Aogust Flintherin','BOTTOM + OUT'],
+            [2,'Dolce & Banana','BOTTOM + OUT']
+        ];
+        const confirmedStatuses=new Map();
+        confirmedDepartures.forEach(([week,name,status])=>{
+            const row=rowsData.find(x=>String(x.ate||'').trim().toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'));
+            if(row&&week<rodadas.length){eliminatedAtRound.set(String(row.uid),week);confirmedStatuses.set(week+'|'+row.uid,status);}
+        });
         rowsData.forEach(row=>{
             if(row.out && !eliminatedAtRound.has(String(row.uid))){
                 const last=rodadas.reduce((found,round,index)=>row.rounds[round]?index:found,-1);
@@ -4152,20 +4186,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const rData=row.rounds[r];
                 const exitAfter=eliminatedAtRound.get(String(row.uid));
                 let badgeText='—';
-                if(exitAfter!==undefined && weekIndex>exitAfter+1){
+                if(exitAfter!==undefined && weekIndex>exitAfter){
                     html += '<td class="fau-tr-after" aria-label="Fora da competição"></td>';
                     return;
                 }
-                if(exitAfter!==undefined && weekIndex===exitAfter+1){
-                    html += '<td class="fau-tr-out">OUT</td>';
-                    return;
-                }
+                
                 const official=officialStatuses.get(r)?.get(row.uid);
-                badgeText=official|| (rData ? previewStatuses.get(r)?.get(row.uid)||'—':'—');
+                badgeText=confirmedStatuses.get(weekIndex+'|'+row.uid)||official|| (rData ? previewStatuses.get(r)?.get(row.uid)||'—':'—');
                 // A classificação da Week da saída não deve ser sobrescrita por OUT.
-                if(badgeText==='OUT')badgeText=previewStatuses.get(r)?.get(row.uid)||'—';
+                if(badgeText==='OUT')badgeText='OUT';
+                if(exitAfter===weekIndex && !badgeText.includes('OUT'))badgeText=badgeText==='—'?'OUT':badgeText+' + OUT';
                 const base=String(badgeText).split(/\s*\+\s*/)[0];
-                const kind=({WIN:'win',TOP:'high',HIGH:'high',SAFE:'safe',LOW:'low',BOTTOM:'bottom'})[base]||'empty';
+                const kind=({WIN:'win',TOP:'high',HIGH:'high',SAFE:'safe',LOW:'low',BOTTOM:'bottom',OUT:'out'})[base]||'empty';
                 html += `<td class="fau-tr-${kind}">${esc(badgeText)}</td>`;
             });
             html += `</tr>`;
@@ -4175,7 +4207,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const trackSlot=document.getElementById('trackRecordTableContainer');
         if(trackSlot){
             trackSlot.classList.remove('font-mono');
-            trackSlot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Classificação por Week. OUT na coluna seguinte à última participação.</p></div></div><div class="fau-tr-scroll">${html}</div>`;
+            trackSlot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Classificação por Week. OUT na rodada da eliminação.</p></div></div><div class="fau-tr-scroll">${html}</div>`;
         }
         // Ranking acumulado permanece privado do Admin.
         // Private cumulative ranking remains available separately to the Admin.
@@ -7644,20 +7676,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         $('#fauSyncAggregate').onclick=safeExec(async()=>{
           if(!isAdmin)throw new Error('Acesso exclusivo do ADM.');
           const status=$('#fauSyncAggregateStatus');
-          // Diagnóstico por coleção: não esconder qual leitura foi negada pelo Firestore.
-          const readForSync=async(label,query)=>{
-            status.textContent='Verificando acesso: '+label+'…';
-            try{return await query.get();}
-            catch(err){
-              const detail=err?.code==='permission-denied'?'Permissão negada pelas regras do Firestore.':(err?.message||String(err));
-              status.textContent='Sincronização interrompida em '+label+': '+detail+' Nenhum acumulado foi alterado.';
-              throw new Error('Falha ao ler '+label+': '+detail);
-            }
-          };
-          const historySnap=await readForSync('ranking_historico',db.collection('ranking_historico'));
-          const evalSnap=await readForSync('avaliacoes',db.collection('avaliacoes'));
-          const profileSnap=await readForSync('perfis (Designers)',db.collection('perfis').where('role','==','estilista'));
-          const penaltySnap=await readForSync('penalidades_rodada',db.collection('penalidades_rodada'));
+          const [historySnap,evalSnap,profileSnap,penaltySnap]=await Promise.all([
+            db.collection('ranking_historico').get(),
+            db.collection('avaliacoes').get(),
+            db.collection('perfis').where('role','==','estilista').get(),
+            db.collection('penalidades_rodada').get()
+          ]);
           const official=new Map();
           historySnap.docs.forEach(doc=>{
             const h=doc.data();
