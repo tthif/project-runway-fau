@@ -4097,11 +4097,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 let badgeText = '—';
                 let badgeClass = 'bg-fashion-950 text-gray-600';
 
-                if (row.out && !rData) {
-                    badgeText = 'OUT';
-                    badgeClass = 'text-[#B84A55] font-bold';
-                } else if (rData) {
-                    const classification = officialStatuses.get(r)?.get(row.uid) || previewStatuses.get(r)?.get(row.uid);
+                // A classificação oficial prevalece mesmo quando não há avaliação
+                // vinculada ao look (ex.: eliminação de Dolce & Banana na W03).
+                const officialClassification = officialStatuses.get(r)?.get(row.uid);
+                const isDolceW03 = fauRoundNumber(r) === 3 && /dolce\s*(?:&|e|and)\s*banana/i.test(String(row.ate||''));
+                if (officialClassification || rData || isDolceW03) {
+                    const classification = officialClassification || (isDolceW03 ? 'BOTTOM' : previewStatuses.get(r)?.get(row.uid));
                     badgeText = classification || '—';
                     const classes = {
                         WIN:'text-[#F4A340] font-bold',
@@ -4114,6 +4115,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         '—':'text-gray-600'
                     };
                     badgeClass = classes[badgeText] || classes['—'];
+                } else if (row.out) {
+                    badgeText = 'OUT';
+                    badgeClass = 'text-[#B84A55] font-bold';
                 }
 
                 html += `<td class="p-2 border-r border-fashion-800"><span class="text-[10px] inline-block uppercase ${badgeClass}">${badgeText}</span></td>`;
@@ -6448,8 +6452,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             preview.id='fauIconDesignerPreview';
             preview.hidden=true;
             preview.className='rounded-xl border border-fashion-gold/30 bg-fashion-950 p-4 space-y-4';
-            preview.innerHTML='<div class="flex items-center justify-between gap-2"><h4 class="font-cinzel text-fashion-gold">THE THEME VAULT · VISÃO DO DESIGNER</h4><button type="button" id="fauCloseIconPreview" class="border border-fashion-700 rounded px-3 py-2 text-xs">Fechar</button></div><p class="text-xs text-gray-400">Simulação de leitura. Nenhuma escolha será registrada.</p><div id="fauIconPreviewBody" class="space-y-3"></div>';
-            iconDesk.append(preview);
+            preview.innerHTML='<div class="flex items-center justify-between gap-2"><h4 class="font-cinzel text-fashion-gold">Escolha do Ícone da Moda</h4><button type="button" id="fauCloseIconPreview" class="border border-fashion-700 rounded px-3 py-2 text-xs">Fechar</button></div><div id="fauIconPreviewBody" aria-live="polite"></div>';
             preview.querySelector('#fauCloseIconPreview').onclick=()=>{preview.hidden=true;previewButton.setAttribute('aria-expanded','false');};
             previewButton.setAttribute('aria-expanded','false');
             const escapePreview=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -6458,28 +6461,28 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               if(!preview.hidden){preview.hidden=true;previewButton.setAttribute('aria-expanded','false');return;}
               preview.hidden=false;previewButton.setAttribute('aria-expanded','true');
               const body=preview.querySelector('#fauIconPreviewBody');
-              body.innerHTML='<p class="text-xs text-gray-400">Carregando prévia…</p>';
+              body.innerHTML='<p class="text-sm text-gray-400">Consultando escolha…</p>';
               const token=++previewToken;
               const g=globalState||{};
-              const options=Array.isArray(g.proxOpcoes)?g.proxOpcoes:[];
-              let choiceDoc=null;
-              try { const snap=await db.doc('escolhas/'+g.rodada).get(); if(snap.exists) choiceDoc=snap.data(); }
-              catch(e) { body.innerHTML='<p class="text-sm text-red-300">Não foi possível consultar a escolha: '+escapePreview(e.message)+'</p>';return; }
-              const selectedId=choiceDoc?.opcaoId||g.proxTema?.themeId||'';
-              const selectedTheme=selectedId?SEASON_THEMES[selectedId]:null;
-              const selectedName=selectedTheme?.title||g.proxTema?.nome||'';
-              const adminResult='<div class="rounded-xl border border-fashion-gold/50 bg-fashion-gold/10 p-4 space-y-2"><p class="text-[11px] uppercase tracking-widest text-fashion-gold">Resultado da escolha · Somente Admin</p>'+
-                (selectedId?'<p class="text-sm text-gray-300">'+escapePreview(g.poderNome||'O Ícone da Moda')+' já escolheu o próximo tema:</p><h4 class="font-cinzel text-2xl text-white">'+escapePreview(selectedName||selectedId)+'</h4><p class="text-xs text-gray-400">Escolha lacrada. Nenhum tema foi revelado ao público por esta prévia.</p>':
-                '<p class="text-sm text-gray-300">'+(g.poderUid?'Aguardando a escolha de '+escapePreview(g.poderNome||'Ícone da Moda')+'.':'A escolha ainda não foi aberta pela produção.')+'</p>')+'</div>';
-              if(g.proxTema){body.innerHTML=adminResult+'<p class="text-xs text-fashion-gold">O próximo desafio já foi revelado pela produção.</p>';return;}
-              if(!g.poderUid||!options.length){body.innerHTML=adminResult;return;}
-              const chosen=!!selectedId;
-              const [clues,photos]=await Promise.all([
-                chosen?Promise.resolve([]):Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_private').doc(o.id).get();return doc.exists?(doc.data()?.clue||''):'';}catch(e){return '';}})),
-                chosen?Promise.resolve([]):Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_public').doc(o.id).get();return doc.exists?(doc.data()?.photo||''):'';}catch(e){return '';}}))
-              ]);
-              if(token!==previewToken||preview.hidden)return;
-              body.innerHTML='<p class="text-fashion-gold font-cinzel tracking-widest text-sm">THE ICON&#39;S CHOICE</p><p class="text-sm text-gray-300">Você tem o poder. Explore as pistas e escolha o próximo desafio.</p>'+(chosen?'<p class="text-fashion-gold text-sm">🔒 Escolha registrada. Aguarde a revelação da produção.</p>':'')+'<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">'+options.map((o,i)=>'<div class="rounded-lg border border-fashion-gold/30 bg-fashion-900 overflow-hidden"><div class="aspect-[4/5] bg-fashion-950">'+(!chosen&&photos[i]?'<img src="'+escapePreview(photos[i])+'" alt="Pista '+(i+1)+'" class="w-full h-full object-cover">':'')+'</div><div class="p-3 space-y-2"><strong class="block font-cinzel text-fashion-gold">MYSTERY '+String(i+1).padStart(2,'0')+'</strong>'+(chosen?'':'<p class="text-gray-300 text-xs">'+escapePreview(clues[i]||'Pista em preparação…')+'</p><span class="block text-center bg-fashion-gold/70 text-black rounded py-2 text-xs font-semibold" aria-label="Botão ilustrativo, desativado">Escolher esta pista</span>')+'</div></div>').join('')+'</div>';
+              try {
+                const round=g.rodada;
+                if(!round){body.innerHTML='<p class="text-sm text-gray-300">Nenhuma rodada ativa.</p>';return;}
+                const snap=await db.collection('escolhas').doc(round).get();
+                if(token!==previewToken||preview.hidden)return;
+                const choice=snap.exists?snap.data():null;
+                const selectedId=choice?.opcaoId||g.proxTema?.themeId||'';
+                const option=(Array.isArray(g.proxOpcoes)?g.proxOpcoes:[]).find(o=>o.id===selectedId);
+                const theme=selectedId&&typeof SEASON_THEMES!=='undefined'?SEASON_THEMES[selectedId]:null;
+                const title=theme?.title||option?.nome||option?.title||g.proxTema?.nome||'';
+                if(selectedId){
+                  body.innerHTML='<p class="text-[11px] uppercase tracking-widest text-fashion-gold mb-2">Tema escolhido</p><h3 class="font-cinzel text-2xl text-white">'+escapePreview(title||selectedId)+'</h3><p class="text-xs text-gray-400 mt-3">'+escapePreview(g.poderNome||'Ícone da Moda')+' · Escolha registrada'+(choice?.opcaoId?'':' / tema definido')+'</p>';
+                }else{
+                  body.innerHTML='<p class="text-sm text-gray-300">'+(g.poderUid?'O Ícone da Moda ainda não escolheu o tema.':'A escolha ainda não foi aberta.')+'</p>';
+                }
+              }catch(e){
+                if(token!==previewToken||preview.hidden)return;
+                body.innerHTML='<p class="text-sm text-red-300">Não foi possível consultar a escolha: '+escapePreview(e.message)+'</p>';
+              }
             };
             // Integração nativa à Central de Comandos: sem card ou título duplicado.
             const commandCenter=episode.querySelector('#fauUnifiedOperations');
@@ -6489,7 +6492,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const publicationGrid=commandCenter.querySelectorAll('.fau-command-control-panel')[1]?.querySelector('.fau-command-quick-grid');
               const previewArea=commandCenter.querySelector('.fau-command-previews');
               const normalize=(button,label)=>{button.className='fau-command-btn';button.textContent=label;button.type='button';};
-              normalize(previewButton,'Ver escolha do Ícone da Moda');
+              normalize(previewButton,'Tema escolhido pelo Ícone');
               normalize(iconOpen,'Abrir The Icon\'s Choice');
               normalize(iconView,'Ver escolha lacrada');
               if(previewsGrid)previewsGrid.append(previewButton);
