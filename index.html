@@ -1004,6 +1004,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 <style id="fau-track-record-editorial-repair">
 .fau-tr-intro{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;padding:6px 2px 12px;border-bottom:1px solid #55424a}.fau-tr-kicker{font-size:10px;letter-spacing:.2em;color:#d1b38b;font-weight:700}.fau-tr-intro h3{font:600 31px 'Cormorant Garamond',serif;color:#f0eae1;line-height:1.1;margin:5px 0}.fau-tr-intro p{font-size:11px;color:#bdb2bb;max-width:560px}.fau-tr-count{white-space:nowrap;color:#d1b38b;font-size:10px;letter-spacing:.1em;border:1px solid #64505a;padding:8px 10px;border-radius:7px}.fau-tr-scroll{box-shadow:0 12px 35px #0003}.fau-tr-table th,.fau-tr-table td{height:54px;min-width:90px;padding:12px 13px;border-color:#463840!important;transition:background .15s}.fau-tr-table tbody tr:hover td:not(.fau-tr-after){filter:brightness(1.13)}.fau-tr-table tbody th{font-family:Inter,sans-serif;min-width:175px;max-width:215px}.fau-tr-table .fau-tr-ppe{color:#e2c693;background:#241d23;font-variant-numeric:tabular-nums;font-weight:700}.fau-tr-rank{color:#9e7e70;font-size:10px;margin-right:9px}.fau-tr-table td.fau-tr-win{background:#443021;color:#ffcc83;border-left:3px solid #e5a35b}.fau-tr-table td.fau-tr-high{background:#35302c;color:#e4bb82;border-left:3px solid #c99a56}.fau-tr-table td.fau-tr-safe{background:#29252b;color:#d2c9d0;border-left:3px solid #7c717d}.fau-tr-table td.fau-tr-low{background:#402923;color:#eeb08b;border-left:3px solid #c77b49}.fau-tr-table td.fau-tr-bottom{background:#48232f;color:#ffa7bd;border-left:3px solid #e16a85}.fau-tr-table td.fau-tr-out{background:#531c2b;color:#ffd8df;border-left:3px solid #d34c66;letter-spacing:.08em}.fau-tr-table td.fau-tr-after{background:#0b090d!important}.fau-tr-table td.fau-tr-empty{color:#716b73;background:#1b181e}.fau-tr-table .fau-tr-eliminated th{color:#b6aab3}.fau-tr-legend{display:flex;flex-wrap:wrap;gap:8px 15px;margin-top:15px;color:#bcb1bb;font-size:10px}.fau-tr-legend span{display:inline-flex;align-items:center;gap:5px}.fau-tr-legend b{color:#f0eae1}.fau-tr-dot{display:inline-block;width:9px;height:9px;border-radius:2px}.fau-tr-dot.fau-tr-win{background:#e5a35b}.fau-tr-dot.fau-tr-high{background:#c99a56}.fau-tr-dot.fau-tr-safe{background:#8c818d}.fau-tr-dot.fau-tr-low{background:#c77b49}.fau-tr-dot.fau-tr-bottom{background:#e16a85}.fau-tr-dot.fau-tr-out{background:#d34c66}@media(max-width:640px){.fau-tr-intro h3{font-size:26px}.fau-tr-count{display:none}.fau-tr-table th,.fau-tr-table td{height:49px;min-width:75px;padding:9px}.fau-tr-table tbody th{min-width:128px;max-width:150px}}
 </style>
+<style id="fau-weekly-score-details-css">.fau-weekly-score-details{margin-top:18px;border-top:1px solid rgba(209,179,139,.22);padding-top:12px}.fau-weekly-score-details summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;color:#d1b38b;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.09em;padding:9px 0;list-style:none}.fau-weekly-score-details summary::-webkit-details-marker{display:none}.fau-weekly-score-details[open] summary i{transform:rotate(180deg)}.fau-weekly-score-list{padding:4px 0 8px}.fau-weekly-score-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid rgba(209,179,139,.13);font-size:12px;color:#e8e0e6}.fau-weekly-score-row span{min-width:0;overflow-wrap:anywhere}.fau-weekly-score-row b{white-space:nowrap;color:#e5c38c;font-variant-numeric:tabular-nums}.fau-weekly-score-empty{font-size:12px;color:#c5b9c3;padding:10px 0}</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -3696,9 +3697,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const officialName=entries.map(x=>String(x.row.ate||x.row.nome||'').trim()).find(Boolean);
             const displayName=officialName||profileName;
             const nameNode=document.querySelector('.fau-my-profile .fau-profile-name');if(nameNode&&displayName)nameNode.textContent=displayName;
-            const played=entries.filter(x=>!/^OUT$/i.test(String(x.row.status||'').trim()));
-            const wins=played.filter(x=>/^WIN$/i.test(String(x.row.status||'').trim())).length;
-            const highlights=played.filter(x=>/^(WIN|HIGH|TOP)$/i.test(String(x.row.status||'').trim())).length;
+            // Classificações podem trazer complementos como WIN (PROTEGIDO) ou WIN + IDM.
+            // A classificação-base deve ser usada para estatísticas; os complementos são preservados na exibição.
+            const legacyBaseStatus=value=>{
+              const raw=String(value||'').trim().toUpperCase();
+              const match=raw.match(/^(WIN|HIGH|TOP|SAFE|LOW|BOTTOM|BTM|OUT|ELIM)(?=$|[\s(+\-/])/);
+              return match?({TOP:'HIGH',BTM:'BOTTOM',ELIM:'OUT'}[match[1]]||match[1]):raw;
+            };
+            const played=entries.filter(x=>legacyBaseStatus(x.row.status)!=='OUT');
+            const wins=played.filter(x=>legacyBaseStatus(x.row.status)==='WIN').length;
+            const highlights=played.filter(x=>['WIN','HIGH'].includes(legacyBaseStatus(x.row.status))).length;
             // O Elimination Pool inclui também o indicado pelo acumulado, que pode estar SAFE/LOW/HIGH.
             // Não inferir participação no Pool a partir da classificação BOTTOM.
             // WEEK 01 — THE FIRST GARMENT foi não eliminatória: BOTTOM não gera Pool.
@@ -3714,7 +3722,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const poolCount=poolRounds.filter(r=>r.eliminationPool.some(x=>String(typeof x==='string'?x:(x?.uid||''))===String(uid)||(!x?.uid&&String(x?.ate||'').trim().toLocaleLowerCase('pt-BR')===name))).length;
             const poolHistoryComplete=eligiblePoolRounds.every(r=>Array.isArray(r.eliminationPool));
             const poolDisplay=poolHistoryComplete?String(poolCount):(poolCount>0?`${poolCount}+`:'—');
-            const out=entries.some(x=>/^OUT$/i.test(String(x.row.status||'').trim()));
+            const out=entries.some(x=>legacyBaseStatus(x.row.status)==='OUT');
             const titleResults=await Promise.allSettled(rounds.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
             const titleMap=new Map();titleResults.forEach((res,i)=>{if(res.status==='fulfilled'&&res.value.exists&&res.value.data()?.published===true)titleMap.set(String(rounds[i].round),res.value.data());});
             const icons=entries.filter(({r})=>String(titleMap.get(String(r.round))?.icon||'')===String(uid)).length;
@@ -3727,8 +3735,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const facts=$('#fauMyLegacyHighlights');
             if(facts){
               const last=played[played.length-1];
-              const best=played.map(x=>String(x.row.status||'').trim().toUpperCase()).find(x=>x==='WIN')||(['HIGH','TOP','SAFE','LOW','BOTTOM'].find(st=>played.some(x=>String(x.row.status||'').trim().toUpperCase()===st))||'');
-              const elimination=entries.find(x=>String(x.row.status||'').trim().toUpperCase()==='OUT');
+              const best=played.map(x=>legacyBaseStatus(x.row.status)).find(x=>x==='WIN')||(['HIGH','SAFE','LOW','BOTTOM'].find(st=>played.some(x=>legacyBaseStatus(x.row.status)===st))||'');
+              const elimination=entries.find(x=>legacyBaseStatus(x.row.status)==='OUT');
               const fact=(label,value,cls='')=>`<div class="fau-profile-fact ${cls}"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`;
               facts.innerHTML=(last?fact('ÚLTIMA RODADA',fauWeekLabel(last.r.round)):'')+(elimination?fact('DESPEDIDA',fauWeekLabel(elimination.r.round),'is-eliminated'):'');
             }
@@ -3759,7 +3767,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               }else{
                 journey.hidden=false;
                 const extremes=`<div class="fau-journey-extremes"><div class="fau-journey-extreme"><small>MELHOR COLOCAÇÃO</small><strong>${bestRank.position}º</strong><span>${esc(bestRank.week)} · ${esc(bestRank.status)}</span></div><div class="fau-journey-extreme"><small>PIOR COLOCAÇÃO</small><strong>${worstRank.position}º</strong><span>${esc(worstRank.week)} · ${esc(worstRank.status)}</span></div></div>`;
-                const poolDetails=verifiedPool.length||poolHistoryComplete?`<details class="mt-4"><summary>HISTÓRICO DO ELIMINATION POOL · ${poolDisplay}</summary>${verifiedPool.length?`<div class="fau-journey-pool">${verifiedPool.map(r=>`<div class="fau-journey-pool-item">${esc(fauWeekLabel(r.round))} · ${entries.some(e=>String(e.r.round)===String(r.round)&&/^OUT$/i.test(String(e.row.status)))?'Eliminado':'Indicado ao Pool'}</div>`).join('')}</div>`:'<p class="fau-journey-caption">Nenhuma indicação registrada.</p>'}${!poolHistoryComplete?'<p class="fau-journey-caption">Histórico parcial: nem todas as rodadas têm os indicados registrados.</p>':''}</details>`:'';
+                const poolDetails=verifiedPool.length||poolHistoryComplete?`<details class="mt-4"><summary>HISTÓRICO DO ELIMINATION POOL · ${poolDisplay}</summary>${verifiedPool.length?`<div class="fau-journey-pool">${verifiedPool.map(r=>`<div class="fau-journey-pool-item">${esc(fauWeekLabel(r.round))} · ${entries.some(e=>String(e.r.round)===String(r.round)&&legacyBaseStatus(e.row.status)==='OUT')?'Eliminado':'Indicado ao Pool'}</div>`).join('')}</div>`:'<p class="fau-journey-caption">Nenhuma indicação registrada.</p>'}${!poolHistoryComplete?'<p class="fau-journey-caption">Histórico parcial: nem todas as rodadas têm os indicados registrados.</p>':''}</details>`:'';
                 const positionSlot=$('#fauMyPositions');if(positionSlot)positionSlot.innerHTML=extremes;
                 journey.innerHTML=`<h3>EVOLUÇÃO NA COMPETIÇÃO</h3>${graph}${lastRank?`<p class="fau-journey-detail">Última rodada: <strong>${esc(lastRank.status)}</strong> · ${esc(movement)}</p>`:''}${poolDetails}`;
               }
@@ -3772,7 +3780,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const st=String(row.status||'').trim().toUpperCase();
               const icon=String(titleMap.get(String(r.round))?.icon||'')===String(uid);
               const isFora=String(titleMap.get(String(r.round))?.fora||titleMap.get(String(r.round))?.fdm||'')===String(uid);
-              if(st==='WIN')moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Winner da Rodada</span>`);
+              if(legacyBaseStatus(st)==='WIN')moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Winner da Rodada</span>`);
               if(icon)moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Ícone da Moda</span>`);
               if(isFora)moments.push(`<span class="fau-hall-award">${esc(fauWeekLabel(r.round))} · Fora de Moda</span>`);
             });
@@ -3808,7 +3816,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const valid=!!data&&Number.isFinite(avg)&&avg>=0;
                 const slot=$('#fauMyScore');
                 const chart=$('#fauMyCriteria');if(chart)chart.innerHTML=fauCriteriaChart(data?.criteriosVisuais);
-                if(slot)slot.innerHTML=`<small>PONTUAÇÃO ACUMULADA</small><strong>${valid?avg.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}<em>${valid?' pontos':''}</em></strong><span>${valid?'Seu total oficial na temporada':'Aguardando publicação do resultado'}</span>`;
+                if(slot){
+                    const weeks=Object.entries(data?.porSemana||{}).filter(([week,value])=>week&&Number.isFinite(Number(value))).sort(([a],[b])=>{const na=Number(String(a).match(/\d+/)?.[0]),nb=Number(String(b).match(/\d+/)?.[0]);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:String(a).localeCompare(String(b),'pt-BR');});
+                    const fmt=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+                    slot.innerHTML=`<small>PONTUAÇÃO ACUMULADA</small><strong>${valid?fmt(avg):'—'}<em>${valid?' pontos':''}</em></strong><span>${valid?'Seu total oficial na temporada':'Aguardando publicação do resultado'}</span>${valid?`<details class="fau-weekly-score-details"><summary aria-label="Ver pontuação de cada semana">VER PONTUAÇÃO POR WEEK <i class="fas fa-chevron-down" aria-hidden="true"></i></summary><div class="fau-weekly-score-list">${weeks.length?weeks.map(([week,value])=>`<div class="fau-weekly-score-row"><span>${esc(fauWeekLabel(week))}</span><b>${fmt(value)} pontos</b></div>`).join(''):'<p class="fau-weekly-score-empty">Histórico de pontuações ainda não sincronizado. A produção pode atualizar os acumulados privados.</p>'}</div></details>`:''}`;
+                }
             });
         }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyScore');if(slot)slot.innerHTML='<small>PONTUAÇÃO ACUMULADA</small><strong>—</strong><span>Não foi possível carregar a pontuação</span>';}
     };
@@ -7669,8 +7681,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const rawScore=mode==='media' ? lookAverages.reduce((a,b)=>a+b,0)/lookAverages.length : lookAverages.reduce((a,b)=>a+b,0);
             const penalty=Math.max(0,Math.min(100,penaltyMap.get(round+'_'+uid)||0));
             const score=rawScore*(1-penalty/100);
-            if(!byUid.has(uid))byUid.set(uid,{total:0,rounds:[]});
-            const item=byUid.get(uid);item.total+=score;item.rounds.push(round);
+            if(!byUid.has(uid))byUid.set(uid,{total:0,rounds:[],porSemana:{}});
+            const item=byUid.get(uid);item.total+=score;item.rounds.push(round);item.porSemana[round]=Number(score.toFixed(2));
           }
           if(!byUid.size)throw new Error('Não encontrei avaliações válidas das rodadas publicadas. Nada foi alterado.');
           const known=new Set(profileSnap.docs.map(d=>d.id));
@@ -7682,6 +7694,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           for(const [uid,data] of rows){
             batch.set(db.doc('desempenho_privado/'+uid),{
               acumulado:Number(data.total.toFixed(2)),
+              porSemana:data.porSemana,
               criteriosVisuais:criteriaProfiles.get(uid)||null,
               rodada:globalState.rodada,
               ultimaRodada:data.rounds.sort((a,b)=>Number(b)-Number(a))[0],
@@ -7754,6 +7767,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           for(const [uid,score] of privateByUid){
             batch.set(db.doc(`desempenho_privado/${uid}`),{
               acumulado:score.tot,rodada:globalState.rodada,
+              [`porSemana.${round}`]:Number(score.rd.toFixed(2)),
               criteriosVisuais:criteriaProfiles.get(uid)||null,
               ultimaRodada:score.rd,atualizadoEm:stamp
             },{merge:true});
