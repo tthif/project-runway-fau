@@ -3923,7 +3923,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
         const rodadasSet = new Set();
         looks.forEach(l => { if (l.rodada) rodadasSet.add(l.rodada); });
-        const rodadas = [...rodadasSet].sort();
+        const fauRoundNumber = value => {
+            const raw = String(value ?? '').trim();
+            const match = raw.match(/(?:week|w)\s*0*(\d+)/i) || raw.match(/^(\d+)$/);
+            return match ? Number(match[1]) : null;
+        };
+        const rodadas = [...rodadasSet].sort((a,b) => {
+            const an=fauRoundNumber(a), bn=fauRoundNumber(b);
+            if(an!==null && bn!==null) return an-bn || String(a).localeCompare(String(b),'pt-BR',{numeric:true});
+            if(an!==null) return -1;
+            if(bn!==null) return 1;
+            return String(a).localeCompare(String(b),'pt-BR',{numeric:true});
+        });
 
         if (!rodadas.length) {
             $('#trackRecordTableContainer').innerHTML = '<p class="text-gray-500 py-8 text-center">Nenhuma rodada registrada com looks ainda.</p>';
@@ -4068,7 +4079,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     <tr class="bg-fashion-950 text-fashion-gold border-b border-fashion-700 text-[11px] font-cinzel">
                         <th class="p-2.5 text-left border-r border-fashion-700">DESIGNER</th>
                         <th class="p-2.5 border-r border-fashion-700">P.P.E.</th>
-                        ${rodadas.map((r, i) => { const m = String(r).match(/w(?:eek)?\s*0*(\d+)/i); const n = m ? Number(m[1]) : i + 1; const label = String(r).replace(/^w(?:eek)?\s*0*\d+[\s_-]*/i, '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim(); return `<th class="p-2.5 border-r border-fashion-700 uppercase">W${String(n).padStart(2, '0')}${label ? ' — ' + esc(label) : ''}</th>`; }).join('')}
+                        ${rodadas.map((r, i) => { const m = String(r).match(/w(?:eek)?\s*0*(\d+)/i); const n = m ? Number(m[1]) : (fauRoundNumber(r) ?? i + 1); const label = String(r).replace(/^w(?:eek)?\s*0*\d+[\s_-]*/i, '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim(); return `<th class="p-2.5 border-r border-fashion-700 uppercase">W${String(n).padStart(2, '0')}${label ? ' — ' + esc(label) : ''}</th>`; }).join('')}
                     </tr>
                 </thead>
                 <tbody>
