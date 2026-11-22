@@ -7426,7 +7426,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!productionConfirm('Aplicar desconto de '+value+'% na nota final da rodada para '+penaltySelect.selectedOptions[0].text+'?'))return;
             await penaltyDoc().set({rodada:penaltyRound,uid:penaltySelect.value,percentual:value,motivo:reason,updatedBy:currentUser.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
             await productionLog('round_penalty_saved',{round:penaltyRound,uid:penaltySelect.value,percentual:value,motivo:reason});
-            await loadPenalty();showToast('Penalidade salva. Recalcule a prévia do ranking.');
+            await loadPenalty();
+            const updated=(await computeSeasonStandings()).find(x=>x.uid===penaltySelect.value);
+            if(updated){
+              const adjusted=updated.rd;
+              const original=value<100?adjusted/(1-value/100):null;
+              penaltyStatus.textContent+=' | Nota válida nesta Week: '+adjusted.toLocaleString('pt-BR',{maximumFractionDigits:2})+' / 50'+(original!==null?' (antes: '+original.toLocaleString('pt-BR',{maximumFractionDigits:2})+')':'');
+            }
+            // Não publica nada: atualiza apenas as prévias já abertas.
+            if(document.getElementById('adminOutput'))document.getElementById('adminOutput').innerHTML='<p class="text-fashion-gold">Penalidade atualizada. Clique em Calcular Notas ou LIVE RESULTS para consultar a nova classificação.</p>';
+            showToast('Penalidade aplicada ao cálculo. Confira a nota válida abaixo.');
           });
           $('#fauPenaltyRemove').onclick=safeExec(async()=>{
             if(!isAdmin||!penaltySelect.value)throw new Error('Selecione um Designer.');
@@ -8961,9 +8970,22 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 a.nota.forEach((n,i)=>entry.criteria[i].push(Number(n)));
                 byDesigner.set(uid,entry);
             });
-            const juryItems=[...byDesigner.values()].map(x=>({uid:x.uid,value:x.totals.reduce((a,b)=>a+b,0)/x.totals.length,judges:x.totals.length,criteria:x.criteria.map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length)}));
+            // A prévia deve usar a mesma nota efetiva do ranking oficial, não a média bruta dos jurados.
+            const [effectiveStandings, livePenaltiesSnap]=await Promise.all([
+                computeSeasonStandings(),
+                db.collection('penalidades_rodada').where('rodada','==',String(round)).get()
+            ]);
+            const effectiveByUid=new Map(effectiveStandings.map(x=>[x.uid,x.rd]));
+            const livePenaltyByUid=new Map(livePenaltiesSnap.docs.map(d=>[String(d.data().uid),Number(d.data().percentual)||0]));
+            const juryItems=[...byDesigner.values()].map(x=>({
+                uid:x.uid,
+                value:effectiveByUid.has(x.uid)?effectiveByUid.get(x.uid):x.totals.reduce((a,b)=>a+b,0)/x.totals.length*(1-(livePenaltyByUid.get(x.uid)||0)/100),
+                penalty:livePenaltyByUid.get(x.uid)||0,
+                judges:x.totals.length,
+                criteria:x.criteria.map(arr=>arr.reduce((a,b)=>a+b,0)/arr.length)
+            }));
             const fmt=n=>n.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2});
-            const juryHtml=`<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><h4 class="font-cinzel text-fashion-gold">Judges' Scores · Ranking provisório</h4><p class="text-xs text-gray-400">Média das avaliações válidas por Designer. O ranking pode mudar enquanto houver notas pendentes.</p>${renderRanking(juryItems,'pontos','Nenhuma avaliação completa registrada.')}${juryItems.length?`<details class="border border-fashion-700 rounded-lg p-3"><summary class="cursor-pointer text-fashion-gold text-sm">Ver médias por critério e quantidade de jurados</summary><div class="space-y-3 mt-3">${juryItems.sort((a,b)=>b.value-a.value).map(x=>`<div class="border-b border-fashion-700 pb-2 text-sm"><strong>${name(x.uid)}</strong><p class="text-xs text-gray-400">${x.judges} avaliação(ões) · ${CRITERIOS.map((c,i)=>`${esc(c)}: ${fmt(x.criteria[i])}`).join(' · ')}</p></div>`).join('')}</div></details>`:''}</section>`;
+            const juryHtml=`<section class="rounded-xl border border-fashion-700 bg-fashion-950 p-4 space-y-3"><h4 class="font-cinzel text-fashion-gold">Judges' Scores · Ranking provisório</h4><p class="text-xs text-gray-400">Nota válida da Week após penalidades, quando houver. As médias por critério permanecem originais. O ranking pode mudar enquanto houver notas pendentes.</p>${renderRanking(juryItems,'pontos','Nenhuma avaliação completa registrada.')}${juryItems.length?`<details class="border border-fashion-700 rounded-lg p-3"><summary class="cursor-pointer text-fashion-gold text-sm">Ver médias por critério e quantidade de jurados</summary><div class="space-y-3 mt-3">${juryItems.sort((a,b)=>b.value-a.value).map(x=>`<div class="border-b border-fashion-700 pb-2 text-sm"><strong>${name(x.uid)}</strong><p class="text-xs text-gray-400">${x.judges} avaliação(ões) · ${x.penalty?'PENALIDADE: −'+x.penalty+'% · ':''}${CRITERIOS.map((c,i)=>`${esc(c)}: ${fmt(x.criteria[i])}`).join(' · ')}</p></div>`).join('')}</div></details>`:''}</section>`;
             $('#adminOutput').innerHTML=`<section class="space-y-4"><div><h3 class="font-cinzel text-fashion-gold text-xl">LIVE RESULTS · Central de Apuração</h3><p class="text-xs text-gray-400 mt-1">${esc(fauWeekLabel(String(round)))} · Consulta confidencial, somente leitura. O Ícone é desempatado com as notas já salvas, mesmo antes da publicação. Prévias podem mudar.</p></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${votes[0]}${votes[1]}${juryHtml}${votes[2]}</div><p class="text-xs text-gray-400">Os votos de salvamento aparecem quando o Elimination Pool estiver aberto e houver votos registrados.</p><button id="btnRefreshLiveVoting" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-sm">Atualizar resultados</button></section>`;
             $('#btnRefreshLiveVoting').onclick=()=>$('#btnLiveVoting').click();
         });
