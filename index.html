@@ -989,7 +989,19 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 .fau-round-editor summary{min-height:44px;display:flex;align-items:center}
 @media(max-width:440px){.fau-setup-advanced>summary{align-items:flex-start;flex-direction:column;gap:3px}.fau-setup-advanced>summary small{text-align:left}}
 </style>
-<style id="fau-admin-studio-style">.fau-admin-studio{color:#f0eae1}.fau-studio-hero{padding:22px;border:1px solid #6a4c59;border-radius:17px;background:radial-gradient(ellipse at 90% 0%,#53243277,transparent 65%),linear-gradient(125deg,#2a1d29,#141215)}.fau-studio-kicker,.fau-studio-time small{font-size:10px;letter-spacing:.15em;color:#d1b38b;font-weight:700}.fau-studio-hero h2{font:600 clamp(35px,7vw,54px) 'Cormorant Garamond',serif;margin:10px 0 0}.fau-studio-hero>p{font-size:12px;color:#d1b38b}.fau-studio-time{display:flex;flex-direction:column;gap:4px;border-top:1px solid #624957;margin-top:18px;padding-top:16px}.fau-studio-time strong{font:600 clamp(26px,6vw,38px) monospace;color:#f0d5a5;font-variant-numeric:tabular-nums}.fau-studio-time strong.urgent{color:#f39aa4}.fau-studio-time span{font-size:11px;color:#bfb2bc}.fau-studio-panel,.fau-studio-card{border:1px solid #51414c;background:#211b22;border-radius:14px}.fau-studio-panel>summary{padding:14px;cursor:pointer;color:#d1b38b}.fau-studio-progress{display:flex;justify-content:space-between;align-items:center}.fau-studio-progress small{font-size:10px;letter-spacing:.1em;color:#d1b38b}.fau-studio-progress h3{font-size:30px;font-weight:700}.fau-studio-progress h3 span{font-size:14px;color:#b8acb7;font-weight:400}.fau-studio-progress>strong{font-size:25px;color:#d1b38b}.fau-studio-bar{height:7px;border-radius:9px;background:#463440;overflow:hidden;margin:12px 0}.fau-studio-bar div{height:100%;background:linear-gradient(90deg,#8e3446,#d1b38b);transition:width .4s}.fau-studio-stats{display:flex;flex-wrap:wrap;gap:7px}.fau-studio-stats span{font-size:11px;padding:6px 9px;background:#151216;border-radius:7px}.fau-studio-toolbar{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap}.fau-studio-filters{display:flex;gap:5px}.fau-studio-filters button{font-size:11px;border:1px solid #65515d;border-radius:8px;padding:9px 11px}.fau-studio-filters button.active{background:#d1b38b;color:#141215;font-weight:700}.fau-studio-toolbar input{background:#211b22;border:1px solid #65515d;border-radius:8px;padding:10px;color:white;font-size:12px;width:min(100%,230px)}.fau-studio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px}.fau-studio-card{padding:13px;min-width:0}.fau-studio-card.complete{border-color:#79634e}.fau-studio-person{display:flex;gap:10px;align-items:center;min-width:0}.fau-studio-person img,.fau-studio-avatar{width:45px;height:50px;flex-shrink:0;object-fit:cover;border-radius:7px;background:#332630}.fau-studio-avatar{display:grid;place-items:center}.fau-studio-person>div:nth-child(2){min-width:0;flex:1}.fau-studio-person h3{font:600 21px 'Cormorant Garamond',serif;overflow-wrap:anywhere}.fau-studio-person small{font-size:11px;color:#b8acb7}.fau-studio-person b{font-size:9px;border:1px solid #79634e;border-radius:99px;padding:5px 7px;color:#d1b38b;white-space:nowrap}.fau-studio-card.pending .fau-studio-person b{border-color:#63505b;color:#b8acb7}.fau-studio-looks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px;margin-top:12px}.fau-studio-looks img,.fau-studio-noimage{width:100%;aspect-ratio:3/4;object-fit:contain;background:#100d11;border-radius:7px}.fau-studio-looks strong{display:block;font-size:13px;margin-top:7px;overflow-wrap:anywhere}.fau-studio-looks details{font-size:12px;margin-top:5px}.fau-studio-looks summary{color:#d1b38b;cursor:pointer}.fau-studio-looks details p{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:8px;line-height:1.6}.fau-studio-wait{font-size:12px;color:#a99ca7;padding-top:15px}.fau-studio-foot,.fau-studio-empty{font-size:11px;color:#b5a9b3;text-align:center;padding:12px}@media(max-width:640px){.fau-studio-toolbar input{width:100%}.fau-studio-hero{padding:18px}}</style><style id="fau-admin-clock-restore">#fauAdminWorkroomClock{width:100%;min-width:0;box-sizing:border-box}#fauAdminWorkroomClock .fau-clock-digits{white-space:nowrap}@media(max-width:640px){#fauAdminWorkroomClock{padding:12px 14px!important;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;text-align:left;gap:2px 10px}#fauAdminWorkroomClock .fau-clock-kicker{font-size:9px}#fauAdminWorkroomClock .fau-clock-digits{font-size:clamp(19px,5.5vw,25px);margin:0;grid-column:2;grid-row:1/3}#fauAdminWorkroomClock .fau-clock-status{font-size:9px;grid-column:1;grid-row:2}#fauAdminWorkroomClock .fau-clock-track{grid-column:1/-1;margin:7px 0 0}#fauAdminWorkroomClock .fau-clock-direction{display:none}}</style></head>
+<style id="fau-admin-studio-style">.fau-admin-studio{color:#f0eae1}.fau-studio-hero{padding:22px;border:1px solid #6a4c59;border-radius:17px;background:radial-gradient(ellipse at 90% 0%,#53243277,transparent 65%),linear-gradient(125deg,#2a1d29,#141215)}.fau-studio-kicker,.fau-studio-time small{font-size:10px;letter-spacing:.15em;color:#d1b38b;font-weight:700}.fau-studio-hero h2{font:600 clamp(35px,7vw,54px) 'Cormorant Garamond',serif;margin:10px 0 0}.fau-studio-hero>p{font-size:12px;color:#d1b38b}.fau-studio-time{display:flex;flex-direction:column;gap:4px;border-top:1px solid #624957;margin-top:18px;padding-top:16px}.fau-studio-time strong{font:600 clamp(26px,6vw,38px) monospace;color:#f0d5a5;font-variant-numeric:tabular-nums}.fau-studio-time strong.urgent{color:#f39aa4}.fau-studio-time span{font-size:11px;color:#bfb2bc}.fau-studio-panel,.fau-studio-card{border:1px solid #51414c;background:#211b22;border-radius:14px}.fau-studio-panel>summary{padding:14px;cursor:pointer;color:#d1b38b}.fau-studio-progress{display:flex;justify-content:space-between;align-items:center}.fau-studio-progress small{font-size:10px;letter-spacing:.1em;color:#d1b38b}.fau-studio-progress h3{font-size:30px;font-weight:700}.fau-studio-progress h3 span{font-size:14px;color:#b8acb7;font-weight:400}.fau-studio-progress>strong{font-size:25px;color:#d1b38b}.fau-studio-bar{height:7px;border-radius:9px;background:#463440;overflow:hidden;margin:12px 0}.fau-studio-bar div{height:100%;background:linear-gradient(90deg,#8e3446,#d1b38b);transition:width .4s}.fau-studio-stats{display:flex;flex-wrap:wrap;gap:7px}.fau-studio-stats span{font-size:11px;padding:6px 9px;background:#151216;border-radius:7px}.fau-studio-toolbar{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap}.fau-studio-filters{display:flex;gap:5px}.fau-studio-filters button{font-size:11px;border:1px solid #65515d;border-radius:8px;padding:9px 11px}.fau-studio-filters button.active{background:#d1b38b;color:#141215;font-weight:700}.fau-studio-toolbar input{background:#211b22;border:1px solid #65515d;border-radius:8px;padding:10px;color:white;font-size:12px;width:min(100%,230px)}.fau-studio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px}.fau-studio-card{padding:13px;min-width:0}.fau-studio-card.complete{border-color:#79634e}.fau-studio-person{display:flex;gap:10px;align-items:center;min-width:0}.fau-studio-person img,.fau-studio-avatar{width:45px;height:50px;flex-shrink:0;object-fit:cover;border-radius:7px;background:#332630}.fau-studio-avatar{display:grid;place-items:center}.fau-studio-person>div:nth-child(2){min-width:0;flex:1}.fau-studio-person h3{font:600 21px 'Cormorant Garamond',serif;overflow-wrap:anywhere}.fau-studio-person small{font-size:11px;color:#b8acb7}.fau-studio-person b{font-size:9px;border:1px solid #79634e;border-radius:99px;padding:5px 7px;color:#d1b38b;white-space:nowrap}.fau-studio-card.pending .fau-studio-person b{border-color:#63505b;color:#b8acb7}.fau-studio-looks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:10px;margin-top:12px}.fau-studio-looks img,.fau-studio-noimage{width:100%;aspect-ratio:3/4;object-fit:contain;background:#100d11;border-radius:7px}.fau-studio-looks strong{display:block;font-size:13px;margin-top:7px;overflow-wrap:anywhere}.fau-studio-looks details{font-size:12px;margin-top:5px}.fau-studio-looks summary{color:#d1b38b;cursor:pointer}.fau-studio-looks details p{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:8px;line-height:1.6}.fau-studio-wait{font-size:12px;color:#a99ca7;padding-top:15px}.fau-studio-foot,.fau-studio-empty{font-size:11px;color:#b5a9b3;text-align:center;padding:12px}@media(max-width:640px){.fau-studio-toolbar input{width:100%}.fau-studio-hero{padding:18px}}</style><style id="fau-admin-clock-restore">#fauAdminWorkroomClock{width:100%;min-width:0;box-sizing:border-box}#fauAdminWorkroomClock .fau-clock-digits{white-space:nowrap}@media(max-width:640px){#fauAdminWorkroomClock{padding:12px 14px!important;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;text-align:left;gap:2px 10px}#fauAdminWorkroomClock .fau-clock-kicker{font-size:9px}#fauAdminWorkroomClock .fau-clock-digits{font-size:clamp(19px,5.5vw,25px);margin:0;grid-column:2;grid-row:1/3}#fauAdminWorkroomClock .fau-clock-status{font-size:9px;grid-column:1;grid-row:2}#fauAdminWorkroomClock .fau-clock-track{grid-column:1/-1;margin:7px 0 0}#fauAdminWorkroomClock .fau-clock-direction{display:none}}</style><style id="fau-track-record-official-2026">
+.fau-tr-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.fau-tr-table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content;text-align:center;font:600 12px/1.35 Inter,system-ui,sans-serif;color:#f0eae1}
+.fau-tr-table th,.fau-tr-table td{padding:12px 10px;border-right:1px solid #453c44;border-bottom:1px solid #453c44;min-width:82px}
+.fau-tr-table thead th{background:#33252c;color:#e9c69e;position:sticky;top:0;z-index:2}
+.fau-tr-table th:first-child{position:sticky;left:0;z-index:3;min-width:145px;max-width:190px;text-align:left;white-space:normal}
+.fau-tr-table tbody th{background:#262027;color:#f0eae1;font-weight:600}
+.fau-tr-table thead th:first-child{z-index:4}
+.fau-tr-table .fau-tr-ppe{background:#201b22;color:#d1b38b;font-variant-numeric:tabular-nums}
+.fau-tr-win{background:#315c97;color:#fff}.fau-tr-high{background:#aabde0;color:#161923}.fau-tr-safe{background:#262329;color:#ded6dd}.fau-tr-low{background:#e6a9ad;color:#2a1419}.fau-tr-bottom{background:#aa2e41;color:#fff}.fau-tr-out{background:#8e162c;color:#fff}.fau-tr-after{background:#08070a}.fau-tr-empty{background:#1d191e;color:#716b73}
+@media(max-width:640px){.fau-tr-table{font-size:11px}.fau-tr-table th,.fau-tr-table td{padding:11px 8px;min-width:75px}.fau-tr-table th:first-child{min-width:118px;max-width:135px}}
+</style>
+</head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -1200,10 +1212,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             },
             "theme_tarantino": {
                 id: "theme_tarantino",
-                code: "WEEK — TARANTINO (DOUBLE KILL)",
+                code: "WEEK — TARANTINO",
                 fixedOrder: null,
                 title: "TARANTINO: BLOOD, GLAMOUR & REVENGE",
-                subtitle: "Referências cinematográficas com Dupla Eliminação: 1ª morte direta pelo menor acumulado + duelo no Bottom 2.",
+                subtitle: "Uma homenagem ao cinema de Quentin Tarantino, com glamour, vingança e personagens inesquecíveis.",
                 elimTipo: "double",
                 numSubmissoes: 1,
                 drawType: "none",
@@ -2237,7 +2249,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const photos = Number(globalState.numSubmissoes || 1);
         const badges = [];
         if (noElimination) badges.push('<span class="fau-status-pill">SEM ELIMINAÇÃO</span>');
-        else if (doubleElimination) badges.push('<span class="fau-status-pill fau-status-pill-danger">ELIMINAÇÃO DUPLA · 2 OUT</span>');
+        // A dinâmica de eliminação dupla é surpresa: não mostrar no banner público.
         if (photos > 1 && globalState.fase !== 'final') badges.push(`<span class="fau-status-pill">${photos} FOTOS NESTA RODADA</span>`);
         const rules = typeof globalState.regras === 'string' ? globalState.regras : '';
         const isHub = activeTab === 'home';
@@ -3842,89 +3854,93 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         `);
 
 
-        // Public Track Record: read ONLY published classifications, never private scores.
-        if (!isAdmin) {
-            const slot = $('#trackRecordTableContainer');
-            try {
-                const history = await db.collection('ranking_historico_publico').get();
-                const rounds = history.docs.map(d=>({round:d.id,...d.data()}))
-                    .filter(r=>Array.isArray(r.rows)&&r.rows.length)
-                    .sort((a,b)=>String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true}));
-                if (!slot?.isConnected) return;
-                if (!rounds.length) {
-                    slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
-                } else {
-                    // One public season matrix. Only published rankings are read.
-                    const cleanStatus = raw => String(raw||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
-                    const normalizeName = name => String(name||'').trim().toLocaleLowerCase('pt-BR');
-                    const collator = new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
-                    const weekLabel = (r,i) => {
-                        const raw=String(r.round||'');
-                        const num=Number(raw.match(/(?:week|w)\s*0*(\d+)/i)?.[1] || (/^\d+$/.test(raw)?raw:0));
-                        const n=num||i+1;
-                        return `W${String(n).padStart(2,'0')}`;
-                    };
-                    const people=new Map();
-                    // Elimination Pool is part of the published official record. A Designer
-                    // eliminated in this episode must still receive BOTTOM in that week.
-                    rounds.forEach(r=>{
-                        const pool=Array.isArray(r.eliminationPool)?r.eliminationPool:[];
-                        pool.forEach(candidate=>{
-                            const uid=String(candidate.uid||'').trim();
-                            const name=String(candidate.ate||'').trim();
-                            if(!uid&&!name)return;
-                            const exists=r.rows.some(entry=>uid ? String(entry.uid||'')===uid : normalizeName(entry.ate)===normalizeName(name));
-                            if(!exists)r.rows.push({uid,ate:name,status:'BOTTOM'});
-                        });
+        // Shared official Track Record: published classifications only, for every role.
+        // P.P.E. is performance points per episode (WIN=5, HIGH=4, SAFE=3,
+        // LOW=2, BOTTOM=1), not confidential jury scores.
+        const trackSlot = $('#trackRecordTableContainer');
+        try {
+            const publishedSnap = await db.collection('ranking_historico_publico').get();
+            const roundNumber = value => {
+                const v=String(value??'').trim();
+                const m=v.match(/(?:week|w)\s*0*(\d+)/i)||v.match(/^(\d+)$/);
+                return m?Number(m[1]):null;
+            };
+            const rounds=publishedSnap.docs.map(doc=>({key:doc.id,...doc.data()}))
+                .filter(r=>Array.isArray(r.rows)&&r.rows.length)
+                .sort((a,b)=>(roundNumber(a.rodada||a.key)??999)-(roundNumber(b.rodada||b.key)??999)
+                    ||String(a.key).localeCompare(String(b.key),'pt-BR',{numeric:true}));
+            if(!trackSlot?.isConnected)return;
+            if(!rounds.length){
+                trackSlot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
+            }else{
+                const normName=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+                const people=new Map();
+                const aliases=new Map();
+                const canonical=(entry)=>{
+                    const uid=String(entry.uid||'').trim(), name=String(entry.ate||entry.nome||'').trim();
+                    const alias=normName(name);
+                    let key=uid&&people.has('uid:'+uid)?'uid:'+uid:aliases.get(alias);
+                    if(!key)key=uid?'uid:'+uid:'name:'+alias;
+                    if(!people.has(key))people.set(key,{name:name||'Designer',history:new Map(),lastSeen:-1,eliminated:-1});
+                    if(name)people.get(key).name=name;
+                    if(alias)aliases.set(alias,key);
+                    return people.get(key);
+                };
+                const clean=raw=>{
+                    const s=String(raw||'').toUpperCase().replace(/\(PROTEGIDO\)/g,'');
+                    if(/\bOUT\b|\bELIM\b/.test(s))return 'OUT';
+                    if(/\bWIN\b/.test(s))return 'WIN';
+                    if(/\bHIGH\b|\bTOP\b/.test(s))return 'HIGH';
+                    if(/\bBOTTOM\b|\bBTM\b/.test(s))return 'BOTTOM';
+                    if(/\bLOW\b/.test(s))return 'LOW';
+                    if(/\bSAFE\b/.test(s))return 'SAFE';
+                    return '—';
+                };
+                rounds.forEach((round,i)=>{
+                    round.rows.forEach((entry,pos)=>{
+                        const p=canonical(entry), status=clean(entry.status);
+                        p.history.set(i,status);p.lastSeen=i;
+                        if(status==='OUT')p.eliminated=i;
                     });
-                    // W03 correction: Dolce & Banana was BOTTOM before leaving.
-                    rounds.forEach((r,i)=>{
-                        if(weekLabel(r,i)!=='W03')return;
-                        const dolce=[...rounds.flatMap(x=>x.rows)].find(x=>/dolce\s*(?:&|e|and)\s*banana/i.test(String(x.ate||'')));
-                        if(dolce&&!r.rows.some(x=>String(x.uid||'')===String(dolce.uid||'') && x.uid))
-                            r.rows.push({...dolce,status:'BOTTOM'});
+                    // Official Pool data may contain a participant missing from ranking rows.
+                    (Array.isArray(round.eliminationPool)?round.eliminationPool:[]).forEach(entry=>{
+                        const p=canonical(entry);
+                        if(!p.history.has(i)){p.history.set(i,'BOTTOM');p.lastSeen=i;}
                     });
-                    rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
-                        const uid=String(entry.uid||'').trim();
-                        const name=String(entry.ate||'Designer').trim();
-                        const key=uid ? `uid:${uid}` : `name:${normalizeName(name)}`;
-                        if(!people.has(key)) people.set(key,{name,history:new Map(),lastSeen:-1,lastRank:Infinity,eliminatedRound:-1});
-                        const person=people.get(key);
-                        person.name=name;
-                        const status=cleanStatus(entry.status);
-                        person.history.set(roundIndex,status);
-                        person.lastSeen=roundIndex;
-                        person.lastRank=position;
-                        if(/\bOUT\b/.test(status))person.eliminatedRound=roundIndex;
-                    }));
-                    const lastIndex=rounds.length-1;
-                    const roster=[...people.values()];
-                    // A designer absent from later official rounds has left the competition.
-                    // OUT is also honored when explicitly published in a ranking.
-                    roster.forEach(p=>{
-                        if(p.eliminatedRound<0 && p.lastSeen<lastIndex)p.eliminatedRound=p.lastSeen;
-                    });
-                    roster.sort((a,b)=>{
-                        const aOut=a.eliminatedRound>=0, bOut=b.eliminatedRound>=0;
-                        if(aOut!==bOut)return aOut?1:-1;
-                        if(aOut)return b.eliminatedRound-a.eliminatedRound || collator.compare(a.name,b.name);
-                        return a.lastRank-b.lastRank || collator.compare(a.name,b.name);
-                    });
-                    const colors={WIN:'text-[#F4A340]',HIGH:'text-[#C99A56]',TOP:'text-[#C99A56]',SAFE:'text-[#A9A3AA]',LOW:'text-[#C77B49]',BOTTOM:'text-[#E16A85]',OUT:'text-[#B84A55]'};
-                    slot.classList.remove('font-mono');
-                    slot.innerHTML=`<div class="overflow-x-auto"><table class="w-full text-center border-collapse text-xs" aria-label="Track Record da temporada">
-                      <thead><tr class="bg-fashion-950 text-fashion-gold border-b border-fashion-700"><th class="sticky left-0 z-10 bg-fashion-950 p-3 text-left min-w-[135px]">DESIGNER</th>${rounds.map((r,i)=>`<th class="p-3 min-w-[76px]" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
-                      <tbody>${roster.map(p=>`<tr class="border-b border-fashion-700 ${p.eliminatedRound>=0?'opacity-75':''}"><th scope="row" class="sticky left-0 bg-fashion-900 p-3 text-left font-semibold text-white">${esc(p.name)}</th>${rounds.map((r,i)=>{const v=p.history.get(i)||'—';return `<td class="p-3 font-bold ${colors[v]||'text-gray-500'}">${esc(v)}</td>`;}).join('')}</tr>`).join('')}</tbody>
-                    </table></div>`;
+                });
+                const last=rounds.length-1;
+                const peopleRows=[...people.values()];
+                peopleRows.forEach(p=>{
+                    if(p.eliminated<0&&p.lastSeen<last)p.eliminated=p.lastSeen;
+                    // The exit episode is OUT, never a dash or a repeated OUT.
+                    if(p.eliminated>=0)p.history.set(p.eliminated,'OUT');
+                });
+                // The W03 exit of Dolce & Banana is an official season correction.
+                const w03=rounds.findIndex((r,i)=>(roundNumber(r.rodada||r.key)??i+1)===3);
+                if(w03>=0){
+                    const dolce=peopleRows.find(p=>/dolce.*banana/i.test(normName(p.name)));
+                    if(dolce){dolce.history.set(w03,'OUT');dolce.eliminated=w03;}
                 }
-            } catch(err) {
-                console.warn('Public Track Record unavailable',err);
-                if(slot?.isConnected)slot.innerHTML='<p class="text-amber-200 text-sm py-5">Não foi possível consultar as classificações públicas. Verifique a leitura de ranking_historico_publico nas regras do Firestore.</p>';
+                const weights={WIN:5,HIGH:4,SAFE:3,LOW:2,BOTTOM:1};
+                const ppe=p=>{const vals=[...p.history.entries()].filter(([i,v])=>i<=p.eliminated||p.eliminated<0).map(([,v])=>weights[v]??(v==='OUT'?0:null)).filter(v=>v!==null);return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;};
+                const collator=new Intl.Collator('pt-BR',{sensitivity:'base'});
+                peopleRows.sort((a,b)=>{
+                    const ao=a.eliminated>=0,bo=b.eliminated>=0;
+                    if(ao!==bo)return ao?1:-1;
+                    if(ao)return b.eliminated-a.eliminated||ppe(b)-ppe(a)||collator.compare(a.name,b.name);
+                    return ppe(b)-ppe(a)||collator.compare(a.name,b.name);
+                });
+                const colors={WIN:'fau-tr-win',HIGH:'fau-tr-high',SAFE:'fau-tr-safe',LOW:'fau-tr-low',BOTTOM:'fau-tr-bottom',OUT:'fau-tr-out'};
+                trackSlot.classList.remove('font-mono');
+                trackSlot.innerHTML=`<div class="fau-tr-scroll"><table class="fau-tr-table" aria-label="Track Record oficial da temporada"><thead><tr><th>DESIGNERS</th><th>P.P.E.</th>${rounds.map((r,i)=>`<th title="${esc(String(r.rodada||r.key))}">W${String(roundNumber(r.rodada||r.key)??i+1).padStart(2,'0')}</th>`).join('')}</tr></thead><tbody>${peopleRows.map(p=>`<tr><th scope="row">${esc(p.name)}</th><td class="fau-tr-ppe">${ppe(p).toFixed(2).replace('.',',')}</td>${rounds.map((r,i)=>{if(p.eliminated>=0&&i>p.eliminated)return '<td class="fau-tr-after"></td>';const v=p.history.get(i)||'—';return `<td class="${colors[v]||'fau-tr-empty'}">${esc(v)}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div><p class="text-[11px] text-gray-400 mt-3">P.P.E. = média de desempenho por episódio. As notas individuais do júri permanecem privadas.</p>`;
             }
-            const gallery=$('#eliminationGalleryGrid');
-            if(gallery)gallery.innerHTML='<p class="text-gray-400 col-span-full py-5">Confira as despedidas oficiais em Auf Wiedersehen, no Fashion Archive.</p>';
-            return;
+        }catch(err){
+            console.warn('Track Record unavailable',err);
+            if(trackSlot?.isConnected)trackSlot.innerHTML='<p class="text-amber-200 text-sm py-5">Não foi possível consultar o Track Record oficial. Confira as permissões de leitura do histórico público.</p>';
         }
+        const gallery=$('#eliminationGalleryGrid');
+        if(gallery)gallery.innerHTML='<p class="text-gray-400 col-span-full py-5">Confira as despedidas oficiais em Auf Wiedersehen, no Fashion Archive.</p>';
+        if (!isAdmin) return;
 
         let [perfisSnap, evalsSnap] = await Promise.all([
             db.collection('perfis').where('role', '==', 'estilista').get(),
@@ -4162,7 +4178,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         });
 
         html += `</tbody></table>`;
-        $('#trackRecordTableContainer').innerHTML = html;
+        // Official shared matrix already rendered above; keep it identical for all roles.
+        // Private cumulative ranking remains available separately to the Admin.
 
         const eliminatedStylists = stylists.filter(s => s.out);
         const elimGrid = $('#eliminationGalleryGrid');
