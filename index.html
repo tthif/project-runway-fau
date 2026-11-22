@@ -3865,6 +3865,25 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         return `W${String(n).padStart(2,'0')}`;
                     };
                     const people=new Map();
+                    // Elimination Pool is part of the published official record. A Designer
+                    // eliminated in this episode must still receive BOTTOM in that week.
+                    rounds.forEach(r=>{
+                        const pool=Array.isArray(r.eliminationPool)?r.eliminationPool:[];
+                        pool.forEach(candidate=>{
+                            const uid=String(candidate.uid||'').trim();
+                            const name=String(candidate.ate||'').trim();
+                            if(!uid&&!name)return;
+                            const exists=r.rows.some(entry=>uid ? String(entry.uid||'')===uid : normalizeName(entry.ate)===normalizeName(name));
+                            if(!exists)r.rows.push({uid,ate:name,status:'BOTTOM'});
+                        });
+                    });
+                    // W03 correction: Dolce & Banana was BOTTOM before leaving.
+                    rounds.forEach((r,i)=>{
+                        if(weekLabel(r,i)!=='W03')return;
+                        const dolce=[...rounds.flatMap(x=>x.rows)].find(x=>/dolce\s*(?:&|e|and)\s*banana/i.test(String(x.ate||'')));
+                        if(dolce&&!r.rows.some(x=>String(x.uid||'')===String(dolce.uid||'') && x.uid))
+                            r.rows.push({...dolce,status:'BOTTOM'});
+                    });
                     rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
                         const uid=String(entry.uid||'').trim();
                         const name=String(entry.ate||'Designer').trim();
@@ -3928,6 +3947,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const match = raw.match(/(?:week|w)\s*0*(\d+)/i) || raw.match(/^(\d+)$/);
             return match ? Number(match[1]) : null;
         };
+        // Include officially published rounds even when an eliminated Designer has no
+        // evaluation document; otherwise the last week's cell disappears.
+        const publicHistorySnap = await db.collection('ranking_historico_publico').get();
+        const publishedByRound = new Map();
+        publicHistorySnap.docs.forEach(doc=>{
+            const data=doc.data();
+            const round=String(data.rodada||doc.id);
+            publishedByRound.set(round,data);
+            if(Array.isArray(data.rows)&&data.rows.length)rodadasSet.add(round);
+        });
         const rodadas = [...rodadasSet].sort((a,b) => {
             const an=fauRoundNumber(a), bn=fauRoundNumber(b);
             if(an!==null && bn!==null) return an-bn || String(a).localeCompare(String(b),'pt-BR',{numeric:true});
@@ -3960,7 +3989,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // Prefer the immutable, official classification for each round. Never derive
         // WIN/TOP/BOTTOM from absolute score thresholds.
         const historySnap = await db.collection('ranking_historico').get();
-        const officialByRound = new Map();
+        const officialByRound = new Map(publishedByRound);
         historySnap.docs.forEach(doc => {
             const data = doc.data();
             const key = String(data.rodada ?? doc.id);
@@ -3981,6 +4010,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if (!entry.uid) return;
                 const status = String(entry.status || '').toUpperCase();
                 byUid.set(entry.uid, /\bOUT\b/.test(status) ? 'OUT' : /WINNER|\bWIN\b/.test(status) ? 'WIN' : /\b(TOP|HIGH)\b/.test(status) ? 'HIGH' : /\bBOTTOM\b/.test(status) ? 'BOTTOM' : /\bLOW\b/.test(status) ? 'LOW' : 'SAFE');
+            });
+            // A missing ranking row must not erase the classification of an
+            // eliminated contestant who was in this week's Elimination Pool.
+            const publicRound=[...publishedByRound.entries()].find(([key])=>key===String(r)|| (fauRoundNumber(key)!==null&&fauRoundNumber(key)===fauRoundNumber(r)))?.[1];
+            const pool=publicRound?.eliminationPool || history.eliminationPool || [];
+            if(Array.isArray(pool))pool.forEach(entry=>{
+                if(entry.uid&&!byUid.has(entry.uid))byUid.set(entry.uid,'BOTTOM');
             });
             officialStatuses.set(r,byUid);
         });
