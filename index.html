@@ -3706,7 +3706,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           try{
             const rs=await db.collection('ranking_historico_publico').get();
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
-            const rounds=rs.docs.map(d=>({round:d.id,...d.data()})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true}));
+            const rounds=rs.docs.map(d=>({round:d.id,...d.data()})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>{const weekNumber=r=>{const m=fauWeekLabel(r.round).match(/WEEK\s+(\d+)/i);return m?Number(m[1]):NaN;};const na=weekNumber(a),nb=weekNumber(b);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});});
             let profileName=String(currentUser.ate||'').trim();
             try {const profileDoc=await db.collection('perfis').doc(uid).get();const profile=profileDoc.data()||{};profileName=String(profile.ate||profile.nomeDesigner||profile.designerName||profileName).trim();}catch(e){console.warn('Designer profile name unavailable',e);}
             const name=profileName.toLocaleLowerCase('pt-BR');
