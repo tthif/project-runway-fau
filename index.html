@@ -6451,10 +6451,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const token=++previewToken;
               const g=globalState||{};
               const options=Array.isArray(g.proxOpcoes)?g.proxOpcoes:[];
-              if(g.proxTema){body.innerHTML='<p class="text-fashion-gold text-xs tracking-widest">THE RESULTS SHOW · THE REVEAL</p><h4 class="font-cinzel text-xl text-white">'+escapePreview(g.proxTema.nome)+'</h4><p class="text-xs text-gray-400">O próximo desafio foi revelado pela produção.</p>';return;}
-              if(!g.poderUid||!options.length){body.innerHTML='<p class="text-sm text-gray-300">A escolha ainda não foi aberta. Assim que você abrir o poder, a prévia mostrará as mesmas opções que o Ícone verá.</p>';return;}
-              let chosen=false;
-              try{const doc=await db.doc('escolhas/'+g.rodada).get();chosen=doc.exists&&!!doc.data()?.opcaoId;}catch(e){}
+              let choiceDoc=null;
+              try { const snap=await db.doc('escolhas/'+g.rodada).get(); if(snap.exists) choiceDoc=snap.data(); }
+              catch(e) { body.innerHTML='<p class="text-sm text-red-300">Não foi possível consultar a escolha: '+escapePreview(e.message)+'</p>';return; }
+              const selectedId=choiceDoc?.opcaoId||g.proxTema?.themeId||'';
+              const selectedTheme=selectedId?SEASON_THEMES[selectedId]:null;
+              const selectedName=selectedTheme?.title||g.proxTema?.nome||'';
+              const adminResult='<div class="rounded-xl border border-fashion-gold/50 bg-fashion-gold/10 p-4 space-y-2"><p class="text-[11px] uppercase tracking-widest text-fashion-gold">Resultado da escolha · Somente Admin</p>'+
+                (selectedId?'<p class="text-sm text-gray-300">'+escapePreview(g.poderNome||'O Ícone da Moda')+' já escolheu o próximo tema:</p><h4 class="font-cinzel text-2xl text-white">'+escapePreview(selectedName||selectedId)+'</h4><p class="text-xs text-gray-400">Escolha lacrada. Nenhum tema foi revelado ao público por esta prévia.</p>':
+                '<p class="text-sm text-gray-300">'+(g.poderUid?'Aguardando a escolha de '+escapePreview(g.poderNome||'Ícone da Moda')+'.':'A escolha ainda não foi aberta pela produção.')+'</p>')+'</div>';
+              if(g.proxTema){body.innerHTML=adminResult+'<p class="text-xs text-fashion-gold">O próximo desafio já foi revelado pela produção.</p>';return;}
+              if(!g.poderUid||!options.length){body.innerHTML=adminResult;return;}
+              const chosen=!!selectedId;
               const [clues,photos]=await Promise.all([
                 chosen?Promise.resolve([]):Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_private').doc(o.id).get();return doc.exists?(doc.data()?.clue||''):'';}catch(e){return '';}})),
                 chosen?Promise.resolve([]):Promise.all(options.map(async o=>{try{const doc=await db.collection('theme_vault_public').doc(o.id).get();return doc.exists?(doc.data()?.photo||''):'';}catch(e){return '';}}))
@@ -6470,7 +6478,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const publicationGrid=commandCenter.querySelectorAll('.fau-command-control-panel')[1]?.querySelector('.fau-command-quick-grid');
               const previewArea=commandCenter.querySelector('.fau-command-previews');
               const normalize=(button,label)=>{button.className='fau-command-btn';button.textContent=label;button.type='button';};
-              normalize(previewButton,'Prévia do Ícone da Moda');
+              normalize(previewButton,'Ver escolha do Ícone da Moda');
               normalize(iconOpen,'Abrir The Icon\'s Choice');
               normalize(iconView,'Ver escolha lacrada');
               if(previewsGrid)previewsGrid.append(previewButton);
