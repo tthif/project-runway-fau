@@ -7185,7 +7185,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const mutationSnap=await db.collection('fashion_mutations').where('round','==',round).get();
             mutationSnap.docs.forEach(d=>broadcastMutations.set(String(d.data().uid),d.data()));
           }
-          const hasOfficialRank=rankSnap.exists&&Array.isArray(rankSnap.data().rows)&&rankSnap.data().rows.length>0;
+          const hasOfficialRank=rankSnap.exists&&rankSnap.data().published===true&&Array.isArray(rankSnap.data().rows)&&rankSnap.data().rows.length>0;
           const root=fauBroadcastRoot();if(!root)return;
           // Encerrar as notas permite ao ADM visualizar a classificação calculada,
           // sem executar a publicação oficial nem alterar qualquer documento público.
@@ -7443,10 +7443,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         $('#fauSyncAggregate').onclick=safeExec(async()=>{
           if(!isAdmin)throw new Error('Acesso exclusivo do ADM.');
           const status=$('#fauSyncAggregateStatus');
-          const [historySnap,evalSnap,profileSnap]=await Promise.all([
+          const [historySnap,evalSnap,profileSnap,penaltySnap]=await Promise.all([
             db.collection('ranking_historico').get(),
             db.collection('avaliacoes').get(),
-            db.collection('perfis').where('role','==','estilista').get()
+            db.collection('perfis').where('role','==','estilista').get(),
+            db.collection('penalidades_rodada').get()
           ]);
           const official=new Map();
           historySnap.docs.forEach(doc=>{
@@ -7472,11 +7473,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!byRound.has(key))byRound.set(key,[]);
             byRound.get(key).push(values.reduce((a,b)=>a+b,0)/values.length);
           }
+          const penaltyMap=new Map(penaltySnap.docs.map(d=>[d.id,Number(d.data().percentual)||0]));
           const byUid=new Map();
           for(const [key,lookAverages] of byRound){
             const cut=key.indexOf('|'),round=key.slice(0,cut),uid=key.slice(cut+1);
             const mode=globalState.modos?.[round];
-            const score=mode==='media' ? lookAverages.reduce((a,b)=>a+b,0)/lookAverages.length : lookAverages.reduce((a,b)=>a+b,0);
+            const rawScore=mode==='media' ? lookAverages.reduce((a,b)=>a+b,0)/lookAverages.length : lookAverages.reduce((a,b)=>a+b,0);
+            const penalty=Math.max(0,Math.min(100,penaltyMap.get(round+'_'+uid)||0));
+            const score=rawScore*(1-penalty/100);
             if(!byUid.has(uid))byUid.set(uid,{total:0,rounds:[]});
             const item=byUid.get(uid);item.total+=score;item.rounds.push(round);
           }
@@ -7507,10 +7511,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const round=String(globalState.rodada);
           const existing=await db.collection('ranking_historico').doc(round).get();
           let rows,classificationSlots=null;
-          if(existing.exists&&Array.isArray(existing.data().rows)&&existing.data().rows.length){
-            rows=existing.data().rows;
-            classificationSlots=existing.data().classificationSlots||null;
+          if(existing.exists&&existing.data().published===true){
+            throw new Error('O ranking desta Week já foi publicado. Não é permitido republicar ou recalcular resultados oficiais por este botão.');
           }else{
+            // Recalcular sempre: uma prévia antiga pode anteceder a penalidade salva.
+            // Nunca reutilizar rows não publicados como fonte do resultado oficial.
             const standings=(await computeSeasonStandings()).sort((a,b)=>b.rd-a.rd);
             if(!standings.length)throw new Error('Nenhuma avaliação encontrada para publicar.');
             const count=standings.length,isFinal=globalState.fase==='final';
