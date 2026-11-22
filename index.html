@@ -6766,13 +6766,25 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }else{
               const types=mode==='cast'?[['veto','ÍCONE DA MODA'],['fdm','FORA DE MODA']]:[['ber','SALVAÇÃO · ELIMINATION POOL']];
               html='<p class="text-gray-400">Contagem parcial dos votos registrados. A consulta não fecha a urna nem revela votos aos participantes.</p>';
+              const castCounts={veto:{},fdm:{}};
+              rows.forEach(v=>{if(castCounts[v.tipo]&&v.alvo)castCounts[v.tipo][v.alvo]=(castCounts[v.tipo][v.alvo]||0)+1;});
+              const [iconDecision,foraDecision]=await Promise.all([fauResolveIcon(round),fauResolveForaPreview(round,castCounts.fdm)]);
+              const decisions={veto:iconDecision,fdm:foraDecision};
+              const decisionPanel=(result,type)=>`<div class="rounded-lg border border-fashion-gold/40 bg-fashion-950 p-3 mt-3 space-y-2">
+                <p class="text-[10px] tracking-widest text-fashion-gold">${result.uid?'LÍDER APÓS OS CRITÉRIOS':'DESEMPATE PENDENTE'}</p>
+                <p class="font-semibold text-white">${result.uid?escPreview(label(result.uid)):'Ainda indefinido'}</p>
+                ${(result.tied||[]).length>1?`<p class="text-xs text-amber-200">Empate nos votos: ${result.tied.map(id=>escPreview(label(id))).join(' · ')}</p>`:''}
+                <p class="text-xs text-gray-300">Critério: ${escPreview(result.reason||'Maior número de votos')}</p>
+                ${(result.tied||[]).length>1?`<p class="text-xs text-gray-400">Ordem: votos → ${type==='veto'?'melhor nota da rodada → melhor acumulado':'pior nota da rodada → pior acumulado'}.</p>`:''}
+                <p class="text-[11px] text-gray-400">Resultado provisório, sujeito a novos votos e notas.</p></div>`;
               types.forEach(([type,title])=>{
                 const counts=new Map();
                 rows.filter(v=>v.tipo===type&&v.alvo).forEach(v=>counts.set(v.alvo,(counts.get(v.alvo)||0)+1));
                 const sorted=[...counts].sort((a,b)=>b[1]-a[1]);
                 const top=sorted[0]?.[1]||0;
                 html+=`<h4 class="text-fashion-gold font-semibold mt-3">${title}</h4>`;
-                html+=sorted.length?sorted.map(([id,n])=>`<div class="flex justify-between gap-3 border-b border-fashion-700 py-2"><span>${escPreview(label(id))}${n===top?' · LIDERANDO'+(sorted.filter(x=>x[1]===top).length>1?' (EMPATE)':''):''}</span><strong>${n} voto(s)</strong></div>`).join(''):'<p>Sem votos registrados nesta modalidade.</p>';
+                html+=sorted.length?sorted.map(([id,n])=>`<div class="flex justify-between gap-3 border-b border-fashion-700 py-2"><span>${escPreview(label(id))}${id===decisions[type]?.uid?' · LÍDER PROVISÓRIO':n===top&&sorted.filter(x=>x[1]===top).length>1?' · EMPATADO':''}</span><strong class="whitespace-nowrap">${n} voto(s)</strong></div>`).join(''):'<p>Sem votos registrados nesta modalidade.</p>';
+                if(sorted.length)html+=decisionPanel(decisions[type],type);
               });
             }
             if(mode==='save'){
@@ -7673,6 +7685,34 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             ? {uid:finalists[0],reason:'Melhor acumulado anterior à rodada (prévia)',tied,votes:max,provisional:true}
             : {uid:null,reason:'Empate persistente nas notas disponíveis; sem Ícone até nova avaliação',tied,votes:max,pending:true};
         };
+            const fauResolveForaPreview=async(round, counts)=>{
+                const entries=Object.entries(counts).filter(([,v])=>Number(v)>0);
+                if(!entries.length)return {uid:null,reason:'Aguardando os primeiros votos.',tied:[],pending:true};
+                const highest=Math.max(...entries.map(([,v])=>Number(v)));
+                const tied=entries.filter(([,v])=>Number(v)===highest).map(([uid])=>uid);
+                if(tied.length===1)return {uid:tied[0],reason:'Maior número de votos.',tied};
+                const all=await db.collection('avaliacoes').get();
+                const score=(docs)=>{
+                    const scores=new Map();
+                    docs.forEach(doc=>{
+                        const d=doc.data();if(!tied.includes(d.alvo))return;
+                        const v=Array.isArray(d.nota)&&d.nota.length===5?d.nota.reduce((a,b)=>a+Number(b),0):Number(d.total);
+                        if(!Number.isFinite(v))return;
+                        const key=String(d.look||d.alvo),group=scores.get(d.alvo)||new Map();
+                        group.set(key,[...(group.get(key)||[]),v]);scores.set(d.alvo,group);
+                    });
+                    return new Map([...scores].map(([uid,looks])=>[uid,[...looks.values()].reduce((sum,arr)=>sum+arr.reduce((a,b)=>a+b,0)/arr.length,0)]));
+                };
+                const current=score(all.docs.filter(d=>String(d.data().rodada)===String(round)));
+                if(tied.some(uid=>!current.has(uid)))return {uid:null,reason:'Empate nos votos. Aguardando notas de todos os envolvidos.',tied,pending:true};
+                const worst=Math.min(...tied.map(uid=>current.get(uid)));
+                const finalists=tied.filter(uid=>Math.abs(current.get(uid)-worst)<0.000001);
+                if(finalists.length===1)return {uid:finalists[0],reason:'Desempate: pior desempenho dos jurados nesta rodada.',tied};
+                const previous=score(all.docs.filter(d=>String(d.data().rodada)!==String(round)));
+                const min=Math.min(...finalists.map(uid=>previous.get(uid)||0));
+                const last=finalists.filter(uid=>Math.abs((previous.get(uid)||0)-min)<0.000001);
+                return last.length===1?{uid:last[0],reason:'Desempate: pior acumulado anterior à rodada.',tied}:{uid:null,reason:'Empate persistente após os critérios disponíveis. Título indefinido.',tied,pending:true};
+            };
         // Títulos oficiais: registro explícito pós-WhatsApp; nunca apurar votos pela interface pública.
         const fauOfficialIds=['fauOfficialIcon','fauOfficialFora','fauOfficialSaved'];
         const fauOfficialGet=()=>({icon:$('#fauOfficialIcon')?.value||'',fora:$('#fauOfficialFora')?.value||'',saved:Array.from($('#fauOfficialSaved')?.selectedOptions||[]).map(o=>o.value)});
@@ -8946,35 +8986,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             };
             const voteCounts=await Promise.all(['veto','fdm','ber'].map(type=>tallyVotes(type)));
             const iconResult=await fauResolveIcon(round);
-            const resolveForaPreview=async()=>{
-                const entries=Object.entries(voteCounts[1]).filter(([,v])=>Number(v)>0);
-                if(!entries.length)return {uid:null,reason:'Aguardando os primeiros votos.',tied:[],pending:true};
-                const highest=Math.max(...entries.map(([,v])=>Number(v)));
-                const tied=entries.filter(([,v])=>Number(v)===highest).map(([uid])=>uid);
-                if(tied.length===1)return {uid:tied[0],reason:'Maior número de votos.',tied};
-                const all=await db.collection('avaliacoes').get();
-                const score=(docs)=>{
-                    const scores=new Map();
-                    docs.forEach(doc=>{
-                        const d=doc.data();if(!tied.includes(d.alvo))return;
-                        const v=Array.isArray(d.nota)&&d.nota.length===5?d.nota.reduce((a,b)=>a+Number(b),0):Number(d.total);
-                        if(!Number.isFinite(v))return;
-                        const key=String(d.look||d.alvo),group=scores.get(d.alvo)||new Map();
-                        group.set(key,[...(group.get(key)||[]),v]);scores.set(d.alvo,group);
-                    });
-                    return new Map([...scores].map(([uid,looks])=>[uid,[...looks.values()].reduce((sum,arr)=>sum+arr.reduce((a,b)=>a+b,0)/arr.length,0)]));
-                };
-                const current=score(all.docs.filter(d=>String(d.data().rodada)===String(round)));
-                if(tied.some(uid=>!current.has(uid)))return {uid:null,reason:'Empate nos votos. Aguardando notas de todos os envolvidos.',tied,pending:true};
-                const worst=Math.min(...tied.map(uid=>current.get(uid)));
-                const finalists=tied.filter(uid=>Math.abs(current.get(uid)-worst)<0.000001);
-                if(finalists.length===1)return {uid:finalists[0],reason:'Desempate: pior desempenho dos jurados nesta rodada.',tied};
-                const previous=score(all.docs.filter(d=>String(d.data().rodada)!==String(round)));
-                const min=Math.min(...finalists.map(uid=>previous.get(uid)||0));
-                const last=finalists.filter(uid=>Math.abs((previous.get(uid)||0)-min)<0.000001);
-                return last.length===1?{uid:last[0],reason:'Desempate: pior acumulado anterior à rodada.',tied}:{uid:null,reason:'Empate persistente após os critérios disponíveis. Título indefinido.',tied,pending:true};
-            };
-            const foraResult=await resolveForaPreview();
+            const foraResult=await fauResolveForaPreview(round,voteCounts[1]);
             const voteSection=(counts,title,result,tone)=>{
                 const items=Object.entries(counts).filter(([,v])=>Number(v)>0).map(([uid,v])=>({uid,value:Number(v)})).sort((a,b)=>b.value-a.value);
                 const total=items.reduce((sum,x)=>sum+x.value,0),max=items[0]?.value||0;
