@@ -4943,13 +4943,19 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         if(raw===String(globalState.rodada))return fauRoundLabel();
         return fauWeekLabel(raw);
     };
-    const juryHistorySort=(a,b)=>{
-        const numeric=v=>{const match=String(v).match(/^(?:w(?:eek)?\s*0*)?(\d+)$/i);return match?Number(match[1]):null;};
-        const na=numeric(a),nb=numeric(b);
-        if(na!==null&&nb!==null)return na-nb;
-        if(na!==null)return -1;if(nb!==null)return 1;
-        return juryHistoryLabel(a).localeCompare(juryHistoryLabel(b),'pt-BR',{numeric:true});
+    // Ordem cronológica da temporada, independente dos IDs legados do Firebase.
+    const juryHistoryOrder=round=>{
+        const raw=String(round).toLowerCase().replace(/[^a-z0-9]/g,'');
+        const label=String(juryHistoryLabel(round)).toLowerCase();
+        if(raw===String(globalState.rodada).toLowerCase().replace(/[^a-z0-9]/g,'') && globalState.themeId==='theme_tarantino')return 4;
+        if(raw.includes('tarantino')||label.includes('tarantino'))return 4;
+        if(raw.includes('themesevendeadly')||raw.includes('onceuponarunway')||label.includes('once upon a runway'))return 3;
+        if(raw.includes('newform')||label.includes('a new form'))return 2;
+        if(raw.includes('firstgarment')||label.includes('the first garment'))return 1;
+        const match=raw.match(/^(?:w|week)0*([0-9]+)$/);
+        return match?Number(match[1]):0;
     };
+    const juryHistorySort=(a,b)=>juryHistoryOrder(a)-juryHistoryOrder(b)||String(a).localeCompare(String(b),'pt-BR',{numeric:true});
     const renderJuryHistory=()=>{
         const selected=historySelect.value;
         const groups=new Map();
