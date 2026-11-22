@@ -7391,6 +7391,74 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           }));
           root.querySelectorAll('[data-broadcast-done]').forEach(b=>b.onchange=()=>{progress[b.dataset.broadcastDone]=b.checked;try{localStorage.setItem(progressKey,JSON.stringify(progress))}catch(_){}refreshProgress();});
         }));
+        // Registro assistido: ADM lança o voto em nome de um Designer, sem voto duplicado.
+        (()=>{
+          const host=document.getElementById('fauResultsDesk');
+          if(!host || !isAdmin)return;
+          const panel=document.createElement('section');
+          panel.className='rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3';
+          panel.innerHTML=`<h4 class="font-cinzel text-fashion-gold text-lg">Registrar voto por um Designer</h4>
+            <p class="text-xs text-gray-300">Registro assistido da rodada atual. Selecione quem está votando e quem recebe o voto. Não substitui votos já registrados.</p>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="text-xs text-gray-300">Tipo de voto<select id="fauProxyType" class="block w-full mt-1 p-2"><option value="veto">Ícone da Moda</option><option value="fdm">Fora de Moda</option><option value="ber">Salvação</option></select></label>
+              <label class="text-xs text-gray-300">Voto de qual Designer?<select id="fauProxyVoter" class="block w-full mt-1 p-2"></select></label>
+              <label class="text-xs text-gray-300 sm:col-span-2">Votar em / salvar<select id="fauProxyTarget" class="block w-full mt-1 p-2"></select></label>
+            </div><button id="fauProxySubmit" type="button" class="bg-fashion-gold text-black rounded px-4 py-3 text-xs font-bold">Registrar voto</button>
+            <p id="fauProxyStatus" class="text-xs text-gray-300" role="status"></p>`;
+          host.insertBefore(panel,host.querySelector('#fauDeskPrivateSummary'));
+          const type=panel.querySelector('#fauProxyType'),voter=panel.querySelector('#fauProxyVoter'),target=panel.querySelector('#fauProxyTarget'),status=panel.querySelector('#fauProxyStatus'),submit=panel.querySelector('#fauProxySubmit');
+          let profiles=[];
+          const nameOf=id=>profiles.find(p=>p.uid===id)?.ate||id;
+          const option=(p)=>`<option value="${esc(p.uid)}">${esc(p.ate)}</option>`;
+          const refresh=()=>{
+            const pool=globalState.berlinda||[];
+            const eligible=profiles.filter(p=>!p.out&&!p.disabled&&(type.value!=='ber'||!pool.some(b=>b.uid===p.uid)));
+            const previous=voter.value;
+            voter.innerHTML='<option value="">Selecione quem vota</option>'+eligible.map(option).join('');
+            if(eligible.some(p=>p.uid===previous))voter.value=previous;
+            refreshTarget();
+          };
+          const refreshTarget=()=>{
+            const pool=globalState.berlinda||[];
+            const candidates=profiles.filter(p=>!p.out&&!p.disabled&&p.uid!==voter.value&&(type.value!=='ber'||pool.some(b=>b.uid===p.uid)));
+            target.innerHTML='<option value="">Selecione o destino do voto</option>'+candidates.map(option).join('');
+            status.textContent=type.value==='ber'&&pool.length!==3?'A salvação exige três indicados no Elimination Pool.':'';
+          };
+          type.onchange=refresh;voter.onchange=refreshTarget;
+          db.collection('perfis').where('role','==','estilista').get().then(snap=>{
+            profiles=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>(a.ate||'').localeCompare(b.ate||'','pt-BR'));
+            refresh();
+          }).catch(e=>status.textContent='Erro ao carregar Designers: '+e.message);
+          submit.onclick=safeExec(async()=>{
+            if(!isAdmin||currentUser.role!=='admin')throw new Error('Apenas o Admin pode registrar votos assistidos.');
+            const kind=type.value,from=voter.value,to=target.value,round=globalState.rodada;
+            if(!round||!from||!to)throw new Error('Escolha o tipo, o Designer votante e o destino.');
+            if(from===to)throw new Error('Não é permitido votar em si mesmo.');
+            const pool=globalState.berlinda||[];
+            if(kind==='ber'&&(pool.length!==3||pool.some(b=>b.uid===from)||!pool.some(b=>b.uid===to)))throw new Error('O votante deve estar fora do Pool e o voto deve salvar um dos três indicados.');
+            if(!profiles.some(p=>p.uid===from&&!p.out&&!p.disabled)||!profiles.some(p=>p.uid===to&&!p.out&&!p.disabled))throw new Error('Designer inelegível.');
+            const label={veto:'Ícone da Moda',fdm:'Fora de Moda',ber:'Salvação'}[kind];
+            if(!confirm(`Registrar ${label} em nome de ${nameOf(from)} para ${nameOf(to)}?\n\nO voto será definitivo e entrará na apuração oficial.`))return;
+            submit.disabled=true;
+            try{
+              const ref=db.doc(`votos/${kind}_${round}_${from}`);
+              await db.runTransaction(async tx=>{
+                const [existing,person,stateSnap]=await Promise.all([tx.get(ref),tx.get(db.doc(`perfis/${from}`)),tx.get(db.doc('config/estado'))]);
+                const state=stateSnap.data()||{},profile=person.data()||{};
+                if(existing.exists)throw new Error('Este Designer já votou nesta categoria. O voto anterior foi preservado.');
+                if(String(state.rodada)!==String(round))throw new Error('A rodada mudou. Atualize a página.');
+                if(profile.role!=='estilista'||profile.out||profile.disabled)throw new Error('O Designer não está elegível.');
+                if(kind==='ber'){
+                  const nominees=state.berlinda||[];
+                  if(nominees.length!==3||nominees.some(b=>b.uid===from)||!nominees.some(b=>b.uid===to))throw new Error('O Elimination Pool mudou. Atualize a página.');
+                }
+                tx.set(ref,{tipo:kind,rodada:round,alvo:to,voter:from,voterName:nameOf(from),t:now(),createdAt:now(),registeredByAdmin:currentUser.uid,assistedVote:true});
+              });
+              status.textContent=`Voto de ${nameOf(from)} para ${nameOf(to)} registrado em ${label}. Atualize as prévias para conferir.`;
+              showToast('Voto assistido registrado.');
+            }finally{submit.disabled=false;}
+          });
+        })();
         // RESULTS DESK: only draft a WhatsApp announcement from already published official round data.
         let fauDeskReady=false;
         $('#fauDeskLoad').onclick=safeExec(async()=>{
