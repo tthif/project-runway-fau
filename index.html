@@ -4979,8 +4979,19 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         if(!opening)return;
         historyBody.textContent='Carregando avaliações salvas...';
         try{
+            // IDs de jurados antigos podem ser diferentes do UID atual.
+            // Consultar também pelo nome do jurado, sem misturar notas de colegas.
             const snap=await db.collection('avaliacoes').where('jurado','==',currentUser.uid).get();
-            juryHistoryRows=snap.docs.map(d=>d.data()).filter(v=>v.rodada!=null&&Array.isArray(v.nota)&&v.nota.length===5);
+            const ownDocs=new Map(snap.docs.map(d=>[d.id,d.data()]));
+            const juryAliases=[...new Set([currentUser.nomeJurado,currentUser.ate,currentUser.nome,currentUser.name]
+                .filter(v=>typeof v==='string'&&v.trim()).map(v=>v.trim()))];
+            for(const alias of juryAliases){
+                try{
+                    const older=await db.collection('avaliacoes').where('juradoNome','==',alias).get();
+                    older.docs.forEach(d=>ownDocs.set(d.id,d.data()));
+                }catch(err){console.warn('[jury history legacy alias]',err);}
+            }
+            juryHistoryRows=[...ownDocs.values()].filter(v=>v.rodada!=null&&Array.isArray(v.nota)&&v.nota.length===5);
             // Reunir rodadas publicadas, looks históricos e avaliações do próprio jurado.
             // Não depender somente de avaliações: uma rodada pode ter ocorrido sem notas deste jurado.
             juryHistoryThemes=new Map();
