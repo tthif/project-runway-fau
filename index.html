@@ -6768,14 +6768,22 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               html='<p class="text-gray-400">Contagem parcial dos votos registrados. A consulta não fecha a urna nem revela votos aos participantes.</p>';
               const castCounts={veto:{},fdm:{}};
               rows.forEach(v=>{if(castCounts[v.tipo]&&v.alvo)castCounts[v.tipo][v.alvo]=(castCounts[v.tipo][v.alvo]||0)+1;});
-              const [iconDecision,foraDecision]=await Promise.all([fauResolveIcon(round),fauResolveForaPreview(round,castCounts.fdm)]);
-              const decisions={veto:iconDecision,fdm:foraDecision};
+              // A prévia de salvação não depende da apuração de Ícone/Fora de Moda.
+              // Cada resolvedor só é executado quando a modalidade correspondente é consultada.
+              const decisions={veto:null,fdm:null};
+              if(mode==='cast'){
+                const [iconDecision,foraDecision]=await Promise.all([
+                  fauResolveIcon(round),fauResolveForaPreview(round,castCounts.fdm)
+                ]);
+                decisions.veto=iconDecision||null;
+                decisions.fdm=foraDecision||null;
+              }
               const decisionPanel=(result,type)=>`<div class="rounded-lg border border-fashion-gold/40 bg-fashion-950 p-3 mt-3 space-y-2">
-                <p class="text-[10px] tracking-widest text-fashion-gold">${result.uid?'LÍDER APÓS OS CRITÉRIOS':'DESEMPATE PENDENTE'}</p>
-                <p class="font-semibold text-white">${result.uid?escPreview(label(result.uid)):'Ainda indefinido'}</p>
-                ${(result.tied||[]).length>1?`<p class="text-xs text-amber-200">Empate nos votos: ${result.tied.map(id=>escPreview(label(id))).join(' · ')}</p>`:''}
-                <p class="text-xs text-gray-300">Critério: ${escPreview(result.reason||'Maior número de votos')}</p>
-                ${(result.tied||[]).length>1?`<p class="text-xs text-gray-400">Ordem: votos → ${type==='veto'?'melhor nota da rodada → melhor acumulado':'pior nota da rodada → pior acumulado'}.</p>`:''}
+                <p class="text-[10px] tracking-widest text-fashion-gold">${result?.uid?'LÍDER APÓS OS CRITÉRIOS':'DESEMPATE PENDENTE'}</p>
+                <p class="font-semibold text-white">${result?.uid?escPreview(label(result.uid)):'Ainda indefinido'}</p>
+                ${(result?.tied||[]).length>1?`<p class="text-xs text-amber-200">Empate nos votos: ${result.tied.map(id=>escPreview(label(id))).join(' · ')}</p>`:''}
+                <p class="text-xs text-gray-300">Critério: ${escPreview(result?.reason||'Maior número de votos')}</p>
+                ${(result?.tied||[]).length>1?`<p class="text-xs text-gray-400">Ordem: votos → ${type==='veto'?'melhor nota da rodada → melhor acumulado':'pior nota da rodada → pior acumulado'}.</p>`:''}
                 <p class="text-[11px] text-gray-400">Resultado provisório, sujeito a novos votos e notas.</p></div>`;
               types.forEach(([type,title])=>{
                 const counts=new Map();
@@ -6789,7 +6797,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }
             if(mode==='save'){
               const profilesSnap=await db.collection('perfis').get();
-              const poolIds=new Set((globalState.berlinda||[]).map(x=>String(x.uid)));
+              const poolIds=new Set((globalState.berlinda||[]).filter(Boolean).map(x=>String(x.uid)));
               const eligible=profilesSnap.docs.filter(d=>{
                 const p=d.data();return p.role==='estilista'&&!p.out&&!p.disabled&&!poolIds.has(d.id);
               }).map(d=>({uid:d.id,name:d.data().ate||label(d.id)})).sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
@@ -6798,10 +6806,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               recorded.forEach(v=>{const uid=String(v.voter||v.voterUid||'');if(uid)byVoter.set(uid,v);});
               const voted=eligible.filter(p=>byVoter.has(p.uid));
               const pending=eligible.filter(p=>!byVoter.has(p.uid));
-              const poolNames=Object.fromEntries((globalState.berlinda||[]).map(p=>[p.uid,p.ate]));
+              const poolNames=Object.fromEntries((globalState.berlinda||[]).filter(Boolean).map(p=>[p.uid,p.ate]));
               const targetName=id=>poolNames[id]||label(id);
               const tally=new Map();
-              (globalState.berlinda||[]).forEach(p=>tally.set(String(p.uid),0));
+              (globalState.berlinda||[]).filter(Boolean).forEach(p=>tally.set(String(p.uid),0));
               voted.forEach(p=>{
                 const target=String(byVoter.get(p.uid)?.alvo||'');
                 if(tally.has(target))tally.set(target,tally.get(target)+1);
@@ -7999,11 +8007,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if (!dono) throw new Error('Não há estilistas ativos.');
             if(!productionConfirm(`Abrir ${opcoes.length} pistas para ${dono.ate}? As fotografias são públicas, mas as pistas escritas e a escolha ficam restritas ao Ícone ou WIN autorizado.`))return;
             await db.doc('config/estado').set({proxOpcoes:opcoes,poderUid:dono.uid,poderNome:dono.ate,poderTipo:icone?'icone':'win',proxTema:null},{merge:true});
-            $('#poderStatus').textContent=`${opcoes.length} temas disponíveis. Escolha aberta para ${dono.ate}.`;
+            const status = document.getElementById('poderStatus') || document.getElementById('fauIconChoiceStatusLine');
+            if(status) status.textContent=`${opcoes.length} temas disponíveis. Escolha aberta para ${dono.ate}.`;
+            showToast(`The Icon's Choice aberto para ${dono.ate}.`);
         });
         const btnPoderVer = $('#btnPoderVer');
         if (btnPoderVer) btnPoderVer.onclick = safeExec(async () => {
-            const box = $('#poderStatus');
+            const box = document.getElementById('poderStatus') || document.getElementById('fauIconChoiceStatusLine');
+            if (!box) { showToast('Painel atualizado. Reabra a direção para consultar a escolha.'); return; }
             if (!globalState.poderUid) { box.textContent = 'Nenhuma escolha aberta ainda.'; return; }
             const snap = await db.doc(`escolhas/${globalState.rodada}`).get();
             if (!snap.exists) { box.textContent = `Aguardando ${globalState.poderNome} escolher…`; return; }
@@ -8014,8 +8025,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if (btnPoderRevelar) btnPoderRevelar.onclick=safeExec(async()=>{
                 if(!productionConfirm(`Revelar ${t.title} ao público? Esta ação encerra o segredo.`))return;
                 await db.doc('config/estado').set({proxTema:{nome:t.title,themeId:id}},{merge:true});
-                $('#newThemeId').value=id; $('#newThemeId').dispatchEvent(new Event('change'));
-                $('#newRoundId').value=slug(t.title); refreshRoundSummary();
+                const themeSelect=$('#newThemeId'); if(themeSelect){themeSelect.value=id;themeSelect.dispatchEvent(new Event('change'));}
+                const roundId=$('#newRoundId');if(roundId)roundId.value=slug(t.title);refreshRoundSummary();
                 showToast('🎭 Tema revelado! O desafio foi selecionado para a próxima rodada.'); await vaultRefresh();
             });
         });
