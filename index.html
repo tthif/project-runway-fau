@@ -5811,7 +5811,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 });
                 if (missing.length) throw new Error('Beauty: os dois looks de cada estilista precisam estar enviados e avaliados antes da apuração: '+missing.map(d=>d.data().ate||d.id).join(', '));
             }
-            const penaltyMap=new Map(penaltiesSnap.docs.map(d=>[d.id,Number(d.data().percentual)||0]));
+            const penaltyMap=new Map(penaltiesSnap.docs.map(d=>[String(d.data().rodada||'')+'_'+String(d.data().uid||''),Number(d.data().percentual)||0]));
             const rows = activeStylists.map(doc => {
                 let totalAccumulated = 0;
                 let currentRoundScore = 0;
@@ -7433,9 +7433,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const original=value<100?adjusted/(1-value/100):null;
               penaltyStatus.textContent+=' | Nota válida nesta Week: '+adjusted.toLocaleString('pt-BR',{maximumFractionDigits:2})+' / 50'+(original!==null?' (antes: '+original.toLocaleString('pt-BR',{maximumFractionDigits:2})+')':'');
             }
-            // Não publica nada: atualiza apenas as prévias já abertas.
-            if(document.getElementById('adminOutput'))document.getElementById('adminOutput').innerHTML='<p class="text-fashion-gold">Penalidade atualizada. Clique em Calcular Notas ou LIVE RESULTS para consultar a nova classificação.</p>';
-            showToast('Penalidade aplicada ao cálculo. Confira a nota válida abaixo.');
+            // Recalcular a prévia e o somatório imediatamente, sem publicar nem modificar notas do júri.
+            const freshRows=await computeSeasonStandings();
+            const output=document.getElementById('adminOutput');
+            if(output){
+              output.innerHTML='<div class="border border-fashion-gold/50 rounded-lg p-3 mb-3 text-xs text-fashion-gold">Prévia atualizada após a penalidade · Week e acumulado recalculados (não publicados).</div>'+printTable(freshRows);
+            }
+            const summary=document.getElementById('fauDeskPrivateSummary');
+            if(summary){
+              const affected=freshRows.find(x=>x.uid===penaltySelect.value);
+              if(affected)summary.innerHTML='<strong class="text-fashion-gold">PENALIDADE APLICADA · PRÉVIA</strong><p class="mt-2">'+esc(affected.ate||penaltySelect.selectedOptions[0].text)+' · Week: '+affected.rd.toLocaleString('pt-BR',{maximumFractionDigits:2})+' · Somatório: '+affected.tot.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</p><p class="text-gray-400 mt-1">Os resultados oficiais não foram publicados.</p>';
+            }
+            showToast('Penalidade aplicada. Somatório e prévia recalculados!');
           });
           $('#fauPenaltyRemove').onclick=safeExec(async()=>{
             if(!isAdmin||!penaltySelect.value)throw new Error('Selecione um Designer.');
@@ -7444,7 +7453,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!productionConfirm('Remover a penalidade deste Designer nesta Week?'))return;
             await penaltyDoc().delete();
             await productionLog('round_penalty_removed',{round:penaltyRound,uid:penaltySelect.value});
-            await loadPenalty();showToast('Penalidade removida.');
+            await loadPenalty();
+            const freshRows=await computeSeasonStandings();
+            const output=document.getElementById('adminOutput');
+            if(output)output.innerHTML='<div class="border border-fashion-gold/50 rounded-lg p-3 mb-3 text-xs text-fashion-gold">Prévia recalculada após remover a penalidade (não publicada).</div>'+printTable(freshRows);
+            const summary=document.getElementById('fauDeskPrivateSummary');
+            const affected=freshRows.find(x=>x.uid===penaltySelect.value);
+            if(summary&&affected)summary.innerHTML='<strong class="text-fashion-gold">PENALIDADE REMOVIDA · PRÉVIA</strong><p class="mt-2">'+esc(affected.ate||penaltySelect.selectedOptions[0].text)+' · Week: '+affected.rd.toLocaleString('pt-BR',{maximumFractionDigits:2})+' · Somatório: '+affected.tot.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</p>';
+            showToast('Penalidade removida. Somatório e prévia atualizados.');
           });
         }
         // Publicação unificada: calcula e publica em um clique, sem apuração manual prévia.
