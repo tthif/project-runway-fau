@@ -6728,7 +6728,15 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(!grouped.has(v.alvo))grouped.set(v.alvo,[]);
                 grouped.get(v.alvo).push(sum);
               });
-              const ordered=[...grouped].map(([id,scores])=>({id,count:scores.length,avg:scores.reduce((a,b)=>a+b,0)/scores.length})).sort((a,b)=>b.avg-a.avg);
+              // Mesma fonte de notas efetivas usada pela apuração oficial.
+              const standings=await computeSeasonStandings();
+              const byUid=new Map(standings.map(x=>[String(x.uid),x]));
+              const ordered=[...grouped].map(([id,scores])=>{
+                const original=scores.reduce((a,b)=>a+b,0)/scores.length;
+                const effective=byUid.get(String(id));
+                return {id,count:scores.length,original,avg:effective?effective.rd:original,
+                  accumulated:effective?.tot};
+              }).sort((a,b)=>b.avg-a.avg || (b.accumulated??0)-(a.accumulated??0));
               const configuredTop=Math.max(0,Number(globalState.critiqueTopCount||0));
               const configuredBottom=Math.max(0,Number(globalState.critiqueBottomCount||0));
               // The provisional classification is for the ADMIN only. Preserve WIN immunity.
@@ -6749,10 +6757,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 return {...x,status};
               });
               const incomplete=ordered.some(x=>x.count!==Math.max(...ordered.map(y=>y.count)));
-              html='<p class="text-fashion-gold font-semibold">RANKING DO JÚRI · PRÉVIA PRIVADA</p><p class="text-gray-400">Classificações provisórias pela média das avaliações completas já registradas. HIGH (inclui WIN): '+topSlots+' · LOW: '+lowSlots+' · BOTTOM: '+bottomSlots+'. Empates e notas pendentes podem alterar a classificação.</p>';
+              html='<p class="text-fashion-gold font-semibold">RANKING DO JÚRI · PRÉVIA PRIVADA</p><p class="text-gray-400">Classificações provisórias pela nota válida após penalidades. HIGH (inclui WIN): '+topSlots+' · LOW: '+lowSlots+' · BOTTOM: '+bottomSlots+'. Empates e notas pendentes podem alterar a classificação.</p>';
               if(!configuredTop&&!configuredBottom&&!official.length)html+='<p class="text-amber-200">Vagas TOP/BOTTOM não configuradas e sem ranking anterior: a distribuição exibida é apenas indicativa. Configure as vagas no painel de críticas.</p>';
               if(incomplete)html+='<p class="text-amber-200">Há quantidades diferentes de avaliações entre os Designers.</p>';
-              html+=classifications.length?classifications.map((x,i)=>`<div class="flex items-center justify-between gap-3 border-b border-fashion-700 py-2"><span>${i+1}º · ${escPreview(label(x.id))} <small class="text-gray-400">(${x.count} avaliações)</small><span class="ml-2 text-fashion-gold font-semibold">${x.status}</span></span><strong class="whitespace-nowrap">${x.avg.toFixed(2)}/50</strong></div>`).join(''):'<p>Nenhuma avaliação completa nesta rodada.</p>';
+              html+=classifications.length?classifications.map((x,i)=>`<div class="flex items-center justify-between gap-3 border-b border-fashion-700 py-2"><span>${i+1}º · ${escPreview(label(x.id))} <small class="text-gray-400">(${x.count} avaliações)</small><span class="ml-2 text-fashion-gold font-semibold">${x.status}</span></span><strong class="whitespace-nowrap">${x.avg.toFixed(2)}/50${Math.abs(x.avg-x.original)>0.005?` <small class="text-amber-200">(antes: ${x.original.toFixed(2)} · penalidade)</small>`:""}</strong></div>`).join(''):'<p>Nenhuma avaliação completa nesta rodada.</p>';
               if(globalState.semEliminacao||globalState.naoEliminatoria){html+='<p class="text-gray-400">ELIMINATION POOL: rodada não eliminatória.</p>';}
               else {html+='<p class="text-gray-400">ELIMINATION POOL: depende também do acumulado, das elegibilidades e das regras especiais da rodada. Consulte a apuração oficial; esta prévia não define o Pool.</p>';}
             }else{
@@ -7444,6 +7452,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const affected=freshRows.find(x=>x.uid===penaltySelect.value);
               if(affected)summary.innerHTML='<strong class="text-fashion-gold">PENALIDADE APLICADA · PRÉVIA</strong><p class="mt-2">'+esc(affected.ate||penaltySelect.selectedOptions[0].text)+' · Week: '+affected.rd.toLocaleString('pt-BR',{maximumFractionDigits:2})+' · Somatório: '+affected.tot.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</p><p class="text-gray-400 mt-1">Os resultados oficiais não foram publicados.</p>';
             }
+            if(fauPreviewMode==='jury' && !document.getElementById('fauPreviewViewer')?.classList.contains('hidden')) await renderFauPrivatePreview('jury');
             showToast('Penalidade aplicada. Somatório e prévia recalculados!');
           });
           $('#fauPenaltyRemove').onclick=safeExec(async()=>{
@@ -7460,6 +7469,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const summary=document.getElementById('fauDeskPrivateSummary');
             const affected=freshRows.find(x=>x.uid===penaltySelect.value);
             if(summary&&affected)summary.innerHTML='<strong class="text-fashion-gold">PENALIDADE REMOVIDA · PRÉVIA</strong><p class="mt-2">'+esc(affected.ate||penaltySelect.selectedOptions[0].text)+' · Week: '+affected.rd.toLocaleString('pt-BR',{maximumFractionDigits:2})+' · Somatório: '+affected.tot.toLocaleString('pt-BR',{maximumFractionDigits:2})+'</p>';
+            if(fauPreviewMode==='jury' && !document.getElementById('fauPreviewViewer')?.classList.contains('hidden')) await renderFauPrivatePreview('jury');
             showToast('Penalidade removida. Somatório e prévia atualizados.');
           });
         }
