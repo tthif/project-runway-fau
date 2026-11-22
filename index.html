@@ -4983,7 +4983,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             // Consultar também pelo nome do jurado, sem misturar notas de colegas.
             const snap=await db.collection('avaliacoes').where('jurado','==',currentUser.uid).get();
             const ownDocs=new Map(snap.docs.map(d=>[d.id,d.data()]));
-            const juryAliases=[...new Set([currentUser.nomeJurado,currentUser.ate,currentUser.nome,currentUser.name]
+            // Duas identidades confirmadas da Direção: login Google antigo e login direcao.
+            // A união é exclusiva do administrador; demais jurados continuam isolados.
+            const directorLegacyAliases=currentUser.role==='admin'
+                ? ['Direção Executiva','The Control Room (Admin & Júri)'] : [];
+            const juryAliases=[...new Set([currentUser.nomeJurado,currentUser.ate,currentUser.nome,currentUser.name,...directorLegacyAliases]
                 .filter(v=>typeof v==='string'&&v.trim()).map(v=>v.trim()))];
             for(const alias of juryAliases){
                 try{
