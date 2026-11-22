@@ -1116,9 +1116,26 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     function fauWeekLabel(value) {
         const raw = String(value ?? '').trim();
         if (!raw || raw === '—') return '—';
-        const compact = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
-        if (/^(?:w0?1|week0?1)(?:firstgarment)?$/.test(compact) || compact === 'firstgarment') return 'WEEK 01 — THE FIRST GARMENT';
-        if (/^(?:w0?2|week0?2)(?:newform)?$/.test(compact) || compact === 'newform') return 'WEEK 02 — A NEW FORM';
+        // IDs legados permanecem no Firestore; a apresentação usa a Week oficial.
+        const key = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const official = {
+            w01firstgarment: 'WEEK 01 — THE FIRST GARMENT',
+            week01: 'WEEK 01 — THE FIRST GARMENT',
+            week1: 'WEEK 01 — THE FIRST GARMENT',
+            w01: 'WEEK 01 — THE FIRST GARMENT',
+            firstgarment: 'WEEK 01 — THE FIRST GARMENT',
+            w02newform: 'WEEK 02 — A NEW FORM',
+            week02: 'WEEK 02 — A NEW FORM',
+            week2: 'WEEK 02 — A NEW FORM',
+            w02: 'WEEK 02 — A NEW FORM',
+            newform: 'WEEK 02 — A NEW FORM',
+            themesevendeadly: 'WEEK 03 — ONCE UPON A RUNWAY',
+            onceuponarunway: 'WEEK 03 — ONCE UPON A RUNWAY',
+            week03: 'WEEK 03 — ONCE UPON A RUNWAY',
+            week3: 'WEEK 03 — ONCE UPON A RUNWAY',
+            w03: 'WEEK 03 — ONCE UPON A RUNWAY'
+        };
+        if (official[key]) return official[key];
         const match = Object.values(SEASON_THEMES).find(t =>
             String(t.id).toLowerCase() === raw.toLowerCase() ||
             String(t.code || '').toLowerCase() === raw.toLowerCase());
@@ -3818,7 +3835,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const slot=$('#fauMyScore');
                 const chart=$('#fauMyCriteria');if(chart)chart.innerHTML=fauCriteriaChart(data?.criteriosVisuais);
                 if(slot){
-                    const weeks=Object.entries(data?.porSemana||{}).filter(([week,value])=>week&&Number.isFinite(Number(value))).sort(([a],[b])=>{const na=Number(String(a).match(/\d+/)?.[0]),nb=Number(String(b).match(/\d+/)?.[0]);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:String(a).localeCompare(String(b),'pt-BR');});
+                    const weeks=Object.entries(data?.porSemana||{}).filter(([week,value])=>week&&Number.isFinite(Number(value))).sort(([a],[b])=>{const na=Number(fauWeekLabel(a).match(/WEEK\s+(\d+)/)?.[1]),nb=Number(fauWeekLabel(b).match(/WEEK\s+(\d+)/)?.[1]);return Number.isFinite(na)&&Number.isFinite(nb)?nb-na:String(b).localeCompare(String(a),'pt-BR');});
                     const fmt=v=>Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
                     slot.innerHTML=`<small>PONTUAÇÃO ACUMULADA</small><strong>${valid?fmt(avg):'—'}<em>${valid?' pontos':''}</em></strong><span>${valid?'Seu total oficial na temporada':'Aguardando publicação do resultado'}</span>${valid?`<details class="fau-weekly-score-details"><summary aria-label="Ver pontuação de cada semana">VER PONTUAÇÃO POR WEEK <i class="fas fa-chevron-down" aria-hidden="true"></i></summary><div class="fau-weekly-score-list">${weeks.length?weeks.map(([week,value])=>`<div class="fau-weekly-score-row"><span>${esc(fauWeekLabel(week))}</span><b>${fmt(value)} pontos</b></div>`).join(''):'<p class="fau-weekly-score-empty">Histórico de pontuações ainda não sincronizado. A produção pode atualizar os acumulados privados.</p>'}</div></details>`:''}`;
                 }
