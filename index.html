@@ -4493,6 +4493,22 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           // Sem registro oficial de saída: não inventar WEEK nem motivo.
           return {week:null,reason:'Saída registrada',verified:false};
         };
+        // Desempate de saídas na mesma WEEK: votação é a despedida mais
+        // recente; entre ausências de envio, prevalece o melhor desempenho
+        // conhecido no ranking oficial anterior (sem expor notas privadas).
+        const previousRankingPosition=(p,week)=>{
+          const uid=String(p.uid||'');
+          const earlier=orderedRanks.filter(r=>{
+            const n=fauArchiveWeekNumber(r.round);
+            return n!==null&&n<week;
+          }).sort((a,b)=>fauArchiveWeekNumber(b.round)-fauArchiveWeekNumber(a.round));
+          for(const r of earlier){
+            const position=(r.rows||[]).findIndex(row=>String(row.uid||row.id||'')===uid && !/\bOUT\b|ELIMINAD/i.test(String(row.status||'')));
+            if(position>=0)return position;
+          }
+          return Number.POSITIVE_INFINITY;
+        };
+        const departurePriority=info=>/votaç|votac/i.test(info.reason||'')?0:/sem envio/i.test(info.reason||'')?1:2;
         const eliminated=castResult.status==='fulfilled'?castResult.value.docs
           .map(d=>({uid:d.id,...d.data()}))
           .filter(p=>p.out===true&&!p.disabled)
@@ -4501,6 +4517,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(aw!==null&&bw!==null&&aw!==bw)return bw-aw;
             if(aw!==null&&bw===null)return -1;
             if(bw!==null&&aw===null)return 1;
+            if(aw!==null&&bw!==null){
+              const ap=departurePriority(exitInfo(a)),bp=departurePriority(exitInfo(b));
+              if(ap!==bp)return ap-bp;
+              if(ap===1){
+                const ar=previousRankingPosition(a,aw),br=previousRankingPosition(b,bw);
+                if(ar!==br)return ar-br;
+              }
+            }
             return String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'});
           }):[];
         const eliminatedCards=eliminated.map(p=>{
