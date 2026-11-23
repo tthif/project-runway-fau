@@ -1073,7 +1073,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 #fauArchive .fau-evolution-avatar img{width:100%;height:100%;object-fit:cover}
 #fauArchive .fau-evolution-identity{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
 #fauArchive .fau-evolution-identity strong{font:600 23px/1.1 'Cormorant Garamond',serif;overflow-wrap:anywhere}
-#fauArchive .fau-evolution-identity small{font-size:10px;color:#c7b6a4;line-height:1.5}
+#fauArchive .fau-evolution-identity small{font-size:11px;color:#c7b6a4;line-height:1.5;letter-spacing:.06em}#fauArchive .fau-evolution-submeta{color:#a79ba4}#fauArchive .fau-evolution-look:hover{border-color:#d1b38b}#fauArchive .fau-evolution-moment:last-child .fau-evolution-week{color:#f0d4a6}
 #fauArchive .fau-evolution-chevron{font-size:26px;color:#d1b38b;transition:transform .2s}
 #fauArchive [aria-expanded=true] .fau-evolution-chevron{transform:rotate(180deg)}
 #fauArchive .fau-evolution-detail{padding:15px;border-top:1px solid #453c44}
@@ -4811,15 +4811,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const weeks=new Set(looks.map(x=>roundKey(x.round)));
           const portrait=evolutionCast.get(person.uid)?.fotoElenco||'';
           const first=looks[0],last=looks[looks.length-1];
+          const pendingRound=looks.some(x=>roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada)));
           return `<article class="fau-evolution-person" data-evolution-name="${esc(archiveNameKey(person.name))}">
             <button type="button" class="fau-evolution-person-head" aria-expanded="false" aria-controls="fau-evolution-${index}">
               <span class="fau-evolution-avatar">${portrait?`<img src="${esc(portrait)}" alt="" loading="lazy">`:'<i class="fa-solid fa-user" aria-hidden="true"></i>'}</span>
-              <span class="fau-evolution-identity"><strong>${esc(person.name)}</strong><small>${weeks.size} ${weeks.size===1?'WEEK':'WEEKS'} · ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'} · ${esc(weekLabel(first.round))} → ${esc(weekLabel(last.round))}</small></span>
+              <span class="fau-evolution-identity"><strong>${esc(person.name)}</strong><small>${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'} <span class="fau-evolution-submeta">· ${weeks.size} ${weeks.size===1?'CAPÍTULO':'CAPÍTULOS'}${pendingRound?' · EM JULGAMENTO':''}</span></small></span>
               <span class="fau-evolution-chevron" aria-hidden="true">⌄</span>
             </button>
             <div class="fau-evolution-detail" id="fau-evolution-${index}" hidden>
-              <p class="fau-evolution-intro">A trajetória na passarela, da primeira criação publicada à mais recente.</p>
-              <div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(weekLabel(x.round))}</span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" aria-label="Ver ${esc(x.title||'criação')} de ${esc(person.name)}" data-evolution-owner="${index}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(person.name)}" data-round="${esc(roundKey(x.round))}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"/><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')}</div>
+              <p class="fau-evolution-intro">Do primeiro look ao mais recente. Cada criação conta um capítulo dessa história.</p>
+              <div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">WEEK ${String(fauArchiveWeekNumber(x.round)??x.round).padStart(2,'0')}${roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada))?' · EM JULGAMENTO':''}</span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" aria-label="Ver ${esc(x.title||'criação')} de ${esc(person.name)}" data-evolution-owner="${index}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(person.name)}" data-round="${esc(roundKey(x.round))}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"/><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')}</div>
             </div>
           </article>`;
         }).join('');
@@ -4851,7 +4852,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <p id="fauArchiveEmpty" class="hidden text-sm text-gray-400 text-center py-8">Nenhum look corresponde à sua busca. Experimente outra palavra ou semana.</p>
           </section>
           <section data-archive-panel="evolution" class="space-y-5 hidden" role="tabpanel">
-            <div class="fau-evolution-hero"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER JOURNEY</p><h3 class="font-cinzel text-3xl text-white mt-2">THE EVOLUTION</h3><p class="text-sm text-gray-300 mt-2">Cada Designer tem uma história. Explore suas criações em ordem cronológica, começando pela primeira Week.</p></div>
+            <div class="fau-evolution-hero"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER JOURNEY</p><h3 class="font-cinzel text-3xl text-white mt-2">THE EVOLUTION</h3><p class="text-sm text-gray-300 mt-2">Uma temporada. Diferentes trajetórias. Descubra como cada assinatura evoluiu, look após look.</p></div>
             <label class="block"><span class="sr-only">Buscar Designer</span><input type="search" id="fauEvolutionSearch" placeholder="Buscar Designer…" class="w-full rounded-lg border border-fashion-700 bg-fashion-950 p-3 text-sm text-white"></label>
             <p id="fauEvolutionCount" class="text-xs text-fashion-gold" aria-live="polite">${evolutionPeople.length} Designers</p>
             <div id="fauEvolutionList" class="space-y-3">${evolutionHtml||'<p class="text-sm text-gray-400 py-6">As trajetórias aparecerão após a publicação dos looks no Fashion Archive.</p>'}</div>
@@ -8464,8 +8465,28 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(globalState.themeId==='theme_next_supreme' && !globalState.liberado && (await supremeState()).phase!=='selected') throw new Error('Conclua a Supreme Vote e confirme as vencedoras antes de abrir a passarela oficial.');
             if(!globalState.liberado && !stageAtLeast('runway') && !productionConfirm('A etapa oficial ainda não chegou ao desfile. Liberar mesmo assim?'))return;
             if (!productionConfirm(globalState.liberado ? 'Ocultar o desfile para todos?' : 'LIBERAR todas as criações enviadas na passarela?')) return;
-            await db.doc('config/estado').update({ liberado: !globalState.liberado });
-            await productionLog('runway_visibility_changed', {visible:!globalState.liberado});
+            const openingRunway=!globalState.liberado;
+            await db.doc('config/estado').update({ liberado: openingRunway });
+            // Arquivamento automático apenas depois da abertura pública confirmada.
+            // A leitura privada ocorre exclusivamente na sessão da produção.
+            if(openingRunway && globalState.rodada){
+              try{
+                const round=String(globalState.rodada);
+                const snap=await db.collection('looks').where('rodada','==',globalState.rodada).get();
+                let batch=db.batch(),pending=0,archived=0;
+                for(const doc of snap.docs){
+                  const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
+                  if(typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image)||!l.uid)continue;
+                  const id='round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
+                  batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round,title:String(l.titulo||l.title||l.ate||'Look').slice(0,120),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid,designer:l.ate||'',slot:l.slot||null,createdAt:now(),createdBy:currentUser.uid},{merge:true});
+                  pending++;archived++;
+                  if(pending>=400){await batch.commit();batch=db.batch();pending=0;}
+                }
+                if(pending)await batch.commit();
+                await productionLog('runway_archive_auto_synced',{round,count:archived});
+              }catch(err){console.warn('Falha no arquivamento automático da runway',err);showToast('Runway liberada. Não foi possível sincronizar o arquivo automaticamente; use Arquivar looks liberados.');}
+            }
+            await productionLog('runway_visibility_changed', {visible:openingRunway});
             showToast('Status da passarela atualizado.');
         });
 
