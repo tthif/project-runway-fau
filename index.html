@@ -4457,47 +4457,59 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const titlesAccessible=titlesResult.status==='fulfilled'||
           (titleChecks.length>0&&titleChecks.every(x=>x.status==='fulfilled'));
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
-        // Exibir as despedidas da mais recente para a mais antiga.
-        // O ranking histórico público é a fonte da rodada de eliminação;
-        // empates na mesma rodada (ou ausência de data) usam ordem alfabética.
-        // Cada OUT pertence à primeira rodada em que foi registrado.
-        // Publicações posteriores podem repetir OUT para antigos eliminados;
-        // essas repetições NÃO alteram a ordem de eliminação.
+        // Hall dos Eliminados: a WEEK da saída prevalece sobre OUT repetido
+        // em snapshots posteriores. As saídas antigas confirmadas pela produção
+        // cobrem episódios sem envio, que podem não ter uma linha OUT no ranking.
         const orderedRanks=[...ranks].sort((a,b)=>fauArchiveSort(a.round,b.round));
+        const archiveNameKey=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLocaleLowerCase('pt-BR');
+        const confirmedDepartures=new Map([
+          ['sam mclean',{week:1,reason:'Sem envio'}],
+          ['pica pablasso',{week:1,reason:'Sem envio'}],
+          ['anomalia cronica',{week:2,reason:'Sem envio'}],
+          ['aogust flintherin',{week:2,reason:'Eliminado pela votação'}],
+          ['dolce & banana',{week:3,reason:'Eliminada pela votação'}]
+        ]);
         const outRounds=new Map();
-        orderedRanks.forEach((r,order)=>{
-          (r.rows||[]).forEach(row=>{
-            const uid=String(row.uid||row.id||'');
-            if(uid && /\bOUT\b|ELIMINAD/i.test(String(row.status||'')) && !outRounds.has(uid))
-              outRounds.set(uid,order);
-          });
-        });
-        // Para registros antigos sem OUT no histórico, usar a última rodada
-        // em que o Designer aparece no ranking como referência de despedida.
         const lastParticipation=new Map();
-        orderedRanks.forEach((r,order)=>{
+        orderedRanks.forEach(r=>{
+          const week=fauArchiveWeekNumber(r.round);
+          if(week===null)return;
           (r.rows||[]).forEach(row=>{
             const uid=String(row.uid||row.id||'');
-            if(uid && !/\bOUT\b|ELIMINAD/i.test(String(row.status||'')))
-              lastParticipation.set(uid,order);
+            if(!uid)return;
+            const status=String(row.status||'');
+            if(/\bOUT\b|ELIMINAD/i.test(status)){
+              if(!outRounds.has(uid)||week<outRounds.get(uid))outRounds.set(uid,week);
+            }else if(!lastParticipation.has(uid)||week>lastParticipation.get(uid)){
+              lastParticipation.set(uid,week);
+            }
           });
         });
+        const exitInfo=p=>{
+          const confirmed=confirmedDepartures.get(archiveNameKey(p.ate));
+          if(confirmed)return {...confirmed,verified:true};
+          const week=outRounds.get(String(p.uid));
+          if(week!==undefined)return {week,reason:'Eliminado na rodada',verified:true};
+          // Sem registro oficial de saída: não inventar WEEK nem motivo.
+          return {week:null,reason:'Saída registrada',verified:false};
+        };
         const eliminated=castResult.status==='fulfilled'?castResult.value.docs
           .map(d=>({uid:d.id,...d.data()}))
           .filter(p=>p.out===true&&!p.disabled)
           .sort((a,b)=>{
-            const ar=outRounds.get(String(a.uid))??lastParticipation.get(String(a.uid));
-            const br=outRounds.get(String(b.uid))??lastParticipation.get(String(b.uid));
-            if(ar!==undefined&&br!==undefined&&ar!==br)return br-ar;
-            if(ar!==undefined&&br===undefined)return -1;
-            if(br!==undefined&&ar===undefined)return 1;
+            const aw=exitInfo(a).week,bw=exitInfo(b).week;
+            if(aw!==null&&bw!==null&&aw!==bw)return bw-aw;
+            if(aw!==null&&bw===null)return -1;
+            if(bw!==null&&aw===null)return 1;
             return String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'});
           }):[];
         const eliminatedCards=eliminated.map(p=>{
           const ownLooks=publications.filter(x=>x.uid===p.uid&&typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
-          const latest=ownLooks.sort((a,b)=>String(b.round||'').localeCompare(String(a.round||''),'pt-BR',{numeric:true}))[0];
+          const latest=ownLooks.sort((a,b)=>fauArchiveSort(b.round,a.round))[0];
           const photo=latest?.image||p.fotoElenco||'';
-          return `<article class="fau-archive-out-card"><div class="fau-archive-out-photo">${photo?`<img src="${esc(photo)}" loading="lazy" alt="${esc(p.ate||'Designer')}" class="${latest?'':'fau-archive-out-portrait'}">`:`<div class="fau-archive-out-placeholder"><i class="fa-solid fa-user" aria-hidden="true"></i><span>${esc(p.ate||'Designer')}</span></div>`}</div><div class="p-4"><span class="fau-archive-out-tag">OUT · AUF WIEDERSEHEN</span><h4 class="font-cinzel text-white text-xl mt-2">${esc(p.ate||'Designer')}</h4>${p.publicOutRealName?`<p class="text-xs text-fashion-gold mt-2">POR TRÁS DO DESIGNER: <strong>${esc(p.publicOutRealName)}</strong></p>`:''}</div></article>`;
+          const exit=exitInfo(p);
+          const exitLabel=exit.week!==null?`WEEK ${String(exit.week).padStart(2,'0')} · ${exit.reason}`:exit.reason;
+          return `<article class="fau-archive-out-card"><div class="fau-archive-out-photo">${photo?`<img src="${esc(photo)}" loading="lazy" alt="${esc(p.ate||'Designer')}" class="${latest?'':'fau-archive-out-portrait'}">`:`<div class="fau-archive-out-placeholder"><i class="fa-solid fa-user" aria-hidden="true"></i><span>${esc(p.ate||'Designer')}</span></div>`}</div><div class="p-4"><span class="fau-archive-out-tag">OUT · AUF WIEDERSEHEN</span><h4 class="font-cinzel text-white text-xl mt-2">${esc(p.ate||'Designer')}</h4><p class="text-xs text-gray-400 mt-2">${esc(exitLabel)}</p>${p.publicOutRealName?`<p class="text-xs text-fashion-gold mt-2">POR TRÁS DO DESIGNER: <strong>${esc(p.publicOutRealName)}</strong></p>`:''}</div></article>`;
         }).join('');
         const roundMap=new Map();
         ranks.forEach(r=>roundMap.set(roundKey(r.round),{round:roundKey(r.round),rank:r,title:null}));
@@ -4598,6 +4610,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // Season Story: cada eliminação é atribuída somente ao primeiro
         // episódio em que o Designer aparece como OUT no ranking oficial.
         // OUT repetidos em rankings seguintes não são novas eliminações.
+        // A eliminação por votação é a fonte oficial da WEEK de saída.
+        // Ela prevalece sobre registros OUT tardios em rankings posteriores.
+        const voteOutByUid=new Map();
+        rounds.forEach(({round,rank})=>{
+          const voted=rank?.eliminatedByVote;
+          const uid=String(voted?.uid||voted?.id||'');
+          if(uid && !voteOutByUid.has(uid))voteOutByUid.set(uid,round);
+        });
         const firstOutByUid=new Map();
         rounds.forEach(({round,rank})=>{
           (Array.isArray(rank?.rows)?rank.rows:[]).forEach(r=>{
@@ -4625,6 +4645,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!uid)return false;
             // OUT explícito no ranking ou eliminação posterior por votação.
             // Não reatribuir uma eliminação já registrada em outra WEEK.
+            if(voteOutByUid.has(uid))return false; // já consta na votação oficial de sua WEEK
             return firstOutByUid.get(uid)===round ||
               (!firstOutByUid.has(uid) && castOutUids.has(uid) && lastPlayedRound.get(uid)===round);
           }).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'}));
