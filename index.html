@@ -1030,6 +1030,33 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
  .fau-tr-legend{gap:8px 12px}
 }
 </style>
+<style id="fau-track-record-maison-2026">
+/* Editorial refinement consistent with the site's oxblood, champagne and noir palette. */
+.fau-tr-intro{align-items:flex-end;padding:0 0 14px;margin-bottom:13px;border-bottom:1px solid rgba(209,179,139,.25)}
+.fau-tr-intro h3{font-size:clamp(27px,4vw,37px);letter-spacing:.035em}
+.fau-tr-kicker{font-size:9px;letter-spacing:.16em}
+.fau-tr-scroll{border:1px solid rgba(209,179,139,.2);border-radius:8px;box-shadow:0 15px 32px rgba(0,0,0,.18)}
+.fau-tr-table th,.fau-tr-table td{border-color:#3b3039!important}
+.fau-tr-table thead th{background:#19151a;color:#d1b38b;letter-spacing:.09em;font-size:10px}
+.fau-tr-table tbody th{background:#1b171d;font-weight:600}
+.fau-tr-table td.fau-tr-safe{background:#272329;color:#d7d0d5;border-left:2px solid #756b77}
+.fau-tr-table td.fau-tr-win{background:#493321;border-left:2px solid #d1b38b}
+.fau-tr-table td.fau-tr-high{background:#36302a;border-left:2px solid #b99b72}
+.fau-tr-table td.fau-tr-low{background:#412a24;border-left:2px solid #b87852}
+.fau-tr-table td.fau-tr-bottom{background:#482530;border-left:2px solid #cb6880}
+.fau-tr-table td.fau-tr-out{background:#79293a;border-left:2px solid #dc7488}
+.fau-tr-pool-mark{color:#f4dcae;font-size:11px;font-weight:800;margin-left:2px;vertical-align:super;line-height:0}
+.fau-tr-pool-legend{width:100%;color:#d1b38b;padding-top:4px}
+.fau-tr-pool-legend b{font-size:14px}
+@media(max-width:640px){
+ #trackRecordTableContainer{padding:10px!important}
+ .fau-tr-intro h3{font-size:27px}
+ .fau-tr-table th,.fau-tr-table td{height:48px;min-width:72px;padding:9px 8px;font-size:11px}
+ .fau-tr-table th:first-child,.fau-tr-table tbody th{width:137px;min-width:137px;max-width:137px;padding:8px 9px;font-size:11px}
+ .fau-tr-rank{display:inline;margin-right:6px;font-size:9px}
+ .fau-tr-mobile-hint{font-size:10px}
+}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -4053,7 +4080,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         if(aPresent!==bPresent)return aPresent?-1:1;
                         return a.lastRank-b.lastRank||collator.compare(a.name,b.name);
                     });
-                    const cssStatus=v=>({WIN:'win',HIGH:'high',TOP:'high',SAFE:'safe',LOW:'low',BOTTOM:'bottom',OUT:'out'})[baseOf(v)||String(v||'').split(/\s*\+\s*/)[0].trim()]||'empty';
+                    const cssStatus=v=>({WIN:'win',HIGH:'high',TOP:'high',SAFE:'safe',IN:'safe',LOW:'low',BOTTOM:'bottom',OUT:'out'})[baseOf(v)||String(v||'').split(/\s*\+\s*/)[0].trim()]||'empty';
                     slot.classList.remove('font-mono');
                     slot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Cada coluna representa uma Week. OUT identifica quem foi eliminado.</p></div><span class="fau-tr-count">${rounds.length} WEEKS</span></div>
                       <div class="fau-tr-mobile-hint" aria-hidden="true"><i class="fa-solid fa-arrows-left-right"></i> Deslize para ver as próximas Weeks</div><div class="fau-tr-scroll" tabindex="0" role="region" aria-label="Tabela de desempenho: deslize horizontalmente para ver as Weeks"><table class="fau-tr-table" aria-label="Track Record da temporada">
@@ -4061,10 +4088,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                       <tbody>${roster.map((p,index)=>`<tr class="${p.exitAt>=0?'fau-tr-eliminated':''}"><th scope="row"><span class="fau-tr-rank">${String(index+1).padStart(2,'0')}</span>${esc(p.name)}</th>${rounds.map((r,i)=>{
                         if(p.exitAt>=0&&i>p.exitAt)return '<td class="fau-tr-after" aria-label="Fora da competição"></td>';
                         const v=p.history.get(i)||'—';
-                        if(v==='OUT' && p.exitAt===i){return '<td class="fau-tr-out">OUT</td>';}
-                        return `<td class="fau-tr-${cssStatus(v)}">${esc(v)}</td>`;
+                        const pool=Array.isArray(r.eliminationPool)?r.eliminationPool:[];
+                        const inPool=pool.some(e=>String(e.uid||'')&&String(e.uid)===String([...r.rows].find(x=>normalizeName(x.ate)===normalizeName(p.name))?.uid||'')||normalizeName(e.ate)===normalizeName(p.name));
+                        // A vaga do pior acumulado não substitui a classificação da Week.
+                        // Os dois BOTTOM entram automaticamente; os demais integrantes do Pool recebem *.
+                        const specialPool=inPool && v!=='BOTTOM' && !(v==='OUT' && /BOTTOM/i.test(p.exitReason));
+                        const display=v==='SAFE'?'IN':v;
+                        const mark=specialPool?'<sup class="fau-tr-pool-mark" aria-label="Elimination Pool pelo pior acumulado">*</sup>':'';
+                        if(v==='OUT' && p.exitAt===i){return `<td class="fau-tr-out">OUT${mark}</td>`;}
+                        return `<td class="fau-tr-${cssStatus(v)}">${esc(display)}${mark}</td>`;
                       }).join('')}</tr>`).join('')}</tbody></table></div>
-                      <div class="fau-tr-legend">${[['WIN','Vencedor'],['HIGH','Destaque'],['SAFE','Seguro'],['LOW','Desempenho baixo'],['BOTTOM','Bottom 2 salvo'],['OUT','Eliminado']].map(([v,label])=>`<span><i class="fau-tr-dot fau-tr-${cssStatus(v)}"></i><b>${v}</b> ${label}</span>`).join('')}</div>`;
+                      <div class="fau-tr-legend">${[['WIN','Vencedor'],['HIGH','Destaque'],['IN','Na competição'],['LOW','Desempenho baixo'],['BOTTOM','Entre os dois últimos'],['OUT','Eliminado']].map(([v,label])=>`<span><i class="fau-tr-dot fau-tr-${cssStatus(v)}"></i><b>${v}</b> ${label}</span>`).join('')}<span class="fau-tr-pool-legend"><b>*</b> Elimination Pool · pior acumulado</span></div>`;
                 }
             } catch(err) {
                 console.warn('Public Track Record unavailable',err);
