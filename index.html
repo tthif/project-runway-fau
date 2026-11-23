@@ -6260,7 +6260,40 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 return { uid: doc.id, ate: doc.data().ate, tot: Number(totalAccumulated.toFixed(2)), rd: Number(currentRoundScore.toFixed(2)) };
             });
 
-            return rows.sort((a, b) => b.tot - a.tot || b.rd - a.rd);
+            // Desempate oficial do acumulado: WIN > Ícone da Moda > HIGH > nome.
+            // Os títulos são históricos e não adicionam pontos às notas.
+            const [rankHistory, titleHistory] = await Promise.all([
+                db.collection('ranking_historico_publico').get(),
+                db.collection('fau_titulos_publicos').get()
+            ]);
+            const honours = new Map();
+            const getHonours = uid => {
+                const key=String(uid);
+                if(!honours.has(key))honours.set(key,{wins:0,icons:0,highs:0});
+                return honours.get(key);
+            };
+            rankHistory.docs.forEach(doc=>{
+                const data=doc.data();
+                if(!Array.isArray(data.rows))return;
+                data.rows.forEach(row=>{
+                    const uid=row.uid||row.id;
+                    if(!uid)return;
+                    const status=String(row.status||'').trim().toUpperCase();
+                    if(/^WIN(?:\b|\s|\()/i.test(status))getHonours(uid).wins++;
+                    else if(/^(?:HIGH|TOP)(?:\b|\s|\()/i.test(status))getHonours(uid).highs++;
+                });
+            });
+            titleHistory.docs.forEach(doc=>{
+                const data=doc.data();
+                if(data.published!==true)return;
+                if(data.icon)getHonours(data.icon).icons++;
+            });
+            return rows.sort((a,b)=>{
+                if(b.tot!==a.tot)return b.tot-a.tot;
+                const ah=getHonours(a.uid),bh=getHonours(b.uid);
+                return bh.wins-ah.wins || bh.icons-ah.icons || bh.highs-ah.highs ||
+                    String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'});
+            });
         };
 
     const fauResolveStandardPool = async () => {
