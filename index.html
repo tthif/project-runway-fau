@@ -3817,10 +3817,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             // WEEK 01 — THE FIRST GARMENT foi não eliminatória: BOTTOM não gera Pool.
             // Para outras semanas, somente listas oficiais registradas contam.
             const fauNoPoolRound=r=>{
-              const id=String(r.round||'').trim();
-              const theme=String(r.themeId||r.temaId||r.theme||r.tema||'').toLowerCase();
-              return id==='1'||id==='01'||/^0*1$/.test(id)||theme==='w01_first_garment'||
-                r.naoEliminatoria===true||r.semEliminacao===true||r.elimTipo==='none';
+              // A primeira Week foi não eliminatória: BOTTOM não equivale a Elimination Pool.
+              // Identificar também IDs legados de tema, além dos números de rodada.
+              const ids=[r.round,r.rodada,r.themeId,r.temaId,r.theme,r.tema]
+                .filter(v=>v!==undefined&&v!==null).map(v=>String(v).trim());
+              const firstWeek=ids.some(id=>/^(?:0*1|w(?:eek)?0*1|w01_first_garment|first_garment)$/i.test(id)
+                || /^WEEK\s*0*1(?:\b|\s*[—-])/i.test(fauWeekLabel(id)));
+              return firstWeek||r.naoEliminatoria===true||r.semEliminacao===true||r.elimTipo==='none';
             };
             const eligiblePoolRounds=rounds.filter(r=>!fauNoPoolRound(r));
             const poolRounds=eligiblePoolRounds.filter(r=>Array.isArray(r.eliminationPool));
