@@ -4618,7 +4618,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const items=[
             winners.length?`<div class="fau-story-result"><span>WINNER DA RODADA</span><strong>${winners.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:'',
             icon?`<div class="fau-story-result"><span>ÍCONE DA MODA</span><strong>${esc(icon.ate||'Designer')}</strong></div>`:'',
-            foraName?`<div class="fau-story-result"><span>FORA DE MODA</span><strong>${esc(foraName)}</strong></div>`:'',
+            foraName?`<div class="fau-story-result"><span>FORA DE MODA</span><strong>${esc(foraName)}</strong>${currentUser?.role==='admin'&&String(round)==='2'?`<button type="button" class="fau-story-correct-fdm block mt-2 text-xs text-fashion-gold underline" data-round="${esc(round)}">Corrigir resultado oficial</button>`:''}</div>`:'',
             poolPeople.length?`<div class="fau-story-result"><span>ELIMINATION POOL</span><strong>${poolPeople.map(esc).join(', ')}</strong></div>`:(!noPool&&currentUser?.role==='admin'?`<div class="fau-story-result"><span>ELIMINATION POOL</span><p class="text-xs text-gray-400 mt-1">Indicações antigas não registradas no histórico.</p><button type="button" class="fau-story-repair-pool mt-2 border border-fashion-gold/50 rounded-lg px-3 py-2 text-xs text-fashion-gold" data-round="${esc(roundId)}">REGISTRAR OS 3 INDICADOS</button></div>`:''),
             rank?.eliminatedByVote?.ate?`<div class="fau-story-result fau-story-out"><span>ELIMINADO PELA VOTAÇÃO</span><strong>${esc(rank.eliminatedByVote.ate)}</strong></div>`:'',
             out.filter(x=>String(x.uid||x.id||'')!==String(rank?.eliminatedByVote?.uid||'')).length?`<div class="fau-story-result fau-story-out"><span>OUTROS DESLIGAMENTOS DO EPISÓDIO</span><strong>${out.filter(x=>String(x.uid||x.id||'')!==String(rank?.eliminatedByVote?.uid||'')).map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:''
@@ -4659,6 +4659,31 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               showToast('Elimination Pool registrado no histórico. Atualize o Season Hub.');
               btn.closest('.fau-story-result').querySelector('p').textContent='Registro salvo. Atualize a página para ver os nomes.';
             }catch(error){showToast(error.message||'Não foi possível registrar o Elimination Pool.');}
+          });
+        }
+        // Correção auditável de título histórico: não altera votos, notas nem eliminação.
+        if(!window.__fauStoryFdmCorrectionBound){
+          window.__fauStoryFdmCorrectionBound=true;
+          document.addEventListener('click',async event=>{
+            const btn=event.target.closest?.('.fau-story-correct-fdm');
+            if(!btn||currentUser?.role!=='admin')return;
+            try{
+              const round=String(btn.dataset.round||'');
+              if(round!=='2')throw new Error('Correção disponível somente para a WEEK 02.');
+              const rankSnap=await db.collection('ranking_historico_publico').doc(round).get();
+              const rows=rankSnap.data()?.rows||[];
+              const normalize=x=>String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
+              const matches=rows.filter(x=>normalize(x.ate)==='thyco mia');
+              if(matches.length!==1||!matches[0].uid)throw new Error('Thýco Mia não foi identificado de forma única no ranking oficial.');
+              const titleRef=db.collection('fau_titulos_publicos').doc(round);
+              const old=(await titleRef.get()).data()||{};
+              if(old.fora===matches[0].uid){showToast('Thýco Mia já está registrado como Fora de Moda.');return;}
+              if(!confirm('Corrigir o Fora de Moda da WEEK 02 para Thýco Mia?\n\nO voto recebido por WhatsApp empatou a votação e Thýco perdeu no desempate.\n\nNotas, ranking e eliminação não serão alterados.'))return;
+              await titleRef.set({fora:matches[0].uid,fdm:matches[0].uid,updatedAt:now(),updatedBy:currentUser.uid,correctionReason:'Voto recebido por WhatsApp gerou empate; Thýco Mia perdeu no desempate.',correctedFrom:old.fora||old.fdm||null},{merge:true});
+              showToast('Fora de Moda da WEEK 02 corrigido. Atualize o arquivo.');
+              btn.closest('.fau-story-result').querySelector('strong').textContent=matches[0].ate;
+              btn.remove();
+            }catch(error){showToast(error.message||'Não foi possível corrigir o título.');}
           });
         }
         // Resultados históricos confirmados pelo ADM são independentes da situação da rodada atual.
