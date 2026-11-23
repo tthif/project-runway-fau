@@ -2650,7 +2650,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         document.body.appendChild(modal);
         const list=$('#publicThemeClues'), count=$('#fauVaultCount');
         let entries=[], filter='all',previousFocus=null;
-        const isUsed=e=>e.data.used===true || (!!globalState?.rodada && globalState.themeId===e.id);
+        const historicalUsedThemes=new Set();
+        const isUsed=e=>e.data.used===true || historicalUsedThemes.has(e.id) || (!!globalState?.rodada && globalState.themeId===e.id);
+        window.fauVaultUsedIds=()=>new Set(entries.filter(isUsed).map(e=>String(e.id)));
         const paint=()=>{
             if(!list?.isConnected)return;
             const shown=entries.filter(e=>filter==='all'||(filter==='used'?isUsed(e):!isUsed(e)));
@@ -2663,6 +2665,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                   <div class="p-3 space-y-1"><h3 class="font-cinzel text-fashion-gold text-xs leading-snug break-words">${esc(title)}</h3><p class="text-[10px] tracking-wide ${isUsed(e)?'text-gray-400':'text-gray-300'}">${isUsed(e)?'ARQUIVADO':'AINDA EM JOGO'}</p></div>
                 </button>`;
             }).join('')||'<p class="text-gray-400 text-sm col-span-full text-center py-10">Nenhuma pista nesta categoria.</p>';
+            if(typeof window.fauMergeIconVault==='function')window.fauMergeIconVault();
         };
         host.querySelectorAll('[data-vault-filter]').forEach(btn=>btn.addEventListener('click',()=>{
             filter=btn.dataset.vaultFilter;
@@ -2719,6 +2722,25 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             showPhoto(item.id);modal.hidden=false;document.body.style.overflow='hidden';
             modal.querySelector('#fauVaultClose').focus();
         });
+        // Historical themes must remain archived even if an older round did not set used=true.
+        // Only theme IDs are read; no private clue or unrevealed name is exposed.
+        const historicalSources={rankings:new Set(),looks:new Set()};
+        const refreshHistoricalUsed=()=>{
+            historicalUsedThemes.clear();
+            for(const source of Object.values(historicalSources))for(const id of source)historicalUsedThemes.add(id);
+            paint();
+        };
+        const historyUnsubs=[
+            db.collection('ranking_historico_publico').onSnapshot(snap=>{
+                historicalSources.rankings=new Set(snap.docs.map(d=>d.data().themeId).filter(id=>id&&SEASON_THEMES[id]));
+                refreshHistoricalUsed();
+            },err=>console.warn('[vault historical rankings]',err)),
+            db.collection('looks').onSnapshot(snap=>{
+                historicalSources.looks=new Set(snap.docs.map(d=>d.data().themeId).filter(id=>id&&SEASON_THEMES[id]));
+                refreshHistoricalUsed();
+            },err=>console.warn('[vault historical looks]',err))
+        ];
+        unsubsTab.push(...historyUnsubs);
         const vaultStateUnsub=db.doc('config/estado').onSnapshot(()=>paint());
         unsubsTab.push(vaultStateUnsub);
         const unsub=db.collection('theme_vault_public').onSnapshot(snap=>{
@@ -10082,7 +10104,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             root?.classList.toggle('fau-icon-choice-active',active);
             gallery.querySelectorAll('.fau-icon-clue').forEach(el=>el.remove());
             if(!active)return;
-            const opts=globalState.proxOpcoes||[];
+            const usedIds=window.fauVaultUsedIds?.()||new Set();
+            const opts=(globalState.proxOpcoes||[]).filter(o=>!usedIds.has(String(o.id)));
             const byId=new Map(opts.map(o=>[String(o.id),o]));
             gallery.querySelectorAll('[data-vault-id]').forEach(card=>{
                 const id=card.dataset.vaultId;
@@ -10113,6 +10136,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const b=e.target.closest('[data-op]');if(!b)return;
             if(chosen||!currentUser||globalState.poderUid!==currentUser.uid||globalState.proxTema){showToast('Escolha indisponível ou já lacrada.');return;}
             const o=(globalState.proxOpcoes||[]).find(x=>x.id===b.dataset.op);if(!o)return;
+            if(window.fauVaultUsedIds?.().has(String(o.id))){showToast('Esta pista já foi utilizada e não pode ser escolhida.');return;}
             if(!confirm('Confirmar esta pista? Sua escolha será definitiva e o tema continuará secreto até a produção revelar.'))return;
             try{
                 const round=globalState.rodada,uid=currentUser.uid,optionId=o.id;
@@ -10126,6 +10150,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     if(String(state.rodada)!==String(round)||state.poderUid!==uid||state.proxTema)throw new Error('O poder de escolha não está disponível para este Designer.');
                     if(profile.role!=='estilista'||profile.out||profile.disabled)throw new Error('Este perfil não pode escolher o tema.');
                     if(!Array.isArray(state.proxOpcoes)||!state.proxOpcoes.some(item=>item.id===optionId))throw new Error('Esta pista não está disponível.');
+                    const publicTheme=await tx.get(db.collection('theme_vault_public').doc(optionId));
+                    if(publicTheme.exists&&publicTheme.data()?.used===true)throw new Error('Esta pista já foi utilizada.');
                     tx.set(choiceRef,{rodada:round,uid,opcaoId:optionId,t:Date.now()});
                 });
                 chosen=optionId;privateClues={};publicPhotos={};last='';render();syncVaultChoice();showToast('Escolha lacrada. Aguarde a revelação oficial.');
