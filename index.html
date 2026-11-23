@@ -1057,6 +1057,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
  .fau-tr-mobile-hint{font-size:10px}
 }
 </style>
+<style id="fau-hall-of-shame-2026">
+.fau-shame-label{color:#ce8190}
+.fau-shame-card{border:1px solid rgba(142,52,70,.55);background:#141215;min-width:0}
+.fau-shame-card img{filter:saturate(.82)}
+.fau-shame-card h4{overflow-wrap:anywhere}
+.fau-shame-section strong{color:#e6b5bf}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -4390,7 +4397,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
 
     // V84 — Acervo de resultados publicados, sem consultar entregas privadas.
-    const fauArchiveSort=(a,b)=>String(a).localeCompare(String(b),'pt-BR',{numeric:true});
+    // Ordenação pela WEEK oficial, não pela chave interna do documento.
+    const fauArchiveWeekNumber=(value)=>{
+      const raw=String(value??'').trim();
+      const label=String(fauWeekLabel(raw)||'');
+      const match=label.match(/\bWEEK\s*0*(\d+)\b/i)||raw.match(/^(?:week|w)[_\s-]*0*(\d+)(?:\D|$)/i)||raw.match(/^0*(\d+)$/);
+      return match?Number(match[1]):null;
+    };
+    const fauArchiveSort=(a,b)=>{
+      const an=fauArchiveWeekNumber(a),bn=fauArchiveWeekNumber(b);
+      if(an!==null&&bn!==null&&an!==bn)return an-bn;
+      if(an!==null&&bn===null)return -1;
+      if(an===null&&bn!==null)return 1;
+      return String(a).localeCompare(String(b),'pt-BR',{numeric:true});
+    };
     VIEWS.legado=async()=>{
       renderView(`<section id="fauArchive" class="space-y-7">
         <header class="fau-archive-head rounded-xl p-7 border border-fashion-gold/40">
@@ -4443,11 +4463,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // Cada OUT pertence à primeira rodada em que foi registrado.
         // Publicações posteriores podem repetir OUT para antigos eliminados;
         // essas repetições NÃO alteram a ordem de eliminação.
-        const orderedRanks=[...ranks].sort((a,b)=>{
-          const an=Number(a.rodada),bn=Number(b.rodada);
-          if(Number.isFinite(an)&&Number.isFinite(bn)&&an!==bn)return an-bn;
-          return fauArchiveSort(a.round,b.round);
-        });
+        const orderedRanks=[...ranks].sort((a,b)=>fauArchiveSort(a.round,b.round));
         const outRounds=new Map();
         orderedRanks.forEach((r,order)=>{
           (r.rows||[]).forEach(row=>{
@@ -4527,6 +4543,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           return `<article class="rounded-xl border border-fashion-gold/25 bg-fashion-950 overflow-hidden">
             ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
             <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
+          </article>`;
+        }).join('');
+        // Hall of Shame: somente Fora de Moda oficialmente publicado.
+        // Não inferir o título a partir de BOTTOM ou da classificação do júri.
+        const shame=titles.filter(t=>t?.fora||t?.fdm).sort((a,b)=>fauArchiveSort(b.round,a.round)).map(t=>{
+          const round=roundKey(t.round),uid=String(t.fora||t.fdm||'');
+          const rows=roundMap.get(round)?.rank?.rows||[];
+          const person=rows.find(r=>String(r.uid||r.id||'')===uid);
+          const cast=castResult.status==='fulfilled'?castResult.value.docs.find(d=>d.id===uid)?.data():null;
+          const name=person?.ate||cast?.ate||'Designer';
+          const pub=findImage(round,uid);
+          return `<article class="fau-shame-card rounded-xl overflow-hidden">
+            ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Look não identificado com segurança no arquivo público</div>`}
+            <div class="p-4"><p class="text-[10px] tracking-widest fau-shame-label">FORA DE MODA · ${esc(weekLabel(round))}</p><h4 class="font-cinzel text-white mt-2">${esc(name)}</h4></div>
           </article>`;
         }).join('');
         // Hall of Fashion: títulos em destaque primeiro; depois os demais
@@ -4710,6 +4740,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           <div class="fau-archive-tabs" role="tablist" aria-label="Explorar o arquivo">
             <button type="button" role="tab" aria-selected="true" data-archive-tab="gallery" class="fau-archive-tab bg-fashion-gold text-black font-bold rounded px-4 py-3 text-xs">LOOKBOOK</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="hall" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">HALL OF FASHION</button>
+            <button type="button" role="tab" aria-selected="false" data-archive-tab="shame" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">HALL OF SHAME</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="out" class="fau-archive-tab fau-archive-out-nav border border-fashion-700 rounded px-4 py-3 text-xs">AUF WIEDERSEHEN <span class="text-[10px] opacity-70">· HALL DOS ELIMINADOS</span></button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="track" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">TRACK RECORD</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="designers" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">DESIGNER LEGACY</button>
@@ -4729,6 +4760,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">Os destaques da passarela</h3>
           <p class="text-gray-400 text-sm">A cada rodada, dois nomes entram para a história: o <strong>Winner da Rodada</strong>, escolhido pelos jurados, e o <strong>Ícone da Moda</strong>, eleito pelos próprios Designers.</p>
           ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm py-6">O Hall abrirá após as primeiras conquistas oficiais.</p>'}</section>
+          <section data-archive-panel="shame" class="space-y-3 hidden fau-shame-section" role="tabpanel"><p class="text-[10px] tracking-[.25em] fau-shame-label">THE HALL OF SHAME</p><h3 class="font-cinzel text-2xl text-white">Os condenados da passarela</h3>
+          <p class="text-gray-400 text-sm">A cada rodada, um nome entra para a história pelos motivos errados: o <strong>Fora de Moda</strong>, eleito pelos próprios Designers como o que menos se destacou na competição.</p>
+          ${shame?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${shame}</div>`:'<p class="text-gray-400 text-sm py-6">Os títulos de Fora de Moda aparecerão aqui após a publicação oficial.</p>'}</section>
           <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">NENHUMA DESPEDIDA ATÉ AGORA</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>'}</section>
           <section data-archive-panel="track" class="space-y-4 hidden" role="tabpanel"><p class="text-gray-400 text-sm py-6 text-center">Abra o Track Record para consultar o histórico da temporada.</p></section>
           <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">A trajetória dos Designers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
