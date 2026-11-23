@@ -1098,6 +1098,25 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 @media(max-width:500px){#fauArchive .fau-evolution-timeline{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#fauArchive .fau-evolution-detail{padding:10px}#fauArchive .fau-evolution-moment{padding-left:8px}#fauArchive .fau-evolution-person-head{padding:11px}}
 @media(prefers-reduced-motion:reduce){#fauArchive .fau-evolution-chevron{transition:none}}
 </style>
+<style id="fau-evolution-uniform-cards-2026">
+/* Igualar a altura dos looks e impedir que títulos longos deformem a linha. */
+#fauArchive .fau-evolution-timeline{align-items:stretch;grid-auto-rows:auto}
+#fauArchive .fau-evolution-moment{display:flex;flex-direction:column;min-width:0}
+#fauArchive .fau-evolution-week{min-height:42px;display:flex;align-items:flex-start;align-content:flex-start;gap:5px;flex-wrap:wrap;line-height:1.4;margin-bottom:7px}
+#fauArchive .fau-evolution-look{display:flex;flex:1;flex-direction:column;min-width:0;height:100%}
+#fauArchive .fau-evolution-look img{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:contain;flex:none}
+#fauArchive .fau-evolution-look>span{display:flex;flex:1;flex-direction:column;justify-content:space-between;gap:8px;padding:10px;min-height:85px}
+#fauArchive .fau-evolution-look strong{font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+#fauArchive .fau-evolution-look small{font-size:9px;line-height:1.35}
+#fauArchive .fau-evolution-verdict{display:inline-flex;align-items:center;min-height:20px;padding:2px 6px;border-radius:4px;border:1px solid #655b62;color:#d4cbd1;font:700 9px/1.2 Inter,sans-serif;letter-spacing:.04em;white-space:nowrap}
+#fauArchive .fau-evolution-verdict.is-win{border-color:#c7a665;color:#e8c68d;background:#3b3021}
+#fauArchive .fau-evolution-verdict.is-high{border-color:#a89bc9;color:#d1c2f0}
+#fauArchive .fau-evolution-verdict.is-safe{border-color:#628575;color:#a6d9bf}
+#fauArchive .fau-evolution-verdict.is-low,#fauArchive .fau-evolution-verdict.is-bottom{border-color:#a96e59;color:#efb69d}
+#fauArchive .fau-evolution-verdict.is-out{border-color:#a24a60;color:#f3a8b8}
+#fauArchive .fau-evolution-verdict.is-pending{border-color:#71626a;color:#c4b6c1}
+@media(max-width:500px){#fauArchive .fau-evolution-week{min-height:51px}#fauArchive .fau-evolution-look>span{min-height:94px;padding:9px}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -4849,9 +4868,27 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const iconText=`${p.icons} ${p.icons===1?'Ícone da Moda':'Ícones da Moda'}`;
           const journey=evolutionPeople.find(e=>(p.uid&&e.uid&&String(p.uid)===String(e.uid))||archiveNameKey(e.name)===archiveNameKey(p.name));
           const looks=journey?[...journey.looks].sort((a,b)=>(archiveWeekNumber(a.round)??999)-(archiveWeekNumber(b.round)??999)):[];
-          const pending=looks.some(x=>roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada)));
+          const pending=looks.some(x=>!roundMap.get(roundKey(x.round))?.rank?.rows?.length);
           const journeyId='fau-legacy-journey-'+profilesIndex;
-          const journeyMarkup=`<div class="fau-legacy-evolution"><button type="button" class="fau-legacy-evolution-toggle" aria-expanded="false" aria-controls="${journeyId}"><span><i class="fa-solid fa-images" aria-hidden="true"></i> VER EVOLUÇÃO <small>· ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'}${pending?' · EM JULGAMENTO':''}</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="${journeyId}" class="fau-evolution-detail" hidden><p class="fau-evolution-intro">Da primeira criação à mais recente. Uma trajetória contada em looks.</p><div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(archiveWeekLabel(x.round).split(' — ')[0])}${roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada))?' · EM JULGAMENTO':''}</span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" data-evolution-owner="${esc(p.uid||archiveNameKey(p.name))}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(p.name)}" data-round="${esc(roundKey(x.round))}" aria-label="Ver criação ${esc(x.title||'')}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')||'<p class="text-gray-400 text-xs">Nenhuma criação publicada ainda.</p>'}</div></div></div>`;
+          // Classificação por episódio: somente resultados oficiais publicados.
+          const evolutionVerdict=x=>{
+            const key=roundKey(x.round);
+            const official=roundMap.get(key)?.rank;
+            const rows=Array.isArray(official?.rows)?official.rows:[];
+            const row=rows.find(r=>(p.uid&&String(r.uid||r.id||'')===String(p.uid))||(!p.uid&&archiveNameKey(r.ate)===archiveNameKey(p.name)));
+            if(!row)return {label:'EM JULGAMENTO',kind:'pending'};
+            const raw=String(row.status||'').toUpperCase();
+            const voted=String(official?.eliminatedByVote?.uid||official?.eliminatedByVote?.id||'');
+            const eliminatedHere=(p.uid&&voted===String(p.uid))||(p.uid&&firstOutByUid.get(String(p.uid))===key&&!voteOutByUid.has(String(p.uid)));
+            if(eliminatedHere||/\bOUT\b|ELIMINAD/.test(raw))return {label:'OUT',kind:'out'};
+            if(/\bWIN\b/.test(raw))return {label:'WIN',kind:'win'};
+            if(/\b(HIGH|TOP)\b/.test(raw))return {label:'HIGH',kind:'high'};
+            if(/\b(BOTTOM|BTM)\b/.test(raw))return {label:'BOTTOM',kind:'bottom'};
+            if(/\bLOW\b/.test(raw))return {label:'LOW',kind:'low'};
+            if(/\bSAFE\b/.test(raw))return {label:'SAFE',kind:'safe'};
+            return {label:'EM JULGAMENTO',kind:'pending'};
+          };
+          const journeyMarkup=`<div class="fau-legacy-evolution"><button type="button" class="fau-legacy-evolution-toggle" aria-expanded="false" aria-controls="${journeyId}"><span><i class="fa-solid fa-images" aria-hidden="true"></i> VER EVOLUÇÃO <small>· ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'}${pending?' · EM JULGAMENTO':''}</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="${journeyId}" class="fau-evolution-detail" hidden><p class="fau-evolution-intro">Da primeira criação à mais recente. Uma trajetória contada em looks.</p><div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(archiveWeekLabel(x.round).split(' — ')[0])} <span class="fau-evolution-verdict is-${evolutionVerdict(x).kind}">${evolutionVerdict(x).label}</span></span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" data-evolution-owner="${esc(p.uid||archiveNameKey(p.name))}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(p.name)}" data-round="${esc(roundKey(x.round))}" aria-label="Ver criação ${esc(x.title||'')}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')||'<p class="text-gray-400 text-xs">Nenhuma criação publicada ainda.</p>'}</div></div></div>`;
           return `<article class="fau-hall-profile${isOut?' is-out':''}${p.wins+p.icons?' has-title':''}">
             <div class="fau-hall-profile-head"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>${isOut?'<span class="fau-hall-out">ELIMINADO</span>':''}</div>
             <div class="fau-hall-counts"><span>${winText}</span><span>${iconText}</span><span>${p.foras} ${p.foras===1?'Fora de Moda':'Fora de Moda'}</span>${isOut?'<span class="fau-hall-out">OUT · ELIMINADO</span>':''}</div>
