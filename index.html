@@ -3901,14 +3901,28 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         `);
 
 
-        // Public Track Record: read ONLY published classifications, never private scores.
-        if (!isAdmin) {
+        // Uma única matriz oficial para plateia, Designers, jurados e ADM.
+        // Nenhuma nota privada é consultada ou exibida por este renderizador.
+        const renderSharedTrackRecord = async () => {
             const slot = $('#trackRecordTableContainer');
             try {
                 const history = await db.collection('ranking_historico_publico').get();
                 const rounds = history.docs.map(d=>({round:d.id,...d.data()}))
                     .filter(r=>Array.isArray(r.rows)&&r.rows.length)
-                    .sort((a,b)=>String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true}));
+                    .sort((a,b)=>{
+                        // IDs do Firestore não são a ordem da temporada: o tema da W03
+                        // pode ter um ID alfabético anterior ao da W01.
+                        const order=v=>{
+                            const raw=String([v.round,v.rodada,v.titulo,v.tema,v.theme,v.nome].filter(Boolean).join(' ')).toLowerCase();
+                            if(/first.?garment|firstgarment/.test(raw))return 1;
+                            if(/new.?form|newform/.test(raw))return 2;
+                            if(/once.?upon.?a.?runway|themesevendeadly|onceuponarunway/.test(raw))return 3;
+                            if(/tarantino/.test(raw))return 4;
+                            const match=String(v.round||v.rodada||'').match(/^w(?:eek)?\s*0*(\d+)/i);
+                            return match?Number(match[1]):Number.MAX_SAFE_INTEGER;
+                        };
+                        return order(a)-order(b)||String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});
+                    });
                 if (!slot?.isConnected) return;
                 if (!rounds.length) {
                     slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
@@ -4018,6 +4032,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }
             const gallery=$('#eliminationGalleryGrid');
             if(gallery)gallery.innerHTML='<p class="text-gray-400 col-span-full py-5">Confira as despedidas oficiais em Auf Wiedersehen, no Fashion Archive.</p>';
+        };
+        if (!isAdmin) {
+            await renderSharedTrackRecord();
             return;
         }
 
@@ -4053,11 +4070,15 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(Array.isArray(data.rows)&&data.rows.length)rodadasSet.add(round);
         });
         const rodadas = [...rodadasSet].sort((a,b) => {
-            const an=fauRoundNumber(a), bn=fauRoundNumber(b);
-            if(an!==null && bn!==null) return an-bn || String(a).localeCompare(String(b),'pt-BR',{numeric:true});
-            if(an!==null) return -1;
-            if(bn!==null) return 1;
-            return String(a).localeCompare(String(b),'pt-BR',{numeric:true});
+            const seasonOrder=value=>{
+                const raw=String(value||'').toLowerCase();
+                if(/first.?garment|firstgarment/.test(raw))return 1;
+                if(/new.?form|newform/.test(raw))return 2;
+                if(/once.?upon.?a.?runway|themesevendeadly|onceuponarunway/.test(raw))return 3;
+                if(/tarantino/.test(raw))return 4;
+                return fauRoundNumber(value)??Number.MAX_SAFE_INTEGER;
+            };
+            return seasonOrder(a)-seasonOrder(b)||String(a).localeCompare(String(b),'pt-BR',{numeric:true});
         });
 
         if (!rodadas.length) {
@@ -4233,52 +4254,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             return nameOrder.compare(String(a.ate||''),String(b.ate||''));
         });
 
-        let html = `
-            <table class="fau-tr-table">
-                <thead>
-                    <tr class="bg-fashion-950 text-fashion-gold border-b border-fashion-700 text-[11px] font-cinzel">
-                        <th class="p-2.5 text-left border-r border-fashion-700">DESIGNER</th>
-                        <th class="p-2.5 border-r border-fashion-700">P.P.E.</th>
-                        ${rodadas.map((r, i) => { const m = String(r).match(/w(?:eek)?\s*0*(\d+)/i); const n = m ? Number(m[1]) : (fauRoundNumber(r) ?? i + 1); const label = String(r).replace(/^w(?:eek)?\s*0*\d+[\s_-]*/i, '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim(); return `<th class="p-2.5 border-r border-fashion-700 uppercase">W${String(n).padStart(2, '0')}${label ? ' — ' + esc(label) : ''}</th>`; }).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        rowsData.forEach(row => {
-            html += `
-                <tr class="border-b border-fashion-800 hover:bg-fashion-950/40 transition">
-                    <td class="p-2.5 text-left font-bold text-white border-r border-fashion-700 font-cinzel">${esc(row.ate)}</td>
-                    <td class="fau-tr-ppe">${row.ppe.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-            `;
-
-            rodadas.forEach((r,weekIndex) => {
-                const rData=row.rounds[r];
-                const exitAfter=eliminatedAtRound.get(String(row.uid));
-                let badgeText='—';
-                if(exitAfter!==undefined && weekIndex>exitAfter){
-                    html += '<td class="fau-tr-after" aria-label="Fora da competição"></td>';
-                    return;
-                }
-                
-                const official=officialStatuses.get(r)?.get(row.uid);
-                badgeText=confirmedStatuses.get(weekIndex+'|'+row.uid)||official|| (rData ? previewStatuses.get(r)?.get(row.uid)||'—':'—');
-                // A classificação da Week da saída não deve ser sobrescrita por OUT.
-                if(badgeText==='OUT')badgeText='OUT';
-                if(exitAfter===weekIndex && !badgeText.includes('OUT'))badgeText=badgeText==='—'?'OUT':badgeText+' + OUT';
-                const base=String(badgeText).split(/\s*\+\s*/)[0];
-                const kind=({WIN:'win',TOP:'high',HIGH:'high',SAFE:'safe',LOW:'low',BOTTOM:'bottom',OUT:'out'})[base]||'empty';
-                html += `<td class="fau-tr-${kind}">${esc(badgeText)}</td>`;
-            });
-            html += `</tr>`;
-        });
-
-        html += `</tbody></table>`;
-        const trackSlot=document.getElementById('trackRecordTableContainer');
-        if(trackSlot){
-            trackSlot.classList.remove('font-mono');
-            trackSlot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Classificação por Week. OUT na rodada da eliminação.</p></div></div><div class="fau-tr-scroll">${html}</div>`;
-        }
+        // ADM utiliza exatamente as mesmas colunas, linhas e classificações
+        // publicadas que todos os outros perfis, além do seu ranking privado.
+        await renderSharedTrackRecord();
         // Ranking acumulado permanece privado do Admin.
         // Private cumulative ranking remains available separately to the Admin.
 
