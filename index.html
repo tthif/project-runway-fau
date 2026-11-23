@@ -1188,6 +1188,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             w03: 'WEEK 03 — ONCE UPON A RUNWAY'
         };
         if (official[key]) return official[key];
+        // Compatibilidade com IDs históricos da terceira rodada (variações de Seven Deadly).
+        if (/^(?:themes?)?seven(?:deadly|sins)/.test(key) || key.includes('sevendeadly')) return official.week03;
+        if (/^0*[123]$/.test(raw)) return official['week0'+Number(raw)];
         const match = Object.values(SEASON_THEMES).find(t =>
             String(t.id).toLowerCase() === raw.toLowerCase() ||
             String(t.code || '').toLowerCase() === raw.toLowerCase());
@@ -3790,7 +3793,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           try{
             const rs=await db.collection('ranking_historico_publico').get();
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
-            const rounds=rs.docs.map(d=>({round:d.id,...d.data()})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>{const weekNumber=r=>{const m=fauWeekLabel(r.round).match(/WEEK\s+(\d+)/i);return m?Number(m[1]):NaN;};const na=weekNumber(a),nb=weekNumber(b);return Number.isFinite(na)&&Number.isFinite(nb)?na-nb:String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});});
+            const rounds=rs.docs.map(d=>({...d.data(),round:d.id})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>{const weekNumber=r=>{const m=fauWeekLabel(r.round).match(/WEEK\s+(\d+)/i);return m?Number(m[1]):Number.POSITIVE_INFINITY;};const na=weekNumber(a),nb=weekNumber(b);return na-nb || String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});});
             let profileName=String(currentUser.ate||'').trim();
             try {const profileDoc=await db.collection('perfis').doc(uid).get();const profile=profileDoc.data()||{};profileName=String(profile.ate||profile.nomeDesigner||profile.designerName||profileName).trim();}catch(e){console.warn('Designer profile name unavailable',e);}
             const name=profileName.toLocaleLowerCase('pt-BR');
@@ -3840,7 +3843,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const best=played.map(x=>legacyBaseStatus(x.row.status)).find(x=>x==='WIN')||(['HIGH','SAFE','LOW','BOTTOM'].find(st=>played.some(x=>legacyBaseStatus(x.row.status)===st))||'');
               const elimination=entries.find(x=>legacyBaseStatus(x.row.status)==='OUT');
               const fact=(label,value,cls='')=>`<div class="fau-profile-fact ${cls}"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`;
-              facts.innerHTML=(last?fact('ÚLTIMA RODADA',fauWeekLabel(last.r.round)):'')+(elimination?fact('DESPEDIDA',fauWeekLabel(elimination.r.round),'is-eliminated'):'');
+              facts.innerHTML=(last?fact('ÚLTIMA RODADA',fauWeekLabel(last.r.round).replace(/^WEEK\s*0*(\d+).*$/i,(_,n)=>'W'+Number(n))):'')+(elimination?fact('DESPEDIDA',fauWeekLabel(elimination.r.round).replace(/^WEEK\s*0*(\d+).*$/i,(_,n)=>'W'+Number(n)),'is-eliminated'):'');
               refreshLatestWeekFact();
             }
             // Reduz o espaço vazio de contas sem resultados; preserva os módulos para futuras rodadas.
@@ -3853,7 +3856,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const journey=$('#fauMyJourney');
             if(journey){
               const ranked=played.map(({r,row})=>({round:r.round,week:fauWeekLabel(r.round),position:Number(row.position??row.posicao??row.rank??row.place??(r.rows.findIndex(z=>String(z.uid||'')===String(uid))+1)),status:legacyDisplayStatus(row.status)}));
-              const validRanked=ranked.filter(x=>Number.isFinite(x.position)&&x.position>0);
+              const validRanked=ranked.filter(x=>Number.isFinite(x.position)&&x.position>0).sort((a,b)=>{const num=x=>Number(x.week.match(/WEEK\s+(\d+)/i)?.[1]||Infinity);return num(a)-num(b);});
               const lastRank=validRanked.at(-1),prevRank=validRanked.at(-2);
               const movement=lastRank&&prevRank?(prevRank.position>lastRank.position?`Subiu ${prevRank.position-lastRank.position} ${prevRank.position-lastRank.position===1?'posição':'posições'}`:prevRank.position<lastRank.position?`Caiu ${lastRank.position-prevRank.position} ${lastRank.position-prevRank.position===1?'posição':'posições'}`:'Manteve a posição'):'Sem comparação anterior';
               const bestRank=validRanked.length?validRanked.reduce((a,b)=>b.position<a.position?b:a):null;
@@ -3862,15 +3865,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const w=540,h=168,pad=30,maxPos=Math.max(2,...validRanked.map(x=>x.position));
               const pts=validRanked.map((x,i)=>({x:pad+(validRanked.length===1?(w-2*pad)/2:i*(w-2*pad)/(validRanked.length-1)),y:pad+(x.position-1)*(h-2*pad)/(maxPos-1),...x}));
               const line=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-              const graph=pts.length?`<svg class="fau-journey-chart" viewBox="0 0 ${w} ${h+26}" role="img" aria-label="Evolução no ranking: ${esc(validRanked.map(x=>`${x.week}: ${x.position}º`).join('; '))}"><line x1="${pad}" y1="${pad}" x2="${w-pad}" y2="${pad}" stroke="#65515c" stroke-dasharray="4 5"/><line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#65515c" stroke-dasharray="4 5"/><text x="4" y="${pad+4}" fill="#d1b38b" font-size="11">1º</text><text x="4" y="${h-pad+4}" fill="#b3a2ae" font-size="11">${maxPos}º</text><path d="${line}" fill="none" stroke="#d1b38b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#d1b38b" stroke="#24191f" stroke-width="2"><title>${esc(p.week)}: ${p.position}º · ${esc(p.status)}</title></circle><text x="${p.x}" y="${Math.max(15,p.y-11)}" text-anchor="middle" font-size="12" fill="#f1e5d2">${p.position}º</text><text x="${p.x}" y="${h+12}" text-anchor="middle" font-size="10" fill="#c8b3bb">${esc(p.week)}</text>`).join('')}</svg>`:'<p class="fau-journey-detail">A evolução aparecerá após a publicação dos rankings.</p>';
+              const shortWeek = x => { const m=String(x.week).match(/WEEK\s*0*(\d+)/i); return m ? 'W'+Number(m[1]) : 'W'+(validRanked.indexOf(x)+1); };
+              const graph=pts.length?`<svg class="fau-journey-chart" viewBox="0 0 ${w} ${h+26}" role="img" aria-label="Evolução no ranking: ${esc(validRanked.map(x=>`${shortWeek(x)}: ${x.position}º`).join('; '))}"><line x1="${pad}" y1="${pad}" x2="${w-pad}" y2="${pad}" stroke="#65515c" stroke-dasharray="4 5"/><line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#65515c" stroke-dasharray="4 5"/><text x="4" y="${pad+4}" fill="#d1b38b" font-size="11">1º</text><text x="4" y="${h-pad+4}" fill="#b3a2ae" font-size="11">${maxPos}º</text><path d="${line}" fill="none" stroke="#d1b38b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#d1b38b" stroke="#24191f" stroke-width="2"><title>${esc(shortWeek(p))}: ${p.position}º · ${esc(p.status)}</title></circle><text x="${p.x}" y="${Math.max(15,p.y-11)}" text-anchor="middle" font-size="12" fill="#f1e5d2">${p.position}º</text><text x="${p.x}" y="${h+12}" text-anchor="middle" font-size="10" fill="#c8b3bb">${esc(shortWeek(p))}</text>`).join('')}</svg>`:'<p class="fau-journey-detail">A evolução aparecerá após a publicação dos rankings.</p>';
               if(!validRanked.length){
                 // Contas de teste sem histórico não precisam de vários painéis vazios.
                 journey.hidden=true;
                 journey.innerHTML='';
               }else{
                 journey.hidden=false;
-                const extremes=`<div class="fau-journey-extremes"><div class="fau-journey-extreme"><small>MELHOR COLOCAÇÃO</small><strong>${bestRank.position}º</strong><span>${esc(bestRank.week)} · ${esc(bestRank.status)}</span></div><div class="fau-journey-extreme"><small>PIOR COLOCAÇÃO</small><strong>${worstRank.position}º</strong><span>${esc(worstRank.week)} · ${esc(worstRank.status)}</span></div></div>`;
-                const poolDetails=verifiedPool.length||poolHistoryComplete?`<details class="mt-4"><summary>HISTÓRICO DO ELIMINATION POOL · ${poolDisplay}</summary>${verifiedPool.length?`<div class="fau-journey-pool">${verifiedPool.map(r=>`<div class="fau-journey-pool-item">${esc(fauWeekLabel(r.round))} · ${entries.some(e=>String(e.r.round)===String(r.round)&&legacyBaseStatus(e.row.status)==='OUT')?'Eliminado':'Indicado ao Pool'}</div>`).join('')}</div>`:'<p class="fau-journey-caption">Nenhuma indicação registrada.</p>'}${!poolHistoryComplete?'<p class="fau-journey-caption">Histórico parcial: nem todas as rodadas têm os indicados registrados.</p>':''}</details>`:'';
+                const extremes=`<div class="fau-journey-extremes"><div class="fau-journey-extreme"><small>MELHOR COLOCAÇÃO</small><strong>${bestRank.position}º</strong><span>${esc(shortWeek(bestRank))} · ${esc(bestRank.status)}</span></div><div class="fau-journey-extreme"><small>PIOR COLOCAÇÃO</small><strong>${worstRank.position}º</strong><span>${esc(shortWeek(worstRank))} · ${esc(worstRank.status)}</span></div></div>`;
+                const poolDetails=verifiedPool.length||poolHistoryComplete?`<details class="mt-4"><summary>HISTÓRICO DO ELIMINATION POOL · ${poolDisplay}</summary>${verifiedPool.length?`<div class="fau-journey-pool">${verifiedPool.map(r=>`<div class="fau-journey-pool-item">${esc((()=>{const m=fauWeekLabel(r.round).match(/WEEK\s*0*(\d+)/i);return m?'W'+Number(m[1]):'Rodada';})())} · ${entries.some(e=>String(e.r.round)===String(r.round)&&legacyBaseStatus(e.row.status)==='OUT')?'Eliminado':'Indicado ao Pool'}</div>`).join('')}</div>`:'<p class="fau-journey-caption">Nenhuma indicação registrada.</p>'}${!poolHistoryComplete?'<p class="fau-journey-caption">Histórico parcial: nem todas as rodadas têm os indicados registrados.</p>':''}</details>`:'';
                 const positionSlot=$('#fauMyPositions');if(positionSlot)positionSlot.innerHTML=extremes;
                 journey.innerHTML=`<h3>EVOLUÇÃO NA COMPETIÇÃO</h3>${graph}${lastRank?`<p class="fau-journey-detail">Última rodada: <strong>${esc(lastRank.status)}</strong> · ${esc(movement)}</p>`:''}${poolDetails}`;
               }
