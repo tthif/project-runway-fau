@@ -1006,15 +1006,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 </style>
 <style id="fau-weekly-score-details-css">.fau-weekly-score-details{margin-top:18px;border-top:1px solid rgba(209,179,139,.22);padding-top:12px}.fau-weekly-score-details summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;color:#d1b38b;font:700 11px Inter,system-ui,sans-serif;letter-spacing:.09em;padding:9px 0;list-style:none}.fau-weekly-score-details summary::-webkit-details-marker{display:none}.fau-weekly-score-details[open] summary i{transform:rotate(180deg)}.fau-weekly-score-list{padding:4px 0 8px}.fau-weekly-score-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid rgba(209,179,139,.13);font-size:12px;color:#e8e0e6}.fau-weekly-score-row span{min-width:0;overflow-wrap:anywhere}.fau-weekly-score-row b{white-space:nowrap;color:#e5c38c;font-variant-numeric:tabular-nums}.fau-weekly-score-empty{font-size:12px;color:#c5b9c3;padding:10px 0}</style>
 <style id="fau-track-record-out-details-2026">
-.fau-tr-table td.fau-tr-out-bottom{background:#812b3b;border-left:3px solid #e16a85;color:#fff}
-.fau-tr-table td.fau-tr-out-special{background:#4b252d;border-left:3px solid #b65c70;color:#fff}
-.fau-tr-exit-detail{position:relative;min-width:58px}
-.fau-tr-exit-detail summary{display:flex;justify-content:center;align-items:center;gap:6px;cursor:pointer;font-weight:700;letter-spacing:.06em;list-style:none;min-height:35px}
-.fau-tr-exit-detail summary::-webkit-details-marker{display:none}
-.fau-tr-exit-detail summary span{font-size:12px;opacity:.75}
-.fau-tr-exit-detail[open] summary span{transform:rotate(180deg)}
-.fau-tr-exit-detail p{min-width:165px;max-width:230px;margin:6px auto 0;padding:8px;background:#21171d;border:1px solid #aa6674;border-radius:6px;color:#fff;font-size:11px;line-height:1.5;letter-spacing:normal;white-space:normal;text-align:left}
-.fau-tr-table .fau-tr-out-bottom .fau-tr-exit-detail,.fau-tr-table .fau-tr-out-special .fau-tr-exit-detail{z-index:1}
+/* OUT is a static status for all roles; no expandable elimination details. */
+.fau-tr-table td.fau-tr-out{background:#812b3b;border-left:3px solid #e16a85;color:#fff;font-weight:700;text-align:center}
 </style>
 <style id="fau-track-record-mobile-2026">
 /* One scroll surface; the Designer column stays visible while Weeks move. */
@@ -1034,9 +1027,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
  .fau-tr-table th,.fau-tr-table td{height:46px;min-width:66px;padding:9px 7px;white-space:nowrap}
  .fau-tr-table th:first-child,.fau-tr-table tbody th{width:118px;min-width:118px;max-width:118px;white-space:normal;padding:8px 7px}
  .fau-tr-rank{display:block;margin:0 0 2px;font-size:9px}
- .fau-tr-exit-detail{min-width:50px}
- .fau-tr-exit-detail summary{min-height:30px}
- .fau-tr-exit-detail p{min-width:140px;max-width:170px}
  .fau-tr-legend{gap:8px 12px}
 }
 </style>
@@ -4003,6 +3993,21 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                             return {...e,status:status+(/\bOUT\b/i.test(String(e.status||''))?' + OUT':'')};
                         });
                     });
+                    // W03: posições oficiais confirmadas pela produção. A votação
+                    // de salvação define quem sai, não a classificação dos demais.
+                    // O eliminado aparece no fim da tabela, sem alterar suas notas.
+                    if(rounds[2]){
+                        const confirmedW03=new Map([
+                            ['vénus','SAFE'],['venus','SAFE'],
+                            ['yvette ferrete','LOW'],['fio robert','LOW'],
+                            ['thýco mia','BOTTOM'],['thyco mia','BOTTOM'],
+                            ['dolce & banana','OUT']
+                        ]);
+                        rounds[2].rows=rounds[2].rows.map(entry=>{
+                            const corrected=confirmedW03.get(normalizeName(entry.ate));
+                            return corrected?{...entry,status:corrected}:entry;
+                        });
+                    }
                     rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
                         const name=String(entry.ate||'Designer').trim();
                         const person=ensurePerson(name,String(entry.uid||'').trim());
@@ -4050,16 +4055,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     });
                     const cssStatus=v=>({WIN:'win',HIGH:'high',TOP:'high',SAFE:'safe',LOW:'low',BOTTOM:'bottom',OUT:'out'})[baseOf(v)||String(v||'').split(/\s*\+\s*/)[0].trim()]||'empty';
                     slot.classList.remove('font-mono');
-                    slot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Cada coluna representa uma Week. OUT identifica a eliminação; toque na célula para ver o motivo.</p></div><span class="fau-tr-count">${rounds.length} WEEKS</span></div>
+                    slot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Cada coluna representa uma Week. OUT identifica quem foi eliminado.</p></div><span class="fau-tr-count">${rounds.length} WEEKS</span></div>
                       <div class="fau-tr-mobile-hint" aria-hidden="true"><i class="fa-solid fa-arrows-left-right"></i> Deslize para ver as próximas Weeks</div><div class="fau-tr-scroll" tabindex="0" role="region" aria-label="Tabela de desempenho: deslize horizontalmente para ver as Weeks"><table class="fau-tr-table" aria-label="Track Record da temporada">
                       <thead><tr><th scope="col">DESIGNERS</th>${rounds.map((r,i)=>`<th scope="col" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
                       <tbody>${roster.map((p,index)=>`<tr class="${p.exitAt>=0?'fau-tr-eliminated':''}"><th scope="row"><span class="fau-tr-rank">${String(index+1).padStart(2,'0')}</span>${esc(p.name)}</th>${rounds.map((r,i)=>{
                         if(p.exitAt>=0&&i>p.exitAt)return '<td class="fau-tr-after" aria-label="Fora da competição"></td>';
                         const v=p.history.get(i)||'—';
-                        if(v==='OUT' && p.exitAt===i){const reason=p.exitReason||'Eliminado nesta rodada.';const special=/BOTTOM/i.test(reason);return `<td class="fau-tr-out ${special?'fau-tr-out-bottom':'fau-tr-out-special'}"><details class="fau-tr-exit-detail"><summary aria-label="OUT: ver motivo da eliminação de ${esc(p.name)}">OUT <span aria-hidden="true">⌄</span></summary><p>${esc(reason)}</p></details></td>`;}
+                        if(v==='OUT' && p.exitAt===i){return '<td class="fau-tr-out">OUT</td>';}
                         return `<td class="fau-tr-${cssStatus(v)}">${esc(v)}</td>`;
                       }).join('')}</tr>`).join('')}</tbody></table></div>
-                      <div class="fau-tr-legend">${[['WIN','Vencedor'],['HIGH','Destaque'],['SAFE','Seguro'],['LOW','Desempenho baixo'],['BOTTOM','Bottom 2 salvo'],['OUT','Eliminado · toque para detalhes']].map(([v,label])=>`<span><i class="fau-tr-dot fau-tr-${cssStatus(v)}"></i><b>${v}</b> ${label}</span>`).join('')}</div>`;
+                      <div class="fau-tr-legend">${[['WIN','Vencedor'],['HIGH','Destaque'],['SAFE','Seguro'],['LOW','Desempenho baixo'],['BOTTOM','Bottom 2 salvo'],['OUT','Eliminado']].map(([v,label])=>`<span><i class="fau-tr-dot fau-tr-${cssStatus(v)}"></i><b>${v}</b> ${label}</span>`).join('')}</div>`;
                 }
             } catch(err) {
                 console.warn('Public Track Record unavailable',err);
