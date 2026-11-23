@@ -4602,6 +4602,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const exitLabel=exit.week!==null?`WEEK ${String(exit.week).padStart(2,'0')} · ${exit.reason}`:exit.reason;
           return `<article class="fau-archive-out-card"><div class="fau-archive-out-photo">${photo?`<img src="${esc(photo)}" loading="lazy" alt="${esc(p.ate||'Designer')}" class="${latest?'':'fau-archive-out-portrait'}">`:`<div class="fau-archive-out-placeholder"><i class="fa-solid fa-user" aria-hidden="true"></i><span>${esc(p.ate||'Designer')}</span></div>`}</div><div class="p-4"><span class="fau-archive-out-tag">OUT · AUF WIEDERSEHEN</span><h4 class="font-cinzel text-white text-xl mt-2">${esc(p.ate||'Designer')}</h4><p class="text-xs text-gray-400 mt-2">${esc(exitLabel)}</p>${p.publicOutRealName?`<p class="text-xs text-fashion-gold mt-2">POR TRÁS DO DESIGNER: <strong>${esc(p.publicOutRealName)}</strong></p>`:''}</div></article>`;
         }).join('');
+        const castProfiles=castResult.status==='fulfilled'?castResult.value.docs.map(d=>({uid:d.id,...d.data()})):[];
         const roundMap=new Map();
         ranks.forEach(r=>roundMap.set(roundKey(r.round),{round:roundKey(r.round),rank:r,title:null}));
         titles.forEach(t=>{const k=roundKey(t.round),v=roundMap.get(k)||{round:k,rank:null,title:null};v.title=t;roundMap.set(k,v);});
@@ -4673,7 +4674,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // pela classificação da última rodada. Eliminados ficam ao final.
         const latestRank=orderedRanks[orderedRanks.length-1];
         const latestPositions=new Map((latestRank?.rows||[]).map((r,i)=>[String(r.uid),i]));
-        const castProfiles=castResult.status==='fulfilled'?castResult.value.docs.map(d=>({uid:d.id,...d.data()})):[];
+
         const eliminatedIds=new Set(castProfiles.filter(p=>p.out===true).map(p=>String(p.uid)));
         // The Designer Legacy: ordenação por conquistas, independentemente
         // da posição na última WEEK ou da situação atual do Designer.
