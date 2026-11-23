@@ -291,6 +291,13 @@ h2.font-cinzel{background:none!important;color:var(--fau-paper)!important;animat
 .fau-rulebook .rule-number{font-size:11px;color:#a99b86;min-width:25px}.fau-rulebook .rule-chevron{font-size:22px;color:#bfa67d;transition:transform .2s}.fau-rulebook .rule-entry[open] .rule-chevron{transform:rotate(180deg)}
 .fau-rulebook [hidden]{display:none!important}.fau-rulebook button:focus-visible,.fau-rulebook summary:focus-visible{outline:2px solid #e6c28d;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.fau-rulebook *{scroll-behavior:auto!important;transition:none!important}}
+#fauArchive .fau-legacy-evolution{border-top:1px solid rgba(209,179,139,.24);margin-top:14px;padding-top:9px}
+#fauArchive .fau-legacy-evolution-toggle{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;color:#d1b38b;text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;padding:10px 2px}
+#fauArchive .fau-legacy-evolution-toggle small{color:#b7aab5;font-size:10px;font-weight:400;letter-spacing:0}
+#fauArchive .fau-legacy-evolution-toggle[aria-expanded=true]>i{transform:rotate(180deg)}
+#fauArchive .fau-hall-profile .fau-evolution-detail{padding:12px 0 0}
+#fauArchive .fau-hall-profile .fau-evolution-timeline{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:420px){#fauArchive .fau-hall-profile .fau-evolution-timeline{gap:8px}#fauArchive .fau-hall-profile .fau-evolution-moment{padding-left:8px}}
 </style>
 <style id="fau-account-mobile-fix">
 header>div{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;min-width:0;min-height:64px;height:auto!important}
@@ -1219,17 +1226,24 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             onceuponarunway: 'WEEK 03 — ONCE UPON A RUNWAY',
             week03: 'WEEK 03 — ONCE UPON A RUNWAY',
             week3: 'WEEK 03 — ONCE UPON A RUNWAY',
-            w03: 'WEEK 03 — ONCE UPON A RUNWAY'
+            w03: 'WEEK 03 — ONCE UPON A RUNWAY',
+            themetarantino: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE',
+            week04: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE',
+            week4: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE',
+            w04: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE'
         };
-        if (official[key]) return official[key];
+        if (official[key]) return official[key].match(/^WEEK\s+\d+/)[0];
         // Compatibilidade com IDs históricos da terceira rodada (variações de Seven Deadly).
-        if (/^(?:themes?)?seven(?:deadly|sins)/.test(key) || key.includes('sevendeadly')) return official.week03;
-        if (/^0*[123]$/.test(raw)) return official['week0'+Number(raw)];
+        if (/^(?:themes?)?seven(?:deadly|sins)/.test(key) || key.includes('sevendeadly')) return 'WEEK 03';
+        if (/^0*[1234]$/.test(raw)) return `WEEK ${String(Number(raw)).padStart(2,'0')}`;
+        // Rodadas futuras: a numeração é do episódio, nunca do ID interno do tema.
+        const numeric = raw.match(/^(?:week|w)?[_\s-]*0*(\d+)$/i);
+        if(numeric && Number(numeric[1])>=5) return `WEEK ${String(Number(numeric[1])).padStart(2,'0')}`;
         const match = Object.values(SEASON_THEMES).find(t =>
             String(t.id).toLowerCase() === raw.toLowerCase() ||
             String(t.code || '').toLowerCase() === raw.toLowerCase());
-        if (match) return `${match.code}${match.code.includes(match.title) ? '' : ' — ' + match.title}`;
-        if (/^week\s*\d+/i.test(raw)) return raw;
+        if (match) { const n=String(match.code||'').match(/WEEK\s*0*(\d+)/i); if(n)return `WEEK ${String(Number(n[1])).padStart(2,'0')}`; }
+        if (/^week\s*0*\d+/i.test(raw)) return `WEEK ${String(Number(raw.match(/^week\s*0*(\d+)/i)[1])).padStart(2,'0')}`;
         return `Rodada ${raw}`;
     }
 
@@ -4453,7 +4467,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
       if(trackButton)trackButton.onclick=()=>VIEWS.historico(true);
       const body=$('#fauArchiveBody'),loading=$('#fauArchiveLoading');
       const roundKey=x=>String(x??'');
-      const weekLabel=x=>fauWeekLabel(x);
+      let weekLabel=x=>fauWeekLabel(x);
       try{
         // Nunca ler a coleção privada "looks" para montar uma página pública.
         const [ranksResult,titlesResult,publicationsResult,castResult]=await Promise.allSettled([
@@ -4484,6 +4498,32 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const titlesAccessible=titlesResult.status==='fulfilled'||
           (titleChecks.length>0&&titleChecks.every(x=>x.status==='fulfilled'));
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
+        // Sequência dos capítulos públicos: IDs de temas não são números de WEEK.
+        const archiveWeekNumber=value=>{
+          const known=fauArchiveWeekNumber(value);
+          if(known!==null)return known;
+          const key=roundKey(value);
+          const current=roundKey(globalState.rodada);
+          const currentNumber=Number(globalState.numeroRodada||globalState.weekNumber||globalState.week||0);
+          if(key===current&&Number.isInteger(currentNumber)&&currentNumber>0)return currentNumber;
+          if(key===current)return Math.max(4,...ranks.map(r=>fauArchiveWeekNumber(r.round)||0))+1;
+          const distinct=[...new Set(publications.map(p=>roundKey(p.round)))];
+          const knownNumbers=distinct.map(x=>fauArchiveWeekNumber(x)).filter(x=>x!==null);
+          if(distinct.includes(key)&&knownNumbers.length){
+            const unknown=distinct.filter(x=>fauArchiveWeekNumber(x)===null).sort((a,b)=>{
+              const pa=publications.find(p=>roundKey(p.round)===a),pb=publications.find(p=>roundKey(p.round)===b);
+              const ta=pa?.publishedAt?.seconds||pa?.createdAt?.seconds||0,tb=pb?.publishedAt?.seconds||pb?.createdAt?.seconds||0;
+              return ta-tb;
+            });
+            return Math.max(...knownNumbers)+1+unknown.indexOf(key);
+          }
+          return null;
+        };
+        const archiveWeekLabel=value=>{
+          const n=archiveWeekNumber(value);
+          return n===null?'WEEK —':`WEEK ${String(n).padStart(2,'0')}`;
+        };
+        weekLabel=archiveWeekLabel;
         // Hall dos Eliminados: a WEEK da saída prevalece sobre OUT repetido
         // em snapshots posteriores. As saídas antigas confirmadas pela produção
         // cobrem episódios sem envio, que podem não ter uma linha OUT no ranking.
@@ -4569,7 +4609,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const people=new Map(),awards=[];
         const getPerson=(uid,name)=>{
           if(!uid)return null;
-          if(!people.has(uid))people.set(uid,{uid,name:name||'Designer',wins:0,icons:0,highs:0,rounds:new Set(),achievements:[]});
+          if(!people.has(uid))people.set(uid,{uid,name:name||'Designer',wins:0,icons:0,highs:0,foras:0,rounds:new Set(),achievements:[]});
           const p=people.get(uid);if(name&&p.name==='Designer')p.name=name;return p;
         };
         // A imagem só pode ser ligada ao vencedor quando o arquivo público
@@ -4588,6 +4628,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'Winner da Rodada'});awards.push({round,uid:r.uid,name:r.ate,type:'Winner da Rodada'});}
             if(/\b(HIGH|TOP)\b/.test(status) && !/\bWIN\b/.test(status))p.highs++;
           });
+          const foraUid=String(title?.fora||title?.fdm||'');
+          if(foraUid){
+            const match=rows.find(r=>String(r.uid||r.id||'')===foraUid);
+            const castMatch=castProfiles.find(c=>String(c.uid)===foraUid);
+            const person=getPerson(foraUid,match?.ate||castMatch?.ate);
+            if(person){person.foras++;person.achievements.push({round,type:'Fora de Moda'});}
+          }
           if(title?.icon){
             const uid=title.icon,match=rows.find(r=>r.uid===uid);
             const p=getPerson(uid,match?.ate);
@@ -4631,24 +4678,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // The Designer Legacy: ordenação por conquistas, independentemente
         // da posição na última WEEK ou da situação atual do Designer.
         // Desempate: WINs > Ícones da Moda > HIGHs > nome alfabético.
-        const profiles=[...people.values()].sort((a,b)=>{
-          if(a.wins!==b.wins)return b.wins-a.wins;
-          if(a.icons!==b.icons)return b.icons-a.icons;
-          if(a.highs!==b.highs)return b.highs-a.highs;
-          return a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'});
-        }).map(p=>{
-          const isOut=eliminatedIds.has(String(p.uid));
-          const orderedAchievements=[...p.achievements].sort((a,b)=>fauArchiveSort(b.round,a.round));
-          const accolades=orderedAchievements.length?orderedAchievements.map(a=>`<span class="fau-hall-award">${esc(weekLabel(a.round))} · ${esc(a.type)}</span>`).join(''):'<span class="fau-hall-empty">Nenhum título conquistado</span>';
-          const winText=`${p.wins} ${p.wins===1?'Winner':'Winners'}`;
-          const iconText=`${p.icons} ${p.icons===1?'Ícone da Moda':'Ícones da Moda'}`;
-          return `<article class="fau-hall-profile${isOut?' is-out':''}${p.wins+p.icons?' has-title':''}">
-            <div class="fau-hall-profile-head"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>${isOut?'<span class="fau-hall-out">ELIMINADO</span>':''}</div>
-            <div class="fau-hall-counts"><span>${winText}</span><span>${iconText}</span></div>
-            <p class="fau-hall-meta">${p.rounds.size} ${p.rounds.size===1?'rodada disputada':'rodadas disputadas'} · ${p.highs} ${p.highs===1?'destaque':'destaques'} no ranking</p>
-            <div class="fau-hall-achievements">${accolades}</div>
-          </article>`;
-        }).join('');
         // Season Story: cada eliminação é atribuída somente ao primeiro
         // episódio em que o Designer aparece como OUT no ranking oficial.
         // OUT repetidos em rankings seguintes não são novas eliminações.
@@ -4781,13 +4810,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         }
         // Resultados históricos confirmados pelo ADM são independentes da situação da rodada atual.
         const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).length;
-        const availableRounds=[...new Set([...rounds.map(r=>r.round),...publications.map(p=>roundKey(p.round))])].filter(Boolean).sort((a,b)=>fauArchiveSort(b,a));
+        const availableRounds=[...new Set([...rounds.map(r=>r.round),...publications.map(p=>roundKey(p.round))])].filter(Boolean).sort((a,b)=>(archiveWeekNumber(b)??0)-(archiveWeekNumber(a)??0));
         // Lookbook: capítulos em ordem cronológica inversa; dentro de cada
         // capítulo, Designers em ordem alfabética (não pelo ranking).
         const archiveLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
         const groupedLooks=new Map();
         archiveLooks.forEach(x=>{const key=roundKey(x.round);if(!groupedLooks.has(key))groupedLooks.set(key,[]);groupedLooks.get(key).push(x);});
-        const gallery=[...groupedLooks.keys()].sort((a,b)=>fauArchiveSort(b,a)).map(round=>{
+        const gallery=[...groupedLooks.keys()].sort((a,b)=>(archiveWeekNumber(b)??0)-(archiveWeekNumber(a)??0)).map(round=>{
           const looks=groupedLooks.get(round).sort((a,b)=>String(a.designer||a.ate||'').localeCompare(String(b.designer||b.ate||''),'pt-BR',{sensitivity:'base'})||String(a.title||'').localeCompare(String(b.title||''),'pt-BR',{sensitivity:'base'}));
           const cards=looks.map(x=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(round)}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round,weekLabel(x.round)].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
             <div class="fau-archive-photo-wrap"><img src="${esc(x.image)}" loading="lazy" alt="Look publicado: ${esc(x.title||'Criação do acervo')}" class="fau-archive-img w-full aspect-[3/4] object-contain bg-black" /></div>
@@ -4806,22 +4835,27 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           evolutionGroups.get(key).looks.push(x);
         });
         const evolutionPeople=[...evolutionGroups.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
-        const evolutionHtml=evolutionPeople.map((person,index)=>{
-          const looks=[...person.looks].sort((a,b)=>fauArchiveSort(a.round,b.round)||String(a.title||'').localeCompare(String(b.title||''),'pt-BR'));
-          const weeks=new Set(looks.map(x=>roundKey(x.round)));
-          const portrait=evolutionCast.get(person.uid)?.fotoElenco||'';
-          const first=looks[0],last=looks[looks.length-1];
-          const pendingRound=looks.some(x=>roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada)));
-          return `<article class="fau-evolution-person" data-evolution-name="${esc(archiveNameKey(person.name))}">
-            <button type="button" class="fau-evolution-person-head" aria-expanded="false" aria-controls="fau-evolution-${index}">
-              <span class="fau-evolution-avatar">${portrait?`<img src="${esc(portrait)}" alt="" loading="lazy">`:'<i class="fa-solid fa-user" aria-hidden="true"></i>'}</span>
-              <span class="fau-evolution-identity"><strong>${esc(person.name)}</strong><small>${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'} <span class="fau-evolution-submeta">· ${weeks.size} ${weeks.size===1?'CAPÍTULO':'CAPÍTULOS'}${pendingRound?' · EM JULGAMENTO':''}</span></small></span>
-              <span class="fau-evolution-chevron" aria-hidden="true">⌄</span>
-            </button>
-            <div class="fau-evolution-detail" id="fau-evolution-${index}" hidden>
-              <p class="fau-evolution-intro">Do primeiro look ao mais recente. Cada criação conta um capítulo dessa história.</p>
-              <div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">WEEK ${String(fauArchiveWeekNumber(x.round)??x.round).padStart(2,'0')}${roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada))?' · EM JULGAMENTO':''}</span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" aria-label="Ver ${esc(x.title||'criação')} de ${esc(person.name)}" data-evolution-owner="${index}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(person.name)}" data-round="${esc(roundKey(x.round))}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"/><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')}</div>
-            </div>
+        const profiles=[...people.values()].sort((a,b)=>{
+          if(a.wins!==b.wins)return b.wins-a.wins;
+          if(a.icons!==b.icons)return b.icons-a.icons;
+          if(a.highs!==b.highs)return b.highs-a.highs;
+          return a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'});
+        }).map((p,profilesIndex)=>{
+          const isOut=eliminatedIds.has(String(p.uid));
+          const orderedAchievements=[...p.achievements].sort((a,b)=>fauArchiveSort(b.round,a.round));
+          const accolades=orderedAchievements.length?orderedAchievements.map(a=>`<span class="fau-hall-award">${esc(weekLabel(a.round))} · ${esc(a.type)}</span>`).join(''):'<span class="fau-hall-empty">Nenhum título conquistado</span>';
+          const winText=`${p.wins} ${p.wins===1?'Winner':'Winners'}`;
+          const iconText=`${p.icons} ${p.icons===1?'Ícone da Moda':'Ícones da Moda'}`;
+          const journey=evolutionPeople.find(e=>(p.uid&&e.uid&&String(p.uid)===String(e.uid))||archiveNameKey(e.name)===archiveNameKey(p.name));
+          const looks=journey?[...journey.looks].sort((a,b)=>(archiveWeekNumber(a.round)??999)-(archiveWeekNumber(b.round)??999)):[];
+          const pending=looks.some(x=>roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada)));
+          const journeyId='fau-legacy-journey-'+profilesIndex;
+          const journeyMarkup=`<div class="fau-legacy-evolution"><button type="button" class="fau-legacy-evolution-toggle" aria-expanded="false" aria-controls="${journeyId}"><span><i class="fa-solid fa-images" aria-hidden="true"></i> VER EVOLUÇÃO <small>· ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'}${pending?' · EM JULGAMENTO':''}</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="${journeyId}" class="fau-evolution-detail" hidden><p class="fau-evolution-intro">Da primeira criação à mais recente. Uma trajetória contada em looks.</p><div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(archiveWeekLabel(x.round).split(' — ')[0])}${roundKey(x.round)===roundKey(globalState.rodada)&&globalState.liberado&&!ranks.some(r=>roundKey(r.round)===roundKey(globalState.rodada))?' · EM JULGAMENTO':''}</span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" data-evolution-owner="${esc(p.uid||archiveNameKey(p.name))}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(p.name)}" data-round="${esc(roundKey(x.round))}" aria-label="Ver criação ${esc(x.title||'')}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')||'<p class="text-gray-400 text-xs">Nenhuma criação publicada ainda.</p>'}</div></div></div>`;
+          return `<article class="fau-hall-profile${isOut?' is-out':''}${p.wins+p.icons?' has-title':''}">
+            <div class="fau-hall-profile-head"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>${isOut?'<span class="fau-hall-out">ELIMINADO</span>':''}</div>
+            <div class="fau-hall-counts"><span>${winText}</span><span>${iconText}</span><span>${p.foras} ${p.foras===1?'Fora de Moda':'Fora de Moda'}</span>${isOut?'<span class="fau-hall-out">OUT · ELIMINADO</span>':''}</div>
+            <p class="fau-hall-meta">${p.rounds.size} ${p.rounds.size===1?'rodada disputada':'rodadas disputadas'} · ${p.highs} ${p.highs===1?'destaque':'destaques'} no ranking</p>
+            <div class="fau-hall-achievements">${accolades}</div>${journeyMarkup}
           </article>`;
         }).join('');
         body.innerHTML=`
@@ -4836,7 +4870,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <button type="button" role="tab" aria-selected="false" data-archive-tab="shame" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">HALL OF SHAME</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="out" class="fau-archive-tab fau-archive-out-nav border border-fashion-700 rounded px-4 py-3 text-xs">AUF WIEDERSEHEN <span class="text-[10px] opacity-70">· HALL DOS ELIMINADOS</span></button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="track" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">TRACK RECORD</button>
-            <button type="button" role="tab" aria-selected="false" data-archive-tab="evolution" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">THE EVOLUTION</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="designers" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">DESIGNER LEGACY</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="story" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">SEASON STORY</button>
           </div>
@@ -4850,13 +4883,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <p id="fauArchiveCount" class="text-xs text-gray-400" aria-live="polite"></p>
             <div id="fauArchiveGallery" class="space-y-7">${gallery||'<p class="col-span-full text-sm text-gray-400 py-8 text-center">O Lookbook será preenchido quando a produção publicar os looks das rodadas.</p>'}</div>
             <p id="fauArchiveEmpty" class="hidden text-sm text-gray-400 text-center py-8">Nenhum look corresponde à sua busca. Experimente outra palavra ou semana.</p>
-          </section>
-          <section data-archive-panel="evolution" class="space-y-5 hidden" role="tabpanel">
-            <div class="fau-evolution-hero"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER JOURNEY</p><h3 class="font-cinzel text-3xl text-white mt-2">THE EVOLUTION</h3><p class="text-sm text-gray-300 mt-2">Uma temporada. Diferentes trajetórias. Descubra como cada assinatura evoluiu, look após look.</p></div>
-            <label class="block"><span class="sr-only">Buscar Designer</span><input type="search" id="fauEvolutionSearch" placeholder="Buscar Designer…" class="w-full rounded-lg border border-fashion-700 bg-fashion-950 p-3 text-sm text-white"></label>
-            <p id="fauEvolutionCount" class="text-xs text-fashion-gold" aria-live="polite">${evolutionPeople.length} Designers</p>
-            <div id="fauEvolutionList" class="space-y-3">${evolutionHtml||'<p class="text-sm text-gray-400 py-6">As trajetórias aparecerão após a publicação dos looks no Fashion Archive.</p>'}</div>
-            <p id="fauEvolutionEmpty" class="hidden text-sm text-gray-400">Nenhum Designer encontrado.</p>
           </section>
           <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">Os destaques da passarela</h3>
           <p class="text-gray-400 text-sm">A cada rodada, dois nomes entram para a história: o <strong>Winner da Rodada</strong>, escolhido pelos jurados, e o <strong>Ícone da Moda</strong>, eleito pelos próprios Designers.</p>
@@ -4897,18 +4923,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           <section class="fau-lb-concept" hidden aria-label="Conceito da criação"><div><small>CREATIVE DOSSIER</small><button type="button" data-lb-concept-close>✕ FECHAR</button></div><h3></h3><p></p></section>
         </div>`;
         document.body.appendChild(viewer);
-        const evolutionSearch=body.querySelector('#fauEvolutionSearch');
-        const evolutionFilter=()=>{
-          const q=archiveNameKey(evolutionSearch?.value||'');let count=0;
-          body.querySelectorAll('.fau-evolution-person').forEach(person=>{const show=person.dataset.evolutionName.includes(q);person.classList.toggle('hidden',!show);if(show)count++;});
-          body.querySelector('#fauEvolutionCount').textContent=`${count} ${count===1?'Designer':'Designers'}`;
-          body.querySelector('#fauEvolutionEmpty').classList.toggle('hidden',count>0);
-        };
-        evolutionSearch?.addEventListener('input',evolutionFilter);
-        body.querySelectorAll('.fau-evolution-person-head').forEach(button=>button.addEventListener('click',()=>{
-          const panel=body.querySelector('#'+button.getAttribute('aria-controls'));
-          const opening=panel.hidden;panel.hidden=!opening;button.setAttribute('aria-expanded',String(opening));
-        }));
+        body.querySelectorAll('.fau-legacy-evolution-toggle').forEach(button=>button.addEventListener('click',()=>{const panel=body.querySelector('#'+button.getAttribute('aria-controls'));const opening=panel.hidden;panel.hidden=!opening;button.setAttribute('aria-expanded',String(opening));}));
         const allCards=[...body.querySelectorAll('.fau-archive-entry')];
         let activeCards=[],activeIndex=0,previousFocus=null,touchStart=null;
         const conceptPanel=viewer.querySelector('.fau-lb-concept');
