@@ -4559,7 +4559,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const status=String(r.status||'').toUpperCase().replace(/\bTOP\b/g,'HIGH').replace(/^WIN.*$/,'WIN');
             if(!/\bOUT\b|ELIMINAD/.test(status))p.rounds.add(round);
             if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'Winner da Rodada'});awards.push({round,uid:r.uid,name:r.ate,type:'Winner da Rodada'});}
-            if(/\b(WIN|HIGH|TOP)\b/.test(status))p.highs++;
+            if(/\b(HIGH|TOP)\b/.test(status) && !/\bWIN\b/.test(status))p.highs++;
           });
           if(title?.icon){
             const uid=title.icon,match=rows.find(r=>r.uid===uid);
@@ -4601,22 +4601,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const latestPositions=new Map((latestRank?.rows||[]).map((r,i)=>[String(r.uid),i]));
         const castProfiles=castResult.status==='fulfilled'?castResult.value.docs.map(d=>({uid:d.id,...d.data()})):[];
         const eliminatedIds=new Set(castProfiles.filter(p=>p.out===true).map(p=>String(p.uid)));
+        // The Designer Legacy: ordenação por conquistas, independentemente
+        // da posição na última WEEK ou da situação atual do Designer.
+        // Desempate: WINs > Ícones da Moda > HIGHs > nome alfabético.
         const profiles=[...people.values()].sort((a,b)=>{
-          const ao=eliminatedIds.has(String(a.uid)),bo=eliminatedIds.has(String(b.uid));
-          if(ao!==bo)return ao?1:-1;
-          if(!ao){
-            // Os maiores destaques da temporada abrem o Hall, sem confundir
-            // o título do júri com o voto de Ícone da Moda.
-            const at=a.wins+a.icons,bt=b.wins+b.icons;
-            if(at!==bt)return bt-at;
-            const ar=latestPositions.get(String(a.uid))??Number.MAX_SAFE_INTEGER;
-            const br=latestPositions.get(String(b.uid))??Number.MAX_SAFE_INTEGER;
-            if(ar!==br)return ar-br;
-          }else{
-            const ar=outRounds.get(String(a.uid))??lastParticipation.get(String(a.uid))??-1;
-            const br=outRounds.get(String(b.uid))??lastParticipation.get(String(b.uid))??-1;
-            if(ar!==br)return br-ar;
-          }
+          if(a.wins!==b.wins)return b.wins-a.wins;
+          if(a.icons!==b.icons)return b.icons-a.icons;
+          if(a.highs!==b.highs)return b.highs-a.highs;
           return a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'});
         }).map(p=>{
           const isOut=eliminatedIds.has(String(p.uid));
