@@ -1064,6 +1064,33 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 .fau-shame-card h4{overflow-wrap:anywhere}
 .fau-shame-section strong{color:#e6b5bf}
 </style>
+<style id="fau-evolution-style">
+#fauArchive .fau-evolution-hero{padding:22px;border:1px solid rgba(209,179,139,.3);border-radius:14px;background:radial-gradient(ellipse at 90% 0%,rgba(142,52,70,.23),transparent 65%),#1d191e}
+#fauArchive .fau-evolution-person{border:1px solid #51414b;border-radius:12px;background:#1d191e;overflow:hidden}
+#fauArchive .fau-evolution-person-head{display:flex;align-items:center;gap:13px;width:100%;text-align:left;padding:13px 16px;color:#f0eae1}
+#fauArchive .fau-evolution-person-head[aria-expanded=true]{background:rgba(209,179,139,.08)}
+#fauArchive .fau-evolution-avatar{flex:0 0 52px;width:52px;height:62px;border-radius:7px;border:1px solid #76614b;background:#292329;display:grid;place-items:center;color:#d1b38b;overflow:hidden}
+#fauArchive .fau-evolution-avatar img{width:100%;height:100%;object-fit:cover}
+#fauArchive .fau-evolution-identity{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+#fauArchive .fau-evolution-identity strong{font:600 23px/1.1 'Cormorant Garamond',serif;overflow-wrap:anywhere}
+#fauArchive .fau-evolution-identity small{font-size:10px;color:#c7b6a4;line-height:1.5}
+#fauArchive .fau-evolution-chevron{font-size:26px;color:#d1b38b;transition:transform .2s}
+#fauArchive [aria-expanded=true] .fau-evolution-chevron{transform:rotate(180deg)}
+#fauArchive .fau-evolution-detail{padding:15px;border-top:1px solid #453c44}
+#fauArchive .fau-evolution-detail[hidden]{display:none!important}
+#fauArchive .fau-evolution-intro{font-size:12px;color:#b9aeb7;margin-bottom:20px}
+#fauArchive .fau-evolution-timeline{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:14px}
+#fauArchive .fau-evolution-moment{position:relative;border-left:2px solid rgba(209,179,139,.5);padding-left:12px;min-width:0}
+#fauArchive .fau-evolution-moment:before{content:'';position:absolute;left:-5px;top:4px;width:8px;height:8px;background:#d1b38b;border-radius:50%}
+#fauArchive .fau-evolution-week{display:block;color:#d1b38b;font-size:10px;font-weight:700;letter-spacing:.12em;margin-bottom:9px}
+#fauArchive .fau-evolution-look{display:block;cursor:pointer;background:#141215;border:1px solid #453c44;border-radius:9px;overflow:hidden}
+#fauArchive .fau-evolution-look img{width:100%;aspect-ratio:3/4;object-fit:contain;background:#09090b}
+#fauArchive .fau-evolution-look span{display:flex;flex-direction:column;gap:6px;padding:11px}
+#fauArchive .fau-evolution-look strong{font-size:12px;color:#f0eae1;overflow-wrap:anywhere}
+#fauArchive .fau-evolution-look small{font-size:9px;color:#d1b38b;letter-spacing:.08em}
+@media(max-width:500px){#fauArchive .fau-evolution-timeline{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}#fauArchive .fau-evolution-detail{padding:10px}#fauArchive .fau-evolution-moment{padding-left:8px}#fauArchive .fau-evolution-person-head{padding:11px}}
+@media(prefers-reduced-motion:reduce){#fauArchive .fau-evolution-chevron{transition:none}}
+</style>
 </head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
@@ -4767,6 +4794,35 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <div class="p-3 space-y-1"><h4 class="text-sm text-white font-cinzel">${esc(x.title||'Criação do arquivo')}</h4>${x.designer||x.ate?`<p class="text-xs text-gray-400">${esc(x.designer||x.ate)}</p>`:''}</div></article>`).join('');
           return `<section class="fau-look-week-group" data-week="${esc(round)}"><div class="fau-look-week-heading"><h4>${esc(weekLabel(round))}</h4><span class="fau-look-week-count">${looks.length} ${looks.length===1?'look':'looks'}</span></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${cards}</div></section>`;
         }).join('');
+        // The Evolution: uma retrospectiva por Designer, exclusivamente com looks publicados.
+        const evolutionCast=new Map(castProfiles.map(p=>[String(p.uid),p]));
+        const evolutionGroups=new Map();
+        archiveLooks.forEach(x=>{
+          const uid=String(x.uid||'');
+          const name=String(x.designer||x.ate||evolutionCast.get(uid)?.ate||'').trim();
+          if(!name)return;
+          const key=uid||archiveNameKey(name);
+          if(!evolutionGroups.has(key))evolutionGroups.set(key,{name,uid,looks:[]});
+          evolutionGroups.get(key).looks.push(x);
+        });
+        const evolutionPeople=[...evolutionGroups.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
+        const evolutionHtml=evolutionPeople.map((person,index)=>{
+          const looks=[...person.looks].sort((a,b)=>fauArchiveSort(a.round,b.round)||String(a.title||'').localeCompare(String(b.title||''),'pt-BR'));
+          const weeks=new Set(looks.map(x=>roundKey(x.round)));
+          const portrait=evolutionCast.get(person.uid)?.fotoElenco||'';
+          const first=looks[0],last=looks[looks.length-1];
+          return `<article class="fau-evolution-person" data-evolution-name="${esc(archiveNameKey(person.name))}">
+            <button type="button" class="fau-evolution-person-head" aria-expanded="false" aria-controls="fau-evolution-${index}">
+              <span class="fau-evolution-avatar">${portrait?`<img src="${esc(portrait)}" alt="" loading="lazy">`:'<i class="fa-solid fa-user" aria-hidden="true"></i>'}</span>
+              <span class="fau-evolution-identity"><strong>${esc(person.name)}</strong><small>${weeks.size} ${weeks.size===1?'WEEK':'WEEKS'} · ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'} · ${esc(weekLabel(first.round))} → ${esc(weekLabel(last.round))}</small></span>
+              <span class="fau-evolution-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="fau-evolution-detail" id="fau-evolution-${index}" hidden>
+              <p class="fau-evolution-intro">A trajetória na passarela, da primeira criação publicada à mais recente.</p>
+              <div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(weekLabel(x.round))}</span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" aria-label="Ver ${esc(x.title||'criação')} de ${esc(person.name)}" data-evolution-owner="${index}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(person.name)}" data-round="${esc(roundKey(x.round))}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"/><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')}</div>
+            </div>
+          </article>`;
+        }).join('');
         body.innerHTML=`
           ${rounds.length||people.size||totalLooks?`<div class="grid grid-cols-3 gap-2 sm:gap-4" aria-label="Resumo do arquivo">
             <div class="fau-archive-stat"><strong>${rounds.length}</strong><span>CAPÍTULOS OFICIAIS</span></div>
@@ -4779,6 +4835,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <button type="button" role="tab" aria-selected="false" data-archive-tab="shame" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">HALL OF SHAME</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="out" class="fau-archive-tab fau-archive-out-nav border border-fashion-700 rounded px-4 py-3 text-xs">AUF WIEDERSEHEN <span class="text-[10px] opacity-70">· HALL DOS ELIMINADOS</span></button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="track" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">TRACK RECORD</button>
+            <button type="button" role="tab" aria-selected="false" data-archive-tab="evolution" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">THE EVOLUTION</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="designers" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">DESIGNER LEGACY</button>
             <button type="button" role="tab" aria-selected="false" data-archive-tab="story" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">SEASON STORY</button>
           </div>
@@ -4792,6 +4849,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <p id="fauArchiveCount" class="text-xs text-gray-400" aria-live="polite"></p>
             <div id="fauArchiveGallery" class="space-y-7">${gallery||'<p class="col-span-full text-sm text-gray-400 py-8 text-center">O Lookbook será preenchido quando a produção publicar os looks das rodadas.</p>'}</div>
             <p id="fauArchiveEmpty" class="hidden text-sm text-gray-400 text-center py-8">Nenhum look corresponde à sua busca. Experimente outra palavra ou semana.</p>
+          </section>
+          <section data-archive-panel="evolution" class="space-y-5 hidden" role="tabpanel">
+            <div class="fau-evolution-hero"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER JOURNEY</p><h3 class="font-cinzel text-3xl text-white mt-2">THE EVOLUTION</h3><p class="text-sm text-gray-300 mt-2">Cada Designer tem uma história. Explore suas criações em ordem cronológica, começando pela primeira Week.</p></div>
+            <label class="block"><span class="sr-only">Buscar Designer</span><input type="search" id="fauEvolutionSearch" placeholder="Buscar Designer…" class="w-full rounded-lg border border-fashion-700 bg-fashion-950 p-3 text-sm text-white"></label>
+            <p id="fauEvolutionCount" class="text-xs text-fashion-gold" aria-live="polite">${evolutionPeople.length} Designers</p>
+            <div id="fauEvolutionList" class="space-y-3">${evolutionHtml||'<p class="text-sm text-gray-400 py-6">As trajetórias aparecerão após a publicação dos looks no Fashion Archive.</p>'}</div>
+            <p id="fauEvolutionEmpty" class="hidden text-sm text-gray-400">Nenhum Designer encontrado.</p>
           </section>
           <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">Os destaques da passarela</h3>
           <p class="text-gray-400 text-sm">A cada rodada, dois nomes entram para a história: o <strong>Winner da Rodada</strong>, escolhido pelos jurados, e o <strong>Ícone da Moda</strong>, eleito pelos próprios Designers.</p>
@@ -4832,6 +4896,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           <section class="fau-lb-concept" hidden aria-label="Conceito da criação"><div><small>CREATIVE DOSSIER</small><button type="button" data-lb-concept-close>✕ FECHAR</button></div><h3></h3><p></p></section>
         </div>`;
         document.body.appendChild(viewer);
+        const evolutionSearch=body.querySelector('#fauEvolutionSearch');
+        const evolutionFilter=()=>{
+          const q=archiveNameKey(evolutionSearch?.value||'');let count=0;
+          body.querySelectorAll('.fau-evolution-person').forEach(person=>{const show=person.dataset.evolutionName.includes(q);person.classList.toggle('hidden',!show);if(show)count++;});
+          body.querySelector('#fauEvolutionCount').textContent=`${count} ${count===1?'Designer':'Designers'}`;
+          body.querySelector('#fauEvolutionEmpty').classList.toggle('hidden',count>0);
+        };
+        evolutionSearch?.addEventListener('input',evolutionFilter);
+        body.querySelectorAll('.fau-evolution-person-head').forEach(button=>button.addEventListener('click',()=>{
+          const panel=body.querySelector('#'+button.getAttribute('aria-controls'));
+          const opening=panel.hidden;panel.hidden=!opening;button.setAttribute('aria-expanded',String(opening));
+        }));
         const allCards=[...body.querySelectorAll('.fau-archive-entry')];
         let activeCards=[],activeIndex=0,previousFocus=null,touchStart=null;
         const conceptPanel=viewer.querySelector('.fau-lb-concept');
@@ -4856,7 +4932,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const moveLook=step=>{if(!conceptPanel.hidden){hideConcept();return;}const next=activeIndex+step;if(next<0||next>=activeCards.length)return;activeIndex=next;displayLook();};
         const openLook=card=>{
           previousFocus=document.activeElement;
-          activeCards=allCards.filter(c=>!c.classList.contains('hidden')&&!c.closest('.fau-look-week-group')?.classList.contains('hidden'));
+          activeCards=card.dataset.evolutionOwner!==undefined?allCards.filter(c=>c.dataset.evolutionOwner===card.dataset.evolutionOwner):allCards.filter(c=>c.closest('[data-archive-panel="gallery"]')&&!c.classList.contains('hidden')&&!c.closest('.fau-look-week-group')?.classList.contains('hidden'));
           activeIndex=activeCards.indexOf(card);if(activeIndex<0){activeCards=[card];activeIndex=0;}
           viewer.hidden=false;document.body.style.overflow='hidden';displayLook();viewer.querySelector('[data-close-archive]')?.focus();
         };
