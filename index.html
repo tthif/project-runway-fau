@@ -2394,7 +2394,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const badges = [];
         if (noElimination) badges.push('<span class="fau-status-pill">SEM ELIMINAÇÃO</span>');
         // A dinâmica de eliminação dupla é surpresa: não mostrar no banner público.
-        if (photos > 1 && globalState.fase !== 'final') badges.push(`<span class="fau-status-pill">${photos} FOTOS NESTA RODADA</span>`);
+        // A quantidade de looks fica restrita aos controles internos da producao.
         const rules = typeof globalState.regras === 'string' ? globalState.regras : '';
         const isHub = activeTab === 'home';
         b.classList.toggle('fau-episode-mini', !isHub);
