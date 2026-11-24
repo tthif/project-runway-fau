@@ -8336,7 +8336,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           for(const [uid,score] of privateByUid){
             batch.set(db.doc(`desempenho_privado/${uid}`),{
               acumulado:score.tot,rodada:globalState.rodada,
-              [`porSemana.${round}`]:Number(score.rd.toFixed(2)),
+              porSemana:{[round]:Number(score.rd.toFixed(2))},
               criteriosVisuais:criteriaProfiles.get(uid)||null,
               ultimaRodada:score.rd,atualizadoEm:stamp
             },{merge:true});
