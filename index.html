@@ -1639,6 +1639,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     async function renderPersonalTwist() {
         const slot=document.getElementById('personalTwistSlot');if(!slot)return;
         const t=getTheme();if(!t){slot.innerHTML='';return;}
+        if(t.id==='theme_beauty_eye'){slot.innerHTML='';return;}
         const draw=await getPersonalTwist();
         const released=true;
         const isDraw=themeHasDraw(t);
@@ -2683,7 +2684,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     };
 
     // SEASON HUB: only published state and permitted navigation; no private ranking queries.
-    VIEWS.home = () => {
+    VIEWS.home = async () => {
+        const hideBeautyTwist=globalState.themeId==='theme_beauty_eye' && (await beautyState().catch(()=>({phase:'first'}))).phase==='first';
         const flow=getSeasonFlow(),role=currentUser.role,allowed=getAvailableTabs();
         const theme=SEASON_THEMES[globalState.themeId]||{};
         const title=flow.configured?(theme.title||theme.nome||globalState.themeId):'THE CASTING EXPERIENCE';
@@ -2729,7 +2731,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const [cta,...others]=available.length?available:fallback;
         const shortcuts=allowed.filter(t=>t!=='home'&&t!==cta?.[0]).slice(0,4);
         const roleNames={admin:'PRODUCTION HQ',estilista:'DESIGNER ACCESS',jurado:'JUDGES’ ACCESS',plateia:'FRONT ROW ACCESS'};
-        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">RESUMO DA RODADA</p><p class="fau-hub-official-text">${esc(globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
+        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">RESUMO DA RODADA</p><p class="fau-hub-official-text">${esc(hideBeautyTwist?'THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.':globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
         // A próxima ação vem antes do comunicado longo, sobretudo no celular.
         const hubRoot=document.querySelector('.fau-season-hub');
         if(hubRoot){const hero=hubRoot.querySelector('.fau-hub-hero');const action=hero?.nextElementSibling;if(action&&action.querySelector('[data-hub-go]'))hubRoot.insertBefore(action,hero);}
@@ -3067,7 +3069,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
       const draw=fauTestLabState.draw, released=fauTestLabState.released;
       const extra=t.extraField && !(false&&draw)?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="fauLabCharacter" class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="">Escolha...</option>${(t.extraField.options||[]).map(x=>`<option>${esc(x)}</option>`).join('')}</select>`:`<input class="w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:'';
       const hiddenSecond=t.id==='theme_beauty_eye'&&!fauTestLabState.phaseTwo;
-      const slots=t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${hiddenSecond?esc('Look 1 — Criação Autoral Original'):t.slotLabels.map(esc).join(' / ')}</p>`:'';
+      if(hiddenSecond)return '';
+      const slots=t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:'';
       if(!extra&&!slots&&(!t.drawType||t.drawType==='none'))return '';
       let control='';
       if(false)control='<p class="text-xs text-gray-300">Escolha livremente um personagem acima e confirme. Sua escolha será definitiva.</p><button type="button" id="fauLabDrawConfirm" class="w-full bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">CONFIRMAR PERSONAGEM</button>';
@@ -3116,7 +3119,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <div class="fau-submission-board"><div id="workroomThermometer" class="text-xs"><div class="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div><p class="text-xs text-gray-300">0 de 18 Designers enviaram · 18 faltam</p><p class="text-[10px] text-gray-500 mt-2">Dados fictícios para visualização</p></div></div></div>
           </section>
           ${fauLabSecondPhase(theme)}<div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
-          <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada"><details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${esc(phaseOne?({'theme_beauty_eye':'THE CHALLENGE — Apresente sua visão pessoal da beleza em um look autoral. Envie sua primeira criação. A produção anunciará os próximos acontecimentos no momento certo.','theme_rest_in_style':'THE CHALLENGE — Crie um look para um funeral sem utilizar preto. A produção anunciará os próximos acontecimentos no momento certo.','theme_tarantino':'THE CHALLENGE — Crie uma proposta autoral inspirada no universo cinematográfico de Tarantino. Aguarde novas instruções da produção.','theme_plaid_bay':'THE CHALLENGE — Reinvente o uniforme xadrez da Baia para um ex-participante de A Fazenda. Xadrez obrigatório. Aguarde novas instruções da produção.'}[theme.id]):theme.mandate||'Aguarde as instruções da produção.')}</div></details></section>
+          <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada"><details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">${esc(phaseOne?({'theme_beauty_eye':'THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.','theme_rest_in_style':'THE CHALLENGE — Crie um look para um funeral sem utilizar preto. A produção anunciará os próximos acontecimentos no momento certo.','theme_tarantino':'THE CHALLENGE — Crie uma proposta autoral inspirada no universo cinematográfico de Tarantino. Aguarde novas instruções da produção.','theme_plaid_bay':'THE CHALLENGE — Reinvente o uniforme xadrez da Baia para um ex-participante de A Fazenda. Xadrez obrigatório. Aguarde novas instruções da produção.'}[theme.id]):theme.mandate||'Aguarde as instruções da produção.')}</div></details></section>
           <section class="fau-submission-suite" aria-label="Envio do desafio">
           <div id="personalTwistSlot">${fauLabTwist(theme)}</div>
           <div id="fauMutationModule">${isMutation?fauMutationPanel(fauTestLabState.envelope?{envelope:fauTestLabState.envelope,mutationIndex:fauTestLabState.mutationIndex,mutationVersion:2}:null,false):''}</div>
@@ -3391,6 +3394,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a sincronização da produção.':`${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${submissionPulse?.updatedAt?.toDate ? ' · Atualizado '+submissionPulse.updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`}</p>`;
 
             const beauty = globalState.themeId === 'theme_beauty_eye' ? await beautyState() : null;
+            if(beauty?.phase==='first'){const brief=document.querySelector('#fauBriefingCard .fau-brief-body');if(brief)brief.textContent='THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.';}
             const beautyAssignment = beauty?.assignments?.find(a=>a.uid===currentUser.uid);
             if (globalState.themeId === 'theme_rest_in_style') {
                 const rest = await restState();
@@ -3436,8 +3440,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const formSlot = $('#workroomFormModule');
             if (beauty && currentRoundLooks.length===1 && beauty.phase==='first') {
                 formSlot.innerHTML = `<div class="bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg text-center space-y-3">
-                    <h3 class="font-cinzel text-fashion-gold">👁️ THE EXHIBITION IS NOT OVER YET</h3>
-                    <p class="text-sm text-gray-300">Sua primeira visão está guardada. A produção está recolhendo os conceitos antes de abrir a segunda etapa.</p></div>`;
+                    <h3 class="font-cinzel text-fashion-gold">LOOK RECEIVED</h3>
+                    <p class="text-sm text-gray-300">Sua criação foi recebida pela produção.</p></div>`;
             } else if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
                 formSlot.innerHTML = '<p class="text-amber-300">Seu envelope ainda não foi distribuído. Avise a produção.</p>';
             } else if (currentRoundLooks.length >= requiredLooks) {
@@ -3452,9 +3456,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 formSlot.innerHTML = `
                     <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6">
                         <div class="space-y-3"><h3 class="font-cinzel text-2xl text-white">Envie seu look</h3></div>
-                <div class="border-b border-fashion-700 pb-3 flex justify-between items-center">
-                            <h3 class="font-cinzel text-lg text-white font-normal">Look ${currentRoundLooks.length + 1} de ${requiredLooks}</h3>
-                        </div>
+                ${beauty?.phase==='first'?'':`<div class="border-b border-fashion-700 pb-3 flex justify-between items-center"><h3 class="font-cinzel text-lg text-white font-normal">Look ${currentRoundLooks.length + 1} de ${requiredLooks}</h3></div>`}
 
                         <div class="space-y-4 text-xs">
                             <div>
@@ -5699,7 +5701,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
     VIEWS.runway = async () => {
         if (globalState.themeId==='theme_beauty_eye' && !isAdmin && (await beautyState()).phase!=='exhibition') {
-            renderView('<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-8 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">👁️ THE EXHIBITION IS NOT OPEN</h2><p class="text-sm text-gray-300 mt-3">As duas visões permanecem em segredo até a autorização da produção.</p></div>');
+            renderView('<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-8 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">👁️ THE EXHIBITION IS NOT OPEN</h2><p class="text-sm text-gray-300 mt-3">A passarela será aberta após a autorização da produção.</p></div>');
             return;
         }
         if (!globalState.liberado && !isAdmin && !(globalState.themeId==='theme_next_supreme' && (await supremeState()).phase==='voting')) {
