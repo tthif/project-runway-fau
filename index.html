@@ -1829,6 +1829,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         bancada: "The Judges' Panel",
         direcao: 'The Control Room',
         testlab: 'Test Lab',
+        judgesvault: "The Judges’ Vault",
         pistas: 'The Theme Vault',
         manual: 'The Rulebook'
     };
@@ -1837,7 +1838,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         estilista: ['meu_perfil', 'work', 'runway', 'tribunal', 'conf'],
         jurado: ['bancada', 'runway', 'conf'],
         plateia: ['runway', 'conf'],
-        admin: ['direcao', 'testlab', 'work', 'bancada', 'runway', 'tribunal', 'conf']
+        admin: ['direcao', 'judgesvault', 'testlab', 'work', 'bancada', 'runway', 'tribunal', 'conf']
     };
 
     Object.values(ABAS_POR_PERFIL).forEach(a => { a.unshift('home'); a.push('cast'); a.push('legado'); a.push('pistas'); a.push('manual'); });
@@ -2561,6 +2562,56 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     });
 
     const VIEWS = {};
+    VIEWS.judgesvault = async () => {
+      const main=$('#mainView'), uid=currentUser?.uid;
+      const allowed=()=>currentUser?.role==='admin' && auth.currentUser?.uid===uid && activeTab==='judgesvault';
+      if(!allowed())return;
+      main.innerHTML='<section id="judgesVault" class="space-y-5"><div class="fau-entrance-stage rounded-2xl border border-fashion-gold/40 p-6"><p class="text-xs tracking-widest text-fashion-gold">CONFIDENTIAL · ADM ONLY</p><h2 class="font-cinzel text-3xl mt-2">The Judges’ Vault</h2><p class="text-gray-300 mt-2">Por trás de cada veredito. Todas as notas, toda a temporada.</p></div><div id="jvBody">Carregando arquivo confidencial…</div></section>';
+      const root=$('#judgesVault'), body=$('#jvBody');
+      try {
+        const [as,ls,ps,hs]=await Promise.all(['avaliacoes','looks','perfis','ranking_historico_publico'].map(c=>db.collection(c).get()));
+        if(!allowed()||!root.isConnected)return;
+        const docs=s=>s.docs.map(d=>({...d.data(),id:d.id}));
+        const profiles=new Map(docs(ps).map(p=>[p.id,p])), looks=new Map(docs(ls).map(l=>[l.id,l]));
+        const history=new Map(docs(hs).map(h=>[String(h.rodada??h.id),h.rows||[]]));
+        const judges=new Map(), designers=new Map();
+        profiles.forEach((p,id)=>{if(p.role==='jurado'||p.role==='admin')judges.set(id,p.nomeJurado||p.ate||id)});
+        const groups=new Map();
+        for(const a of docs(as)){
+          if(!a.jurado||!Array.isArray(a.nota)||a.nota.length!==5||a.nota.some(n=>n===null||n===''||!Number.isFinite(Number(n))||Number(n)<0||Number(n)>10))continue;
+          const l=looks.get(a.look)||{}, r=String(a.rodada??l.rodada??'—'), d=a.alvo||l.uid||a.alvoAte||a.id, k=a.look||`${r}:${d}`;
+          judges.set(a.jurado,a.juradoNome||judges.get(a.jurado)||a.jurado); designers.set(d,a.alvoAte||l.ate||profiles.get(d)?.ate||d);
+          if(!groups.has(k))groups.set(k,{k,r,d,l,status:history.get(r)?.find(x=>x.uid===d)?.status||'Sem resultado',notes:new Map()});
+          const g=groups.get(k), old=g.notes.get(a.jurado); if(!old||Number(a.t||0)>=Number(old.t||0))g.notes.set(a.jurado,{...a,nota:a.nota.map(Number)});
+        }
+        const all=[...groups.values()], rounds=[...new Set(all.map(g=>g.r))].sort((a,b)=>fauWeekLabel(a).localeCompare(fauWeekLabel(b),'pt-BR',{numeric:true}));
+        const mean=x=>x.length?x.reduce((a,b)=>a+b,0)/x.length:null, fmt=x=>x==null?'—':x.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+        const options=(items)=>items.map(([v,n])=>`<option value="${esc(v)}">${esc(n)}</option>`).join('');
+        const select=(id,label,items)=>`<label class="text-xs text-gray-300">${label}<select id="${id}" class="block w-full mt-1 p-2 border border-fashion-700">${options(items)}</select></label>`;
+        const panel=(title,content)=>`<section class="rounded-xl border border-fashion-700 bg-fashion-900 p-4 space-y-3"><h3 class="font-cinzel text-fashion-gold text-lg">${title}</h3>${content}</section>`;
+        body.innerHTML=`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${select('jvRound','Semana',[['all','Temporada completa'],...rounds.map(r=>[r,fauWeekLabel(r)])])}${select('jvJudge','Jurado',[['all','Média dos jurados'],...judges])}${select('jvDesigner','Designer',[['all','Todos'],...designers])}${select('jvStatus','Classificação',[['all','Todas'],...([...new Set(all.map(g=>g.status))].map(s=>[s,s]))])}${select('jvCriterion','Critério',[['total','Total / 50'],...CRITERIOS.map((c,i)=>[i,c])])}${select('jvMode','Ranking',[['look','Por criação'],['mean','Designer · média por semana'],['sum','Designer · acumulado'],['week','Por semana'],['judge','Por jurado']])}</div><div class="flex justify-end"><button id="jvRefresh" class="text-fashion-gold text-xs border border-fashion-700 rounded px-4">Atualizar dados</button></div><div id="jvResults" class="space-y-4"></div>`;
+        const render=()=>{
+          if(!allowed()||!root.isConnected)return;
+          const val=id=>$('#'+id).value, r=val('jvRound'),j=val('jvJudge'),d=val('jvDesigner'),s=val('jvStatus'),c=val('jvCriterion'),mode=val('jvMode'),max=c==='total'?50:10;
+          const score=a=>c==='total'?a.nota.reduce((x,y)=>x+y,0):a.nota[Number(c)];
+          const base=all.filter(g=>(r==='all'||g.r===r)&&(d==='all'||g.d===d)&&(s==='all'||g.status===s));
+          const rows=base.map(g=>({...g,v:mean([...g.notes].filter(([id])=>j==='all'||id===j).map(([,a])=>score(a)))})).filter(g=>g.v!==null);
+          const bucket=(arr,key)=>{const m=new Map();arr.forEach(x=>{const k=key(x);if(!m.has(k))m.set(k,[]);m.get(k).push(x)});return m};
+          const byJudge=[...judges].map(([id,name])=>{const a=base.filter(g=>g.notes.has(id));const v=a.map(g=>score(g.notes.get(id)));return {name,v:mean(v),count:a.length, weeks:new Set(a.map(g=>g.r)).size,low:v.length?Math.min(...v):null,high:v.length?Math.max(...v):null}}).filter(x=>x.count&&(j==='all'||judges.get(j)===x.name));
+          let rank=rows.map(g=>({name:designers.get(g.d),sub:`${fauWeekLabel(g.r)} · ${g.status}`,v:g.v,g}));
+          if(mode==='week')rank=[...bucket(rows,g=>g.r)].map(([k,a])=>({name:fauWeekLabel(k),sub:`${a.length} criações`,v:mean(a.map(g=>g.v))}));
+          if(mode==='judge')rank=byJudge.map(x=>({...x,sub:`${x.count} looks · ${x.weeks} semanas`}));
+          if(mode==='mean'||mode==='sum')rank=[...bucket(rows,g=>g.d)].map(([k,a])=>{const w=[...bucket(a,g=>g.r).values()].map(b=>mean(b.map(g=>g.v)));return {name:designers.get(k),sub:`${w.length} semanas · ${a.length} looks`,v:mode==='sum'?w.reduce((x,y)=>x+y,0):mean(w)}});
+          rank.sort((a,b)=>b.v-a.v); const bar=(v,m=max)=>`<div class="h-1 rounded bg-fashion-700 mt-2"><div class="h-1 rounded bg-fashion-gold" style="width:${Math.min(100,Math.max(0,v/m*100))}%"></div></div>`;
+          const detail=g=>`<details class="mt-3 border-t border-fashion-700 pt-2"><summary class="cursor-pointer text-fashion-gold text-xs">Abrir dossiê de avaliação</summary><p class="text-sm my-2">${esc(g.l.mem||'')}</p>${[...g.notes].map(([id,a])=>`<div class="border-t border-fashion-700 py-2"><strong>${esc(judges.get(id))} · ${fmt(a.nota.reduce((x,y)=>x+y,0))}/50</strong>${CRITERIOS.map((n,i)=>`<div class="flex justify-between text-xs py-1"><span>${esc(n)}</span><b>${fmt(a.nota[i])}</b></div>`).join('')}</div>`).join('')}</details>`;
+          const cards=rank.map((x,i)=>`<article class="border ${i===0?'border-fashion-gold':'border-fashion-700'} rounded-xl p-3 bg-fashion-950"><div class="flex items-center gap-3"><span class="text-fashion-gold font-cinzel text-xl">${rank.findIndex(y=>y.v===x.v)+1}º</span>${x.g?.l.url?`<img loading="lazy" src="${esc(x.g.l.url)}" class="w-14 h-20 object-cover rounded" alt="Look">`:''}<div class="flex-1 min-w-0"><strong>${esc(x.name)}</strong><p class="text-xs text-gray-400">${esc(x.sub)}</p>${x.g?`<p class="text-xs">${esc(x.g.l.titulo||'')} · ${x.g.notes.size} avaliações</p>`:''}</div><b class="text-fashion-gold text-xl">${fmt(x.v)}</b></div>${bar(x.v,mode==='sum'?rank[0].v||1:max)}${x.g?detail(x.g):''}</article>`).join('');
+          const spread=rows.filter(g=>g.notes.size>1).map(g=>({g,v:Math.max(...[...g.notes.values()].map(score))-Math.min(...[...g.notes.values()].map(score))})).sort((a,b)=>b.v-a.v);
+          $('#jvResults').innerHTML=`<div class="grid grid-cols-2 md:grid-cols-4 gap-2">${[['Criações',rows.length],['Média',fmt(mean(rows.map(g=>g.v)))],['Maior nota',fmt(rows.length?Math.max(...rows.map(g=>g.v)):null)],['Menor nota',fmt(rows.length?Math.min(...rows.map(g=>g.v)):null)]].map(([k,v])=>`<div class="bg-fashion-900 border border-fashion-700 rounded-xl p-3"><p class="text-xs text-gray-400">${k}</p><strong class="text-2xl text-fashion-gold">${v}</strong></div>`).join('')}</div>${panel('Rankings',cards||'<p>Sem avaliações para estes filtros.</p>')}${panel('Judging DNA',byJudge.sort((a,b)=>b.v-a.v).map(x=>`<div class="border-b border-fashion-700 pb-3"><div class="flex justify-between"><strong>${esc(x.name)}</strong><b class="text-fashion-gold">${fmt(x.v)}</b></div><p class="text-xs text-gray-400">${x.count} looks · ${x.weeks} semanas · mín. ${fmt(x.low)} · máx. ${fmt(x.high)}</p>${bar(x.v)}</div>`).join('')||'Sem notas')}${panel('Evolução por semana',rounds.filter(w=>r==='all'||r===w).map(w=>{const a=rows.filter(g=>g.r===w);return `<div><strong>${esc(fauWeekLabel(w))}</strong><div class="flex justify-between text-xs"><span>Média · ${a.length} looks</span><b>${fmt(mean(a.map(g=>g.v)))}</b></div>${bar(mean(a.map(g=>g.v))||0)}${byJudge.map(x=>{const id=[...judges].find(([id,n])=>n===x.name)?.[0];const v=mean(a.filter(g=>g.notes.has(id)).map(g=>score(g.notes.get(id))));return `<div class="flex justify-between text-xs text-gray-400"><span>${esc(x.name)}</span><span>${fmt(v)}</span></div>`}).join('')}</div>`}).join(''))}${panel('Consensos e divergências',spread.length?`<p class="text-xs text-gray-400">Diferença entre maior e menor nota da bancada completa.</p>${[...spread.slice(0,3),...spread.slice(-3).filter(x=>!spread.slice(0,3).includes(x))].map(x=>`<div class="flex justify-between gap-2 text-sm"><span>${esc(designers.get(x.g.d))} · ${esc(fauWeekLabel(x.g.r))}</span><b>${fmt(x.v)}</b></div>`).join('')}`:'Sem avaliações comparáveis.') }<p class="text-xs text-gray-400">Análise de notas brutas, sem penalidades. Acumulado analítico soma médias por semana (múltiplos looks têm peso igual dentro da semana). Rodadas sem resultado são provisórias. Ausências não valem zero. Classificações vêm do histórico oficial; não são recalculadas.</p>`;
+        };
+        body.querySelectorAll('select').forEach(e=>e.addEventListener('change',render));$('#jvRefresh').onclick=()=>VIEWS.judgesvault();render();
+      }catch(e){if(allowed()&&root.isConnected)body.textContent='Não foi possível carregar o arquivo: '+(e.message||e);}
+    };
+
 
     // Photo upload uses the existing protected profile document. A compressed image
     // is kept under Firestore's document size limit, avoiding a separate storage setup.
