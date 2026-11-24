@@ -4189,6 +4189,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                             return corrected?{...entry,status:corrected}:entry;
                         });
                     }
+                    // W04 — Double Kill: classificação e ordem de saída confirmadas pela produção.
+                    if(rounds[3]){
+                        const confirmedW04=new Map([['thýco mia','LOW + OUT'],['thyco mia','LOW + OUT'],['lince d’oro','BOTTOM'],["lince d'oro",'BOTTOM'],['dr chucodromo','BOTTOM + OUT'],['giuseppe cadura','LOW']]);
+                        rounds[3].rows=rounds[3].rows.map(entry=>{
+                            const corrected=confirmedW04.get(normalizeName(entry.ate));
+                            return corrected?{...entry,status:corrected}:entry;
+                        });
+                    }
                     rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
                         const name=String(entry.ate||'Designer').trim();
                         const person=ensurePerson(name,String(entry.uid||'').trim());
@@ -4211,6 +4219,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         person.exitReason=reason==='SEM ENVIO'?'Eliminado por não enviar o look.':'Eliminado no Elimination Pool após ficar no BOTTOM da rodada.';
                         person.history.set(week,'OUT');
                     });
+                    if(rounds[3]){
+                        const first=byName.get('thýco mia')||byName.get('thyco mia');
+                        if(first){first.exitAt=3;first.exitReason='Eliminado pelo pior acumulado (First Kill).';}
+                    }
                     const lastIndex=rounds.length-1;
                     const roster=[...new Set(people.values())];
                     roster.forEach(p=>{
@@ -4246,13 +4258,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         const inPool=pool.some(e=>String(e.uid||'')&&String(e.uid)===String([...r.rows].find(x=>normalizeName(x.ate)===normalizeName(p.name))?.uid||'')||normalizeName(e.ate)===normalizeName(p.name));
                         // A vaga do pior acumulado não substitui a classificação da Week.
                         // Os dois BOTTOM entram automaticamente; os demais integrantes do Pool recebem *.
-                        const specialPool=inPool && v!=='BOTTOM' && !(v==='OUT' && /BOTTOM/i.test(p.exitReason));
+                        const specialPool=(inPool && v!=='BOTTOM' && !(v==='OUT' && /BOTTOM/i.test(p.exitReason))) || (v==='OUT' && p.exitAt===i && /First Kill/.test(p.exitReason));
                         const display=v==='SAFE'?'IN':v;
                         const mark=specialPool?'<sup class="fau-tr-pool-mark" aria-label="Elimination Pool pelo pior acumulado">*</sup>':'';
                         if(v==='OUT' && p.exitAt===i){return `<td class="fau-tr-out">OUT${mark}</td>`;}
                         return `<td class="fau-tr-${cssStatus(v)}">${esc(display)}${mark}</td>`;
                       }).join('')}</tr>`).join('')}</tbody></table></div>
-                      <div class="fau-tr-legend">${[['WIN','Vencedor'],['HIGH','Destaque'],['IN','Na competição'],['LOW','Desempenho baixo'],['BOTTOM','Entre os dois últimos'],['OUT','Eliminado']].map(([v,label])=>`<span><i class="fau-tr-dot fau-tr-${cssStatus(v)}"></i><b>${v}</b> ${label}</span>`).join('')}<span class="fau-tr-pool-legend"><b>*</b> Elimination Pool · pior acumulado</span></div>`;
+                      <div class="fau-tr-legend">${[['WIN','Vencedor'],['HIGH','Destaque'],['IN','Na competição'],['LOW','Desempenho baixo'],['BOTTOM','Entre os dois últimos'],['OUT','Eliminado']].map(([v,label])=>`<span><i class="fau-tr-dot fau-tr-${cssStatus(v)}"></i><b>${v}</b> ${label}</span>`).join('')}<span class="fau-tr-pool-legend"><b>*</b> Pior acumulado · Elimination Pool ou First Kill</span></div>`;
                 }
             } catch(err) {
                 console.warn('Public Track Record unavailable',err);
