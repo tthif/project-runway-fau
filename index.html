@@ -3224,27 +3224,31 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 });
             }
             let designers=[],looks=[],readyProfiles=false,readyLooks=false;
+            const isBeautyStudio=globalState.themeId==='theme_beauty_eye';
+            let studioBeautyPhase='first';
             const paint=()=>{
                 const list=$('#fauAdminWorkroomList'),counter=$('#fauAdminWorkroomCount');
                 if(!list||!counter)return;
                 if(!readyProfiles||!readyLooks)return;
                 const byUid=new Map();
                 for(const look of looks){
+                    if(isBeautyStudio && studioBeautyPhase==='first' && Number(look.slot||1)!==1)continue;
                     const uid=look.uid;if(!uid)continue;
                     if(!byUid.has(uid))byUid.set(uid,[]);
                     byUid.get(uid).push(look);
                 }
-                const required=globalState.fase==='final'?4:(Number(globalState.numSubmissoes)||1);
+                const required=isBeautyStudio?(studioBeautyPhase==='first'?1:2):globalState.fase==='final'?4:(Number(globalState.numSubmissoes)||1);
                 const eligible=designers.filter(d=>!d.disabled&&!d.out&&!d.eliminado&&d.ativo!==false&&String(d.status||'').toUpperCase()!=='OUT');
                 const completed=eligible.filter(d=>(byUid.get(d.uid)||[]).length>=required).length;
                 const pct=eligible.length?Math.round(completed/eligible.length*100):0;
-                counter.innerHTML=`<div class="fau-studio-progress"><div><small>STATUS DAS ENTREGAS</small><h3>${completed} <span>/ ${eligible.length} Designers</span></h3></div><strong>${pct}%</strong></div><div class="fau-studio-bar"><div style="width:${pct}%"></div></div><div class="fau-studio-stats"><span>${completed} concluídos</span><span>${eligible.length-completed} pendentes</span><span>${looks.length} looks recebidos</span></div>`;
+                counter.innerHTML=`<div class="fau-studio-progress"><div><small>STATUS DAS ENTREGAS</small><h3>${completed} <span>/ ${eligible.length} Designers</span></h3></div><strong>${pct}%</strong></div><div class="fau-studio-bar"><div style="width:${pct}%"></div></div><div class="fau-studio-stats"><span>${completed} concluídos</span><span>${eligible.length-completed} pendentes</span><span>${eligible.reduce((n,d)=>n+(byUid.get(d.uid)||[]).length,0)} ${eligible.reduce((n,d)=>n+(byUid.get(d.uid)||[]).length,0)===1?'look recebido':'looks recebidos'}</span></div>`;
                 const visible=eligible.filter(d=>{const n=(byUid.get(d.uid)||[]).length;return (studioFilter==='all'||(studioFilter==='complete'?n>=required:n<required))&&String(d.ate||d.nome||'').toLocaleLowerCase('pt-BR').includes(studioSearch);});
                 list.innerHTML=visible.map(d=>{
                     const entries=(byUid.get(d.uid)||[]).sort((a,b)=>(a.slot||0)-(b.slot||0));const done=entries.length>=required;
-                    return `<article class="fau-studio-card ${done?'complete':'pending'}"><div class="fau-studio-person">${d.fotoElenco?`<img src="${esc(d.fotoElenco)}" alt="">`:'<div class="fau-studio-avatar">✂</div>'}<div><h3>${esc(d.ate||'Designer')}</h3><small>${entries.length} de ${required} ${required===1?'look':'looks'}</small></div><b>${done?'CONCLUÍDO':'PENDENTE'}</b></div>${entries.length?`<div class="fau-studio-looks">${entries.map(l=>`<div>${l.url?`<img src="${esc(l.url)}" alt="Look de ${esc(d.ate||'Designer')}" loading="lazy">`:'<div class="fau-studio-noimage">Imagem indisponível</div>'}<strong>${esc(l.titulo||'Sem título')}</strong><details><summary>Ver conceito</summary><p>${esc(l.mem||'Sem conceito informado.')}</p></details></div>`).join('')}</div>`:'<p class="fau-studio-wait">◷ Aguardando criação...</p>'}</article>`;
+                    return `<article class="fau-studio-card ${done?'complete':'pending'}"><div class="fau-studio-person">${d.fotoElenco?`<img src="${esc(d.fotoElenco)}" alt="">`:'<div class="fau-studio-avatar">✂</div>'}<div><h3>${esc(d.ate||'Designer')}</h3><small>${entries.length} de ${required} ${required===1?'look':'looks'}</small></div><b>${done?'CONCLUÍDO':'PENDENTE'}</b></div>${entries.length?`<div class="fau-studio-looks">${entries.map(l=>`<div>${isBeautyStudio&&studioBeautyPhase!=='first'?`<p class="text-xs text-fashion-gold mb-2">${Number(l.slot)===2?'Another Point of View':'My Vision'}</p>`:''}${l.url?`<img src="${esc(l.url)}" alt="Look de ${esc(d.ate||'Designer')}" loading="lazy">`:'<div class="fau-studio-noimage">Imagem indisponível</div>'}<strong>${esc(l.titulo||'Sem título')}</strong><details><summary>Ver conceito</summary><p>${esc(l.mem||'Sem conceito informado.')}</p></details></div>`).join('')}</div>`:'<p class="fau-studio-wait">◷ Aguardando criação...</p>'}</article>`;
                 }).join('')||'<p class="fau-studio-empty">Nenhum Designer encontrado neste filtro.</p>';
             };
+            if(isBeautyStudio)sub(beautyRef(),snap=>{studioBeautyPhase=['assigned','exhibition'].includes(snap.data()?.phase)?snap.data().phase:'first';paint();});
             sub(db.collection('perfis').where('role','==','estilista'),snap=>{designers=snap.docs.map(d=>({uid:d.id,...d.data()})).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR'));readyProfiles=true;paint();});
             sub(db.collection('looks').where('rodada','==',round),snap=>{looks=snap.docs.map(d=>({id:d.id,...d.data()}));readyLooks=true;paint();});
             return;
@@ -3262,7 +3266,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             return;
         }
         const isFinalPhase = globalState.fase === 'final';
-        const requiredLooks = isFinalPhase ? 4 : (globalState.numSubmissoes || 1);
+        const isBeautyWorkroom = globalState.themeId === 'theme_beauty_eye';
+        let observedBeautyPhase = null;
 
         renderView(`
             <div class="space-y-6">
@@ -3285,7 +3290,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
                 <div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
-                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(String(globalState.briefing?.trim() || getTheme()?.mandate || 'Aguarde as instruções da produção.'))}</div></details>
+                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(isBeautyWorkroom ? 'THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.' : String(globalState.briefing?.trim() || getTheme()?.mandate || 'Aguarde as instruções da produção.'))}</div></details>
                 </section>
 
                 <section class="fau-submission-suite" aria-label="Envio do desafio">
@@ -3380,7 +3385,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 $('#atelierSetupModule').innerHTML = '';
             }
 
-            const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada);
+            const beauty = isBeautyWorkroom ? await beautyState() : null;
+            if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
+            const beautyReleased = ['assigned','exhibition'].includes(beauty?.phase);
+            const requiredLooks = isBeautyWorkroom ? (beautyReleased ? 2 : 1) : (isFinalPhase ? 4 : (globalState.numSubmissoes || 1));
+            const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada && (!isBeautyWorkroom || beautyReleased || Number(l.slot||1)===1));
             // Public aggregate only: never query or reveal other designers' individual submissions.
             const pulseReady = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
             const sent = pulseReady ? Math.max(0, Number(submissionPulse.enviados)) : null;
@@ -3393,9 +3402,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
               <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a sincronização da produção.':`${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${submissionPulse?.updatedAt?.toDate ? ' · Atualizado '+submissionPulse.updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`}</p>`;
 
-            const beauty = globalState.themeId === 'theme_beauty_eye' ? await beautyState() : null;
-            if(beauty?.phase==='first'){const brief=document.querySelector('#fauBriefingCard .fau-brief-body');if(brief)brief.textContent='THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.';}
-            const beautyAssignment = beauty?.assignments?.find(a=>a.uid===currentUser.uid);
+            if(beauty){const brief=document.querySelector('#fauBriefingCard .fau-brief-body');if(brief)brief.textContent=beautyReleased ? (globalState.briefing?.trim() || getTheme()?.mandate) : 'THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.';}
+            const beautyAssignment = beautyReleased ? beauty?.assignments?.find(a=>a.uid===currentUser.uid) : null;
             if (globalState.themeId === 'theme_rest_in_style') {
                 const rest = await restState();
                 const nominated = (rest.pool||[]).some(x=>x.uid===currentUser.uid);
@@ -3438,25 +3446,21 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }
             if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
             const formSlot = $('#workroomFormModule');
-            if (beauty && currentRoundLooks.length===1 && beauty.phase==='first') {
-                formSlot.innerHTML = `<div class="bg-fashion-900 border border-fashion-gold/40 p-6 rounded-lg text-center space-y-3">
-                    <h3 class="font-cinzel text-fashion-gold">LOOK RECEIVED</h3>
-                    <p class="text-sm text-gray-300">Sua criação foi recebida pela produção.</p></div>`;
-            } else if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
+            if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
                 formSlot.innerHTML = '<p class="text-amber-300">Seu envelope ainda não foi distribuído. Avise a produção.</p>';
             } else if (currentRoundLooks.length >= requiredLooks) {
                 const editable = Number(globalState.prazo)>now();
                 formSlot.innerHTML = `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-5 space-y-4">
                     <h3 class="font-cinzel text-2xl text-white">${editable?'Your runway look':'Your submitted looks'}</h3>
                     <p class="text-xs text-gray-300">${editable?'Sua última entrega já está salva. Os campos abaixo vêm preenchidos e você pode atualizar a imagem, o título e o conceito até o prazo terminar.':'As entregas estão encerradas. Confira seus looks no arquivo do Designer.'}</p>
-                    ${editable?`<div class="flex flex-wrap gap-2" id="fauInlineLookTabs" role="group" aria-label="Escolher look para editar">${currentRoundLooks.slice().sort((a,b)=>(a.slot||0)-(b.slot||0)).map((l,i)=>`<button type="button" data-edit-look="${esc(l.id)}" class="rounded border border-fashion-gold/50 px-4 py-2 text-xs text-fashion-gold">${esc(getTheme()?.slotLabels?.[l.slot-1]||'LOOK '+(l.slot||i+1))}</button>`).join('')}</div><div id="fauInlineEditHost"></div>`:'<p class="text-green-300 text-xs">✓ Entregas recebidas pela produção.</p>'}
+                    ${editable?`<div class="flex flex-wrap gap-2" id="fauInlineLookTabs" role="group" aria-label="Escolher look para editar">${currentRoundLooks.slice().sort((a,b)=>(a.slot||0)-(b.slot||0)).map((l,i)=>`<button type="button" data-edit-look="${esc(l.id)}" class="rounded border border-fashion-gold/50 px-4 py-2 text-xs text-fashion-gold">${esc(isBeautyWorkroom ? (beautyReleased ? (Number(l.slot)===2?'Another Point of View':'My Vision') : 'Editar look') : (getTheme()?.slotLabels?.[l.slot-1]||'LOOK '+(l.slot||i+1)))}</button>`).join('')}</div><div id="fauInlineEditHost"></div>`:'<p class="text-green-300 text-xs">✓ Entregas recebidas pela produção.</p>'}
                 </section>`;
                 if(editable)queueMicrotask(()=>document.querySelector('#fauInlineLookTabs [data-edit-look]')?.click());
             } else {
                 formSlot.innerHTML = `
                     <div class="bg-fashion-900 border border-fashion-700 p-6 rounded-lg space-y-6">
                         <div class="space-y-3"><h3 class="font-cinzel text-2xl text-white">Envie seu look</h3></div>
-                ${beauty?.phase==='first'?'':`<div class="border-b border-fashion-700 pb-3 flex justify-between items-center"><h3 class="font-cinzel text-lg text-white font-normal">Look ${currentRoundLooks.length + 1} de ${requiredLooks}</h3></div>`}
+                ${isBeautyWorkroom&&!beautyReleased?'':`<div class="border-b border-fashion-700 pb-3 flex justify-between items-center"><h3 class="font-cinzel text-lg text-white font-normal">${isBeautyWorkroom?(currentRoundLooks.length===0?'My Vision':'Another Point of View'):`Look ${currentRoundLooks.length + 1} de ${requiredLooks}`}</h3></div>`}
 
                         <div class="space-y-4 text-xs">
                             <div>
@@ -3523,7 +3527,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         <p class="text-xs text-gray-300">Recupere um elemento visual reconhecível da sua primeira criação, transforme-o e explique a conexão no conceito. Não é necessário criar uma estética futurista.</p>
                     </section>`);
                 }
-                if (beauty && currentRoundLooks.length===1 && beautyAssignment) {
+                if (beautyReleased && currentRoundLooks.length===1 && beautyAssignment) {
                     formSlot.insertAdjacentHTML('afterbegin', `<div class="bg-fashion-950 border border-fashion-gold rounded-lg p-5 mb-4 space-y-3">
                         <div class="text-fashion-gold font-cinzel">🎭 ANOTHER POINT OF VIEW — YOUR SEALED CONCEPT</div>
                         <h3 class="text-white font-cinzel">${esc(beautyAssignment.title)}</h3>
@@ -3576,13 +3580,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             fauUpdateClock();
             renderPersonalTwist().catch(console.error);
             if(themeHasDraw(getTheme())) sub(drawGateRef(),()=>renderPersonalTwist().catch(console.error));
-            $('#myLooksCount').textContent = `${allMyLooks.length} looks`;
-            $('#myLooksArchiveGrid').innerHTML = allMyLooks.map(l => {
+            const visibleMyLooks = allMyLooks.filter(l=>!isBeautyWorkroom || beautyReleased || l.rodada!==globalState.rodada || Number(l.slot||1)===1);
+            $('#myLooksCount').textContent = `${visibleMyLooks.length} looks`;
+            $('#myLooksArchiveGrid').innerHTML = visibleMyLooks.map(l => {
                 return `
                     <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-2">
                         <img src="${esc(l.url)}" class="w-full img-look rounded">
                         <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-fashion-gold font-bold font-cinzel">${esc(fauWeekLabel(l.rodada))}</span>
+                            <span class="text-fashion-gold font-bold font-cinzel">${esc(fauWeekLabel(l.rodada))}${isBeautyWorkroom&&beautyReleased&&l.rodada===globalState.rodada?` · ${Number(l.slot)===2?'Another Point of View':'My Vision'}`:''}</span>
                             <span class="text-gray-400 font-cinzel">${esc(l.titulo || 'Look Sem Nome')}</span>
                         </div>
                         <p class="text-[10px] text-gray-400 line-clamp-2 italic">${esc(l.mem)}</p>
@@ -3731,7 +3736,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     }
                 }
                 const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada);
-                if (currentRoundLooks.length >= (theme?.numSubmissoes || globalState.numSubmissoes || 1)) throw new Error('Todas as entregas desta rodada já foram enviadas.');
+                if (currentRoundLooks.length >= (beauty ? (beauty.phase==='assigned'?2:1) : (theme?.numSubmissoes || globalState.numSubmissoes || 1))) throw new Error('Todas as entregas desta rodada já foram enviadas.');
                 showToast('Otimizando a fotografia e enviando...');
                 const index = currentRoundLooks.length;
                 const lookDocId = `${globalState.rodada}_${currentUser.uid}_${index}`;
@@ -3786,6 +3791,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             document.getElementById('fauRetryWorkroom')?.addEventListener('click',()=>navigate('work'));
         };
         const safeRefreshWorkroom = () => refreshWorkroomUI().catch(showWorkroomError);
+        if(isBeautyWorkroom) sub(beautyRef(),snap=>{const phase=snap.data()?.phase||'first';if(observedBeautyPhase!==phase){observedBeautyPhase=phase;if(looksLoaded)safeRefreshWorkroom();}});
         const waitingHost = document.getElementById('workroomFormModule');
         if(waitingHost) waitingHost.innerHTML = '<section class="border border-fashion-gold/40 bg-fashion-900 rounded-xl p-5 text-sm text-gray-300" role="status">Preparando seu ateliê e conferindo suas entregas…</section>';
         const looksQuery = db.collection('looks').where('uid', '==', currentUser.uid);
@@ -7619,7 +7625,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const castIds=new Set(cast.map(d=>d.id));
             const jurorIds=new Set(jurors.map(d=>d.id));
             const theme=getTheme();
-            const required=Math.max(1,Number(theme?.numSubmissoes)||1);
+            const required=globalState.themeId==='theme_beauty_eye'?(['assigned','exhibition'].includes((await beautyState().catch(()=>({phase:'first'}))).phase)?2:1):Math.max(1,Number(theme?.numSubmissoes)||1);
             const looksByUser=new Map();
             looks.docs.forEach(d=>{const l=d.data();if(castIds.has(l.uid))looksByUser.set(l.uid,(looksByUser.get(l.uid)||0)+1);});
             const submitted=new Set(cast.filter(d=>(looksByUser.get(d.id)||0)>=required).map(d=>d.id));
@@ -7671,11 +7677,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const p = d.data();
                 return p.role === 'estilista' && p.disabled !== true && p.ativo !== false && p.eliminado !== true && p.out !== true && String(p.status || '').toUpperCase() !== 'OUT';
             }).map(d => d.id));
-            const required = Number(getTheme()?.numSubmissoes || globalState.numSubmissoes || 1);
+            const required = globalState.themeId==='theme_beauty_eye'?(['assigned','exhibition'].includes((await beautyState().catch(()=>({phase:'first'}))).phase)?2:1):Number(getTheme()?.numSubmissoes || globalState.numSubmissoes || 1);
             const counts = new Map();
             fauLooksForPulse.docs.forEach(d => {
                 const l = d.data();
-                if(active.has(l.uid)) counts.set(l.uid, (counts.get(l.uid)||0)+1);
+                if(active.has(l.uid) && (globalState.themeId!=='theme_beauty_eye'||required===2||Number(l.slot||1)===1)) counts.set(l.uid, (counts.get(l.uid)||0)+1);
             });
             const eligibleTotal = (Number(globalState.rodada) === 2 || String(globalState.themeId) === 'w02_new_form') ? Math.min(active.size, 18) : active.size;
             const sent = Math.min(eligibleTotal, [...counts.values()].filter(n => n >= required).length);
@@ -7695,6 +7701,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(fauPulsePending){fauPulsePending=false;queueMicrotask(syncFauPublicPulse);}
             }
         };
+        if(globalState.themeId==='theme_beauty_eye')sub(beautyRef(),()=>{syncFauPublicPulse();refreshFauStatus();});
         sub(db.collection('perfis'), snap=>{fauRosterForPulse=snap;syncFauPublicPulse();});
         sub(db.collection('looks').where('rodada','==',globalState.rodada||'sem-rodada'), snap=>{
             fauLooksForPulse=snap;syncFauPublicPulse();
@@ -10078,7 +10085,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const name=profileSnap.data().ate||btn.dataset.name||'Designer';
                 const round=globalState.rodada;
                 const theme=getTheme();
-                const limit=Number(theme?.numSubmissoes||globalState.numSubmissoes||1);
+                const limit=globalState.themeId==='theme_beauty_eye'?(['assigned','exhibition'].includes((await beautyState().catch(()=>({phase:'first'}))).phase)?2:1):Number(theme?.numSubmissoes||globalState.numSubmissoes||1);
                 const existingSnap=await db.collection('looks').where('rodada','==',round).where('uid','==',uid).get();
                 const existing=existingSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.slot||0)-(b.slot||0));
                 const dialog=document.createElement('div');
