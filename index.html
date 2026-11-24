@@ -4191,7 +4191,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     }
                     // W04 — Double Kill: classificação e ordem de saída confirmadas pela produção.
                     if(rounds[3]){
-                        const confirmedW04=new Map([['thýco mia','LOW + OUT'],['thyco mia','LOW + OUT'],['lince d’oro','BOTTOM'],["lince d'oro",'BOTTOM'],['dr chucodromo','BOTTOM + OUT'],['giuseppe cadura','LOW']]);
+                        const confirmedW04=new Map([['thýco mia','LOW + OUT'],['thyco mia','LOW + OUT'],['lince d’oro','BOTTOM'],["lince d'oro",'BOTTOM'],['dr chucodromo','BOTTOM + OUT'],['giuseppe cadura','LOW'],["l'amour",'IN'],['l’amour','IN'],['lamour','IN'],['wout ahi','IN']]);
                         rounds[3].rows=rounds[3].rows.map(entry=>{
                             const corrected=confirmedW04.get(normalizeName(entry.ate));
                             return corrected?{...entry,status:corrected}:entry;
