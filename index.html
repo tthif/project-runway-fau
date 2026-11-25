@@ -1291,7 +1291,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             themetarantino: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE',
             week04: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE',
             week4: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE',
-            w04: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE'
+            w04: 'WEEK 04 — TARANTINO: BLOOD, GLAMOUR & REVENGE',
+            themebeautyeye: 'WEEK 05 — BEAUTY IS IN THE EYE',
+            beautyisintheeye: 'WEEK 05 — BEAUTY IS IN THE EYE'
         };
         if (official[key]) return official[key].match(/^WEEK\s+\d+/)[0];
         // Compatibilidade com IDs históricos da terceira rodada (variações de Seven Deadly).
@@ -1370,7 +1372,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             },
             "theme_beauty_eye": {
                 id: "theme_beauty_eye",
-                code: "WEEK — BEAUTY IS IN THE EYE",
+                code: "WEEK 05",
                 fixedOrder: null,
                 title: "BEAUTY IS IN THE EYE",
                 subtitle: "Uma visão pessoal da beleza traduzida em moda autoral.",
@@ -1596,6 +1598,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     Object.values(SEASON_THEMES).forEach(theme => {
         if (theme.extraField && theme.extraField.type !== 'select') theme.extraField = null;
     });
+    const fauThemeIdsByRound=new Map(Object.values(SEASON_THEMES).flatMap(theme=>[[slug(theme.id),theme.id],[slug(theme.title),theme.id]]));
+    const fauThemeIdForRound=round=>{
+        const key=slug(String(round||''));
+        const aliases={firstgarment:'w01_first_garment',newform:'w02_new_form',sevendeadly:'theme_seven_deadly',tarantino:'theme_tarantino'};
+        const week=key.match(/^(?:w(?:eek)?)?0*([1-5])$/)?.[1];
+        return fauThemeIdsByRound.get(key)||(Object.hasOwn(aliases,key)?aliases[key]:null)||
+            ['w01_first_garment','w02_new_form','theme_seven_deadly','theme_tarantino','theme_beauty_eye'][Number(week)-1]||null;
+    };
     // Rótulos editoriais: nunca usar o identificador técnico da rodada na interface.
     const fauRoundLabel = () => {
         const theme = SEASON_THEMES[globalState?.themeId];
@@ -2859,15 +2869,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         document.body.appendChild(modal);
         const list=$('#publicThemeClues'), count=$('#fauVaultCount');
         let entries=[], filter='all',previousFocus=null;
-        const themeIdsByRound=new Map(Object.values(SEASON_THEMES).flatMap(theme=>[[slug(theme.id),theme.id],[slug(theme.title),theme.id]]));
+        const confirmedWeeks=new Map([['theme_beauty_eye',fauArchiveWeekNumber('theme_beauty_eye')]]);
         let historicalRounds=[];
         let usedThemes=new Map();
         let currentWeek=null;
         const roundWeek=(round,metadata={})=>{
+            const key=slug(String(round||''));
+            const themeId=metadata.themeId||fauThemeIdForRound(round);
+            const confirmed=confirmedWeeks.get(themeId);
+            if(confirmed)return confirmed;
             const explicit=Number(metadata.numeroRodada||metadata.weekNumber||metadata.week);
             if(Number.isInteger(explicit)&&explicit>0)return explicit;
-            const key=slug(String(round||''));
-            const themeId=themeIdsByRound.get(key);
             if(['w01_first_garment','w02_new_form','theme_seven_deadly','theme_tarantino'].includes(themeId))
                 return fauArchiveWeekNumber(themeId);
             // Os demais códigos do catálogo podem representar Weeks planejadas.
@@ -2880,13 +2892,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const startedRounds=new Set(Object.keys(state.modos||{}));
             usedThemes=new Map();
             for(const round of startedRounds){
-                const id=themeIdsByRound.get(slug(round));
+                const id=fauThemeIdForRound(round);
                 if(id)usedThemes.set(id,roundWeek(round));
             }
             let latestPastWeek=0;
             for(const {id,data} of historicalRounds){
                 const round=String(data.rodada||id);
-                const themeId=data.themeId||themeIdsByRound.get(slug(round))||themeIdsByRound.get(slug(id));
+                const themeId=data.themeId||fauThemeIdForRound(round)||fauThemeIdForRound(id);
                 const week=roundWeek(round,data)||roundWeek(id,data);
                 if(themeId)usedThemes.set(themeId,week??usedThemes.get(themeId)??null);
                 if(round!==currentRound&&id!==currentRound&&week)latestPastWeek=Math.max(latestPastWeek,week);
@@ -2905,7 +2917,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const name=String(publicName||(isUsed(e)?SEASON_THEMES[e.id]?.title:'')||'').trim();
             if(!name)return `MYSTERY ${String(e.number).padStart(2,'0')}`;
             const storedWeek=roundWeek(e.data.roundId,{weekNumber:e.data.weekNumber});
-            const week=(isNext&&currentWeek?currentWeek+1:null)||storedWeek||usedThemes.get(e.id)||
+            const week=confirmedWeeks.get(e.id)||(isNext&&currentWeek?currentWeek+1:null)||storedWeek||usedThemes.get(e.id)||
                 (isUsed(e)?roundWeek(e.id):null);
             if(!week)return name;
             return `WEEK ${String(week).padStart(2,'0')} · ${name.replace(/^WEEK\s+\d+\s*[·:—–-]\s*/i,'')}`;
@@ -6943,10 +6955,29 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         });
     };
 
+    const fauDirectorCurrentTheme=state=>{
+        const id=Object.hasOwn(state,'themeId')?state.themeId:fauThemeIdForRound(state.rodada);
+        return Object.hasOwn(SEASON_THEMES,id)?id:'';
+    };
+    const fauDirectorThemeOptions=(state,used,selected,ready)=>{
+        const current=fauDirectorCurrentTheme(state);
+        const revealed=state.proxTema?.themeId;
+        const themes=Object.values(SEASON_THEMES)
+            .filter(theme=>theme.id===current||(!used.has(theme.id)&&(ready||theme.id===revealed)))
+            .map(theme=>({id:theme.id,label:String(theme.title||'').replace(/^\s*WEEK\s*(?:\d+)?\s*[—–-]\s*/i,'').trim()}))
+            .sort((a,b)=>a.label.localeCompare(b.label,'pt-BR',{sensitivity:'base'}));
+        const customLabel=state.rodada&&!current?'Rodada personalizada · ATUAL':'Rodada personalizada';
+        return `<option value="">${customLabel}</option>`+themes.map(theme=>
+            `<option value="${esc(theme.id)}"${theme.id===selected?' selected':''}>${esc(theme.label)}${theme.id===current?' · ATUAL':''}</option>`
+        ).join('');
+    };
+
     // 8. DIREÇÃO EXECUTIVA (ADMIN MASTER)
     VIEWS.direcao = () => {
         const roundPz = globalState.prazo ? new Date(globalState.prazo - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16) : '';
         let calculationState=null,eliminationPreview=null;
+        const currentThemeId=fauDirectorCurrentTheme(globalState);
+        const usedRoundThemes=new Set(Object.keys(globalState.modos||{}).map(fauThemeIdForRound).filter(Boolean));
 
         renderView(`
             <div class="space-y-8">
@@ -7091,7 +7122,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     <div class="fau-new-round-heading"><p class="text-[10px] uppercase tracking-[.2em] text-fashion-gold">PRODUÇÃO · PRÓXIMO EPISÓDIO</p><h3 class="font-cinzel text-white text-xl mt-1">Criar nova rodada</h3><p class="text-xs text-gray-400 mt-1">Escolha o desafio, ajuste as regras e confira tudo antes de iniciar.</p></div>
                     <div class="fau-setup-step"><span class="fau-setup-step-number">01</span><div><strong>Escolha o desafio</strong><p>O tema preenche o identificador e os textos automaticamente.</p></div></div>
                     <label class="block text-xs text-gray-300">Desafio
-                      <select id="newThemeId" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2 text-white"><option value="">Rodada personalizada</option>${Object.values(SEASON_THEMES).map(t => `<option value="${esc(t.id)}">${esc(String(t.title||'').replace(/^\s*WEEK\s*(?:\d+)?\s*[—–-]\s*/i,'').trim())}</option>`).join('')}</select>
+                      <select id="newThemeId" aria-describedby="fauThemeSelectStatus" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2 text-white">${fauDirectorThemeOptions(globalState,usedRoundThemes,currentThemeId,false)}</select>
+                      <span id="fauThemeSelectStatus" class="block mt-1 text-gray-400" role="status">Consultando temas disponíveis…</span>
                     </label>
                     <div id="themePreview" class="hidden" aria-hidden="true"></div>
                     <div class="space-y-2"><div class="flex items-center justify-between gap-2"><span class="text-[10px] uppercase tracking-wider text-gray-400">Configuração rápida</span><span class="text-[10px] text-gray-500">Personalize em Ajustes avançados</span></div>
@@ -9214,14 +9246,40 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
         const vaultPublic = db.collection('theme_vault_public');
         const vaultPrivate = db.collection('theme_vault_private');
+        const themeSelect=$('#newThemeId');
+        const themeSelectStatus=$('#fauThemeSelectStatus');
+        const vaultList=$('#vaultList');
+        const historicalThemes=db.collection('ranking_historico_publico').get()
+            .then(history=>history.docs.filter(doc=>doc.data().rows?.length).map(doc=>{
+                const record=doc.data();
+                return record.themeId||fauThemeIdForRound(record.rodada)||fauThemeIdForRound(doc.id);
+            }).filter(Boolean))
+            .catch(err=>{console.warn('[director theme history]',err);return [];});
         const vaultRefresh = async () => {
-            const [pub, priv] = await Promise.all([vaultPublic.get(),vaultPrivate.get()]);
+            const publicVault=vaultPublic.get();
+            Promise.all([publicVault,historicalThemes]).then(([pub,history])=>{
+                if(!themeSelect.isConnected)return;
+                const used=new Set([...usedRoundThemes,...history,...pub.docs.filter(doc=>doc.data().used===true).map(doc=>doc.id)]);
+                const previous=themeSelect.value;
+                themeSelect.innerHTML=fauDirectorThemeOptions(globalState,used,previous,true);
+                if([...themeSelect.options].some(option=>option.value===previous))themeSelect.value=previous;
+                else{
+                    themeSelect.value=currentThemeId;
+                    themeSelect.dispatchEvent(new Event('change',{bubbles:true}));
+                }
+                themeSelectStatus.textContent='';
+            }).catch(err=>{
+                if(themeSelect.isConnected)themeSelectStatus.textContent='Não foi possível conferir os temas disponíveis.';
+                console.warn('[director theme vault]',err);
+            });
+            const [pub, priv] = await Promise.all([publicVault,vaultPrivate.get()]);
+            if(!vaultList.isConnected)return;
             const secret = Object.fromEntries(priv.docs.map(d=>[d.id,d.data()]));
-            $('#vaultList').innerHTML = pub.docs.map(d=>{
+            vaultList.innerHTML = pub.docs.map(d=>{
                 const v=d.data(), t=SEASON_THEMES[d.id];
                 return `<div class="bg-fashion-950 border border-fashion-700 rounded-lg p-2 space-y-2"><div class="aspect-[4/5] bg-fashion-900 overflow-hidden rounded">${v.photo?`<img src="${esc(v.photo)}" alt="Pista visual" class="w-full h-full object-cover">`:'<div class="p-3 text-gray-400">Sem fotografia</div>'}</div><strong class="block text-fashion-gold">${esc(t?.title||d.id)}</strong><p class="text-gray-400">${esc(secret[d.id]?.clue||'Sem texto')}</p><span class="text-gray-400">${v.used?'UTILIZADO':'DISPONÍVEL'}</span><button data-vault-edit="${esc(d.id)}" class="block underline text-fashion-gold">Editar</button></div>`;
             }).join('') || '<p class="text-gray-400 col-span-full">O Vault está vazio. Cadastre os temas antes da estreia.</p>';
-            $('#vaultList').querySelectorAll('[data-vault-edit]').forEach(b=>b.onclick=()=>{
+            vaultList.querySelectorAll('[data-vault-edit]').forEach(b=>b.onclick=()=>{
                 const id=b.dataset.vaultEdit, pub=pub.docs.find(d=>d.id===id)?.data();
                 $('#vaultTheme').value=id; $('#vaultPhoto').value=''; $('#vaultPhotoSaved').textContent=pub?.photo?'Fotografia já cadastrada. Selecione outra para substituir.':'Nenhuma fotografia cadastrada.'; $('#vaultClue').value=secret[id]?.clue||'';
             });
@@ -9250,7 +9308,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             showToast(`${count} textos públicos antigos removidos.`);
             await vaultRefresh();
         });
-        vaultRefresh().catch(e=>{$('#vaultList').textContent='Não foi possível abrir o Vault: '+e.message});
+        vaultRefresh().catch(e=>{if(vaultList.isConnected)vaultList.textContent='Não foi possível abrir o Vault: '+e.message});
         const btnPoderAbrir = $('#btnPoderAbrir');
         if (btnPoderAbrir) btnPoderAbrir.onclick = safeExec(async () => {
             const available=await vaultPublic.where('used','==',false).get();
@@ -9542,7 +9600,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         loadDesignerRoster();
         // Preserva regras personalizadas por tema e a configuração já salva da rodada.
         const fauRulesKey=id=>'fau_round_rules_draft_'+(id||'custom');
-        let fauPreviousTheme=globalState.themeId||'';
+        let fauPreviousTheme=currentThemeId;
         const fauSavedRules=typeof globalState.regras==='string'?globalState.regras:null;
         $('#newThemeId').value=fauPreviousTheme;
         // Resumo publicado no Season Hub: campo Firestore `regras`, separado de `briefing`.
