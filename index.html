@@ -1793,10 +1793,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         });
     };
     const beautyRef = () => db.doc(`beauty_dinamicas/${globalState.rodada}`);
-    const beautyState = async () => (await beautyRef().get()).data() || {phase:'first'};
-    const beautyAssign = async () => {
+    const beautyEnvelopeRef = uid => beautyRef().collection('envelopes').doc(uid);
+    const beautyPrivateRef = () => beautyRef().collection('private').doc('distribution');
+    const beautyState = async () => {
+        const st=(await beautyRef().get()).data() || {phase:'first'};
+        if(st.phase==='assigned' && !st.assignments){
+            if(isAdmin) st.assignments=(await beautyPrivateRef().get()).data()?.assignments||[];
+            else if(currentUser?.role==='estilista'){const a=(await beautyEnvelopeRef(currentUser.uid).get()).data();st.assignments=a?[{...a,uid:currentUser.uid}]:[];}
+        }
+        return st;
+    };
+    const beautyAssign = async (deadline) => {
         if (!isAdmin || globalState.themeId !== 'theme_beauty_eye') throw new Error('Apenas a produção pode sortear os conceitos.');
         const state = await beautyState();
+        if (!(Number(globalState.prazo)>0 && Number(globalState.prazo)<=now())) throw new Error('Aguarde o encerramento do primeiro prazo.');
         if (state.phase !== 'first') throw new Error('O sorteio já foi realizado.');
         const profiles = await db.collection('perfis').where('role','==','estilista').get();
         const eligible = profiles.docs.filter(d=>!d.data().out && !d.data().disabled);
@@ -1812,7 +1822,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const shift = 1+Math.floor(Math.random()*(ids.length-1));
         const assignments = ids.map((uid,i)=>({uid, sourceUid:ids[(i+shift)%ids.length], title:map.get(ids[(i+shift)%ids.length]).titulo, concept:map.get(ids[(i+shift)%ids.length]).mem}));
         const payload = {phase:'assigned', assignments, createdBy:currentUser.uid, createdAt:firebase.firestore.FieldValue.serverTimestamp()};
-        await beautyRef().set(payload);
+        await db.runTransaction(async tx=>{
+            const fresh=await tx.get(beautyRef());
+            if(fresh.exists && fresh.data().phase!=='first') throw new Error('O sorteio já foi realizado.');
+            tx.set(beautyPrivateRef(),{assignments});
+            assignments.forEach(a=>tx.set(beautyEnvelopeRef(a.uid),{title:a.title,concept:a.concept}));
+            tx.set(beautyRef(),{phase:'assigned',firstDeadline:Number(globalState.prazo),secondDeadline:deadline,createdBy:payload.createdBy,createdAt:payload.createdAt});
+            tx.update(db.doc('config/estado'),{prazo:deadline});
+        });
         await productionLog('beauty_concepts_assigned',{round:globalState.rodada, count:assignments.length});
         return assignments;
     };
@@ -3149,6 +3166,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
       const labRelease=document.getElementById('fauLabRelease');if(labRelease)labRelease.onclick=()=>{fauTestLabState.released=true;VIEWS.testlab();};
       const labReset=document.getElementById('fauLabDrawReset');if(labReset)labReset.onclick=()=>{fauTestLabState.draw=null;fauTestLabState.released=false;fauTestLabState.wedding={};fauTestLabState.selectedEnvelope=null;VIEWS.testlab();};
       document.querySelectorAll('[data-lab-concept]').forEach(el=>el.oninput=()=>{document.querySelector(`[data-lab-chars="${el.dataset.labConcept}"]`).textContent=el.value.length+' / 500';});
+      if(theme.id==='theme_beauty_eye'&&fauTestLabState.phaseTwo)document.querySelector('[data-lab-concept="2"]')?.parentElement.setAttribute('hidden','');
       document.querySelectorAll('[data-lab-submit]').forEach(el=>el.onclick=()=>showToast(theme.id==='theme_next_supreme'?'TEST LAB · As duas Supremas são enviadas juntas no Workroom real. Nenhum dado foi gravado.':'TEST LAB · Envio demonstrativo. Nada foi gravado.'));
       document.querySelectorAll('[data-lab-look-file]').forEach(el=>el.onchange=()=>{const file=el.files?.[0],box=document.querySelector(`[data-lab-preview="${el.dataset.labLookFile}"]`);if(!file){box.classList.add('hidden');return;}if(file.size>5*1024*1024){showError('O arquivo deve ter no máximo 5 MB.');el.value='';return;}const url=URL.createObjectURL(file);box.querySelector('img').src=url;box.classList.remove('hidden');box.querySelector('img').onload=()=>URL.revokeObjectURL(url);});
       document.querySelectorAll('#fauMutationModule [data-mutation-envelope]').forEach(b=>b.onclick=()=>{const n=Number(b.dataset.mutationEnvelope);if(!confirm(`Abrir envelope ${String(n).padStart(2,'0')} no TEST LAB?`))return;fauTestLabState.envelope=n;fauTestLabState.mutationIndex=fauMutationShuffle()[n-1];VIEWS.testlab();});
@@ -3446,14 +3464,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }
             if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
             const formSlot = $('#workroomFormModule');
-            if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
+            if (beauty?.phase==='exhibition' && currentRoundLooks.length<requiredLooks) { formSlot.innerHTML='<p>Exposição autorizada. Entregas encerradas.</p>'; } else if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
                 formSlot.innerHTML = '<p class="text-amber-300">Seu envelope ainda não foi distribuído. Avise a produção.</p>';
             } else if (currentRoundLooks.length >= requiredLooks) {
-                const editable = Number(globalState.prazo)>now();
+                const editable = Number(globalState.prazo)>now() && beauty?.phase!=='exhibition';
                 formSlot.innerHTML = `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-5 space-y-4">
                     <h3 class="font-cinzel text-2xl text-white">${editable?'Your runway look':'Your submitted looks'}</h3>
-                    <p class="text-xs text-gray-300">${editable?'Sua última entrega já está salva. Os campos abaixo vêm preenchidos e você pode atualizar a imagem, o título e o conceito até o prazo terminar.':'As entregas estão encerradas. Confira seus looks no arquivo do Designer.'}</p>
-                    ${editable?`<div class="flex flex-wrap gap-2" id="fauInlineLookTabs" role="group" aria-label="Escolher look para editar">${currentRoundLooks.slice().sort((a,b)=>(a.slot||0)-(b.slot||0)).map((l,i)=>`<button type="button" data-edit-look="${esc(l.id)}" class="rounded border border-fashion-gold/50 px-4 py-2 text-xs text-fashion-gold">${esc(isBeautyWorkroom ? (beautyReleased ? (Number(l.slot)===2?'Another Point of View':'My Vision') : 'Editar look') : (getTheme()?.slotLabels?.[l.slot-1]||'LOOK '+(l.slot||i+1)))}</button>`).join('')}</div><div id="fauInlineEditHost"></div>`:'<p class="text-green-300 text-xs">✓ Entregas recebidas pela produção.</p>'}
+                    <p class="text-xs text-gray-300">${editable?'Sua última entrega já está salva. Os campos abaixo vêm preenchidos e você pode atualizar os campos permitidos até o prazo terminar.':'As entregas estão encerradas. Confira seus looks no arquivo do Designer.'}</p>
+                    ${editable?`<div class="flex flex-wrap gap-2" id="fauInlineLookTabs" role="group" aria-label="Escolher look para editar">${currentRoundLooks.filter(l=>!beautyReleased||Number(l.slot)===2).slice().sort((a,b)=>(a.slot||0)-(b.slot||0)).map((l,i)=>`<button type="button" data-edit-look="${esc(l.id)}" class="rounded border border-fashion-gold/50 px-4 py-2 text-xs text-fashion-gold">${esc(isBeautyWorkroom ? (beautyReleased ? (Number(l.slot)===2?'Another Point of View':'My Vision') : 'Editar look') : (getTheme()?.slotLabels?.[l.slot-1]||'LOOK '+(l.slot||i+1)))}</button>`).join('')}</div><div id="fauInlineEditHost"></div>`:'<p class="text-green-300 text-xs">✓ Entregas recebidas pela produção.</p>'}
                 </section>`;
                 if(editable)queueMicrotask(()=>document.querySelector('#fauInlineLookTabs [data-edit-look]')?.click());
             } else {
@@ -3532,7 +3550,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         <div class="text-fashion-gold font-cinzel">🎭 ANOTHER POINT OF VIEW — YOUR SEALED CONCEPT</div>
                         <h3 class="text-white font-cinzel">${esc(beautyAssignment.title)}</h3>
                         <p class="text-sm text-gray-300 italic">${esc(beautyAssignment.concept)}</p>
-                        <p class="text-xs text-amber-200">Você recebeu apenas título e conceito. A imagem e a identidade original continuam em segredo. Crie uma releitura com título próprio.</p></div>`);
+                        <p class="text-xs text-amber-200">Você recebeu apenas título e conceito. A imagem e a identidade original continuam em segredo. Envie apenas a imagem da releitura e um título próprio. Não escreva outro conceito.</p></div>`);
                 }
                 // Prévia da imagem real selecionada, sem upload automático.
                 $('#lookFileInput')?.addEventListener('change', e=>{
@@ -3547,6 +3565,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     info.textContent=`${file.name} · ${(file.size/1048576).toFixed(2)} MB · Ainda não enviado`;
                     wrap.classList.remove('hidden');
                 });
+                if(beautyReleased && currentRoundLooks.length===1) $('#lookMemorialText').closest('div').hidden=true;
                 $('#lookMemorialText').oninput = e => {
                     $('#charCounter').textContent = `${e.target.value.length} / 500 letras`;
                 };
@@ -3591,7 +3610,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                             <span class="text-gray-400 font-cinzel">${esc(l.titulo || 'Look Sem Nome')}</span>
                         </div>
                         <p class="text-[10px] text-gray-400 line-clamp-2 italic">${esc(l.mem)}</p>
-                        ${l.rodada===globalState.rodada && Number(globalState.prazo)>now() ? `<button type="button" data-edit-look="${esc(l.id)}" class="w-full border border-fashion-gold/60 text-fashion-gold rounded p-2 font-semibold">✎ Editar entrega</button>` : ''}
+                        ${l.rodada===globalState.rodada && Number(globalState.prazo)>now() && (!beautyReleased || (beauty.phase==='assigned'&&Number(l.slot)===2)) ? `<button type="button" data-edit-look="${esc(l.id)}" class="w-full border border-fashion-gold/60 text-fashion-gold rounded p-2 font-semibold">✎ Editar entrega</button>` : ''}
                     </div>
                 `;
             }).join('') || '<div class="col-span-full text-center text-gray-500 py-4">Seu Designer ainda não enviou looks.</div>';
@@ -3605,6 +3624,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(!(Number(globalState.prazo)>now()))throw new Error('O prazo de edição desta rodada já terminou.');
                 const look=allMyLooks.find(l=>l.id===editButton.dataset.editLook && l.uid===currentUser.uid && l.rodada===globalState.rodada);
                 if(!look)throw new Error('Esta entrega não foi encontrada no seu ateliê.');
+                const editBeauty=isBeautyWorkroom?await beautyState():null;
+                if(editBeauty && (editBeauty.phase==='exhibition'||(editBeauty.phase!=='first'&&Number(look.slot)===1)))throw new Error('Esta criação está lacrada.');
+                const editSecond=!!editBeauty&&Number(look.slot)===2;
                 const host=document.getElementById('fauLookEditPanel');
                 if(host)host.remove();
                 const panel=document.createElement('section');panel.id='fauLookEditPanel';
@@ -3613,6 +3635,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const inlineHost=document.getElementById('fauInlineEditHost');
                 if(inlineHost){inlineHost.replaceChildren(panel);document.querySelectorAll('#fauInlineLookTabs [data-edit-look]').forEach(b=>{const active=b.dataset.editLook===look.id;b.classList.toggle('bg-fashion-gold',active);b.classList.toggle('text-black',active);});}
                 else {document.getElementById('workroomFormModule').after(panel);panel.scrollIntoView({behavior:'smooth',block:'start'});}
+                if(editSecond)panel.querySelector('#fauEditConcept').closest('label').hidden=true;
                 const count=()=>panel.querySelector('#fauEditCount').textContent=`${panel.querySelector('#fauEditConcept').value.length}/500`;
                 panel.querySelector('#fauEditConcept').addEventListener('input',count);count();
                 panel.querySelector('#fauEditCancel').onclick=()=>{if(inlineHost){navigate('work');}else panel.remove();};
@@ -3626,16 +3649,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     const button=panel.querySelector('#fauEditSave');if(button.disabled)return;
                     if(!(Number(globalState.prazo)>now()))throw new Error('O prazo de edição acabou.');
                     const title=panel.querySelector('#fauEditTitle').value.trim(),mem=panel.querySelector('#fauEditConcept').value.trim(),file=panel.querySelector('#fauEditFile').files?.[0];
-                    if(!title||!mem||title.length>100||mem.length>500)throw new Error('Informe título (até 100 caracteres) e conceito (até 500 caracteres).');
+                    if(!title||(!editSecond&&!mem)||title.length>100||mem.length>500)throw new Error('Informe título (até 100 caracteres) e conceito (até 500 caracteres).');
                     if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024))throw new Error('A nova imagem precisa ser JPG, PNG ou WebP de até 5 MB.');
                     button.disabled=true;button.textContent='SALVANDO...';
                     try{
-                        const updates={titulo:title,mem,editedAt:firebase.firestore.FieldValue.serverTimestamp()};
+                        const updates={titulo:title,...(editSecond?{}:{mem}),editedAt:firebase.firestore.FieldValue.serverTimestamp()};
                         if(file)updates.url=await compressImageToBase64(file);
                         if(!(Number(globalState.prazo)>now()))throw new Error('O prazo terminou durante a edição. Nada foi salvo.');
                         const ref=db.doc(`looks/${look.id}`);
                         await db.runTransaction(async tx=>{
                             const snap=await tx.get(ref);
+                            if(editBeauty){const phase=(await tx.get(beautyRef())).data()?.phase||'first';if(phase==='exhibition'||(phase!=='first'&&Number(look.slot)===1))throw new Error('Esta criação está lacrada.');}
                             if(!snap.exists||snap.data().uid!==currentUser.uid||snap.data().rodada!==globalState.rodada)throw new Error('Entrega não encontrada ou sem permissão.');
                             if(!(Number(globalState.prazo)>now()))throw new Error('O prazo terminou.');
                             tx.update(ref,updates);
@@ -3703,7 +3727,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const lookTitle = $('#lookTitleInput').value.trim();
                 const memorial = $('#lookMemorialText').value.trim();
 
-                if (!file || !lookTitle || !memorial) throw new Error('Preencha imagem, título e conceito da criação.');
+                const beautySecond=isBeautyWorkroom && allMyLooks.some(l=>l.rodada===globalState.rodada && Number(l.slot)===1);
+                if (!file || !lookTitle || (!beautySecond && !memorial)) throw new Error(beautySecond?'Preencha imagem e título.':'Preencha imagem, título e conceito da criação.');
                 if(file.size>5*1024*1024) throw new Error('A fotografia deve ter no máximo 5 MB. Escolha uma imagem menor.');
 
                 const theme = getTheme();
@@ -3755,12 +3780,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     themeId: theme?.id || null,
                     slot: index + 1,
                     twistValue: ['theme_traitors','theme_beauty_eye'].includes(theme?.id) ? null : (draw?.value || null),
-                    beautySourceUid: beauty && index===1 ? beauty.assignments.find(a=>a.uid===currentUser.uid)?.sourceUid : null,
+                    beautySourceUid: null,
                     themeExtra: false?(await getPersonalTwist()).value||'':document.getElementById('themeExtraInput')?.value.trim() || '',
                     finaleMeta: finaleMeta,
                     titulo: lookTitle,
                     url: photoBase64,
-                    mem: memorial,
+                    mem: beautySecond ? (beauty.assignments.find(a=>a.uid===currentUser.uid)?.concept||'') : memorial,
                     t: now()
                 });
                 batch.set(db.doc(`envios/${lookDocId}`), {
@@ -5172,11 +5197,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!root.isConnected)return;
             const critiqueNames=new Map(critiqueProfilesSnap.docs.map(doc=>[doc.id,doc.data().ate]));
             const critiquePhotos=new Map();
+            const beautyCritiquePhotos=new Map();
             critiqueLooksSnap.docs.forEach(doc=>{
                 const look=doc.data(),name=critiqueNames.get(look.uid);
+                if(name&&look.url&&globalState.themeId==='theme_beauty_eye'){const list=beautyCritiquePhotos.get(name)||[];list.push(look);beautyCritiquePhotos.set(name,list);}
                 if(name&&look.url&&!critiquePhotos.has(name))critiquePhotos.set(name,look.url);
             });
-            root.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4><div><p class="text-[10px] tracking-widest text-fashion-gold">🎤 THE CRITIQUE CALL</p><h3 class="font-cinzel text-lg">Uma crítica por Designer</h3><p class="text-xs text-gray-400">Somente as Designers convocadas. Escreva uma vez ou envie áudio pelo WhatsApp à produção. O texto pode ser ajustado até a produção encerrar as críticas.</p><p class="text-xs ${globalState.criticasEncerradas?'text-red-300':'text-green-300'}">${globalState.criticasEncerradas?'🔒 Prazo de críticas encerrado · somente leitura':'● Críticas abertas · edite e salve quantas vezes precisar'}</p></div>${targets.map((t,i)=>{const d=docs[i].data()||{};return `<div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><div class="flex items-center gap-3 min-w-0"><div class="shrink-0">${critiquePhotos.has(t.ate)?`<img src="${esc(critiquePhotos.get(t.ate))}" alt="Criação da rodada de ${esc(t.ate)}" loading="lazy" class="w-16 h-20 object-cover rounded-lg border border-fashion-gold/40 cursor-zoom-in" data-critique-photo="${i}" tabindex="0" role="button" aria-label="Ampliar criação de ${esc(t.ate)}">`:`<div class="w-16 h-20 rounded-lg border border-fashion-700 bg-fashion-800 flex items-center justify-center text-[10px] text-gray-400 text-center">Sem foto</div>`}</div><strong class="text-fashion-gold text-base">${esc(t.ate)}</strong></div>${d.source==='whatsapp'?'<p class="text-xs text-green-300">✓ Áudio recebido pela produção</p>':`<textarea data-critique-text="${i}" rows="4" maxlength="1500" ${globalState.criticasEncerradas?'disabled':''} class="w-full bg-fashion-900 border border-fashion-700 rounded p-2 text-xs" placeholder="Sua crítica (opcional)">${esc(d.text||'')}</textarea><button data-critique-send="${i}" ${globalState.criticasEncerradas?'disabled':''} class="rounded bg-fashion-gold text-black px-3 py-2 text-xs font-bold">${d.text?'Atualizar crítica':'Enviar crítica'}</button>${d.text?'<span class="text-green-300 text-xs ml-2">✓ Recebida</span>':''}`}</div>`}).join('')}</div>`;
+            root.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4><div><p class="text-[10px] tracking-widest text-fashion-gold">🎤 THE CRITIQUE CALL</p><h3 class="font-cinzel text-lg">Uma crítica por Designer</h3><p class="text-xs text-gray-400">Somente as Designers convocadas. Escreva uma vez ou envie áudio pelo WhatsApp à produção. O texto pode ser ajustado até a produção encerrar as críticas.</p><p class="text-xs ${globalState.criticasEncerradas?'text-red-300':'text-green-300'}">${globalState.criticasEncerradas?'🔒 Prazo de críticas encerrado · somente leitura':'● Críticas abertas · edite e salve quantas vezes precisar'}</p></div>${targets.map((t,i)=>{const d=docs[i].data()||{};return `<div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><div class="flex items-center gap-3 min-w-0"><div class="shrink-0">${beautyCritiquePhotos.has(t.ate)?`<div class="flex gap-2">${beautyCritiquePhotos.get(t.ate).sort((a,b)=>a.slot-b.slot).map(l=>`<div><img src="${esc(l.url)}" class="w-20 h-28 object-cover rounded cursor-zoom-in" data-critique-photo="${i}" tabindex="0"><p class="text-[10px]">${l.slot===2?'Another Point of View':'My Vision'}</p></div>`).join('')}</div>`:critiquePhotos.has(t.ate)?`<img src="${esc(critiquePhotos.get(t.ate))}" alt="Criação da rodada de ${esc(t.ate)}" loading="lazy" class="w-16 h-20 object-cover rounded-lg border border-fashion-gold/40 cursor-zoom-in" data-critique-photo="${i}" tabindex="0" role="button" aria-label="Ampliar criação de ${esc(t.ate)}">`:`<div class="w-16 h-20 rounded-lg border border-fashion-700 bg-fashion-800 flex items-center justify-center text-[10px] text-gray-400 text-center">Sem foto</div>`}</div><strong class="text-fashion-gold text-base">${esc(t.ate)}</strong></div>${d.source==='whatsapp'?'<p class="text-xs text-green-300">✓ Áudio recebido pela produção</p>':`<textarea data-critique-text="${i}" rows="4" maxlength="1500" ${globalState.criticasEncerradas?'disabled':''} class="w-full bg-fashion-900 border border-fashion-700 rounded p-2 text-xs" placeholder="Sua crítica (opcional)">${esc(d.text||'')}</textarea><button data-critique-send="${i}" ${globalState.criticasEncerradas?'disabled':''} class="rounded bg-fashion-gold text-black px-3 py-2 text-xs font-bold">${d.text?'Atualizar crítica':'Enviar crítica'}</button>${d.text?'<span class="text-green-300 text-xs ml-2">✓ Recebida</span>':''}`}</div>`}).join('')}</div>`;
             root.querySelectorAll('[data-critique-photo]').forEach(img=>{
                 const expand=()=>{
                     const overlay=document.createElement('div');
@@ -5285,7 +5312,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     };
 
 
-    VIEWS.bancada = () => {
+    VIEWS.bancada = async () => {
         let looks = [];
         let evaluations = {};
         let week01References = new Map();
@@ -5294,8 +5321,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         let juryNamesByUid = new Map();
         const juryLiveName = look => juryNamesByUid.get(String(look.uid)) || look.ate || 'Designer';
         const sortJuryLooks = items => [...items].sort((a,b)=>juryLiveName(a).localeCompare(juryLiveName(b),'pt-BR',{sensitivity:'base',numeric:true}) || (Number(a.slot)||0)-(Number(b.slot)||0) || String(a.id).localeCompare(String(b.id)));
-        const juryStageOpen = () => !!globalState.rodada && !!globalState.themeId && stageAtLeast('judging');
-        const juryCanViewLooks = () => isAdmin || juryStageOpen();
+        const beautyJury = globalState.themeId==='theme_beauty_eye';
+        let beautyPhase=beautyJury?(await beautyRef().get()).data()?.phase||'first':null;
+        const beautyDeadlinePassed=()=>Number(globalState.prazo)>0&&Number(globalState.prazo)<=now();
+        const beautyFirstOpen=()=>beautyPhase!=='first'||beautyDeadlinePassed();
+        const beautySecondOpen=()=>beautyPhase==='exhibition'||(beautyPhase==='assigned'&&beautyDeadlinePassed());
+        const juryStageOpen = () => !!globalState.rodada && !!globalState.themeId && (beautyJury?beautyFirstOpen():stageAtLeast('judging'));
+        const juryCanViewLooks = () => beautyJury?juryStageOpen():(isAdmin || juryStageOpen());
         const scoresClosed = () => !juryStageOpen() || !!globalState.notasEncerradas;
         const juryStatus = () => !globalState.rodada || !globalState.themeId ? 'Aguardando a abertura da rodada' : !juryStageOpen() ? 'Aguardando a liberação das avaliações' : globalState.notasEncerradas ? 'Notas encerradas · somente consulta' : 'Notas abertas · você pode editar as avaliações salvas';
         const draftScores = new Map();
@@ -5331,6 +5363,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 </div>
 
                 ${globalState.criticasAbertas && !globalState.criticasEncerradas ? `<div class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">ETAPA ATUAL · CRÍTICAS ABERTAS</p><h3 class="font-cinzel text-xl">The Critique Call</h3><p class="text-xs text-gray-300">As notas estão encerradas. Escreva suas críticas abaixo, sem revelar as classificações.</p><a href="#fauCritiqueJury" class="inline-block rounded bg-fashion-gold px-4 py-3 text-black text-xs font-bold">IR PARA AS CRÍTICAS ↓</a></div>` : ''}
+                ${beautyJury&&beautyFirstOpen()?`<section class="rounded-xl border border-fashion-gold/40 p-4 text-sm text-gray-300"><strong class="text-fashion-gold">Julgamento privado · ${beautySecondOpen()?'Duas criações por Designer':'My Vision'}</strong><p class="mt-2">${beautySecondOpen()?'Avalie as novas criações e revise as notas anteriores se desejar.':'Avalie as criações originais. As notas poderão ser revisadas posteriormente.'} A passarela continua sob controle da produção.</p></section>`:''}
                 <section id="fauCritiqueJury" class="scroll-mt-24"></section>
                 ${globalState.notasEncerradas ? `<details id="fauClosedScoreDetails" class="rounded-xl border border-fashion-700 bg-fashion-900 p-4"><summary class="cursor-pointer text-fashion-gold font-semibold text-sm py-2">CONSULTAR NOTAS ENCERRADAS · Exibir avaliações</summary><div class="mt-4 space-y-5">` : ''}
                 <section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-4 space-y-2" aria-label="Progresso de avaliação"><div class="flex justify-between items-center gap-2"><span class="text-xs uppercase tracking-widest text-fashion-gold">⚖️ YOUR JUDGING DESK</span><span id="fauJuryProgressText" class="text-xs text-gray-300">Preparando avaliações...</span></div><div class="h-2 rounded-full bg-fashion-950 overflow-hidden"><div id="fauJuryProgressBar" class="h-full bg-fashion-gold transition-all duration-500" style="width:0%"></div></div><p class="text-[11px] text-gray-400">Avalie cada criação e salve suas notas antes de sair.</p></section>
@@ -5483,7 +5516,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 return `
                     <div class="bg-fashion-950 p-2 rounded border border-fashion-700 text-center space-y-1">
                         <img src="${esc(l.url)}" class="w-full aspect-[3/4] object-cover rounded">
-                        <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(juryLiveName(l))}</div>
+                        <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(juryLiveName(l))}</div>${beautyJury?`<div class="text-[10px] text-fashion-gold">${Number(l.slot)===2?'02 · Another Point of View':'01 · My Vision'}</div>`:''}
                         <div class="text-fashion-gold font-mono font-bold text-xs">${tot}${tot==='—'?'':' / 50'}</div><div class="text-[10px] ${draftScores.has(l.id)?'text-amber-300':ev.nota?'text-green-300':'text-gray-400'}">${draftScores.has(l.id)?'Não salvo':ev.nota?'Salvo':'Pendente'}</div>
                     </div>
                 `;
@@ -5499,6 +5532,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
                                 <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div>
+                                ${beautyJury?`<div class="rounded border ${Number(look.slot)===2?'border-purple-400/60 text-purple-200':'border-fashion-gold/60 text-fashion-gold'} p-2 text-xs font-semibold">${Number(look.slot)===2?'02 · Another Point of View — Reinterpretação':'01 · My Vision — Criação original'}</div>`:''}
                                 <p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
                                 ${globalState.themeId==='w02_new_form' ? (()=>{
                                   const previous=week01References.get(String(look.uid));
@@ -5521,7 +5555,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                                       <details class="fau-jury-dossier border border-fashion-700 rounded"><summary class="p-3 text-xs text-fashion-gold cursor-pointer">LER CONCEITO NOVO ⌄</summary><p class="text-xs text-gray-300 whitespace-pre-wrap px-3 pb-3">${esc(look.mem||'Sem conceito')}</p></details>
                                     </div>
                                   </section>`;
-                                })() : `<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">${creativeDossier(look)}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>LER CONCEITO · ${esc(look.titulo || 'Sem título')}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
+                                })() : `<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">${creativeDossier(look)}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>${beautyJury&&Number(look.slot)===2?'LER CONCEITO RECEBIDO':'LER CONCEITO'} · ${esc(look.titulo || 'Sem título')}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
                             </div>
                             <div class="fau-jury-scoring md:col-span-8 space-y-4 text-xs">
                                 <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
@@ -5612,9 +5646,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 juradoNome: currentUser.nomeJurado||currentUser.ate,
                 nota: scores,
                 total: totalSum,
-                t: now()
+                t: now(),
+                ...(beautyJury?{themeId:globalState.themeId,slot:Number(targetLook.slot||1)}:{})
             }, { merge: true });
             try {
+                if(beautyJury&&!globalState.liberado) throw new Error('Resumo adiado até a publicação');
                 const sn = await db.doc(`avaliacoes/${lookId}_${currentUser.uid}`).get(), dv = sn.data() || {};
                 await db.doc(`avaliacoes_resumo/${sn.id}`).set({ look: dv.look ?? lookId, alvo: dv.alvo || null, ate: dv.alvoAte || '', rodada: dv.rodada || null, jurado: currentUser.uid, total: dv.total });
             } catch (e) { console.warn('[resumo]', e); }
@@ -5631,7 +5667,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             savingAll=true;const button=$('#btnSubmitAllEvaluations');if(button){button.disabled=true;button.textContent='SALVANDO...';}const bottomButton=$('#btnSubmitAllEvaluationsBottom');if(bottomButton){bottomButton.disabled=true;bottomButton.textContent='SALVANDO...';}
             let done=0;
             try{
-                for(const look of looks){await saveSingleEvaluation(look.id);done++;}
+                for(const look of looks){if(beautyJury&&evaluations[look.id]&&!draftScores.has(look.id))continue;await saveSingleEvaluation(look.id);done++;}
                 showToast(`${done} avaliações salvas com sucesso.`);
             }catch(e){throw new Error(`${done} de ${looks.length} avaliações salvas. ${e.message}`);}
             finally{savingAll=false;if(button){button.textContent='Salvar Todas as Notas';button.disabled=scoresClosed()||!looks.length;}if(bottomButton){bottomButton.textContent='Salvar Todas as Notas';bottomButton.disabled=scoresClosed()||!looks.length;}}
@@ -5643,7 +5679,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             looks=globalState.themeId==='theme_next_supreme'
                 ? (supremeJuryState?.phase==='selected' ? supremeAllJuryLooks.filter(l=>supremeJuryState.winners?.some(w=>w.uid===l.uid&&w.slot===l.slot)) : [])
                 : supremeAllJuryLooks;
-            looks=sortJuryLooks(looks);
+            looks=sortJuryLooks(beautyJury?looks.filter(l=>Number(l.slot||1)===1||beautySecondOpen()):looks);
             refreshJuryUI();
         };
         // Sincroniza renomeações do ADM em tempo real, inclusive em looks antigos.
@@ -5661,14 +5697,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             week01References=new Map(snap.docs.map(d=>[String(d.data().uid),{id:d.id,...d.data()}]));
             refreshJuryUI();
         });
-        if(juryCanViewLooks()) sub(db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
+        if(beautyJury){
+            let gate=String(beautyFirstOpen())+'|'+String(beautySecondOpen());
+            const checkGate=()=>{const next=String(beautyFirstOpen())+'|'+String(beautySecondOpen());if(next!==gate){gate=next;navigate('bancada');}};
+            const timer=setInterval(checkGate,1000);unsubsTab.push(()=>clearInterval(timer));
+            sub(beautyRef(),snap=>{beautyPhase=snap.data()?.phase||'first';checkGate();});
+        }
+        if(juryCanViewLooks()) sub(beautyJury&&!beautySecondOpen()?db.collection('looks').where('rodada','==',globalState.rodada).where('slot','==',1):db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
             supremeAllJuryLooks=snap.docs.map(d => ({ id: d.id, ...d.data() }));
             refreshSupremeJury();
         });
         if(juryCanViewLooks() && globalState.themeId==='theme_next_supreme') sub(supremeRef(),snap=>{supremeJuryState=snap.data()||null;refreshSupremeJury();});
 
         if(!juryCanViewLooks()){refreshJuryUI();return;}
-        fauCritiqueJuryMount();
+        if(!beautyJury||beautySecondOpen()) fauCritiqueJuryMount();
         sub(db.collection('avaliacoes').where('jurado', '==', currentUser.uid), snap => {
             evaluations = {};
             snap.docs.forEach(d => {const v=d.data();if(v.rodada===globalState.rodada)evaluations[v.look]=v;});
@@ -5971,8 +6013,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     const recipient=assignments.find(a=>a.sourceUid===original.uid);
                     const second=looks.find(l=>l.slot===2 && l.uid===recipient?.uid);
                     return `<section class="bg-fashion-950 border border-fashion-gold/40 p-5 rounded-lg space-y-4"><h3 class="font-cinzel text-fashion-gold">${esc(original.titulo)}</h3><p class="text-sm text-gray-300 italic">${esc(original.mem)}</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><p class="text-xs text-fashion-gold mb-2">MY VISION · ${esc(original.ate)}</p><img class="w-full img-look rounded" src="${esc(original.url)}"></div>
-                    ${second?`<div><p class="text-xs text-fashion-gold mb-2">ANOTHER POINT OF VIEW · ${esc(second.ate)}</p><img class="w-full img-look rounded" src="${esc(second.url)}"><p class="text-xs text-gray-300 mt-2">${esc(second.titulo)}</p></div>`:'<p class="text-xs">Releitura indisponível</p>'}</div></section>`;
+                    <div><p class="text-xs text-fashion-gold mb-2">MY VISION · ${esc(original.ate)}</p><img class="w-full img-look rounded" src="${esc(original.url)}">${isAdmin?`<button data-fau-whatsapp="${esc(original.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>
+                    ${second?`<div><p class="text-xs text-fashion-gold mb-2">ANOTHER POINT OF VIEW · ${esc(second.ate)}</p><img class="w-full img-look rounded" src="${esc(second.url)}"><p class="text-xs text-gray-300 mt-2">${esc(second.titulo)}</p>${isAdmin?`<button data-fau-whatsapp="${esc(second.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>`:'<p class="text-xs">Releitura indisponível</p>'}</div></section>`;
                 }).join('')}</div>`;
                 $('#runwayGrid').innerHTML='';
                 return;
@@ -6422,6 +6464,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const absentUids = new Set(absencesSnap ? absencesSnap.docs.map(d=>d.data().uid) : []);
             const activeStylists = profilesSnap.docs.filter(d => !d.data().out && !d.data().disabled && !absentUids.has(d.id));
             if (globalState.themeId === 'theme_beauty_eye') {
+                if((await beautyState()).phase==='first'||Number(globalState.prazo)>now())throw new Error('Aguarde o encerramento da segunda etapa.');
                 const lookSnap = await db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada').get();
                 const slotsByUid = {};
                 lookSnap.docs.forEach(d => {const l=d.data(); (slotsByUid[l.uid] ??= new Set()).add(l.slot);});
@@ -6431,6 +6474,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     const scored=Object.values(evaluationsByLook[d.id] || {}).filter(x=>x.r===globalState.rodada && x.scores.length);
                     return scored.length < 2;
                 });
+                const jury=await db.collection('perfis').where('role','==','jurado').get();
+                const expected=new Set(jury.docs.filter(d=>!d.data().disabled).map(d=>d.id));expected.add(currentUser.uid);
+                const activeIds=new Set(activeStylists.map(d=>d.id));
+                const rated=new Set(evalsSnap.docs.map(d=>d.data()).filter(e=>e.rodada===globalState.rodada&&Number.isFinite(e.total)).map(e=>e.jurado+'|'+e.look));
+                const pending=lookSnap.docs.filter(d=>activeIds.has(d.data().uid)).flatMap(d=>[...expected].filter(uid=>!rated.has(uid+'|'+d.id)).map(uid=>uid+' / '+d.id));
+                if(pending.length)throw new Error('Beauty: faltam '+pending.length+' avaliações individuais da bancada.');
                 if (missing.length) throw new Error('Beauty: os dois looks de cada estilista precisam estar enviados e avaliados antes da apuração: '+missing.map(d=>d.data().ate||d.id).join(', '));
             }
             const penaltyMap=new Map(penaltiesSnap.docs.map(d=>[String(d.data().rodada||'')+'_'+String(d.data().uid||''),Number(d.data().percentual)||0]));
@@ -8594,10 +8643,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         renderFlowChecklist();
 
         $('#btnTogglePublic').onclick = safeExec(async () => {
+            if(globalState.themeId==='theme_beauty_eye' && !globalState.liberado && ((await beautyState()).phase!=='exhibition'||Number(globalState.prazo)>now())) throw new Error('Aguarde o segundo prazo e autorize a exposição Beauty.');
             if(globalState.themeId==='theme_next_supreme' && !globalState.liberado && (await supremeState()).phase!=='selected') throw new Error('Conclua a Supreme Vote e confirme as vencedoras antes de abrir a passarela oficial.');
             if(!globalState.liberado && !stageAtLeast('runway') && !productionConfirm('A etapa oficial ainda não chegou ao desfile. Liberar mesmo assim?'))return;
             if (!productionConfirm(globalState.liberado ? 'Ocultar o desfile para todos?' : 'LIBERAR todas as criações enviadas na passarela?')) return;
             const openingRunway=!globalState.liberado;
+            if(openingRunway&&globalState.themeId==='theme_beauty_eye'){
+                const es=await db.collection('avaliacoes').where('rodada','==',globalState.rodada).get();
+                let batch=db.batch(),n=0;
+                for(const d of es.docs){const x=d.data();batch.set(db.collection('avaliacoes_resumo').doc(d.id),{look:x.look,alvo:x.alvo,ate:x.alvoAte||'',rodada:x.rodada,jurado:x.jurado,total:x.total});if(++n%400===0){await batch.commit();batch=db.batch();}}
+                if(n%400)await batch.commit();
+            }
             await db.doc('config/estado').update({ liberado: openingRunway });
             // Arquivamento automático apenas depois da abertura pública confirmada.
             // A leitura privada ocorre exclusivamente na sessão da produção.
@@ -9510,7 +9566,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         if ($('#btnBeautyAssign')) $('#btnBeautyAssign').onclick = safeExec(async () => {
             if(globalState.themeId!=='theme_beauty_eye') throw new Error('Disponível somente em Beauty Is in the Eye.');
             if(!productionConfirm('Todos os primeiros looks foram conferidos? Sortear os conceitos e liberar a segunda etapa?')) return;
-            const assignments=await beautyAssign();
+            const raw=prompt('Novo prazo da segunda etapa (DD/MM/AAAA HH:MM, horário de Brasília):');
+            if(raw===null)return;
+            const m=raw.match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);
+            const deadline=m?Date.parse(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:00-03:00`):NaN;
+            if(!Number.isFinite(deadline)||deadline<=now())throw new Error('Informe um prazo futuro válido.');
+            const assignments=await beautyAssign(deadline);
             $('#adminOutput').innerHTML=`<div class="bg-fashion-950 border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">👁️ SEALED CONCEPTS — PRODUÇÃO</h3>${assignments.map(a=>`<p class="text-xs text-white">${esc(a.uid)} ← ${esc(a.sourceUid)}: ${esc(a.title)}</p>`).join('')}</div>`;
             showToast('Conceitos sorteados. Os estilistas podem criar suas releituras.');
         });
@@ -9523,6 +9584,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(globalState.themeId!=='theme_beauty_eye') throw new Error('Esta não é a rodada Beauty.');
             const st=await beautyState();
             if(st.phase!=='assigned') throw new Error('Os conceitos precisam ser sorteados antes.');
+            if(Number(globalState.prazo)>now())throw new Error('Aguarde o encerramento do segundo prazo.');
             const profiles=await db.collection('perfis').where('role','==','estilista').get();
             const eligible=profiles.docs.filter(d=>!d.data().out && !d.data().disabled);
             const looksSnap=await db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada').get();
@@ -9530,7 +9592,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const missing=eligible.filter(d=>!completed.has(d.id));
             if(missing.length) throw new Error('Segundas entregas pendentes: '+missing.map(d=>d.data().ate||d.id).join(', '));
             if(!productionConfirm('LIBERAR A EXPOSIÇÃO? Os dois looks e a autoria de cada conceito serão revelados aos participantes quando a passarela estiver aberta.')) return;
-            await beautyRef().update({phase:'exhibition', publishedBy:currentUser.uid, publishedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            await beautyRef().update({phase:'exhibition', assignments:(st.assignments||[]).map(a=>({uid:a.uid,sourceUid:a.sourceUid})), publishedBy:currentUser.uid, publishedAt:firebase.firestore.FieldValue.serverTimestamp()});
             await productionLog('beauty_exhibition_authorized',{round:globalState.rodada});
             showToast('Exposição autorizada. Agora libere a passarela.');
         });
