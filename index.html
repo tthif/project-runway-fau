@@ -3993,6 +3993,24 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     }
     // 3. HISTÓRICO DA TEMPORADA & GALERIA DE ELIMINAÇÕES
     // Personal dossier: only the authenticated designer's own aggregate, never another person's.
+    function fauOfficialTrackRounds(history) {
+        // Ajustes históricos confirmados pela produção, vinculados à Week oficial.
+        const corrections = new Map([
+            [3, new Map([['venus','SAFE'],['yvette ferrete','LOW'],['fio robert','LOW'],['thyco mia','BOTTOM'],['dolce & banana','OUT']])],
+            [4, new Map([['thyco mia','LOW + OUT'],['lince d\'oro','BOTTOM'],['dr chucodromo','BOTTOM + OUT'],['giuseppe cadura','LOW'],["l'amour",'SAFE'],['lamour','SAFE'],['wout ahi','SAFE']])]
+        ]);
+        return history.docs.map(doc=>({...doc.data(),round:doc.id}))
+            .filter(round=>Array.isArray(round.rows)&&round.rows.length)
+            .sort((a,b)=>fauArchiveSort(a.round,b.round,a,b))
+            .map(round=>{
+                const confirmed=corrections.get(fauArchiveWeekNumber(round.round,round));
+                const rows=round.rows.map(row=>{
+                    const name=fauArchiveText(row.ate).replaceAll('’',"'");
+                    return {...row,status:fauArchiveStatus(confirmed?.get(name)??row.status)};
+                });
+                return {...round,rows};
+            });
+    }
     VIEWS.meu_perfil = async () => {
         if(currentUser.role!=='estilista') {navigate('home');return;}
         const uid=currentUser.uid;
@@ -4019,7 +4037,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           try{
             const rs=await db.collection('ranking_historico_publico').get();
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
-            const rounds=rs.docs.map(d=>({...d.data(),round:d.id})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>{const weekNumber=r=>{const m=fauWeekLabel(r.round).match(/WEEK\s+(\d+)/i);return m?Number(m[1]):Number.POSITIVE_INFINITY;};const na=weekNumber(a),nb=weekNumber(b);return na-nb || String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});});
+            const rounds=fauOfficialTrackRounds(rs);
             let profileName=String(currentUser.ate||'').trim();
             try {const profileDoc=await db.collection('perfis').doc(uid).get();const profile=profileDoc.data()||{};profileName=String(profile.ate||profile.nomeDesigner||profile.designerName||profileName).trim();}catch(e){console.warn('Designer profile name unavailable',e);}
             const name=profileName.toLocaleLowerCase('pt-BR');
@@ -4034,7 +4052,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const match=raw.match(/^(WIN|HIGH|TOP|SAFE|LOW|BOTTOM|BTM|OUT|ELIM)(?=$|[\s(+\-/])/);
               return match?({TOP:'HIGH',BTM:'BOTTOM',ELIM:'OUT'}[match[1]]||match[1]):raw;
             };
-            const legacyDisplayStatus=value=>String(value||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
+            const voteExitRound=rounds.find(r=>fauArchiveVoteExits(r).some(event=>fauArchiveExitUid(event)===String(uid)));
+            const legacyDisplayStatus=({r,row})=>{
+              const status=(fauArchiveStatus(row.status)||'—').replace(/^SAFE\b/,'IN');
+              return r===voteExitRound&&!/\bOUT\b/.test(status)?status+' + OUT':status;
+            };
             const played=entries.filter(x=>legacyBaseStatus(x.row.status)!=='OUT');
             const wins=played.filter(x=>legacyBaseStatus(x.row.status)==='WIN').length;
             const highlights=played.filter(x=>['WIN','HIGH'].includes(legacyBaseStatus(x.row.status))).length;
@@ -4056,7 +4078,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const poolCount=poolRounds.filter(r=>r.eliminationPool.some(x=>String(typeof x==='string'?x:(x?.uid||''))===String(uid)||(!x?.uid&&String(x?.ate||'').trim().toLocaleLowerCase('pt-BR')===name))).length;
             const poolHistoryComplete=eligiblePoolRounds.every(r=>Array.isArray(r.eliminationPool));
             const poolDisplay=poolHistoryComplete?String(poolCount):(poolCount>0?`${poolCount}+`:'—');
-            const out=entries.some(x=>legacyBaseStatus(x.row.status)==='OUT');
+            const out=!!voteExitRound||entries.some(x=>/\bOUT\b/.test(x.row.status));
             const titleResults=await Promise.allSettled(rounds.map(r=>db.collection('fau_titulos_publicos').doc(String(r.round)).get()));
             const titleMap=new Map();titleResults.forEach((res,i)=>{if(res.status==='fulfilled'&&res.value.exists&&res.value.data()?.published===true)titleMap.set(String(rounds[i].round),res.value.data());});
             const icons=entries.filter(({r})=>String(titleMap.get(String(r.round))?.icon||'')===String(uid)).length;
@@ -4065,14 +4087,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const titlesAvailable=titleResults.every(x=>x.status==='fulfilled');
             const chip=(label)=>`<span>${esc(label)}</span>`;
             stats.innerHTML=chip(`${wins} ${wins===1?'Winner':'Winners'}`)+chip(titlesAvailable?`${icons} ${icons===1?'Ícone da Moda':'Ícones da Moda'}`:'Ícone da Moda indisponível')+(titlesAvailable?`<span class="fau-fdm">${fora} Fora de Moda</span>`:'');
-            meta.innerHTML=[['RODADAS DISPUTADAS',played.length],['DESTAQUES NO RANKING',highlights],['VEZES NO ELIMINATION POOL',poolDisplay],['ÚLTIMA CLASSIFICAÇÃO',played.length?legacyDisplayStatus(played[played.length-1].row.status||'SAFE'):'—']].map(([label,value])=>`<span class="fau-legacy-metric"><small>${esc(label)}</small><strong>${esc(String(value))}</strong></span>`).join('');
+            meta.innerHTML=[['RODADAS DISPUTADAS',played.length],['DESTAQUES NO RANKING',highlights],['VEZES NO ELIMINATION POOL',poolDisplay],['ÚLTIMA CLASSIFICAÇÃO',played.length?legacyDisplayStatus(played[played.length-1]):'—']].map(([label,value])=>`<span class="fau-legacy-metric"><small>${esc(label)}</small><strong>${esc(String(value))}</strong></span>`).join('');
             const facts=$('#fauMyLegacyHighlights');
             if(facts){
               const last=played[played.length-1];
               const best=played.map(x=>legacyBaseStatus(x.row.status)).find(x=>x==='WIN')||(['HIGH','SAFE','LOW','BOTTOM'].find(st=>played.some(x=>legacyBaseStatus(x.row.status)===st))||'');
-              const elimination=entries.find(x=>legacyBaseStatus(x.row.status)==='OUT');
+              const elimination=voteExitRound||entries.find(x=>/\bOUT\b/.test(x.row.status))?.r;
               const fact=(label,value,cls='')=>`<div class="fau-profile-fact ${cls}"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`;
-              facts.innerHTML=(last?fact('ÚLTIMA RODADA',fauWeekLabel(last.r.round).replace(/^WEEK\s*0*(\d+).*$/i,(_,n)=>'W'+Number(n))):'')+(elimination?fact('DESPEDIDA',fauWeekLabel(elimination.r.round).replace(/^WEEK\s*0*(\d+).*$/i,(_,n)=>'W'+Number(n)),'is-eliminated'):'');
+              facts.innerHTML=(last?fact('ÚLTIMA RODADA',fauWeekLabel(last.r.round).replace(/^WEEK\s*0*(\d+).*$/i,(_,n)=>'W'+Number(n))):'')+(elimination?fact('DESPEDIDA',fauWeekLabel(elimination.round).replace(/^WEEK\s*0*(\d+).*$/i,(_,n)=>'W'+Number(n)),'is-eliminated'):'');
               refreshLatestWeekFact();
             }
             // Reduz o espaço vazio de contas sem resultados; preserva os módulos para futuras rodadas.
@@ -4084,7 +4106,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!played.length){const emptyMeta=$('#fauMyLegacyMeta');if(emptyMeta)emptyMeta.textContent='Sua trajetória começa aqui.';}
             const journey=$('#fauMyJourney');
             if(journey){
-              const ranked=played.map(({r,row})=>({round:r.round,week:fauWeekLabel(r.round),position:Number(row.position??row.posicao??row.rank??row.place??(r.rows.findIndex(z=>String(z.uid||'')===String(uid))+1)),status:legacyDisplayStatus(row.status)}));
+              const ranked=played.map(({r,row})=>({round:r.round,week:fauWeekLabel(r.round),position:Number(row.position??row.posicao??row.rank??row.place??(r.rows.findIndex(z=>String(z.uid||'')===String(uid))+1)),status:legacyDisplayStatus({r,row})}));
               const validRanked=ranked.filter(x=>Number.isFinite(x.position)&&x.position>0).sort((a,b)=>{const num=x=>Number(x.week.match(/WEEK\s+(\d+)/i)?.[1]||Infinity);return num(a)-num(b);});
               const lastRank=validRanked.at(-1),prevRank=validRanked.at(-2);
               const movement=lastRank&&prevRank?(prevRank.position>lastRank.position?`Subiu ${prevRank.position-lastRank.position} ${prevRank.position-lastRank.position===1?'posição':'posições'}`:prevRank.position<lastRank.position?`Caiu ${lastRank.position-prevRank.position} ${lastRank.position-prevRank.position===1?'posição':'posições'}`:'Manteve a posição'):'Sem comparação anterior';
@@ -4213,9 +4235,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const renderSharedTrackRecord = async () => {
             const slot = $('#trackRecordTableContainer');
             try {
-                const rounds=(archiveRanks??(await db.collection('ranking_historico_publico').get()).docs.map(d=>({...d.data(),round:d.id})))
-                    .filter(r=>Array.isArray(r.rows)&&r.rows.length)
-                    .sort((a,b)=>fauArchiveSort(a.round,b.round));
+                const rounds=archiveRanks??fauOfficialTrackRounds(await db.collection('ranking_historico_publico').get());
                 if (!slot?.isConnected) return;
                 if (!rounds.length) {
                     slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
@@ -4593,8 +4613,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
       const week=match?Number(match[1]):Number(metadata?.numeroRodada||metadata?.weekNumber||metadata?.week||0);
       return Number.isInteger(week)&&week>0?week:null;
     };
-    const fauArchiveSort=(a,b)=>{
-      const an=fauArchiveWeekNumber(a),bn=fauArchiveWeekNumber(b);
+    const fauArchiveSort=(a,b,aMetadata,bMetadata)=>{
+      const an=fauArchiveWeekNumber(a,aMetadata),bn=fauArchiveWeekNumber(b,bMetadata);
       if(an!==null&&bn!==null&&an!==bn)return an-bn;
       if(an!==null&&bn===null)return -1;
       if(an===null&&bn!==null)return 1;
@@ -4654,7 +4674,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           db.collection('perfis').where('role','==','estilista').get()
         ]);
         if(!body?.isConnected)return;
-        const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>Array.isArray(d.data().rows)&&d.data().rows.length).map(d=>({...d.data(),round:d.id})):[];
+        const ranks=ranksResult.status==='fulfilled'?fauOfficialTrackRounds(ranksResult.value):[];
         // Consultas de coleção e de documentos individuais podem ter permissões distintas.
         // Buscar cada rodada oficial evita perder títulos por causa de uma listagem negada.
         const titleByRound=new Map();
