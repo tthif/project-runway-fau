@@ -3581,7 +3581,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     info.textContent=`${file.name} · ${(file.size/1048576).toFixed(2)} MB · Ainda não enviado`;
                     wrap.classList.remove('hidden');
                 });
-                if(beautyReleased && currentRoundLooks.length===1) $('#lookMemorialText').closest('div').hidden=true;
+
                 $('#lookMemorialText').oninput = e => {
                     $('#charCounter').textContent = `${e.target.value.length} / 500 letras`;
                 };
@@ -3743,8 +3743,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const lookTitle = $('#lookTitleInput').value.trim();
                 const memorial = $('#lookMemorialText').value.trim();
 
-                const beautySecond=isBeautyWorkroom && allMyLooks.some(l=>l.rodada===globalState.rodada && Number(l.slot)===1);
-                if (!file || !lookTitle || (!beautySecond && !memorial)) throw new Error(beautySecond?'Preencha imagem e título.':'Preencha imagem, título e conceito da criação.');
+                if (!file || !lookTitle || !memorial) throw new Error('Preencha imagem, título e conceito da criação.');
+                if (memorial.length > 500) throw new Error('O conceito deve ter até 500 caracteres.');
                 if(file.size>5*1024*1024) throw new Error('A fotografia deve ter no máximo 5 MB. Escolha uma imagem menor.');
 
                 const theme = getTheme();
@@ -3801,7 +3801,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     finaleMeta: finaleMeta,
                     titulo: lookTitle,
                     url: photoBase64,
-                    mem: beautySecond ? (beauty.assignments.find(a=>a.uid===currentUser.uid)?.concept||'') : memorial,
+                    mem: memorial,
                     t: now()
                 });
                 batch.set(db.doc(`envios/${lookDocId}`), {
