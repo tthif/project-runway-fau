@@ -1123,7 +1123,22 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 .fau-season-hub .fau-hub-hero[data-theme="theme_traitors"]{background:radial-gradient(ellipse at 90% 0%,#78613d66,transparent 60%),#131715}
 .fau-editorial-kicker{font-size:10px;letter-spacing:.23em;color:#d1b38b;margin:0 0 10px}.fau-hub-editorial{padding:22px;border:1px solid #54483c;border-radius:16px;background:#17151a;display:grid;gap:12px}.fau-hub-editorial h3{font-family:Cinzel,serif;color:#f3e7d5;font-size:21px}.fau-hub-editorial p{color:#c6bdc1;font-size:12px}.fau-hub-editorial .fau-editorial-kicker{color:#d1b38b;font-size:10px}.fau-hub-progress,.fau-hub-recap{border-top:1px solid #51463d;padding-top:18px}.fau-hub-progress:empty,.fau-hub-recap:empty{display:none}.fau-hub-numbers{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px}.fau-hub-numbers strong{display:block;font-size:28px;color:#e7d0a9}.fau-hub-numbers span{font-size:11px;color:#c6bdc1}.fau-hub-track{height:5px;background:#39343a;border-radius:8px;margin-top:14px;overflow:hidden}.fau-hub-track i{display:block;height:100%;background:#c5a777}.fau-hub-icon{margin-bottom:18px;padding:14px;border:1px solid #6a563a;border-radius:10px;background:#29231c}
 #fauHistoryRepair>summary{padding:10px 0}#fauCommandMessage:empty{display:none}
-</style></head>
+</style><style id="fau-jury-comparison-alignment">
+.fau-jury-compare{border:1px solid #655344;border-radius:10px;padding:10px;min-width:0}
+.fau-jury-compare-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-bottom:12px}
+.fau-jury-compare-tabs button{font-size:10px;line-height:1.2;min-height:44px;padding:5px;border:1px solid #655344;border-radius:5px;color:#d6b583}
+.fau-jury-compare-tabs button[aria-pressed=true]{background:#d6b583;color:#171417}
+.fau-jury-compare-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.fau-jury-compare-grid[data-mode=both]{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fau-jury-compare-grid[data-mode=original] [data-vision=second],.fau-jury-compare-grid[data-mode=second] [data-vision=original]{display:none!important}
+.fau-jury-compare-grid figure{margin:0;min-width:0;display:grid;grid-template-rows:32px auto auto auto;align-content:start;text-align:center;gap:5px}
+.fau-jury-compare-grid figcaption{display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1.2;color:#d6b583}
+.fau-jury-compare-grid figure button{display:block;width:100%;aspect-ratio:2/3;background:#100e10;overflow:hidden;border-radius:5px}
+.fau-jury-compare-grid figure img{display:block;width:100%!important;height:100%!important;object-fit:contain!important;aspect-ratio:auto!important}
+.fau-jury-compare-grid strong{font-size:13px;overflow-wrap:anywhere}.fau-jury-compare-grid small{font-size:11px;color:#c3b8b5;overflow-wrap:anywhere}
+.fau-jury-compare-dialog{background:#100e10;color:#d6b583;border:1px solid #655344;border-radius:10px;padding:12px;max-width:95vw;max-height:95dvh;margin:auto}.fau-jury-compare-dialog::backdrop{background:#000d}.fau-jury-compare-dialog img{display:block;max-width:85vw;max-height:80dvh;object-fit:contain;margin:auto}.fau-jury-compare-dialog button{display:block;margin:0 0 10px auto;padding:8px}
+</style>
+</head>
 <body class="min-h-screen flex flex-col bg-fashion-950 text-gray-200 font-sans antialiased">
 <a class="fau-ux-skip" href="#mainContent">Pular para o conteúdo</a>
 
@@ -3598,7 +3613,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     info.textContent=`${file.name} · ${(file.size/1048576).toFixed(2)} MB · Ainda não enviado`;
                     wrap.classList.remove('hidden');
                 });
-                if(beautyReleased && currentRoundLooks.length===1) $('#lookMemorialText').closest('div').hidden=true;
+
+                if(beautyReleased && currentRoundLooks.length===1) { const field=$('#lookMemorialText'); field.closest('div').style.display='none'; field.disabled=true; }
                 $('#lookMemorialText').oninput = e => {
                     $('#charCounter').textContent = `${e.target.value.length} / 500 letras`;
                 };
@@ -3660,17 +3676,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const editBeauty=isBeautyWorkroom?await beautyState():null;
                 if(editBeauty && (editBeauty.phase==='exhibition'||(editBeauty.phase!=='first'&&Number(look.slot)===1)))throw new Error('Esta criação está lacrada.');
                 const editSecond=!!editBeauty&&Number(look.slot)===2;
+                const receivedConcept=editSecond?editBeauty.assignments?.find(a=>a.uid===currentUser.uid):null;
                 const host=document.getElementById('fauLookEditPanel');
                 if(host)host.remove();
                 const panel=document.createElement('section');panel.id='fauLookEditPanel';
                 panel.className='rounded-xl border border-fashion-gold bg-fashion-900 p-5 space-y-4';
-                panel.innerHTML=`<p class="text-[10px] text-fashion-gold tracking-widest">THE ALTERATION ROOM · LOOK ${esc(look.slot||1)}</p><h3 class="font-cinzel text-xl text-white">Editar entrega</h3><p class="text-xs text-gray-300">Suas alterações substituem a versão anterior. A imagem só muda se você escolher outra. Disponível até o encerramento da rodada.</p><img src="${esc(look.url)}" alt="Imagem atual do look" class="max-h-60 w-full object-contain rounded bg-black"><label class="block text-xs text-gray-300">Substituir imagem (opcional · JPG, PNG ou WebP · até 5 MB)<input id="fauEditFile" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full mt-2"></label><img id="fauEditPreview" alt="Prévia da nova imagem" class="hidden max-h-60 w-full object-contain rounded bg-black"><label class="block text-xs text-gray-300">Título<input id="fauEditTitle" maxlength="${LOOK_TITLE_MAX_LENGTH}" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded text-white" value="${esc(look.titulo||'')}"></label><label class="block text-xs text-gray-300">Conceito <span id="fauEditCount"></span><textarea id="fauEditConcept" maxlength="500" rows="4" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded text-white">${esc(look.mem||'')}</textarea></label><div class="flex flex-wrap gap-2"><button type="button" id="fauEditSave" class="bg-fashion-gold text-black rounded px-4 py-3 font-bold text-xs">Salvar alterações</button><button type="button" id="fauEditCancel" class="border border-fashion-700 rounded px-4 py-3 text-xs">Cancelar</button></div><p id="fauEditStatus" class="text-xs text-gray-300" role="status"></p>`;
+                panel.innerHTML=`<p class="text-[10px] text-fashion-gold tracking-widest">THE ALTERATION ROOM · LOOK ${esc(look.slot||1)}</p><h3 class="font-cinzel text-xl text-white">Editar entrega</h3><p class="text-xs text-gray-300">Suas alterações substituem a versão anterior. A imagem só muda se você escolher outra. Disponível até o encerramento da rodada.</p>${editSecond?`<section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-2"><p class="text-xs text-fashion-gold uppercase tracking-widest">Your sealed concept</p><h4 class="font-cinzel text-white">${esc(receivedConcept?.title||"Conceito recebido")}</h4><p class="text-sm text-gray-200 whitespace-pre-wrap">${esc(receivedConcept?.concept||"Conceito indisponível. Consulte a produção.")}</p></section>`:""}<img src="${esc(look.url)}" alt="Imagem atual do look" class="max-h-60 w-full object-contain rounded bg-black"><label class="block text-xs text-gray-300">Substituir imagem (opcional · JPG, PNG ou WebP · até 5 MB)<input id="fauEditFile" type="file" accept="image/jpeg,image/png,image/webp" class="block w-full mt-2"></label><img id="fauEditPreview" alt="Prévia da nova imagem" class="hidden max-h-60 w-full object-contain rounded bg-black"><label class="block text-xs text-gray-300">Título (até 50 caracteres)<input id="fauEditTitle" maxlength="${LOOK_TITLE_MAX_LENGTH}" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded text-white" value="${esc(look.titulo||'')}"></label>${editSecond?"":`<label class="block text-xs text-gray-300">Conceito <span id="fauEditCount"></span><textarea id="fauEditConcept" maxlength="500" rows="4" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded text-white">${esc(look.mem||"")}</textarea></label>`}<div class="flex flex-wrap gap-2"><button type="button" id="fauEditSave" class="bg-fashion-gold text-black rounded px-4 py-3 font-bold text-xs">Salvar alterações</button><button type="button" id="fauEditCancel" class="border border-fashion-700 rounded px-4 py-3 text-xs">Cancelar</button></div><p id="fauEditStatus" class="text-xs text-gray-300" role="status"></p>`;
                 const inlineHost=document.getElementById('fauInlineEditHost');
                 if(inlineHost){inlineHost.replaceChildren(panel);document.querySelectorAll('#fauInlineLookTabs [data-edit-look]').forEach(b=>{const active=b.dataset.editLook===look.id;b.classList.toggle('bg-fashion-gold',active);b.classList.toggle('text-black',active);});}
                 else {document.getElementById('workroomFormModule').after(panel);panel.scrollIntoView({behavior:'smooth',block:'start'});}
-                if(editSecond)panel.querySelector('#fauEditConcept').closest('label').hidden=true;
-                const count=()=>panel.querySelector('#fauEditCount').textContent=`${panel.querySelector('#fauEditConcept').value.length}/500`;
-                panel.querySelector('#fauEditConcept').addEventListener('input',count);count();
+                if(!editSecond){const count=()=>panel.querySelector('#fauEditCount').textContent=`${panel.querySelector('#fauEditConcept').value.length}/500`;panel.querySelector('#fauEditConcept').addEventListener('input',count);count();}
                 panel.querySelector('#fauEditCancel').onclick=()=>{if(inlineHost){navigate('work');}else panel.remove();};
                 panel.querySelector('#fauEditFile').addEventListener('change',ev=>{
                     const file=ev.target.files?.[0],preview=panel.querySelector('#fauEditPreview');
@@ -3681,10 +3696,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 panel.querySelector('#fauEditSave').onclick=safeExec(async()=>{
                     const button=panel.querySelector('#fauEditSave');if(button.disabled)return;
                     if(!(Number(globalState.prazo)>now()))throw new Error('O prazo de edição acabou.');
-                    const title=panel.querySelector('#fauEditTitle').value.trim(),mem=panel.querySelector('#fauEditConcept').value.trim(),file=panel.querySelector('#fauEditFile').files?.[0];
+                    const title=panel.querySelector('#fauEditTitle').value.trim(),mem=editSecond?'':panel.querySelector('#fauEditConcept').value.trim(),file=panel.querySelector('#fauEditFile').files?.[0];
                     if(!title)throw new Error('Informe o título da criação.');
                     checkLookTitleLength(title);
-                    if(!editSecond&&(!mem||mem.length>500))throw new Error('Informe o conceito (até 500 caracteres).');
+                    if(!editSecond&&(!mem||mem.length>500))throw new Error('Informe um conceito de até 500 caracteres.');
                     if(file&&(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024))throw new Error('A nova imagem precisa ser JPG, PNG ou WebP de até 5 MB.');
                     button.disabled=true;button.textContent='SALVANDO...';
                     try{
@@ -3766,6 +3781,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
                 const beautySecond=isBeautyWorkroom && allMyLooks.some(l=>l.rodada===globalState.rodada && Number(l.slot)===1);
                 if (!file || !lookTitle || (!beautySecond && !memorial)) throw new Error(beautySecond?'Preencha imagem e título.':'Preencha imagem, título e conceito da criação.');
+                if (!beautySecond && memorial.length > 500) throw new Error('O conceito deve ter até 500 caracteres.');
                 if(file.size>5*1024*1024) throw new Error('A fotografia deve ter no máximo 5 MB. Escolha uma imagem menor.');
 
                 const theme = getTheme();
@@ -5367,7 +5383,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // O nome exibido vem do cadastro atual, nunca do snapshot do envio.
         let juryNamesByUid = new Map();
         const juryLiveName = look => juryNamesByUid.get(String(look.uid)) || look.ate || 'Designer';
-        const sortJuryLooks = items => [...items].sort((a,b)=>juryLiveName(a).localeCompare(juryLiveName(b),'pt-BR',{sensitivity:'base',numeric:true}) || (Number(a.slot)||0)-(Number(b.slot)||0) || String(a.id).localeCompare(String(b.id)));
+        const sortJuryLooks = items => [...items].sort((a,b)=>(beautyJury?(Number(a.slot||1)-Number(b.slot||1)):0) || juryLiveName(a).localeCompare(juryLiveName(b),'pt-BR',{sensitivity:'base',numeric:true}) || (Number(a.slot)||0)-(Number(b.slot)||0) || String(a.id).localeCompare(String(b.id)));
         const beautyJury = globalState.themeId==='theme_beauty_eye';
         let beautyJuryState=beautyJury?(await beautyRef().get()).data()||{}:{};
         let beautyPhase=beautyJuryState.phase||'first';
@@ -5570,13 +5586,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 `;
             }).join('');
 
-            container.innerHTML = looks.map(look => {
+            container.innerHTML = (beautyJury?`<nav class="col-span-full flex flex-wrap gap-2 border border-fashion-700 rounded p-3">${[1,2].filter(slot=>looks.some(l=>Number(l.slot||1)===slot)).map(slot=>`<button type="button" data-action="jury-jump" data-slot="${slot}" class="border border-fashion-gold/50 rounded p-2 text-xs text-fashion-gold">${slot===1?'MY VISION':'ANOTHER POINT OF VIEW'} · ${looks.filter(l=>Number(l.slot||1)===slot&&evaluations[l.id]?.nota).length}/${looks.filter(l=>Number(l.slot||1)===slot).length}</button>`).join('')}<button type="button" data-action="jury-pending" class="border border-fashion-700 rounded p-2 text-xs">PRÓXIMO PENDENTE</button></nav>`:'')+looks.map((look,index) => {
+                const secondVision=beautyJury&&Number(look.slot)===2;
+                const sectionStart=beautyJury&&(index===0||Number(looks[index-1].slot||1)!==Number(look.slot||1));
+                const matches=secondVision&&look.mem?looks.filter(l=>Number(l.slot||1)===1&&l.uid!==look.uid&&l.mem===look.mem):[];
+                const original=matches.length===1?matches[0]:null;
                 const ev = evaluations[look.id] || {};
                 const scores = draftScores.get(look.id) || ev.nota || [5.0, 5.0, 5.0, 5.0, 5.0];
                 const commentAdmin = ev.comentAdmin || '';
 
                 return `
-                    <div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
+                    ${sectionStart?`<section data-jury-section="${secondVision?2:1}" class="col-span-full border-b border-fashion-gold/40 py-4"><h3 class="font-cinzel text-fashion-gold text-lg">${secondVision?"02 · ANOTHER POINT OF VIEW":"01 · MY VISION"}</h3><p class="text-xs text-gray-400 mt-1">${secondVision?"Releituras dos conceitos recebidos":"Criações originais"}</p></section>`:""}<div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
                                 <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div>
@@ -5603,7 +5623,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                                       <details class="fau-jury-dossier border border-fashion-700 rounded"><summary class="p-3 text-xs text-fashion-gold cursor-pointer">LER CONCEITO NOVO ⌄</summary><p class="text-xs text-gray-300 whitespace-pre-wrap px-3 pb-3">${esc(look.mem||'Sem conceito')}</p></details>
                                     </div>
                                   </section>`;
-                                })() : `<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">${creativeDossier(look)}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>${beautyJury&&Number(look.slot)===2?'LER CONCEITO RECEBIDO':'LER CONCEITO'} · ${esc(look.titulo || 'Sem título')}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
+                                })() : `${secondVision&&original?`<div class="fau-jury-compare"><div class="fau-jury-compare-tabs" role="group" aria-label="Modo de visualização"><button type="button" data-action="jury-compare" data-mode="second" aria-pressed="true">ANOTHER POINT OF VIEW</button><button type="button" data-action="jury-compare" data-mode="both" aria-pressed="false">COMPARE</button></div><div class="fau-jury-compare-grid" data-mode="second">${[original,look].map((item,i)=>`<figure data-vision="${i?"second":"original"}"><figcaption>${i?"ANOTHER POINT OF VIEW":"MY VISION"}</figcaption><button type="button" data-action="jury-enlarge" data-src="${esc(item.url)}" aria-label="Ampliar ${esc(item.titulo||"look")}"><img src="${esc(item.url)}" alt="${esc(item.titulo||"Look")}" loading="lazy"></button><strong>${esc(item.titulo||"Sem título")}</strong><small>${esc(juryLiveName(item))}</small></figure>`).join("")}</div></div>`:`<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">`}${creativeDossier(look)}${secondVision&&!original?`<p class="font-cinzel text-fashion-gold text-sm">${esc(look.titulo||"Sem título")}</p>`:""}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>${secondVision?('LER CONCEITO ORIGINAL RECEBIDO'+(original?' · '+esc(original.titulo||'')+' — '+esc(juryLiveName(original)):'')):`LER CONCEITO · ${esc(look.titulo || 'Sem título')}`}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
                             </div>
                             <div class="fau-jury-scoring md:col-span-8 space-y-4 text-xs">
                                 <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
@@ -5614,7 +5634,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                                 </div>
 
                                 <div class="space-y-3">
-                                    ${(globalState.themeId==='theme_beauty_eye' && look.slot===2 ? CRITERIOS.map((c,i)=>i===1?'Fidelidade à essência do conceito recebido':c) : CRITERIOS).map((c, i) => `
+                                    ${(globalState.themeId==='theme_beauty_eye' && Number(look.slot)===2 ? CRITERIOS.map((c,i)=>i===1?'Fidelidade à essência do conceito recebido':c) : CRITERIOS).map((c, i) => `
                                         <div class="space-y-1">
                                             <div class="flex justify-between text-gray-300">
                                                 <span>${c}</span>
@@ -5668,9 +5688,15 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const act = btn.dataset.action;
             const lookId = btn.dataset.look;
 
+            if(act==='jury-compare'){const panel=btn.closest('.fau-jury-compare');panel.querySelector('.fau-jury-compare-grid').dataset.mode=btn.dataset.mode;panel.querySelectorAll('[data-mode][data-action="jury-compare"]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));return;}
+            if(act==='jury-enlarge'){const dialog=document.createElement('dialog');dialog.className='fau-jury-compare-dialog';const image=document.createElement('img');image.src=btn.dataset.src;image.alt=btn.getAttribute('aria-label')||'Look';const close=document.createElement('button');close.type='button';close.textContent='FECHAR';close.onclick=()=>dialog.close();dialog.append(close,image);dialog.addEventListener('close',()=>{dialog.remove();btn.focus();},{once:true});dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});document.body.append(dialog);dialog.showModal();return;}
+            if(act==='jury-jump'){document.querySelector('[data-jury-section="'+Number(btn.dataset.slot)+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});return;}
+            const jumpPending=()=>{const next=looks.find(l=>!evaluations[l.id]?.nota);if(next){[...document.querySelectorAll('.fau-jury-card')].find(el=>el.dataset.look===next.id)?.scrollIntoView({behavior:'smooth',block:'start'});}else showToast('Todas as avaliações foram salvas.');};
+            if(act==='jury-pending'){jumpPending();return;}
             if (act === 'save-evaluation') {
                 await saveSingleEvaluation(lookId);
                 showToast('Avaliação salva com sucesso.');
+                if(beautyJury&&looks.some(l=>!evaluations[l.id]?.nota))jumpPending();
             }
         });
 
@@ -5888,12 +5914,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const title=card?.querySelector('.font-cinzel.text-fashion-gold.font-bold')?.textContent?.trim()||active.alt||'Editorial';
             const concept=card?.querySelector('p.italic')?.textContent?.trim()||'';
 
-            viewer.querySelector('[data-viewer-count]').textContent=`LOOK ${index+1} / ${images.length}`;
+            viewer.querySelector('[data-viewer-count]').textContent=`LOOK ${index+1} / ${images.length}${card?.dataset.beautyVision?' · '+card.dataset.beautyVision:''}`;
             viewer.querySelector('[data-viewer-title]').textContent=title;
             const lookTitle=card?.querySelector('.fau-collection-title')?.textContent?.trim()||card?.querySelector('.font-cinzel.text-fashion-gold.font-bold')?.textContent?.trim()||'';
             const lookTitleNode=viewer.querySelector('[data-viewer-look-title]');
             lookTitleNode.textContent=lookTitle;lookTitleNode.hidden=!lookTitle;
-            viewer.querySelector('[data-viewer-concept]').textContent=concept;
+            viewer.querySelector('[data-viewer-concept]').textContent=card?.dataset.beautySource?`CONCEITO ORIGINAL — ${card.dataset.beautySource}\n\n${card.dataset.beautyConcept||concept}`:concept;
 
             viewer.querySelector('[data-viewer-prev]').disabled=images.length<2;
             viewer.querySelector('[data-viewer-next]').disabled=images.length<2;
@@ -5985,7 +6011,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     mutationLine=`*Mutação:* ${mutationName}\n\n`;
                     files=[await makeFile(past.url,'01-Criacao-Original'),newFile];
                 }
-                const caption=`*${runwayName(look)}*\n\n${mutationLine}_${look.titulo||'Nova criação'}_\n\n${look.mem||''}`;
+                const beautyShare=globalState.themeId==='theme_beauty_eye';
+                const secondVision=beautyShare&&Number(look.slot)===2;
+                const sourceAssignment=secondVision?beautyBroadcast?.assignments?.find(a=>a.uid===look.uid):null;
+                const sourceLook=secondVision?looks.find(l=>Number(l.slot)===1&&l.uid===sourceAssignment?.sourceUid):null;
+                const caption=beautyShare?`*${runwayName(look)}*\n\n*${secondVision?'ANOTHER POINT OF VIEW':'MY VISION'}*\n\n_${look.titulo||'Nova criação'}_${secondVision?(sourceLook?`\n\nReleitura de _${sourceLook.titulo}_ — ${runwayName(sourceLook)}`:''):`\n\n${look.mem||''}`}`:`*${runwayName(look)}*\n\n${mutationLine}_${look.titulo||'Nova criação'}_\n\n${look.mem||''}`;
                 if(navigator.share && navigator.canShare?.({files})){
                     try{
                         await navigator.share({files,text:caption});
@@ -6003,7 +6033,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 }
                 await copyCaption(caption);
                 files.forEach(downloadFile);
-                showToast('Fotos baixadas e legenda copiada. Selecione as duas no WhatsApp.');
+                showToast(files.length===1?'Foto baixada e legenda copiada. Envie a foto no WhatsApp.':'Fotos baixadas e legenda copiada. Selecione as duas no WhatsApp.');
             }catch(error){showError(error.message||'Não foi possível preparar o compartilhamento.');}
             finally{button.disabled=false;button.innerHTML=original;}
         };
@@ -6059,19 +6089,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML='<div class="text-center text-gray-300 bg-fashion-900 border border-fashion-gold/30 rounded p-8">👑 As Supremas permanecem nos bastidores até a decisão da produção.</div>';return;
                 }
             }
-            if (globalState.themeId==='theme_beauty_eye' && beautyBroadcast?.phase==='exhibition') {
-                const originals=looks.filter(l=>l.slot===1);
-                const assignments=beautyBroadcast.assignments||[];
-                $('#runwayGroups').innerHTML=`<div class="space-y-6">${originals.map(original=>{
-                    const recipient=assignments.find(a=>a.sourceUid===original.uid);
-                    const second=looks.find(l=>l.slot===2 && l.uid===recipient?.uid);
-                    return `<section class="bg-fashion-950 border border-fashion-gold/40 p-5 rounded-lg space-y-4"><h3 class="font-cinzel text-fashion-gold">${esc(original.titulo)}</h3><p class="text-sm text-gray-300 italic">${esc(original.mem)}</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div><p class="text-xs text-fashion-gold mb-2">MY VISION · ${esc(original.ate)}</p><img class="w-full img-look rounded" src="${esc(original.url)}">${isAdmin?`<button data-fau-whatsapp="${esc(original.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>
-                    ${second?`<div><p class="text-xs text-fashion-gold mb-2">ANOTHER POINT OF VIEW · ${esc(second.ate)}</p><img class="w-full img-look rounded" src="${esc(second.url)}"><p class="text-xs text-gray-300 mt-2">${esc(second.titulo)}</p>${isAdmin?`<button data-fau-whatsapp="${esc(second.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>`:'<p class="text-xs">Releitura indisponível</p>'}</div></section>`;
-                }).join('')}</div>`;
-                $('#runwayGrid').innerHTML='';
-                return;
-            }
             const grouped = globalState.themeId === 'theme_traitors' && banquetBroadcast?.activated && (isAdmin || globalState.liberado);
             const groupsBox = $('#runwayGroups');
             const renderLook = look => {
@@ -6122,7 +6139,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     </div>
                 `;
             };
-            if (grouped) {
+            if (globalState.themeId==='theme_beauty_eye' && (isAdmin || (globalState.liberado && beautyBroadcast?.phase==='exhibition'))) {
+                const assignments=beautyBroadcast?.assignments||[];
+                const originals=looks.filter(l=>Number(l.slot)===1);
+                const card=(look,label,source)=>renderLook(look).replace('<div class="bg-fashion-900','<div data-beauty-vision="'+esc(label)+'" data-beauty-source="'+esc(source?runwayName(source):'')+'" data-beauty-concept="'+esc(source?.mem||look.mem||'')+'" class="bg-fashion-900');
+                groupsBox.innerHTML='';
+                $('#runwayGrid').innerHTML=originals.map(original=>{const recipient=assignments.find(a=>a.sourceUid===original.uid);const second=looks.find(l=>Number(l.slot)===2&&l.uid===recipient?.uid);return card(original,'MY VISION')+(second?card(second,'ANOTHER POINT OF VIEW',original):'<div class="fau-beauty-pending border border-fashion-700 rounded-lg p-4 text-xs text-gray-400">AWAITING ANOTHER POINT OF VIEW</div>');}).join('');
+            } else if (grouped) {
                 const byUid = new Map((banquetBroadcast.members || []).map(m => [m.uid,m.faction]));
                 const makeSection = (faction, heading, symbol) => {
                     const items = looks.filter(l => byUid.get(l.uid) === faction);
@@ -6251,7 +6274,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(currentUser.role==='estilista') sub(db.collection('supreme_votos').where('rodada','==',globalState.rodada || 'sem-rodada').where('voterUid','==',currentUser.uid),snap=>{supremeMyVotes=snap.docs.map(d=>d.data());refreshRunwayUI();});
         }
         if (globalState.themeId === 'theme_beauty_eye') {
-            sub(beautyRef(), snap => {beautyBroadcast=snap.exists?snap.data():null;refreshRunwayUI();});
+            let privateAssignments=null;
+            sub(beautyRef(), snap => {beautyBroadcast=snap.exists?snap.data():null;if(isAdmin&&beautyBroadcast&&privateAssignments)beautyBroadcast.assignments=privateAssignments;refreshRunwayUI();});
+            if(isAdmin)sub(beautyPrivateRef(),snap=>{privateAssignments=snap.data()?.assignments||null;if(beautyBroadcast&&privateAssignments)beautyBroadcast.assignments=privateAssignments;refreshRunwayUI();});
         }
         if (globalState.themeId === 'theme_traitors') {
             sub(db.doc(`revelacoes_traitors/${globalState.rodada}`), snap => {
@@ -11528,7 +11553,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    for(const child of [...content.children])if(child!==name&&child!==photo)body.appendChild(child);
    for(const child of [...card.children])if(child!==content)body.appendChild(child);
    details.append(summary,body);
-   if(name)copy.append(name);copy.append(title);if(excerpt.textContent)copy.append(excerpt);copy.append(details);
+   if(card.dataset.beautyVision){const vision=document.createElement('div');vision.className='fau-beauty-vision';vision.textContent=card.dataset.beautyVision;copy.append(vision);}if(name)copy.append(name);copy.append(title);if(excerpt.textContent)copy.append(excerpt);copy.append(details);
    // Production sharing stays visible even when the editorial details are collapsed.
    const share=details.querySelector('[data-fau-whatsapp]');
    if(share){share.classList.add('fau-gallery-share-visible');content.append(share);}
@@ -11583,6 +11608,10 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 </script>
 
 <style id="fau-gallery-photo-first-final">
+#runwayGrid .fau-beauty-vision{display:block!important;color:#d6b583;font-size:10px;letter-spacing:.08em;line-height:1.4;margin-bottom:4px}
+#runwayGrid .fau-beauty-pending{display:flex!important;align-items:center;justify-content:center;text-align:center;letter-spacing:.1em;min-height:120px;color:#d6b583!important}
+#mainView:has(#runwayGrid [data-beauty-vision]) #runwayGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.fau-runway-viewer [data-viewer-concept]{white-space:pre-wrap!important}
 /* Gallery: only the designer and the photo. Existing full photo viewer retained. */
 #runwayGrid .fau-collection-card .fau-collection-title,
 #runwayGrid .fau-collection-card .fau-collection-excerpt,
