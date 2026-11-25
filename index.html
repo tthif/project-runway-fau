@@ -3620,7 +3620,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             $('#myLooksArchiveGrid').innerHTML = visibleMyLooks.map(l => {
                 return `
                     <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-2">
-                        <img src="${esc(l.url)}" class="w-full img-look rounded">
+                        <img src="${esc(l.url)}" class="w-full img-look rounded" alt="Criação da ${esc(fauWeekLabel(l.rodada))}" loading="lazy" decoding="async">
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="text-fashion-gold font-bold font-cinzel">${esc(fauWeekLabel(l.rodada))}${isBeautyWorkroom&&beautyReleased&&l.rodada===globalState.rodada?` · ${Number(l.slot)===2?'Another Point of View':'My Vision'}`:''}</span>
                             <span class="text-gray-400 font-cinzel">${esc(l.titulo || 'Look Sem Nome')}</span>
@@ -5532,7 +5532,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const values=draftScores.get(l.id)||ev.nota; const tot=values?.length===5 ? values.reduce((a,b)=>a+Number(b),0).toFixed(1) : '—';
                 return `
                     <div class="bg-fashion-950 p-2 rounded border border-fashion-700 text-center space-y-1">
-                        <img src="${esc(l.url)}" class="w-full aspect-[3/4] object-cover rounded">
+                        <img src="${esc(l.url)}" class="w-full aspect-[3/4] object-cover rounded" alt="Look de ${esc(juryLiveName(l))}" loading="lazy" decoding="async">
                         <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(juryLiveName(l))}</div>${beautyJury?`<div class="text-[10px] text-fashion-gold">${Number(l.slot)===2?'02 · Another Point of View':'01 · My Vision'}</div>`:''}
                         <div class="text-fashion-gold font-mono font-bold text-xs">${tot}${tot==='—'?'':' / 50'}</div><div class="text-[10px] ${draftScores.has(l.id)?'text-amber-300':ev.nota?'text-green-300':'text-gray-400'}">${draftScores.has(l.id)?'Não salvo':ev.nota?'Salvo':'Pendente'}</div>
                     </div>
@@ -5988,11 +5988,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="space-y-2 text-center">
-                                <img src="${esc(lookA.url)}" class="w-full img-look rounded border border-fashion-700">
+                                <img src="${esc(lookA.url)}" class="w-full img-look rounded border border-fashion-700" alt="Look de ${esc(runwayName(lookA))}" decoding="async">
                                 <span class="font-cinzel font-bold text-white text-xs">${esc(runwayName(lookA))}</span>
                             </div>
                             <div class="space-y-2 text-center">
-                                <img src="${esc(lookB.url)}" class="w-full img-look rounded border border-fashion-700">
+                                <img src="${esc(lookB.url)}" class="w-full img-look rounded border border-fashion-700" alt="Look de ${esc(runwayName(lookB))}" decoding="async">
                                 <span class="font-cinzel font-bold text-white text-xs">${esc(runwayName(lookB))}</span>
                             </div>
                         </div>
@@ -7792,7 +7792,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         const isDisabled = p.disabled === true;
                         return `<article class="fau-profile-card">
                             <div class="fau-profile-top">
-                                ${(['estilista','jurado'].includes(p.role)||isSelf)?(p.fotoElenco?`<img class="fau-admin-cast-thumb" src="${esc(p.fotoElenco)}" alt="Foto de ${esc(p.ate||'Designer')}">`:'<div class="fau-admin-cast-thumb fau-cast-placeholder"><i class="fa-solid fa-user"></i></div>'):''}
+                                ${(['estilista','jurado'].includes(p.role)||isSelf)?(p.fotoElenco?`<img class="fau-admin-cast-thumb" src="${esc(p.fotoElenco)}" alt="Foto de ${esc(p.ate||'Designer')}" loading="lazy" decoding="async">`:'<div class="fau-admin-cast-thumb fau-cast-placeholder"><i class="fa-solid fa-user"></i></div>'):''}
                                 <div class="min-w-0"><h4 class="fau-profile-name">${esc(p.role==='jurado'?(p.nomeJurado||p.ate||'Sem nome'):(p.ate||'Sem nome'))}</h4><p class="fau-profile-sub">${esc(p.role==='jurado'?'Jurado · nome público':(p.manifesto ? 'Manifesto cadastrado' : 'Sem manifesto'))}</p></div>
                                 <span class="fau-profile-status ${isDisabled?'is-disabled':'is-active'}">${isDisabled?'Desativado':'Ativo'}</span>
                             </div>
@@ -10509,7 +10509,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             return `
                 <div class="bg-fashion-950 p-3 rounded border border-fashion-700 space-y-2 text-left flex flex-col justify-between">
                     <div class="space-y-2">
-                        <img src="${esc(l.url)}" class="w-full img-look rounded border border-fashion-700 shadow">
+                        <img src="${esc(l.url)}" class="w-full img-look rounded border border-fashion-700 shadow" alt="Criação da ${esc(fauWeekLabel(l.rodada))}" loading="lazy" decoding="async">
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="font-cinzel text-fashion-gold font-bold">Rodada: ${esc(l.rodada)}</span>
                             <span class="text-gray-400 font-cinzel">${esc(l.titulo || '')}</span>
