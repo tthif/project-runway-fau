@@ -4624,13 +4624,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(d.data()?.published===true)titleByRound.set(String(d.id),{round:d.id,...d.data()});
           });
         }
-        const titleChecks=await Promise.allSettled(ranks.map(r=>
+        const ranksNeedingTitles=ranks.filter(r=>!titleByRound.has(String(r.round)));
+        const titleChecks=await Promise.allSettled(ranksNeedingTitles.map(r=>
           db.collection('fau_titulos_publicos').doc(String(r.round)).get()
         ));
         titleChecks.forEach((result,index)=>{
           if(result.status!=='fulfilled'||!result.value.exists)return;
           const data=result.value.data();
-          if(data?.published===true)titleByRound.set(String(ranks[index].round),{round:ranks[index].round,...data});
+          if(data?.published===true)titleByRound.set(String(ranksNeedingTitles[index].round),{round:ranksNeedingTitles[index].round,...data});
         });
         const titles=[...titleByRound.values()];
         const titlesAccessible=titlesResult.status==='fulfilled'||
@@ -4957,8 +4958,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         archiveLooks.forEach(x=>{const key=roundKey(x.round);if(!groupedLooks.has(key))groupedLooks.set(key,[]);groupedLooks.get(key).push(x);});
         const gallery=[...groupedLooks.keys()].sort((a,b)=>(archiveWeekNumber(b)??0)-(archiveWeekNumber(a)??0)).map(round=>{
           const looks=groupedLooks.get(round).sort((a,b)=>String(a.designer||a.ate||'').localeCompare(String(b.designer||b.ate||''),'pt-BR',{sensitivity:'base'})||String(a.title||'').localeCompare(String(b.title||''),'pt-BR',{sensitivity:'base'}));
-          const cards=looks.map(x=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(round)}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round,weekLabel(x.round)].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
-            <div class="fau-archive-photo-wrap"><img src="${esc(x.image)}" loading="lazy" alt="Look publicado: ${esc(x.title||'Criação do acervo')}" class="fau-archive-img w-full aspect-[3/4] object-contain bg-black" /></div>
+          const cards=looks.map(x=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(round)}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round,weekLabel(x.round)].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
+            <div class="fau-archive-photo-wrap"><img src="${esc(x.image)}" loading="lazy" decoding="async" alt="Look publicado: ${esc(x.title||'Criação do acervo')}" class="fau-archive-img w-full aspect-[3/4] object-contain bg-black" /></div>
             <div class="p-3 space-y-1"><h4 class="text-sm text-white font-cinzel">${esc(x.title||'Criação do arquivo')}</h4>${x.designer||x.ate?`<p class="text-xs text-gray-400">${esc(x.designer||x.ate)}</p>`:''}</div></article>`).join('');
           return `<section class="fau-look-week-group" data-week="${esc(round)}"><div class="fau-look-week-heading"><h4>${esc(weekLabel(round))}</h4><span class="fau-look-week-count">${looks.length} ${looks.length===1?'look':'looks'}</span></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${cards}</div></section>`;
         }).join('');
@@ -4974,7 +4975,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           evolutionGroups.get(key).looks.push(x);
         });
         const evolutionPeople=[...evolutionGroups.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
-        const profiles=[...people.values()].sort((a,b)=>{
+        const renderProfiles=()=>[...people.values()].sort((a,b)=>{
           if(a.wins!==b.wins)return b.wins-a.wins;
           if(a.icons!==b.icons)return b.icons-a.icons;
           if(a.highs!==b.highs)return b.highs-a.highs;
@@ -5007,7 +5008,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(/\bSAFE\b/.test(raw))return {label:'SAFE',kind:'safe'};
             return {label:'EM JULGAMENTO',kind:'pending'};
           };
-          const journeyMarkup=`<div class="fau-legacy-evolution"><button type="button" class="fau-legacy-evolution-toggle" aria-expanded="false" aria-controls="${journeyId}"><span><i class="fa-solid fa-images" aria-hidden="true"></i> VER EVOLUÇÃO <small>· ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'}${pending?' · EM JULGAMENTO':''}</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="${journeyId}" class="fau-evolution-detail" hidden><p class="fau-evolution-intro">Da primeira criação à mais recente. Uma trajetória contada em looks.</p><div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(archiveWeekLabel(x.round).split(' — ')[0])} <span class="fau-evolution-verdict is-${evolutionVerdict(x).kind}">${evolutionVerdict(x).label}</span></span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" data-evolution-owner="${esc(p.uid||archiveNameKey(p.name))}" data-image="${esc(x.image)}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(p.name)}" data-round="${esc(roundKey(x.round))}" aria-label="Ver criação ${esc(x.title||'')}"><img src="${esc(x.image)}" loading="lazy" alt="${esc(x.title||'Look publicado')}"><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')||'<p class="text-gray-400 text-xs">Nenhuma criação publicada ainda.</p>'}</div></div></div>`;
+          const journeyMarkup=`<div class="fau-legacy-evolution"><button type="button" class="fau-legacy-evolution-toggle" aria-expanded="false" aria-controls="${journeyId}"><span><i class="fa-solid fa-images" aria-hidden="true"></i> VER EVOLUÇÃO <small>· ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'}${pending?' · EM JULGAMENTO':''}</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="${journeyId}" class="fau-evolution-detail" hidden><p class="fau-evolution-intro">Da primeira criação à mais recente. Uma trajetória contada em looks.</p><div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(archiveWeekLabel(x.round).split(' — ')[0])} <span class="fau-evolution-verdict is-${evolutionVerdict(x).kind}">${evolutionVerdict(x).label}</span></span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" data-evolution-owner="${esc(p.uid||archiveNameKey(p.name))}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(p.name)}" data-round="${esc(roundKey(x.round))}" aria-label="Ver criação ${esc(x.title||'')}"><img src="${esc(x.image)}" loading="lazy" decoding="async" alt="${esc(x.title||'Look publicado')}"><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')||'<p class="text-gray-400 text-xs">Nenhuma criação publicada ainda.</p>'}</div></div></div>`;
           return `<article class="fau-hall-profile${isOut?' is-out':''}${p.wins+p.icons?' has-title':''}">
             <div class="fau-hall-profile-head"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>${isOut?'<span class="fau-hall-out">ELIMINADO</span>':''}</div>
             <div class="fau-hall-counts"><span>${winText}</span><span>${iconText}</span><span>${p.foras} ${p.foras===1?'Fora de Moda':'Fora de Moda'}</span>${isOut?'<span class="fau-hall-out">OUT · ELIMINADO</span>':''}</div>
@@ -5049,7 +5050,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           ${shame?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${shame}</div>`:'<p class="text-gray-400 text-sm py-6">Os títulos de Fora de Moda aparecerão aqui após a publicação oficial.</p>'}</section>
           <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">NENHUMA DESPEDIDA ATÉ AGORA</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>'}</section>
           <section data-archive-panel="track" class="space-y-4 hidden" role="tabpanel"><p class="text-gray-400 text-sm py-6 text-center">Abra o Track Record para consultar o histórico da temporada.</p></section>
-          <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">A trajetória dos Designers</h3><div class="grid sm:grid-cols-2 gap-3">${profiles||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>'}</div></section>
+          <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">A trajetória dos Designers</h3><div class="grid sm:grid-cols-2 gap-3"><div id="fauArchiveLegacyContent" class="contents"></div></div></section>
           <section data-archive-panel="story" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
           <p class="text-gray-400 text-sm">Cada rodada tem sua história. Relembre os resultados e os momentos que marcaram a competição.</p>
           <div class="fau-archive-timeline space-y-3">${story||'<p class="text-gray-400 text-sm">Os capítulos aparecerão após a publicação dos primeiros resultados.</p>'}</div></section>
@@ -5057,13 +5058,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           ${!titlesAccessible?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar todos os títulos publicados. Verifique as regras de leitura de fau_titulos_publicos.</p>':''}
           ${castResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar o elenco público para o Hall dos Eliminados.</p>':''}
           ${publicationsResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O acervo de imagens publicadas não está acessível com as permissões atuais.</p>':''}`;
-        let trackLoaded=false;
+        let trackLoaded=false,legacyLoaded=false;
         const tabs=[...body.querySelectorAll('[data-archive-tab]')];
         tabs.forEach(tab=>tab.addEventListener('click',()=>{
           const chosen=tab.dataset.archiveTab;
           tabs.forEach(t=>{const active=t===tab;t.setAttribute('aria-selected',String(active));t.classList.toggle('bg-fashion-gold',active);t.classList.toggle('text-black',active);t.classList.toggle('font-bold',active);t.classList.toggle('border',!active);t.classList.toggle('border-fashion-700',!active);});
           body.querySelectorAll('[data-archive-panel]').forEach(panel=>panel.classList.toggle('hidden',panel.dataset.archivePanel!==chosen));
-          if(chosen==='track'&&!trackLoaded){trackLoaded=true;VIEWS.historico(true).catch(err=>{trackLoaded=false;console.error('Track Record',err);const panel=body.querySelector('[data-archive-panel="track"]');if(panel)panel.innerHTML='<p class="text-red-300 text-sm">Não foi possível carregar o Track Record. Tente novamente.</p>';});}
+          if(chosen==='designers'&&!legacyLoaded){const target=body.querySelector('#fauArchiveLegacyContent');if(target){target.innerHTML=renderProfiles()||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>';legacyLoaded=true;}}
+           if(chosen==='track'&&!trackLoaded){trackLoaded=true;VIEWS.historico(true).catch(err=>{trackLoaded=false;console.error('Track Record',err);const panel=body.querySelector('[data-archive-panel="track"]');if(panel)panel.innerHTML='<p class="text-red-300 text-sm">Não foi possível carregar o Track Record. Tente novamente.</p>';});}
         }));
         const search=body.querySelector('#fauArchiveSearch'),select=body.querySelector('#fauArchiveRound');
         const searchToggle=body.querySelector('#fauArchiveSearchToggle'),searchPanel=body.querySelector('#fauLookSearchPanel');
@@ -5080,8 +5082,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           <section class="fau-lb-concept" hidden aria-label="Conceito da criação"><div><small>CREATIVE DOSSIER</small><button type="button" data-lb-concept-close>✕ FECHAR</button></div><h3></h3><p></p></section>
         </div>`;
         document.body.appendChild(viewer);
-        body.querySelectorAll('.fau-legacy-evolution-toggle').forEach(button=>button.addEventListener('click',()=>{const panel=body.querySelector('#'+button.getAttribute('aria-controls'));const opening=panel.hidden;panel.hidden=!opening;button.setAttribute('aria-expanded',String(opening));}));
-        const allCards=[...body.querySelectorAll('.fau-archive-entry')];
+        body.addEventListener('click',event=>{const button=event.target.closest('.fau-legacy-evolution-toggle');if(!button)return;const panel=body.querySelector('#'+button.getAttribute('aria-controls'));if(!panel)return;const opening=panel.hidden;panel.hidden=!opening;button.setAttribute('aria-expanded',String(opening));});
         let activeCards=[],activeIndex=0,previousFocus=null,touchStart=null;
         const conceptPanel=viewer.querySelector('.fau-lb-concept');
         const hideConcept=()=>{conceptPanel.hidden=true;viewer.querySelector('[data-lb-concept]').setAttribute('aria-expanded','false');};
@@ -5089,7 +5090,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const displayLook=()=>{
           const card=activeCards[activeIndex];if(!card)return;
           const title=card.dataset.title||'Criação do arquivo';
-          viewer.querySelector('img').src=card.dataset.image;viewer.querySelector('img').alt=title;
+          viewer.querySelector('img').src=card.querySelector('img').getAttribute('src');viewer.querySelector('img').alt=title;
           viewer.querySelector('.fau-lb-week').textContent=weekLabel(card.dataset.round);
           viewer.querySelector('.fau-lb-title').textContent=title;
           viewer.querySelector('.fau-lb-designer').textContent=card.dataset.designer||'';
@@ -5105,6 +5106,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const moveLook=step=>{if(!conceptPanel.hidden){hideConcept();return;}const next=activeIndex+step;if(next<0||next>=activeCards.length)return;activeIndex=next;displayLook();};
         const openLook=card=>{
           previousFocus=document.activeElement;
+          const allCards=[...body.querySelectorAll('.fau-archive-entry')];
           activeCards=card.dataset.evolutionOwner!==undefined?allCards.filter(c=>c.dataset.evolutionOwner===card.dataset.evolutionOwner):allCards.filter(c=>c.closest('[data-archive-panel="gallery"]')&&!c.classList.contains('hidden')&&!c.closest('.fau-look-week-group')?.classList.contains('hidden'));
           activeIndex=activeCards.indexOf(card);if(activeIndex<0){activeCards=[card];activeIndex=0;}
           viewer.hidden=false;document.body.style.overflow='hidden';displayLook();viewer.querySelector('[data-close-archive]')?.focus();
@@ -5118,11 +5120,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         viewer.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!conceptPanel.hidden)hideConcept();else closeViewer();}if(conceptPanel.hidden&&e.key==='ArrowRight')moveLook(1);if(conceptPanel.hidden&&e.key==='ArrowLeft')moveLook(-1);});
         viewer.addEventListener('touchstart',e=>{if(e.touches.length===1)touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
         viewer.addEventListener('touchend',e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;touchStart=null;if(!conceptPanel.hidden||e.target.closest('button'))return;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.25)moveLook(dx<0?1:-1);},{passive:true});
-        allCards.forEach(card=>{card.addEventListener('click',()=>openLook(card));card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLook(card);}});});
+        body.addEventListener('click',e=>{const card=e.target.closest('.fau-archive-entry');if(card)openLook(card);});
+        body.addEventListener('keydown',e=>{const card=e.target.closest('.fau-archive-entry');if(card&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openLook(card);}});
         const filterArchive=()=>{
           const q=(search?.value||'').trim().toLocaleLowerCase('pt-BR'),round=select?.value||'';
           let visible=0;
-          body.querySelectorAll('.fau-archive-entry').forEach(card=>{const show=(!round||card.dataset.round===round)&&(!q||(card.dataset.search||'').includes(q));card.classList.toggle('hidden',!show);card.classList.toggle('fau-look-single-week',!!round);if(show)visible++;});
+          body.querySelectorAll('[data-archive-panel="gallery"] .fau-archive-entry').forEach(card=>{const show=(!round||card.dataset.round===round)&&(!q||(card.dataset.search||'').includes(q));card.classList.toggle('hidden',!show);card.classList.toggle('fau-look-single-week',!!round);if(show)visible++;});
           body.querySelectorAll('.fau-look-week-group').forEach(group=>{
             const count=[...group.querySelectorAll('.fau-archive-entry')].filter(card=>!card.classList.contains('hidden')).length;
             group.classList.toggle('hidden',count===0);
