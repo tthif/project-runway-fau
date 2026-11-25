@@ -2859,19 +2859,69 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         document.body.appendChild(modal);
         const list=$('#publicThemeClues'), count=$('#fauVaultCount');
         let entries=[], filter='all',previousFocus=null;
-        const historicalUsedThemes=new Set();
-        const isUsed=e=>e.data.used===true || historicalUsedThemes.has(e.id) || (!!globalState?.rodada && globalState.themeId===e.id);
+        const themeIdsByRound=new Map(Object.values(SEASON_THEMES).flatMap(theme=>[[slug(theme.id),theme.id],[slug(theme.title),theme.id]]));
+        let historicalRounds=[];
+        let usedThemes=new Map();
+        let currentWeek=null;
+        const roundWeek=(round,metadata={})=>{
+            const explicit=Number(metadata.numeroRodada||metadata.weekNumber||metadata.week);
+            if(Number.isInteger(explicit)&&explicit>0)return explicit;
+            const key=slug(String(round||''));
+            const themeId=themeIdsByRound.get(key);
+            if(['w01_first_garment','w02_new_form','theme_seven_deadly','theme_tarantino'].includes(themeId))
+                return fauArchiveWeekNumber(themeId);
+            // Os demais códigos do catálogo podem representar Weeks planejadas.
+            if(!/^(?:(?:w(?:eek)?)?\d+|firstgarment|newform|sevendeadly|tarantino)$/.test(key))return null;
+            return fauArchiveWeekNumber(round);
+        };
+        const refreshThemeWeeks=()=>{
+            const state=globalState||{};
+            const currentRound=String(state.rodada||'');
+            const startedRounds=new Set(Object.keys(state.modos||{}));
+            usedThemes=new Map();
+            for(const round of startedRounds){
+                const id=themeIdsByRound.get(slug(round));
+                if(id)usedThemes.set(id,roundWeek(round));
+            }
+            let latestPastWeek=0;
+            for(const {id,data} of historicalRounds){
+                const round=String(data.rodada||id);
+                const themeId=data.themeId||themeIdsByRound.get(slug(round))||themeIdsByRound.get(slug(id));
+                const week=roundWeek(round,data)||roundWeek(id,data);
+                if(themeId)usedThemes.set(themeId,week??usedThemes.get(themeId)??null);
+                if(round!==currentRound&&id!==currentRound&&week)latestPastWeek=Math.max(latestPastWeek,week);
+            }
+            if(currentRound)startedRounds.add(currentRound);
+            const savedWeek=entries.find(e=>e.id===state.themeId)?.data.weekNumber;
+            currentWeek=currentRound?roundWeek(currentRound,state)||
+                roundWeek('',{weekNumber:savedWeek})||Math.max(startedRounds.size,latestPastWeek+1):null;
+            if(currentRound&&state.themeId)usedThemes.set(state.themeId,currentWeek);
+        };
+        const isUsed=e=>e.data.used===true||usedThemes.has(e.id);
+        const themeLabel=e=>{
+            const next=globalState?.proxTema;
+            const isNext=next?.themeId===e.id;
+            const publicName=(isNext?next.nome:'')||e.data.revealedName;
+            const name=String(publicName||(isUsed(e)?SEASON_THEMES[e.id]?.title:'')||'').trim();
+            if(!name)return `MYSTERY ${String(e.number).padStart(2,'0')}`;
+            const storedWeek=roundWeek(e.data.roundId,{weekNumber:e.data.weekNumber});
+            const week=(isNext&&currentWeek?currentWeek+1:null)||storedWeek||usedThemes.get(e.id)||
+                (isUsed(e)?roundWeek(e.id):null);
+            if(!week)return name;
+            return `WEEK ${String(week).padStart(2,'0')} · ${name.replace(/^WEEK\s+\d+\s*[·:—–-]\s*/i,'')}`;
+        };
         window.fauVaultUsedIds=()=>new Set(entries.filter(isUsed).map(e=>String(e.id)));
         const paint=()=>{
             if(!list?.isConnected)return;
+            refreshThemeWeeks();
             const shown=entries.filter(e=>filter==='all'||(filter==='used'?isUsed(e):!isUsed(e)));
             count.textContent=`${shown.length} de ${entries.length} pistas`;
             list.innerHTML=shown.map((e)=>{
-                const v=e.data, revealed=!!v.revealedName;
-                const title=revealed?v.revealedName:`MYSTERY ${String(e.number).padStart(2,'0')}`;
+                const v=e.data, title=themeLabel(e);
+                const status=isUsed(e)?'ARQUIVADO':(v.revealedName||globalState?.proxTema?.themeId===e.id)?'REVELADO':'AINDA EM JOGO';
                 return `<button type="button" data-vault-id="${esc(e.id)}" class="fau-vault-card text-left bg-fashion-900 border border-fashion-700 rounded-xl overflow-hidden group focus:outline-none focus:ring-2 focus:ring-fashion-gold" aria-label="Ampliar pista ${e.number}: ${esc(title)}">
                   <div class="fau-vault-photo bg-fashion-950 relative overflow-hidden">${v.photo?`<img src="${esc(v.photo)}" alt="Pista visual ${e.number}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">`:'<div class="h-full flex items-center justify-center text-gray-500 text-xs p-3 text-center">Aguardando fotografia</div>'}<span class="absolute top-2 left-2 bg-black/75 text-fashion-gold text-[10px] px-2 py-1 rounded">${String(e.number).padStart(2,'0')}</span></div>
-                  <div class="p-3 space-y-1"><h3 class="font-cinzel text-fashion-gold text-xs leading-snug break-words">${esc(title)}</h3><p class="text-[10px] tracking-wide ${isUsed(e)?'text-gray-400':'text-gray-300'}">${isUsed(e)?'ARQUIVADO':'AINDA EM JOGO'}</p></div>
+                  <div class="p-3 space-y-1"><h3 class="font-cinzel text-fashion-gold text-xs leading-snug break-words">${esc(title)}</h3><p class="text-[10px] tracking-wide ${isUsed(e)?'text-gray-400':'text-gray-300'}">${status}</p></div>
                 </button>`;
             }).join('')||'<p class="text-gray-400 text-sm col-span-full text-center py-10">Nenhuma pista nesta categoria.</p>';
             if(typeof window.fauMergeIconVault==='function')window.fauMergeIconVault();
@@ -2894,7 +2944,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const item=shown[index];activeId=item.id;
             const img=modal.querySelector('#fauVaultModalImg');
             img.src=item.data.photo;img.alt=`Pista visual ${item.number}`;
-            modal.querySelector('#fauVaultModalTitle').textContent=item.data.revealedName||`MYSTERY ${String(item.number).padStart(2,'0')}`;
+            modal.querySelector('#fauVaultModalTitle').textContent=themeLabel(item);
             modal.querySelector('#fauVaultPosition').textContent=`${index+1} / ${shown.length}`;
             modal.querySelector('#fauVaultPrev').disabled=shown.length<2;
             modal.querySelector('#fauVaultNext').disabled=shown.length<2;
@@ -2931,25 +2981,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             showPhoto(item.id);modal.hidden=false;document.body.style.overflow='hidden';
             modal.querySelector('#fauVaultClose').focus();
         });
-        // Historical themes must remain archived even if an older round did not set used=true.
-        // Only theme IDs are read; no private clue or unrevealed name is exposed.
-        const historicalSources={rankings:new Set(),looks:new Set()};
-        const refreshHistoricalUsed=()=>{
-            historicalUsedThemes.clear();
-            for(const source of Object.values(historicalSources))for(const id of source)historicalUsedThemes.add(id);
+        const historyUnsub=db.collection('ranking_historico_publico').onSnapshot(snap=>{
+            historicalRounds=snap.docs.map(d=>({id:d.id,data:d.data()})).filter(({data})=>data.rows?.length);
             paint();
-        };
-        const historyUnsubs=[
-            db.collection('ranking_historico_publico').onSnapshot(snap=>{
-                historicalSources.rankings=new Set(snap.docs.map(d=>d.data().themeId).filter(id=>id&&SEASON_THEMES[id]));
-                refreshHistoricalUsed();
-            },err=>console.warn('[vault historical rankings]',err)),
-            db.collection('looks').onSnapshot(snap=>{
-                historicalSources.looks=new Set(snap.docs.map(d=>d.data().themeId).filter(id=>id&&SEASON_THEMES[id]));
-                refreshHistoricalUsed();
-            },err=>console.warn('[vault historical looks]',err))
-        ];
-        unsubsTab.push(...historyUnsubs);
+        },err=>console.warn('[vault historical rankings]',err));
+        unsubsTab.push(historyUnsub);
         const vaultStateUnsub=db.doc('config/estado').onSnapshot(()=>paint());
         unsubsTab.push(vaultStateUnsub);
         const unsub=db.collection('theme_vault_public').onSnapshot(snap=>{
