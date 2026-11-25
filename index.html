@@ -6032,12 +6032,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 }
             }
             if (globalState.themeId==='theme_beauty_eye' && beautyBroadcast?.phase==='exhibition') {
-                const originals=looks.filter(l=>l.slot===1);
+                const originals=looks.filter(l=>Number(l.slot)===1);
                 const assignments=beautyBroadcast.assignments||[];
                 $('#runwayGroups').innerHTML=`<div class="space-y-6">${originals.map(original=>{
                     const recipient=assignments.find(a=>a.sourceUid===original.uid);
-                    const second=looks.find(l=>l.slot===2 && l.uid===recipient?.uid);
-                    return `<section class="bg-fashion-950 border border-fashion-gold/40 p-5 rounded-lg space-y-4"><h3 class="font-cinzel text-fashion-gold">${esc(original.titulo)}</h3><p class="text-sm text-gray-300 italic">${esc(original.mem)}</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    const second=looks.find(l=>Number(l.slot)===2 && l.uid===recipient?.uid);
+                    return `<section class="bg-fashion-950 border border-fashion-gold/40 p-5 rounded-lg space-y-4"><h3 class="font-cinzel text-fashion-gold">${esc(original.titulo)}</h3><p class="text-sm text-gray-300 italic">${esc(original.mem)}</p><div class="grid grid-cols-1 gap-4">
                     <div><p class="text-xs text-fashion-gold mb-2">MY VISION · ${esc(original.ate)}</p><img class="w-full img-look rounded" src="${esc(original.url)}">${isAdmin?`<button data-fau-whatsapp="${esc(original.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>
                     ${second?`<div><p class="text-xs text-fashion-gold mb-2">ANOTHER POINT OF VIEW · ${esc(second.ate)}</p><img class="w-full img-look rounded" src="${esc(second.url)}"><p class="text-xs text-gray-300 mt-2">${esc(second.titulo)}</p>${isAdmin?`<button data-fau-whatsapp="${esc(second.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>`:'<p class="text-xs">Releitura indisponível</p>'}</div></section>`;
                 }).join('')}</div>`;
