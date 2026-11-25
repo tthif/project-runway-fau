@@ -833,16 +833,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #fauArchive .fau-look-controls{display:flex;gap:9px;align-items:stretch}
 #fauArchive .fau-look-round{flex:1;min-width:0}
 #fauArchive .fau-look-round select{min-width:0;text-overflow:ellipsis}
-#fauArchive .fau-look-search-toggle{flex:0 0 auto;border:1px solid #65515e;border-radius:9px;padding:0 14px;color:#d7b991;font-size:13px}
-#fauArchive .fau-look-search-panel{display:flex;gap:8px;align-items:center}
-#fauArchive .fau-look-search-panel.hidden{display:none}
-#fauArchive .fau-look-search-panel label{flex:1;min-width:0}
 #fauArchive .fau-archive-entry{border-radius:13px;overflow:hidden;background:#171317}
 #fauArchive .fau-archive-entry .fau-archive-photo-wrap{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center}
 #fauArchive .fau-archive-entry .fau-archive-img{width:100%;height:100%;object-fit:contain;aspect-ratio:auto}
 #fauArchive .fau-archive-entry.fau-look-single-week .fau-look-week{display:none}
 #fauArchive .fau-archive-entry h4{line-height:1.35;overflow-wrap:anywhere}
-@media(max-width:480px){#fauArchive .fau-look-search-toggle span{display:none}#fauArchive .fau-look-search-toggle{font-size:21px;padding:0 15px}#fauArchive #fauArchiveGallery{gap:10px}#fauArchive .fau-archive-entry .p-3{padding:10px}}
+@media(max-width:480px){#fauArchive #fauArchiveGallery{gap:10px}#fauArchive .fau-archive-entry .p-3{padding:10px}}
 #fauArchive .fau-look-week-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #594751;padding:0 0 12px;margin-bottom:14px}
 #fauArchive .fau-look-week-heading h4{font-family:Georgia,serif;font-size:18px;letter-spacing:.04em;color:#d6b68f}
 #fauArchive .fau-look-week-count{font-size:12px;color:#a99fa5;white-space:nowrap}
@@ -854,11 +850,30 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 .fau-lb-progress{display:flex;gap:3px;padding:12px 12px 0;flex-shrink:0}.fau-lb-progress span{height:3px;flex:1;background:#51454c;border-radius:3px}.fau-lb-progress span.seen,.fau-lb-progress span.current{background:#d5b58a}
 .fau-lb-top{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;gap:10px}.fau-lb-top div{display:flex;flex-direction:column;gap:3px;min-width:0}.fau-lb-top small{font-size:10px;letter-spacing:.2em;color:#cbb18f}.fau-lb-top strong{font-size:13px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fau-lookbook-stories .fau-lb-top button{padding:5px 10px;border:0;font-size:20px}
 .fau-lb-photo{position:relative;min-height:0;flex:1;display:flex;align-items:center;justify-content:center;background:#080709}.fau-lookbook-stories .fau-lb-photo img{width:100%;height:100%;max-height:none;max-width:none;object-fit:contain;border-radius:0}
-.fau-lookbook-stories .fau-lb-tap{position:absolute;top:0;bottom:120px;width:28%;border:0;padding:0;background:transparent;border-radius:0;z-index:2}.fau-lb-tap-left{left:0}.fau-lb-tap-right{right:0}.fau-lookbook-stories .fau-lb-tap:disabled{opacity:0}
-.fau-lb-caption{position:absolute;bottom:0;left:0;right:0;padding:42px 16px 14px;background:linear-gradient(transparent,rgba(10,7,11,.96) 55%);pointer-events:none}.fau-lb-caption>*{pointer-events:auto}.fau-lb-counter{color:#d5b58a;font-size:10px;letter-spacing:.15em}.fau-lb-title{color:#fff;font-family:Georgia,serif;font-size:21px;margin:5px 0}.fau-lb-designer{font-size:13px;color:#d7c9d2}.fau-lookbook-stories .fau-lb-caption button{margin:9px 0 0;padding:6px 12px;font-size:11px;letter-spacing:.12em;background:#241a23}
+.fau-lookbook-stories .fau-lb-tap{position:absolute;top:0;bottom:0;width:28%;border:0;padding:0;background:transparent;border-radius:0;z-index:2}.fau-lb-tap-left{left:0}.fau-lb-tap-right{right:0}.fau-lookbook-stories .fau-lb-tap:disabled{opacity:0}
+.fau-lb-caption{flex-shrink:0;padding:8px 16px;background:#120e13;overflow-wrap:anywhere}.fau-lb-counter{color:#d5b58a;font-size:10px;letter-spacing:.15em}.fau-lb-title{color:#fff;font-family:"Cormorant Garamond",Georgia,serif;font-size:22px;line-height:1.15;margin:4px 0}.fau-lb-designer{font-size:13px;color:#d7c9d2}.fau-lookbook-stories .fau-lb-caption button{margin:9px 0 0;padding:6px 12px;font-size:11px;letter-spacing:.12em;background:#241a23}
 .fau-lb-actions{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:8px 10px}.fau-lb-actions span{font-size:10px;color:#a99ca5}.fau-lookbook-stories .fau-lb-actions button{padding:8px;font-size:11px}.fau-lookbook-stories button:disabled{opacity:.3}
-.fau-lb-concept{position:absolute;bottom:0;left:0;right:0;max-height:75%;overflow:auto;background:#211820;border-top:1px solid #b99b74;border-radius:16px 16px 0 0;padding:20px;z-index:5;box-shadow:0 -15px 50px #0009}.fau-lb-concept[hidden]{display:none}.fau-lb-concept>div{display:flex;align-items:center;justify-content:space-between;gap:8px}.fau-lb-concept small{font-size:10px;letter-spacing:.2em;color:#d5b58a}.fau-lookbook-stories .fau-lb-concept button{font-size:11px;padding:7px}.fau-lb-concept h3{font-family:Georgia,serif;color:white;font-size:22px;margin:16px 0}.fau-lb-concept p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.65;color:#e5dce3}
+.fau-lb-concept{position:absolute;bottom:0;left:0;right:0;max-height:75%;overflow:auto;background:#211820;border-top:1px solid #b99b74;border-radius:16px 16px 0 0;padding:20px;z-index:5;box-shadow:0 -15px 50px #0009}.fau-lb-concept[hidden]{display:none}.fau-lb-concept>div{display:flex;align-items:center;justify-content:space-between;gap:8px}.fau-lb-concept small{font-size:10px;letter-spacing:.2em;color:#d5b58a}.fau-lookbook-stories .fau-lb-concept button{font-size:11px;padding:7px}.fau-lb-concept h3{font-family:"Cormorant Garamond",Georgia,serif;overflow-wrap:anywhere;color:white;font-size:22px;margin:16px 0}.fau-lb-concept p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.65;color:#e5dce3}
 @media(max-width:480px){.fau-lookbook-stories{padding:0!important}.fau-lb-story{width:100%;height:100dvh;border:0;border-radius:0}}
+#fauArchive .fau-look-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px}
+#fauArchive .fau-archive-clear{justify-self:start;min-height:44px}
+#fauArchive :is(button,input,select,[role="button"],[role="tabpanel"]):focus-visible,.fau-lookbook-stories button:focus-visible{outline:2px solid #d1b38b;outline-offset:2px}
+@media(max-width:640px){#fauArchive .fau-look-controls{grid-template-columns:minmax(0,1fr)}}
+.fau-lb-progress span{transform-origin:left}
+.fau-lookbook-stories .fau-lb-actions button,.fau-lookbook-stories [data-close-archive],.fau-lookbook-stories [data-lb-concept],.fau-lookbook-stories [data-lb-concept-close]{min-height:44px;min-width:44px}
+#fauArchive .fau-archive-related,.fau-lookbook-stories .fau-lb-related button{min-height:44px;color:#e3c9a4;text-decoration:underline;font-size:12px;padding:6px 10px}
+.fau-lb-related{display:flex;justify-content:center;gap:10px}
+.fau-lb-related:not(:has(button:not([hidden]))){display:none}
+@media(orientation:landscape) and (max-height:500px){
+  .fau-lookbook-stories .fau-lb-story{width:min(100%,800px);display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);grid-template-rows:auto auto minmax(0,1fr) auto auto;grid-template-areas:"progress progress" "top top" "photo caption" "photo related" "actions actions"}
+  .fau-lb-progress{grid-area:progress}
+  .fau-lb-top{grid-area:top}
+  .fau-lb-photo{grid-area:photo}
+  .fau-lb-caption{grid-area:caption;min-height:0;overflow:auto;padding:4px 12px}
+  .fau-lb-related{grid-area:related}
+  .fau-lb-actions{grid-area:actions}
+  .fau-lb-title{font-size:16px}
+}
 </style>
 <style>
 .fau-story-results{display:grid;gap:12px;margin-top:12px}
@@ -4149,7 +4164,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         }catch(err){console.warn('Private dossier unavailable',err);const slot=$('#fauMyScore');if(slot)slot.innerHTML='<small>PONTUAÇÃO ACUMULADA</small><strong>—</strong><span>Não foi possível carregar a pontuação</span>';}
     };
 
-    VIEWS.historico = async (insideArchive=false) => {
+    VIEWS.historico = async (insideArchive=false, archiveRanks=null) => {
         if (globalState.themeId === 'theme_traitors') {
             const ref = db.doc(`revelacoes_traitors/${globalState.rodada}`);
             sub(ref, snap => {
@@ -4198,46 +4213,33 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const renderSharedTrackRecord = async () => {
             const slot = $('#trackRecordTableContainer');
             try {
-                const history = await db.collection('ranking_historico_publico').get();
-                const rounds = history.docs.map(d=>({round:d.id,...d.data()}))
+                const rounds=(archiveRanks??(await db.collection('ranking_historico_publico').get()).docs.map(d=>({...d.data(),round:d.id})))
                     .filter(r=>Array.isArray(r.rows)&&r.rows.length)
-                    .sort((a,b)=>{
-                        // IDs do Firestore não são a ordem da temporada: o tema da W03
-                        // pode ter um ID alfabético anterior ao da W01.
-                        const order=v=>{
-                            const raw=String([v.round,v.rodada,v.titulo,v.tema,v.theme,v.nome].filter(Boolean).join(' ')).toLowerCase();
-                            if(/first.?garment|firstgarment/.test(raw))return 1;
-                            if(/new.?form|newform/.test(raw))return 2;
-                            if(/once.?upon.?a.?runway|themesevendeadly|onceuponarunway/.test(raw))return 3;
-                            if(/tarantino/.test(raw))return 4;
-                            const match=String(v.round||v.rodada||'').match(/^w(?:eek)?\s*0*(\d+)/i);
-                            return match?Number(match[1]):Number.MAX_SAFE_INTEGER;
-                        };
-                        return order(a)-order(b)||String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});
-                    });
+                    .sort((a,b)=>fauArchiveSort(a.round,b.round));
                 if (!slot?.isConnected) return;
                 if (!rounds.length) {
                     slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
                 } else {
                     // One public season matrix. Only published rankings are read.
-                    const cleanStatus = raw => String(raw||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
+                    const cleanStatus = fauArchiveStatus;
                     const normalizeName = name => String(name||'').trim().toLocaleLowerCase('pt-BR');
                     const collator = new Intl.Collator('pt-BR',{sensitivity:'base',numeric:true});
-                    // Each published document is one chronological Week. Document IDs are
-                    // internal identifiers, not season numbers (they may repeat W01).
-                    const weekLabel = (_,i) => `W${String(i+1).padStart(2,'0')}`;
+                    const weekLabel=r=>{
+                        const week=fauArchiveWeekNumber(r.round,r);
+                        return week===null?String(r.round):`W${String(week).padStart(2,'0')}`;
+                    };
                     const people=new Map();
                     const byName=new Map();
                     const ensurePerson=(name,uid='')=>{
                         const normalized=normalizeName(name);
                         const key=uid ? `uid:${uid}` : `name:${normalized}`;
-                        let person=people.get(key)||byName.get(normalized);
+                        let person=people.get(key)||(!uid?byName.get(normalized):null);
                         if(!person){person={name,history:new Map(),lastSeen:-1,lastRank:Infinity,exitAt:-1,exitReason:''};people.set(key,person);}
-                        if(uid)people.set(`uid:${uid}`,person);
+                        if(uid){people.set(`uid:${uid}`,person);person.uid=uid;}
                         byName.set(normalized,person);
                         return person;
                     };
-                    const baseOf=v=>String(v||'').toUpperCase().match(/\b(WIN|HIGH|TOP|SAFE|LOW|BOTTOM)\b/)?.[1]||'';
+                    const baseOf=v=>String(v||'').toUpperCase().match(/^(WIN|HIGH|SAFE|LOW|BOTTOM)\b/)?.[1]||'';
                     const departures=[
                         {week:0,name:'Sam McLean',reason:'SEM ENVIO'},
                         {week:0,name:'Pica Pablasso',reason:'SEM ENVIO'},
@@ -4245,44 +4247,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         {week:1,name:'Aogust Flintherin',reason:'ELIMINATION POOL'},
                         {week:2,name:'Dolce & Banana',reason:'ELIMINATION POOL'}
                     ];
-                    rounds.forEach(r=>{
-                        const judged=r.rows.filter(e=>e.uid && String(e.status||'').trim().toUpperCase()!=='OUT');
-                        const n=judged.length, bottom=Math.min(2,Math.max(0,n-1));
-                        const slots=r.classificationSlots||{};
-                        const original=judged.map(e=>String(e.status||'').toUpperCase());
-                        const top=Math.min(Math.max(1,Number(slots.top)||original.filter(x=>/\b(WIN|HIGH|TOP)\b/.test(x)).length||1),Math.max(1,n-bottom));
-                        const lower=Math.max(bottom,slots.low!==undefined?Number(slots.low)+bottom:original.filter(x=>/\b(LOW|BOTTOM)\b/.test(x)).length);
-                        const low=Math.min(Math.max(0,lower-bottom),Math.max(0,n-top-bottom));
-                        r.rows=r.rows.map(e=>{
-                            const pos=judged.findIndex(x=>x.uid===e.uid);
-                            if(pos<0)return e;
-                            const status=pos===0?'WIN':pos<top?'HIGH':pos>=n-bottom?'BOTTOM':pos>=n-bottom-low?'LOW':'SAFE';
-                            return {...e,status:status+(/\bOUT\b/i.test(String(e.status||''))?' + OUT':'')};
-                        });
-                    });
-                    // W03: posições oficiais confirmadas pela produção. A votação
-                    // de salvação define quem sai, não a classificação dos demais.
-                    // O eliminado aparece no fim da tabela, sem alterar suas notas.
-                    if(rounds[2]){
-                        const confirmedW03=new Map([
-                            ['vénus','SAFE'],['venus','SAFE'],
-                            ['yvette ferrete','LOW'],['fio robert','LOW'],
-                            ['thýco mia','BOTTOM'],['thyco mia','BOTTOM'],
-                            ['dolce & banana','OUT']
-                        ]);
-                        rounds[2].rows=rounds[2].rows.map(entry=>{
-                            const corrected=confirmedW03.get(normalizeName(entry.ate));
-                            return corrected?{...entry,status:corrected}:entry;
-                        });
-                    }
-                    // W04 — Double Kill: classificação e ordem de saída confirmadas pela produção.
-                    if(rounds[3]){
-                        const confirmedW04=new Map([['thýco mia','LOW + OUT'],['thyco mia','LOW + OUT'],['lince d’oro','BOTTOM'],["lince d'oro",'BOTTOM'],['dr chucodromo','BOTTOM + OUT'],['giuseppe cadura','LOW'],["l'amour",'SAFE'],['l’amour','SAFE'],['lamour','SAFE'],['wout ahi','SAFE']]);
-                        rounds[3].rows=rounds[3].rows.map(entry=>{
-                            const corrected=confirmedW04.get(normalizeName(entry.ate));
-                            return corrected?{...entry,status:corrected}:entry;
-                        });
-                    }
                     rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
                         const name=String(entry.ate||'Designer').trim();
                         const person=ensurePerson(name,String(entry.uid||'').trim());
@@ -4290,25 +4254,33 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         const status=cleanStatus(entry.status);
                         // Keep the classification of the judged work, including BOTTOM.
                         const placement=baseOf(status);
-                        if(placement)person.history.set(roundIndex,placement==='TOP'?'HIGH':placement);
-                        else if(status==='OUT')person.history.set(roundIndex,'OUT');
+                        if(placement||status)person.history.set(roundIndex,placement||status.replace(/\s*\+\s*OUT\b/g,''));
                         person.lastSeen=Math.max(person.lastSeen,roundIndex);
                         person.lastRank=position;
-                        if(/\bOUT\b/.test(status)){person.exitAt=roundIndex;person.exitReason=/\bBOTTOM\b/.test(status)?'Eliminado no Elimination Pool após ficar no BOTTOM da rodada.':'Eliminado nesta rodada.';}
+                        if(/\bOUT\b/.test(status)&&person.exitAt<0){person.exitAt=roundIndex;person.exitReason=/\bBOTTOM\b/.test(status)?'Eliminado no Elimination Pool após ficar no BOTTOM da rodada.':'Eliminado nesta rodada.';}
                     }));
-                    // The departures confirmed by production take precedence over legacy
-                    // OUT cells that were shifted into a different Week.
+                    const recordedDepartures=new Set();
+                    rounds.forEach((round,index)=>fauArchiveVoteExits(round).forEach(exit=>{
+                        const uid=fauArchiveExitUid(exit);
+                        if(recordedDepartures.has(uid))return;
+                        recordedDepartures.add(uid);
+                        const person=people.get(`uid:${uid}`)||ensurePerson(exit.ate||exit.nome||'Designer',uid);
+                        person.exitAt=index;
+                        person.exitReason='Eliminado pela votação.';
+                    }));
+                    // Conservar despedidas legadas confirmadas quando não há um evento de urna para a pessoa.
                     departures.forEach(({week,name,reason})=>{
-                        if(week>=rounds.length)return;
+                        const index=rounds.findIndex(r=>fauArchiveWeekNumber(r.round)===week+1);
+                        if(index<0)return;
                         const person=ensurePerson(name);
-                        person.exitAt=week;
+                        if(recordedDepartures.has(person.uid))return;
+                        person.exitAt=index;
                         person.exitReason=reason==='SEM ENVIO'?'Eliminado por não enviar o look.':'Eliminado no Elimination Pool após ficar no BOTTOM da rodada.';
-                        person.history.set(week,'OUT');
                     });
-                    if(rounds[3]){
-                        const first=byName.get('thýco mia')||byName.get('thyco mia');
-                        if(first){first.exitAt=3;first.exitReason='Eliminado pelo pior acumulado (First Kill).';}
-                    }
+                    const tarantinoIndex=rounds.findIndex(r=>fauArchiveWeekNumber(r.round)===4);
+                    const firstKill=byName.get('thýco mia')||byName.get('thyco mia');
+                    if(firstKill?.exitAt===tarantinoIndex&&tarantinoIndex>=0&&!recordedDepartures.has(firstKill.uid))
+                        firstKill.exitReason='Eliminado pelo pior acumulado (First Kill).';
                     const lastIndex=rounds.length-1;
                     const roster=[...new Set(people.values())];
                     roster.forEach(p=>{
@@ -4316,7 +4288,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         // ranking: only explicit official OUT or known departures count.
                         if(p.exitAt>=0){
                             for(let i=p.exitAt+1;i<rounds.length;i++)p.history.delete(i);
-                            p.history.set(p.exitAt,'OUT');
+                            const placement=p.history.get(p.exitAt);
+                            p.history.set(p.exitAt,placement&&placement!=='OUT'?`${placement} + OUT`:'OUT');
                         }
                     });
                     roster.sort((a,b)=>{
@@ -4336,18 +4309,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     slot.classList.remove('font-mono');
                     slot.innerHTML=`<div class="fau-tr-intro"><div><span class="fau-tr-kicker">TEMPORADA · HISTÓRICO OFICIAL</span><h3>THE TRACK RECORD</h3><p>Cada coluna representa uma Week. OUT identifica quem foi eliminado.</p></div><span class="fau-tr-count">${rounds.length} WEEKS</span></div>
                       <div class="fau-tr-mobile-hint" aria-hidden="true"><i class="fa-solid fa-arrows-left-right"></i> Deslize para ver as próximas Weeks</div><div class="fau-tr-scroll" tabindex="0" role="region" aria-label="Tabela de desempenho: deslize horizontalmente para ver as Weeks"><table class="fau-tr-table" aria-label="Track Record da temporada">
-                      <thead><tr><th scope="col">DESIGNERS</th>${rounds.map((r,i)=>`<th scope="col" title="${esc(String(r.round))}">${weekLabel(r,i)}</th>`).join('')}</tr></thead>
+                      <thead><tr><th scope="col">DESIGNERS</th>${rounds.map(r=>`<th scope="col" title="${esc(String(r.round))}">${esc(weekLabel(r))}</th>`).join('')}</tr></thead>
                       <tbody>${roster.map((p,index)=>`<tr class="${p.exitAt>=0?'fau-tr-eliminated':''}"><th scope="row"><span class="fau-tr-rank">${String(index+1).padStart(2,'0')}</span>${esc(p.name)}</th>${rounds.map((r,i)=>{
                         if(p.exitAt>=0&&i>p.exitAt)return '<td class="fau-tr-after" aria-label="Fora da competição"></td>';
                         const v=p.history.get(i)||'—';
                         const pool=Array.isArray(r.eliminationPool)?r.eliminationPool:[];
-                        const inPool=pool.some(e=>String(e.uid||'')&&String(e.uid)===String([...r.rows].find(x=>normalizeName(x.ate)===normalizeName(p.name))?.uid||'')||normalizeName(e.ate)===normalizeName(p.name));
+                        const inPool=pool.some(entry=>{const uid=fauArchiveExitUid(entry);return uid?uid===p.uid:normalizeName(entry?.ate)===normalizeName(p.name);});
                         // A vaga do pior acumulado não substitui a classificação da Week.
                         // Os dois BOTTOM entram automaticamente; os demais integrantes do Pool recebem *.
-                        const specialPool=(inPool && v!=='BOTTOM' && !(v==='OUT' && /BOTTOM/i.test(p.exitReason))) || (v==='OUT' && p.exitAt===i && /First Kill/.test(p.exitReason));
-                        const display=v==='SAFE'?'IN':v;
+                        const specialPool=(inPool && baseOf(v)!=='BOTTOM' && !(v==='OUT' && /BOTTOM/i.test(p.exitReason))) || (p.exitAt===i && /First Kill/.test(p.exitReason));
+                        const display=v.replace(/^SAFE\b/,'IN');
                         const mark=specialPool?'<sup class="fau-tr-pool-mark" aria-label="Elimination Pool pelo pior acumulado">*</sup>':'';
-                        if(v==='OUT' && p.exitAt===i){return `<td class="fau-tr-out">OUT${mark}</td>`;}
+                        if(p.exitAt===i){return `<td class="fau-tr-out">${esc(display)}${mark}</td>`;}
                         return `<td class="fau-tr-${cssStatus(v)}">${esc(display)}${mark}</td>`;
                       }).join('')}</tr>`).join('')}</tbody></table></div>
                       <div class="fau-tr-legend">${[['WIN','Vencedor'],['HIGH','Destaque'],['IN','Na competição'],['LOW','Desempenho baixo'],['BOTTOM','Entre os dois últimos'],['OUT','Eliminado']].map(([v,label])=>`<span><i class="fau-tr-dot fau-tr-${cssStatus(v)}"></i><b>${v}</b> ${label}</span>`).join('')}<span class="fau-tr-pool-legend"><b>*</b> Pior acumulado · Elimination Pool ou First Kill</span></div>`;
@@ -4387,11 +4360,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         };
         // Include officially published rounds even when an eliminated Designer has no
         // evaluation document; otherwise the last week's cell disappears.
-        const publicHistorySnap = await db.collection('ranking_historico_publico').get();
+        const publishedRows=archiveRanks??(await db.collection('ranking_historico_publico').get()).docs.map(doc=>({...doc.data(),round:doc.id}));
         const publishedByRound = new Map();
-        publicHistorySnap.docs.forEach(doc=>{
-            const data=doc.data();
-            const round=String(data.rodada||doc.id);
+        publishedRows.forEach(data=>{
+            const round=String(data.rodada||data.round);
             publishedByRound.set(round,data);
             if(Array.isArray(data.rows)&&data.rows.length)rodadasSet.add(round);
         });
@@ -4614,11 +4586,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
     // V84 — Acervo de resultados publicados, sem consultar entregas privadas.
     // Ordenação pela WEEK oficial, não pela chave interna do documento.
-    const fauArchiveWeekNumber=(value)=>{
+    const fauArchiveWeekNumber=(value,metadata)=>{
       const raw=String(value??'').trim();
       const label=String(fauWeekLabel(raw)||'');
       const match=label.match(/\bWEEK\s*0*(\d+)\b/i)||raw.match(/^(?:week|w)[_\s-]*0*(\d+)(?:\D|$)/i)||raw.match(/^0*(\d+)$/);
-      return match?Number(match[1]):null;
+      const week=match?Number(match[1]):Number(metadata?.numeroRodada||metadata?.weekNumber||metadata?.week||0);
+      return Number.isInteger(week)&&week>0?week:null;
     };
     const fauArchiveSort=(a,b)=>{
       const an=fauArchiveWeekNumber(a),bn=fauArchiveWeekNumber(b);
@@ -4627,7 +4600,38 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
       if(an===null&&bn!==null)return 1;
       return String(a).localeCompare(String(b),'pt-BR',{numeric:true});
     };
+    const fauArchiveStatus=value=>String(value||'').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase().replace(/^WINNER\b/,'WIN').replace(/\bTOP\b/g,'HIGH').replace(/\bBTM\b/g,'BOTTOM');
+    const fauArchiveIsWinner=value=>/^WIN\b/.test(fauArchiveStatus(value));
+    const fauArchiveExitUid=value=>String(typeof value==='string'?value:value?.uid||value?.id||'').trim();
+    const fauArchiveVoteExits=rank=>{
+      const events=new Map();
+      for(const event of [...(Array.isArray(rank?.eliminatedByVotes)?rank.eliminatedByVotes:[]),rank?.eliminatedByVote]){
+        const uid=fauArchiveExitUid(event);
+        if(uid&&!events.has(uid))events.set(uid,event);
+      }
+      return [...events.values()];
+    };
+    const fauArchiveText=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLocaleLowerCase('pt-BR');
+    let fauArchiveNavigation=null;
+    const fauArchiveImage=value=>typeof value==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(value);
+    const fauArchiveAllowsLook=(state,reveal,look)=>{
+      if(state.liberado!==true||!look.uid)return false;
+      if(['theme_beauty_eye','theme_next_supreme'].includes(look.themeId)&&look.themeId!==state.themeId)return false;
+      const slot=Number(look.slot);
+      if(state.themeId==='theme_next_supreme'){
+        return reveal?.phase==='selected'&&Array.isArray(reveal.winners)&&reveal.winners.some(w=>w.uid===look.uid&&Number(w.slot)===slot);
+      }
+      if(state.themeId==='theme_beauty_eye'){
+        return reveal?.phase==='exhibition'&&Number(state.prazo||0)<=now()&&
+          (slot===1||(slot===2&&Array.isArray(reveal.assignments)&&reveal.assignments.some(a=>a.uid===look.uid&&a.sourceUid)));
+      }
+      return true;
+    };
     VIEWS.legado=async()=>{
+      const userId=currentUser.uid;
+      if(fauArchiveNavigation?.userId!==userId)fauArchiveNavigation={userId,tab:'gallery',query:'',round:'',scroll:0};
+      const navigation=fauArchiveNavigation;
+      const restoreFocus=!!document.activeElement?.closest('#fauArchive,.fau-archive-lightbox');
       renderView(`<section id="fauArchive" class="space-y-7">
         <header class="fau-archive-head rounded-xl p-7 border border-fashion-gold/40">
           <p class="text-fashion-gold text-[10px] tracking-[.3em]">PROJECT RUNWAY: FAU · THE OFFICIAL ARCHIVE</p>
@@ -4638,8 +4642,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         <div id="fauArchiveLoading" class="text-gray-400 text-sm animate-pulse" role="status">✦ Abrindo os arquivos oficiais da temporada…</div>
         <div id="fauArchiveBody" class="space-y-8"></div>
       </section>`);
-      const trackButton=document.getElementById('archiveShowTrackRecord');
-      if(trackButton)trackButton.onclick=()=>VIEWS.historico(true);
       const body=$('#fauArchiveBody'),loading=$('#fauArchiveLoading');
       const roundKey=x=>String(x??'');
       let weekLabel=x=>fauWeekLabel(x);
@@ -4652,7 +4654,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           db.collection('perfis').where('role','==','estilista').get()
         ]);
         if(!body?.isConnected)return;
-        const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>Array.isArray(d.data().rows)).map(d=>({round:d.id,...d.data()})):[];
+        const ranks=ranksResult.status==='fulfilled'?ranksResult.value.docs.filter(d=>Array.isArray(d.data().rows)&&d.data().rows.length).map(d=>({...d.data(),round:d.id})):[];
         // Consultas de coleção e de documentos individuais podem ter permissões distintas.
         // Buscar cada rodada oficial evita perder títulos por causa de uma listagem negada.
         const titleByRound=new Map();
@@ -4670,41 +4672,29 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const data=result.value.data();
           if(data?.published===true)titleByRound.set(String(ranksNeedingTitles[index].round),{round:ranksNeedingTitles[index].round,...data});
         });
+        if(!body.isConnected)return;
         const titles=[...titleByRound.values()];
-        const titlesAccessible=titlesResult.status==='fulfilled'||
-          (titleChecks.length>0&&titleChecks.every(x=>x.status==='fulfilled'));
+        const titlesAccessible=(titlesResult.status==='fulfilled'||titleChecks.length>0)&&
+          titleChecks.every(x=>x.status==='fulfilled');
         const publications=publicationsResult.status==='fulfilled'?publicationsResult.value.docs.map(d=>d.data()).filter(d=>d.published===true&&d.kind==='archive'):[];
-        // Sequência dos capítulos públicos: IDs de temas não são números de WEEK.
         const archiveWeekNumber=value=>{
           const known=fauArchiveWeekNumber(value);
           if(known!==null)return known;
-          const key=roundKey(value);
-          const current=roundKey(globalState.rodada);
-          const currentNumber=Number(globalState.numeroRodada||globalState.weekNumber||globalState.week||0);
-          if(key===current&&Number.isInteger(currentNumber)&&currentNumber>0)return currentNumber;
-          if(key===current)return Math.max(4,...ranks.map(r=>fauArchiveWeekNumber(r.round)||0))+1;
-          const distinct=[...new Set(publications.map(p=>roundKey(p.round)))];
-          const knownNumbers=distinct.map(x=>fauArchiveWeekNumber(x)).filter(x=>x!==null);
-          if(distinct.includes(key)&&knownNumbers.length){
-            const unknown=distinct.filter(x=>fauArchiveWeekNumber(x)===null).sort((a,b)=>{
-              const pa=publications.find(p=>roundKey(p.round)===a),pb=publications.find(p=>roundKey(p.round)===b);
-              const ta=pa?.publishedAt?.seconds||pa?.createdAt?.seconds||0,tb=pb?.publishedAt?.seconds||pb?.createdAt?.seconds||0;
-              return ta-tb;
-            });
-            return Math.max(...knownNumbers)+1+unknown.indexOf(key);
-          }
-          return null;
+          const meta=ranks.find(r=>roundKey(r.round)===roundKey(value));
+          const current=roundKey(value)===roundKey(globalState.rodada)?globalState:null;
+          const number=Number(meta?.numeroRodada||meta?.weekNumber||current?.numeroRodada||current?.weekNumber||current?.week||0);
+          return Number.isInteger(number)&&number>0?number:null;
         };
         const archiveWeekLabel=value=>{
           const n=archiveWeekNumber(value);
-          return n===null?'WEEK —':`WEEK ${String(n).padStart(2,'0')}`;
+          return n===null?String(value||'Rodada sem identificação'):`WEEK ${String(n).padStart(2,'0')}`;
         };
         weekLabel=archiveWeekLabel;
         // Hall dos Eliminados: a WEEK da saída prevalece sobre OUT repetido
         // em snapshots posteriores. As saídas antigas confirmadas pela produção
         // cobrem episódios sem envio, que podem não ter uma linha OUT no ranking.
         const orderedRanks=[...ranks].sort((a,b)=>fauArchiveSort(a.round,b.round));
-        const archiveNameKey=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLocaleLowerCase('pt-BR');
+        const archiveNameKey=fauArchiveText;
         const confirmedDepartures=new Map([
           ['sam mclean',{week:1,reason:'Sem envio'}],
           ['pica pablasso',{week:1,reason:'Sem envio'}],
@@ -4713,22 +4703,21 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           ['dolce & banana',{week:3,reason:'Eliminada pela votação'}]
         ]);
         const outRounds=new Map();
-        const lastParticipation=new Map();
+        const votedRounds=new Map();
         orderedRanks.forEach(r=>{
-          const week=fauArchiveWeekNumber(r.round);
-          if(week===null)return;
-          (r.rows||[]).forEach(row=>{
-            const uid=String(row.uid||row.id||'');
-            if(!uid)return;
-            const status=String(row.status||'');
-            if(/\bOUT\b|ELIMINAD/i.test(status)){
-              if(!outRounds.has(uid)||week<outRounds.get(uid))outRounds.set(uid,week);
-            }else if(!lastParticipation.has(uid)||week>lastParticipation.get(uid)){
-              lastParticipation.set(uid,week);
-            }
-          });
+          const week=archiveWeekNumber(r.round);
+          for(const event of fauArchiveVoteExits(r)){
+            const uid=fauArchiveExitUid(event);
+            if(!votedRounds.has(uid))votedRounds.set(uid,{week,reason:'Eliminação por votação'});
+          }
+          for(const row of r.rows){
+            const uid=fauArchiveExitUid(row);
+            if(uid&&/\bOUT\b|ELIMINAD/i.test(row.status||'')&&!outRounds.has(uid))outRounds.set(uid,week);
+          }
         });
         const exitInfo=p=>{
+          const voted=votedRounds.get(String(p.uid));
+          if(voted)return voted;
           const confirmed=confirmedDepartures.get(archiveNameKey(p.ate));
           if(confirmed)return {...confirmed,verified:true};
           const week=outRounds.get(String(p.uid));
@@ -4800,7 +4789,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
           rows.forEach(r=>{
             const p=getPerson(r.uid,r.ate);if(!p)return;
-            const status=String(r.status||'').toUpperCase().replace(/\bTOP\b/g,'HIGH').replace(/^WIN.*$/,'WIN');
+            const status=fauArchiveStatus(r.status);
             if(!/\bOUT\b|ELIMINAD/.test(status))p.rounds.add(round);
             if(/\bWIN\b/.test(status)){p.wins++;p.achievements.push({round,type:'Winner da Rodada'});awards.push({round,uid:r.uid,name:r.ate,type:'Winner da Rodada'});}
             if(/\b(HIGH|TOP)\b/.test(status) && !/\bWIN\b/.test(status))p.highs++;
@@ -4861,11 +4850,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // A eliminação por votação é a fonte oficial da WEEK de saída.
         // Ela prevalece sobre registros OUT tardios em rankings posteriores.
         const voteOutByUid=new Map();
-        rounds.forEach(({round,rank})=>{
-          const voted=rank?.eliminatedByVote;
-          const uid=String(voted?.uid||voted?.id||'');
-          if(uid && !voteOutByUid.has(uid))voteOutByUid.set(uid,round);
-        });
+        rounds.forEach(({round,rank})=>fauArchiveVoteExits(rank).forEach(event=>{
+          const uid=fauArchiveExitUid(event);
+          if(!voteOutByUid.has(uid))voteOutByUid.set(uid,round);
+        }));
         const firstOutByUid=new Map();
         rounds.forEach(({round,rank})=>{
           (Array.isArray(rank?.rows)?rank.rows:[]).forEach(r=>{
@@ -4874,29 +4862,21 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               firstOutByUid.set(uid,round);
           });
         });
-        // Eliminações decididas na urna podem ocorrer após a publicação do
-        // ranking: o status público da WEEK permanece BOTTOM, não OUT.
-        // Cruzar o estado final do elenco com a última participação oficial.
-        const castOutUids=new Set(castProfiles.filter(p=>p.out===true).map(p=>String(p.uid)));
-        const lastPlayedRound=new Map();
-        rounds.forEach(({round,rank})=>{
-          (Array.isArray(rank?.rows)?rank.rows:[]).forEach(r=>{
-            const uid=String(r.uid||r.id||'');
-            if(uid && !/\bOUT\b|ELIMINAD/i.test(String(r.status||'')))lastPlayedRound.set(uid,round);
-          });
-        });
+        const lookRounds=new Set(publications.filter(x=>fauArchiveImage(x.image)).map(x=>roundKey(x.round)));
         const story=[...rounds].reverse().map(({round,rank,title},index)=>{
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
-          const winners=rows.filter(r=>/\bWIN\b/i.test(String(r.status||'')));
-          const out=rows.filter(r=>{
-            const uid=String(r.uid||r.id||'');
-            if(!uid)return false;
-            // OUT explícito no ranking ou eliminação posterior por votação.
-            // Não reatribuir uma eliminação já registrada em outra WEEK.
-            if(voteOutByUid.has(uid))return false; // já consta na votação oficial de sua WEEK
-            return firstOutByUid.get(uid)===round ||
-              (!firstOutByUid.has(uid) && castOutUids.has(uid) && lastPlayedRound.get(uid)===round);
-          }).sort((a,b)=>String(a.ate||'').localeCompare(String(b.ate||''),'pt-BR',{sensitivity:'base'}));
+          const winners=rows.filter(r=>fauArchiveIsWinner(r.status));
+          const otherExits=new Map();
+          for(const row of rows){
+            const uid=fauArchiveExitUid(row);
+            if(uid&&!voteOutByUid.has(uid)&&firstOutByUid.get(uid)===round)otherExits.set(uid,row.ate||'Designer');
+          }
+          for(const profile of castProfiles){
+            const uid=String(profile.uid);
+            if(profile.out===true&&!voteOutByUid.has(uid)&&confirmedDepartures.get(archiveNameKey(profile.ate))?.week===archiveWeekNumber(round))
+              otherExits.set(uid,profile.ate||'Designer');
+          }
+          const out=[...otherExits.values()].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
           const icon=title?.icon?rows.find(r=>String(r.uid||r.id||'')===String(title.icon)):null;
           const foraId=String(title?.fora||title?.fdm||'').trim();
           const fora=foraId?rows.find(r=>String(r.uid||r.id||'')===foraId):null;
@@ -4905,7 +4885,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           // A primeira WEEK não teve Elimination Pool, mesmo com BOTTOM no ranking.
           const roundId=String(round||'').trim();
           const roundTheme=String(rank?.themeId||rank?.temaId||rank?.theme||rank?.tema||'').toLowerCase();
-          const noPool=/^0*1$/.test(roundId)||roundTheme==='w01_first_garment'||rank?.naoEliminatoria===true||rank?.semEliminacao===true||rank?.elimTipo==='none';
+          const noPool=archiveWeekNumber(roundId)===1||roundTheme==='w01_first_garment'||rank?.naoEliminatoria===true||rank?.semEliminacao===true||rank?.elimTipo==='none';
           const officialPool=!noPool&&Array.isArray(rank?.eliminationPool)?rank.eliminationPool:[];
           const poolPeople=[...new Map(officialPool.map(person=>{
             const id=String(typeof person==='string'?person:(person?.uid||person?.id||'')).trim();
@@ -4914,19 +4894,25 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             return [id||name.toLocaleLowerCase('pt-BR'),name];
           }).filter(([key,name])=>key&&name)).values()];
           const participants=rows.filter(r=>!(/\bOUT\b|ELIMINAD/i.test(String(r.status||'')) && firstOutByUid.get(String(r.uid||r.id||''))!==round));
+          const voteExits=fauArchiveVoteExits(rank).filter(event=>voteOutByUid.get(fauArchiveExitUid(event))===round);
+          const voteNames=voteExits.map(event=>{
+            const uid=fauArchiveExitUid(event);
+            return event?.ate||event?.nome||rows.find(row=>fauArchiveExitUid(row)===uid)?.ate||castProfiles.find(p=>p.uid===uid)?.ate||'Designer';
+          });
           const items=[
             winners.length?`<div class="fau-story-result"><span>WINNER DA RODADA</span><strong>${winners.map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:'',
             icon?`<div class="fau-story-result"><span>ÍCONE DA MODA</span><strong>${esc(icon.ate||'Designer')}</strong></div>`:'',
             foraName?`<div class="fau-story-result"><span>FORA DE MODA</span><strong>${esc(foraName)}</strong>${currentUser?.role==='admin'&&String(round)==='2'?`<button type="button" class="fau-story-correct-fdm block mt-2 text-xs text-fashion-gold underline" data-round="${esc(round)}">Corrigir resultado oficial</button>`:''}</div>`:'',
             poolPeople.length?`<div class="fau-story-result"><span>ELIMINATION POOL</span><strong>${poolPeople.map(esc).join(', ')}</strong></div>`:(!noPool&&currentUser?.role==='admin'?`<div class="fau-story-result"><span>ELIMINATION POOL</span><p class="text-xs text-gray-400 mt-1">Indicações antigas não registradas no histórico.</p><button type="button" class="fau-story-repair-pool mt-2 border border-fashion-gold/50 rounded-lg px-3 py-2 text-xs text-fashion-gold" data-round="${esc(roundId)}">REGISTRAR OS 3 INDICADOS</button></div>`:''),
-            rank?.eliminatedByVote?.ate?`<div class="fau-story-result fau-story-out"><span>ELIMINADO PELA VOTAÇÃO</span><strong>${esc(rank.eliminatedByVote.ate)}</strong></div>`:'',
-            out.filter(x=>String(x.uid||x.id||'')!==String(rank?.eliminatedByVote?.uid||'')).length?`<div class="fau-story-result fau-story-out"><span>OUTROS DESLIGAMENTOS DO EPISÓDIO</span><strong>${out.filter(x=>String(x.uid||x.id||'')!==String(rank?.eliminatedByVote?.uid||'')).map(x=>esc(x.ate||'Designer')).join(', ')}</strong></div>`:''
+            voteNames.length?`<div class="fau-story-result fau-story-out"><span>${voteNames.length===1?'ELIMINADO PELA VOTAÇÃO':'ELIMINADOS PELA VOTAÇÃO'}</span><strong>${voteNames.map(esc).join(', ')}</strong></div>`:'',
+            out.length?`<div class="fau-story-result fau-story-out"><span>OUTROS DESLIGAMENTOS DO EPISÓDIO</span><strong>${out.map(esc).join(', ')}</strong></div>`:''
           ].filter(Boolean);
-          return `<article class="fau-archive-chapter">
+          return `<article class="fau-archive-chapter" data-archive-chapter="${esc(round)}">
             <p class="text-[10px] text-fashion-gold tracking-widest">${index===0?'CAPÍTULO MAIS RECENTE':'CAPÍTULO DA TEMPORADA'}</p>
             <h4 class="font-cinzel text-white mt-2">${esc(weekLabel(round))}</h4>
             <p class="text-xs text-gray-400 mt-1 mb-3">${participants.length} ${participants.length===1?'Designer no episódio':'Designers no episódio'}</p>
             <div class="fau-story-results">${items.length?items.join(''):'<p class="text-gray-400 text-sm">Aguardando resultados oficiais.</p>'}</div>
+            ${lookRounds.has(round)?`<button type="button" class="fau-archive-related mt-3" data-archive-gallery-round="${esc(round)}">Ver criações da rodada</button>`:''}
           </article>`;
         }).join('');
         // Recuperação administrativa de rodadas antigas: nunca deduzir Pool a partir de BOTTOM.
@@ -4994,15 +4980,15 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         }
         // Resultados históricos confirmados pelo ADM são independentes da situação da rodada atual.
         const totalLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image)).length;
-        const availableRounds=[...new Set([...rounds.map(r=>r.round),...publications.map(p=>roundKey(p.round))])].filter(Boolean).sort((a,b)=>(archiveWeekNumber(b)??0)-(archiveWeekNumber(a)??0));
         // Lookbook: capítulos em ordem cronológica inversa; dentro de cada
         // capítulo, Designers em ordem alfabética (não pelo ranking).
         const archiveLooks=publications.filter(x=>typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
         const groupedLooks=new Map();
         archiveLooks.forEach(x=>{const key=roundKey(x.round);if(!groupedLooks.has(key))groupedLooks.set(key,[]);groupedLooks.get(key).push(x);});
-        const gallery=[...groupedLooks.keys()].sort((a,b)=>(archiveWeekNumber(b)??0)-(archiveWeekNumber(a)??0)).map(round=>{
+        const availableRounds=[...groupedLooks.keys()].sort((a,b)=>(archiveWeekNumber(b)??0)-(archiveWeekNumber(a)??0));
+        const gallery=availableRounds.map(round=>{
           const looks=groupedLooks.get(round).sort((a,b)=>String(a.designer||a.ate||'').localeCompare(String(b.designer||b.ate||''),'pt-BR',{sensitivity:'base'})||String(a.title||'').localeCompare(String(b.title||''),'pt-BR',{sensitivity:'base'}));
-          const cards=looks.map(x=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(round)}" data-search="${esc([x.title,x.description,x.designer,x.ate,x.round,weekLabel(x.round)].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR'))}">
+          const cards=looks.map(x=>`<article class="fau-archive-entry rounded-xl border border-fashion-700 bg-fashion-950 overflow-hidden" tabindex="0" role="button" aria-label="Ampliar look: ${esc(x.title||'Criação do arquivo')}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(x.designer||x.ate||'')}" data-round="${esc(round)}" data-look-author="${esc(x.uid||'')}" data-search="${esc(fauArchiveText([x.title,x.description,x.designer,x.ate,x.round,weekLabel(x.round)].filter(Boolean).join(' ')))}">
             <div class="fau-archive-photo-wrap"><img src="${esc(x.image)}" loading="lazy" decoding="async" alt="Look publicado: ${esc(x.title||'Criação do acervo')}" class="fau-archive-img w-full aspect-[3/4] object-contain bg-black" /></div>
             <div class="p-3 space-y-1"><h4 class="text-sm text-white font-cinzel">${esc(x.title||'Criação do arquivo')}</h4>${x.designer||x.ate?`<p class="text-xs text-gray-400">${esc(x.designer||x.ate)}</p>`:''}</div></article>`).join('');
           return `<section class="fau-look-week-group" data-week="${esc(round)}"><div class="fau-look-week-heading"><h4>${esc(weekLabel(round))}</h4><span class="fau-look-week-count">${looks.length} ${looks.length===1?'look':'looks'}</span></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${cards}</div></section>`;
@@ -5018,7 +5004,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           if(!evolutionGroups.has(key))evolutionGroups.set(key,{name,uid,looks:[]});
           evolutionGroups.get(key).looks.push(x);
         });
-        const evolutionPeople=[...evolutionGroups.values()].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR',{sensitivity:'base'}));
+        for(const [key,journey] of evolutionGroups){
+          if(!journey.uid&&[...people.values()].some(p=>archiveNameKey(p.name)===key))continue;
+          getPerson(key,journey.name);
+        }
         const renderProfiles=()=>[...people.values()].sort((a,b)=>{
           if(a.wins!==b.wins)return b.wins-a.wins;
           if(a.icons!==b.icons)return b.icons-a.icons;
@@ -5030,7 +5019,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const accolades=orderedAchievements.length?orderedAchievements.map(a=>`<span class="fau-hall-award">${esc(weekLabel(a.round))} · ${esc(a.type)}</span>`).join(''):'<span class="fau-hall-empty">Nenhum título conquistado</span>';
           const winText=`${p.wins} ${p.wins===1?'Winner':'Winners'}`;
           const iconText=`${p.icons} ${p.icons===1?'Ícone da Moda':'Ícones da Moda'}`;
-          const journey=evolutionPeople.find(e=>(p.uid&&e.uid&&String(p.uid)===String(e.uid))||archiveNameKey(e.name)===archiveNameKey(p.name));
+          const journey=evolutionGroups.get(String(p.uid))||evolutionGroups.get(archiveNameKey(p.name));
           const looks=journey?[...journey.looks].sort((a,b)=>(archiveWeekNumber(a.round)??999)-(archiveWeekNumber(b.round)??999)):[];
           const pending=looks.some(x=>!roundMap.get(roundKey(x.round))?.rank?.rows?.length);
           const journeyId='fau-legacy-journey-'+profilesIndex;
@@ -5040,26 +5029,33 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const official=roundMap.get(key)?.rank;
             const rows=Array.isArray(official?.rows)?official.rows:[];
             const row=rows.find(r=>(p.uid&&String(r.uid||r.id||'')===String(p.uid))||(!p.uid&&archiveNameKey(r.ate)===archiveNameKey(p.name)));
-            if(!row)return {label:'EM JULGAMENTO',kind:'pending'};
-            const raw=String(row.status||'').toUpperCase();
-            const voted=String(official?.eliminatedByVote?.uid||official?.eliminatedByVote?.id||'');
-            const eliminatedHere=(p.uid&&voted===String(p.uid))||(p.uid&&firstOutByUid.get(String(p.uid))===key&&!voteOutByUid.has(String(p.uid)));
-            if(eliminatedHere||/\bOUT\b|ELIMINAD/.test(raw))return {label:'OUT',kind:'out'};
+            const raw=fauArchiveStatus(row?.status);
+            const eliminatedHere=(p.uid&&voteOutByUid.get(String(p.uid))===key)||(p.uid&&firstOutByUid.get(String(p.uid))===key&&!voteOutByUid.has(String(p.uid)));
+            if(eliminatedHere||/\bOUT\b|ELIMINAD/.test(raw)){
+              const placement=raw.match(/^(WIN|HIGH|SAFE|LOW|BOTTOM)\b/)?.[1];
+              return {label:placement?`${placement} + OUT`:'OUT',kind:'out'};
+            }
             if(/\bWIN\b/.test(raw))return {label:'WIN',kind:'win'};
             if(/\b(HIGH|TOP)\b/.test(raw))return {label:'HIGH',kind:'high'};
             if(/\b(BOTTOM|BTM)\b/.test(raw))return {label:'BOTTOM',kind:'bottom'};
             if(/\bLOW\b/.test(raw))return {label:'LOW',kind:'low'};
             if(/\bSAFE\b/.test(raw))return {label:'SAFE',kind:'safe'};
-            return {label:'EM JULGAMENTO',kind:'pending'};
+            return raw?{label:raw,kind:'safe'}:{label:'EM JULGAMENTO',kind:'pending'};
           };
-          const journeyMarkup=`<div class="fau-legacy-evolution"><button type="button" class="fau-legacy-evolution-toggle" aria-expanded="false" aria-controls="${journeyId}"><span><i class="fa-solid fa-images" aria-hidden="true"></i> VER EVOLUÇÃO <small>· ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'}${pending?' · EM JULGAMENTO':''}</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="${journeyId}" class="fau-evolution-detail" hidden><p class="fau-evolution-intro">Da primeira criação à mais recente. Uma trajetória contada em looks.</p><div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(archiveWeekLabel(x.round).split(' — ')[0])} <span class="fau-evolution-verdict is-${evolutionVerdict(x).kind}">${evolutionVerdict(x).label}</span></span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" data-evolution-owner="${esc(p.uid||archiveNameKey(p.name))}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(p.name)}" data-round="${esc(roundKey(x.round))}" aria-label="Ver criação ${esc(x.title||'')}"><img src="${esc(x.image)}" loading="lazy" decoding="async" alt="${esc(x.title||'Look publicado')}"><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')||'<p class="text-gray-400 text-xs">Nenhuma criação publicada ainda.</p>'}</div></div></div>`;
-          return `<article class="fau-hall-profile${isOut?' is-out':''}${p.wins+p.icons?' has-title':''}">
+          const journeyMarkup=`<div class="fau-legacy-evolution"><button type="button" class="fau-legacy-evolution-toggle" aria-expanded="false" aria-controls="${journeyId}"><span><i class="fa-solid fa-images" aria-hidden="true"></i> VER EVOLUÇÃO <small>· ${looks.length} ${looks.length===1?'CRIAÇÃO':'CRIAÇÕES'}${pending?' · EM JULGAMENTO':''}</small></span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="${journeyId}" class="fau-evolution-detail" hidden><p class="fau-evolution-intro">Da primeira criação à mais recente. Uma trajetória contada em looks.</p><div class="fau-evolution-timeline">${looks.map((x,i)=>`<div class="fau-evolution-moment"><span class="fau-evolution-week">${esc(archiveWeekLabel(x.round).split(' — ')[0])} <span class="fau-evolution-verdict is-${evolutionVerdict(x).kind}">${evolutionVerdict(x).label}</span></span><article class="fau-evolution-look fau-archive-entry" tabindex="0" role="button" data-evolution-owner="${esc(p.uid||archiveNameKey(p.name))}" data-look-author="${esc(x.uid||'')}" data-title="${esc(x.title||'Criação do arquivo')}" data-description="${esc(x.description||'')}" data-designer="${esc(p.name)}" data-round="${esc(roundKey(x.round))}" aria-label="Ver criação ${esc(x.title||'')}"><img src="${esc(x.image)}" loading="lazy" decoding="async" alt="${esc(x.title||'Look publicado')}"><span><strong>${esc(x.title||'Criação do arquivo')}</strong><small>LOOK ${String(i+1).padStart(2,'0')} · VER CRIAÇÃO</small></span></article></div>`).join('')||'<p class="text-gray-400 text-xs">Nenhuma criação publicada ainda.</p>'}</div></div></div>`;
+          return `<article class="fau-hall-profile${isOut?' is-out':''}${p.wins+p.icons?' has-title':''}" data-archive-person="${esc(p.uid)}">
             <div class="fau-hall-profile-head"><h4 class="font-cinzel text-white">${esc(p.name)}</h4>${isOut?'<span class="fau-hall-out">ELIMINADO</span>':''}</div>
             <div class="fau-hall-counts"><span>${winText}</span><span>${iconText}</span><span>${p.foras} ${p.foras===1?'Fora de Moda':'Fora de Moda'}</span>${isOut?'<span class="fau-hall-out">OUT · ELIMINADO</span>':''}</div>
             <p class="fau-hall-meta">${p.rounds.size} ${p.rounds.size===1?'rodada disputada':'rodadas disputadas'} · ${p.highs} ${p.highs===1?'destaque':'destaques'} no ranking</p>
             <div class="fau-hall-achievements">${accolades}</div>${journeyMarkup}
           </article>`;
         }).join('');
+        const archiveNotice=message=>`<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded" role="status">${message}</p>`;
+        const ranksUnavailable=ranksResult.status==='rejected';
+        const galleryUnavailable=publicationsResult.status==='rejected';
+        const castUnavailable=castResult.status==='rejected';
+        const rankWarning=ranksUnavailable?archiveNotice('Não foi possível consultar o histórico oficial.'):'';
+        const titleWarning=!titlesAccessible?archiveNotice('Alguns títulos oficiais estão indisponíveis.'):'';
         body.innerHTML=`
           ${rounds.length||people.size||totalLooks?`<div class="grid grid-cols-3 gap-2 sm:gap-4" aria-label="Resumo do arquivo">
             <div class="fau-archive-stat"><strong>${rounds.length}</strong><span>CAPÍTULOS OFICIAIS</span></div>
@@ -5076,61 +5072,118 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <button type="button" role="tab" aria-selected="false" data-archive-tab="story" class="fau-archive-tab border border-fashion-700 rounded px-4 py-3 text-xs">SEASON STORY</button>
           </div>
           <section data-archive-panel="gallery" class="space-y-4" role="tabpanel">
+            ${galleryUnavailable?archiveNotice('Não foi possível carregar as criações publicadas.'):''}
             <div><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE OFFICIAL LOOKBOOK</p><h3 class="font-cinzel text-2xl text-white mt-1">As criações da temporada</h3><p class="text-sm text-gray-400 mt-2">Todas as criações oficialmente publicadas, reunidas em um só lugar.</p></div>
             <div class="fau-look-controls">
               <label class="fau-look-round"><span class="sr-only">Filtrar por semana</span><select id="fauArchiveRound" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg px-3 py-3 text-sm text-white"><option value="">Todas as semanas</option>${availableRounds.map(r=>`<option value="${esc(r)}">${esc(weekLabel(r))}</option>`).join('')}</select></label>
-              <button type="button" id="fauArchiveSearchToggle" class="fau-look-search-toggle" aria-expanded="false" aria-controls="fauLookSearchPanel" aria-label="Abrir busca">⌕ <span>Buscar</span></button>
+              <label><span class="sr-only">Buscar no arquivo</span><input id="fauArchiveSearch" type="search" placeholder="Look, Designer ou conceito…" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg px-4 py-3 text-sm text-white"></label>
+              <button type="button" id="fauArchiveClear" class="fau-archive-clear" hidden>Limpar filtros</button>
             </div>
-            <div id="fauLookSearchPanel" class="fau-look-search-panel hidden"><label><span class="sr-only">Buscar no arquivo</span><input id="fauArchiveSearch" type="search" placeholder="Look, Designer ou conceito…" class="w-full bg-fashion-950 border border-fashion-700 rounded-lg px-4 py-3 text-sm text-white" /></label><button type="button" id="fauArchiveClear" class="fau-archive-clear">Limpar</button></div>
             <p id="fauArchiveCount" class="text-xs text-gray-400" aria-live="polite"></p>
-            <div id="fauArchiveGallery" class="space-y-7">${gallery||'<p class="col-span-full text-sm text-gray-400 py-8 text-center">O Lookbook será preenchido quando a produção publicar os looks das rodadas.</p>'}</div>
+            <div id="fauArchiveGallery" class="space-y-7">${gallery||(galleryUnavailable?'':'<p class="col-span-full text-sm text-gray-400 py-8 text-center">O Lookbook será preenchido quando a produção publicar os looks das rodadas.</p>')}</div>
             <p id="fauArchiveEmpty" class="hidden text-sm text-gray-400 text-center py-8">Nenhum look corresponde à sua busca. Experimente outra palavra ou semana.</p>
           </section>
           <section data-archive-panel="hall" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE HALL OF FASHION</p><h3 class="font-cinzel text-2xl text-white">Os destaques da passarela</h3>
-          <p class="text-gray-400 text-sm">A cada rodada, dois nomes entram para a história: o <strong>Winner da Rodada</strong>, escolhido pelos jurados, e o <strong>Ícone da Moda</strong>, eleito pelos próprios Designers.</p>
-          ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:'<p class="text-gray-400 text-sm py-6">O Hall abrirá após as primeiras conquistas oficiais.</p>'}</section>
-          <section data-archive-panel="shame" class="space-y-3 hidden fau-shame-section" role="tabpanel"><p class="text-[10px] tracking-[.25em] fau-shame-label">THE HALL OF SHAME</p><h3 class="font-cinzel text-2xl text-white">Os condenados da passarela</h3>
-          <p class="text-gray-400 text-sm">A cada rodada, um nome entra para a história pelos motivos errados: o <strong>Fora de Moda</strong>, eleito pelos próprios Designers como o que menos se destacou na competição.</p>
-          ${shame?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${shame}</div>`:'<p class="text-gray-400 text-sm py-6">Os títulos de Fora de Moda aparecerão aqui após a publicação oficial.</p>'}</section>
-          <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">NENHUMA DESPEDIDA ATÉ AGORA</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>'}</section>
+          <p class="text-gray-400 text-sm">Os títulos da rodada destacam o <strong>Winner da Rodada</strong>, escolhido pelos jurados, e o <strong>Ícone da Moda</strong>, eleito pelos próprios Designers.</p>
+          ${rankWarning}${titleWarning}
+          ${hall?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${hall}</div>`:((ranksUnavailable||!titlesAccessible)?'':'<p class="text-gray-400 text-sm py-6">O Hall abrirá após as primeiras conquistas oficiais.</p>')}</section>
+          <section data-archive-panel="shame" class="space-y-3 hidden fau-shame-section" role="tabpanel"><p class="text-[10px] tracking-[.25em] fau-shame-label">THE HALL OF SHAME</p><h3 class="font-cinzel text-2xl text-white">Fora de Moda</h3>
+          <p class="text-gray-400 text-sm">Registro dos títulos de <strong>Fora de Moda</strong> eleitos pelos Designers, organizados por rodada.</p>
+          ${titleWarning}
+          ${shame?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${shame}</div>`:(!titlesAccessible?'':'<p class="text-gray-400 text-sm py-6">Os títulos de Fora de Moda aparecerão aqui após a publicação oficial.</p>')}</section>
+          <section data-archive-panel="out" class="space-y-4 hidden" role="tabpanel"><div class="fau-archive-farewell"><p class="text-[10px] tracking-[.3em] text-fashion-gold">ONE DAY YOU'RE IN. THE NEXT DAY YOU'RE OUT.</p><h3 class="font-cinzel text-3xl text-white mt-3">Auf Wiedersehen</h3><p class="text-gray-300 text-sm mt-2">As histórias de quem deixou a runway. As identidades são reveladas somente após a eliminação oficial.</p></div>${castUnavailable?archiveNotice('Não foi possível consultar as despedidas registradas.'):''}${eliminatedCards?`<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${eliminatedCards}</div>`:(castUnavailable?'':'<div class="fau-archive-awaiting"><p class="text-fashion-gold text-xs tracking-widest">NENHUMA DESPEDIDA ATÉ AGORA</p><p class="text-white font-cinzel text-xl mt-3">Ainda não houve uma despedida oficial.</p><p class="text-gray-400 text-sm mt-2">Quando a primeira eliminação acontecer, a história continuará aqui.</p></div>')}</section>
           <section data-archive-panel="track" class="space-y-4 hidden" role="tabpanel"><p class="text-gray-400 text-sm py-6 text-center">Abra o Track Record para consultar o histórico da temporada.</p></section>
-          <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">A trajetória dos Designers</h3><div class="grid sm:grid-cols-2 gap-3"><div id="fauArchiveLegacyContent" class="contents"></div></div></section>
+          <section data-archive-panel="designers" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">THE DESIGNER LEGACY</p><h3 class="font-cinzel text-xl text-white">A trajetória dos Designers</h3>${rankWarning}${titleWarning}${galleryUnavailable?archiveNotice('Não foi possível consultar os portfólios de looks.'):''}<div class="grid sm:grid-cols-2 gap-3"><div id="fauArchiveLegacyContent" class="contents"></div></div></section>
           <section data-archive-panel="story" class="space-y-3 hidden" role="tabpanel"><p class="text-[10px] tracking-[.25em] text-fashion-gold">PREVIOUSLY ON FAU…</p><h3 class="font-cinzel text-xl text-white">The Season Story</h3>
           <p class="text-gray-400 text-sm">Cada rodada tem sua história. Relembre os resultados e os momentos que marcaram a competição.</p>
-          <div class="fau-archive-timeline space-y-3">${story||'<p class="text-gray-400 text-sm">Os capítulos aparecerão após a publicação dos primeiros resultados.</p>'}</div></section>
-          ${ranksResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O histórico público não está acessível com as permissões atuais. Nenhuma nota privada será consultada.</p>':''}
-          ${!titlesAccessible?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar todos os títulos publicados. Verifique as regras de leitura de fau_titulos_publicos.</p>':''}
-          ${castResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">Não foi possível consultar o elenco público para o Hall dos Eliminados.</p>':''}
-          ${publicationsResult.status==='rejected'?'<p class="text-xs text-amber-200 border border-amber-700/40 p-3 rounded">O acervo de imagens publicadas não está acessível com as permissões atuais.</p>':''}`;
+          <div class="fau-archive-timeline space-y-3">${rankWarning}${titleWarning}${story||((ranksUnavailable||!titlesAccessible)?'':'<p class="text-gray-400 text-sm">Os capítulos aparecerão após a publicação dos primeiros resultados.</p>')}</div></section>
+`;
         let trackLoaded=false,legacyLoaded=false;
         const tabs=[...body.querySelectorAll('[data-archive-tab]')];
-        tabs.forEach(tab=>tab.addEventListener('click',()=>{
+        const panels=[...body.querySelectorAll('[data-archive-panel]')];
+        const activateTab=tab=>{
           const chosen=tab.dataset.archiveTab;
-          tabs.forEach(t=>{const active=t===tab;t.setAttribute('aria-selected',String(active));t.classList.toggle('bg-fashion-gold',active);t.classList.toggle('text-black',active);t.classList.toggle('font-bold',active);t.classList.toggle('border',!active);t.classList.toggle('border-fashion-700',!active);});
-          body.querySelectorAll('[data-archive-panel]').forEach(panel=>panel.classList.toggle('hidden',panel.dataset.archivePanel!==chosen));
-          if(chosen==='designers'&&!legacyLoaded){const target=body.querySelector('#fauArchiveLegacyContent');if(target){target.innerHTML=renderProfiles()||'<p class="text-gray-400 text-sm">Aguardando os primeiros resultados.</p>';legacyLoaded=true;}}
-           if(chosen==='track'&&!trackLoaded){trackLoaded=true;VIEWS.historico(true).catch(err=>{trackLoaded=false;console.error('Track Record',err);const panel=body.querySelector('[data-archive-panel="track"]');if(panel)panel.innerHTML='<p class="text-red-300 text-sm">Não foi possível carregar o Track Record. Tente novamente.</p>';});}
-        }));
+          navigation.tab=chosen;
+          tabs.forEach(t=>{
+            const active=t===tab;
+            t.tabIndex=active?0:-1;
+            t.setAttribute('aria-selected',String(active));
+            for(const name of ['bg-fashion-gold','text-black','font-bold'])t.classList.toggle(name,active);
+            for(const name of ['border','border-fashion-700'])t.classList.toggle(name,!active);
+          });
+          panels.forEach(panel=>panel.classList.toggle('hidden',panel.dataset.archivePanel!==chosen));
+          if(chosen==='designers'&&!legacyLoaded){
+            body.querySelector('#fauArchiveLegacyContent').innerHTML=renderProfiles()||
+              (ranksUnavailable||galleryUnavailable||!titlesAccessible?'':'<p class="text-gray-400 text-sm">Aguardando os primeiros registros publicados.</p>');
+            legacyLoaded=true;
+          }
+          if(chosen==='track'&&!trackLoaded){
+            trackLoaded=true;
+            VIEWS.historico(true,ranksUnavailable?null:ranks).catch(err=>{
+              trackLoaded=false;
+              console.error('Track Record',err);
+              const panel=body.querySelector('[data-archive-panel="track"]');
+              if(panel)panel.innerHTML=archiveNotice('Não foi possível carregar o Track Record. Abra a aba para tentar novamente.');
+            });
+          }
+        };
+        tabs.forEach((tab,index)=>{
+          const key=tab.dataset.archiveTab,panel=panels.find(p=>p.dataset.archivePanel===key);
+          tab.id='fauArchiveTab-'+key;
+          panel.id='fauArchivePanel-'+key;
+          tab.setAttribute('aria-controls',panel.id);
+          panel.setAttribute('aria-labelledby',tab.id);
+          panel.tabIndex=0;
+          tab.addEventListener('click',()=>activateTab(tab));
+          tab.addEventListener('keydown',event=>{
+            const next={ArrowRight:(index+1)%tabs.length,ArrowLeft:(index+tabs.length-1)%tabs.length,Home:0,End:tabs.length-1}[event.key];
+            if(typeof next!=='number')return;
+            event.preventDefault();
+            activateTab(tabs[next]);
+            tabs[next].focus();
+          });
+        });
         const search=body.querySelector('#fauArchiveSearch'),select=body.querySelector('#fauArchiveRound');
-        const searchToggle=body.querySelector('#fauArchiveSearchToggle'),searchPanel=body.querySelector('#fauLookSearchPanel');
-        searchToggle?.addEventListener('click',()=>{const opening=searchPanel.classList.contains('hidden');searchPanel.classList.toggle('hidden',!opening);searchToggle.setAttribute('aria-expanded',String(opening));if(opening)search?.focus();});
-        body.querySelector('#fauArchiveClear')?.addEventListener('click',()=>{if(search)search.value='';if(select)select.value='';filterArchive();search?.focus();});
-        document.querySelectorAll('.fau-archive-lightbox').forEach(el=>el.remove());
+        const clear=body.querySelector('#fauArchiveClear');
+        search.value=navigation.query;
+        select.value=availableRounds.includes(navigation.round)?navigation.round:'';
+        clear.addEventListener('click',()=>{search.value='';select.value='';filterArchive();search.focus();});
         const viewer=document.createElement('div');viewer.className='fau-archive-lightbox fau-lookbook-stories';viewer.hidden=true;
         viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Lookbook · Fashion Stories');
         viewer.innerHTML=`<div class="fau-lb-story" role="document">
-          <div class="fau-lb-progress" aria-label="Progresso da galeria"></div>
+          <div class="fau-lb-progress" aria-hidden="true"><span class="current"></span></div>
           <header class="fau-lb-top"><div><small>THE LOOKBOOK · FAU</small><strong class="fau-lb-week"></strong></div><button type="button" data-close-archive aria-label="Fechar galeria">✕</button></header>
-          <div class="fau-lb-photo"><img alt="Look ampliado"><button type="button" class="fau-lb-tap fau-lb-tap-left" data-lb-prev aria-label="Foto anterior"></button><button type="button" class="fau-lb-tap fau-lb-tap-right" data-lb-next aria-label="Próxima foto"></button><div class="fau-lb-caption"><small class="fau-lb-counter"></small><h3 class="fau-lb-title"></h3><p class="fau-lb-designer"></p><button type="button" data-lb-concept aria-expanded="false">LER CONCEITO ↑</button></div></div>
+          <div class="fau-lb-photo"><img alt="Look ampliado"><button type="button" tabindex="-1" class="fau-lb-tap fau-lb-tap-left" data-lb-prev aria-label="Foto anterior"></button><button type="button" tabindex="-1" class="fau-lb-tap fau-lb-tap-right" data-lb-next aria-label="Próxima foto"></button></div>
+          <div class="fau-lb-caption"><small class="fau-lb-counter"></small><h3 class="fau-lb-title"></h3><p class="fau-lb-designer"></p><button type="button" data-lb-concept aria-expanded="false">LER CONCEITO ↑</button></div>
+          <div class="fau-lb-related"><button type="button" data-lb-designer hidden>Ver Designer</button><button type="button" data-lb-chapter hidden>Ver capítulo</button></div>
           <footer class="fau-lb-actions"><button type="button" data-lb-prev>‹ ANTERIOR</button><span>Deslize para navegar</span><button type="button" data-lb-next>PRÓXIMO ›</button></footer>
           <section class="fau-lb-concept" hidden aria-label="Conceito da criação"><div><small>CREATIVE DOSSIER</small><button type="button" data-lb-concept-close>✕ FECHAR</button></div><h3></h3><p></p></section>
         </div>`;
         document.body.appendChild(viewer);
         body.addEventListener('click',event=>{const button=event.target.closest('.fau-legacy-evolution-toggle');if(!button)return;const panel=body.querySelector('#'+button.getAttribute('aria-controls'));if(!panel)return;const opening=panel.hidden;panel.hidden=!opening;button.setAttribute('aria-expanded',String(opening));});
-        let activeCards=[],activeIndex=0,previousFocus=null,touchStart=null;
+        let activeCards=[],activeIndex=0,previousFocus=null,touchStart=null,previousOverflow='';
         const conceptPanel=viewer.querySelector('.fau-lb-concept');
-        const hideConcept=()=>{conceptPanel.hidden=true;viewer.querySelector('[data-lb-concept]').setAttribute('aria-expanded','false');};
-        const closeViewer=()=>{hideConcept();viewer.hidden=true;document.body.style.overflow='';previousFocus?.focus?.();};
+        const conceptButton=viewer.querySelector('[data-lb-concept]');
+        const closeButton=viewer.querySelector('[data-close-archive]');
+        const designerLink=viewer.querySelector('[data-lb-designer]');
+        const chapterLink=viewer.querySelector('[data-lb-chapter]');
+        const hideConcept=(restore=false)=>{
+          conceptPanel.hidden=true;
+          conceptButton.setAttribute('aria-expanded','false');
+          if(restore)conceptButton.focus();
+        };
+        const closeViewer=(restore=true)=>{
+          if(viewer.hidden)return;
+          hideConcept();
+          viewer.hidden=true;
+          document.body.style.overflow=previousOverflow;
+          if(restore&&previousFocus?.isConnected)previousFocus.focus({preventScroll:true});
+        };
+        unsubsTab.push(()=>{
+          navigation.scroll=window.scrollY;
+          closeViewer(false);
+          viewer.remove();
+        });
         const displayLook=()=>{
           const card=activeCards[activeIndex];if(!card)return;
           const title=card.dataset.title||'Criação do arquivo';
@@ -5138,8 +5191,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           viewer.querySelector('.fau-lb-week').textContent=weekLabel(card.dataset.round);
           viewer.querySelector('.fau-lb-title').textContent=title;
           viewer.querySelector('.fau-lb-designer').textContent=card.dataset.designer||'';
+          designerLink.hidden=!card.dataset.lookAuthor||!people.has(card.dataset.lookAuthor)||navigation.tab==='designers';
+          chapterLink.hidden=!roundMap.has(card.dataset.round);
           viewer.querySelector('.fau-lb-counter').textContent=`LOOK ${activeIndex+1} / ${activeCards.length}`;
-          viewer.querySelector('.fau-lb-progress').innerHTML=activeCards.map((_,i)=>`<span class="${i<activeIndex?'seen':i===activeIndex?'current':''}"></span>`).join('');
+          viewer.querySelector('.fau-lb-progress span').style.transform=`scaleX(${(activeIndex+1)/activeCards.length})`;
           viewer.querySelector('.fau-lb-concept h3').textContent=title;
           viewer.querySelector('.fau-lb-concept p').textContent=card.dataset.description||'Conceito não disponível.';
           viewer.querySelector('[data-lb-concept]').hidden=!card.dataset.description;
@@ -5147,27 +5202,70 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           viewer.querySelectorAll('[data-lb-next]').forEach(b=>b.disabled=activeIndex===activeCards.length-1);
           hideConcept();
         };
-        const moveLook=step=>{if(!conceptPanel.hidden){hideConcept();return;}const next=activeIndex+step;if(next<0||next>=activeCards.length)return;activeIndex=next;displayLook();};
+        const moveLook=step=>{if(!conceptPanel.hidden)return;const next=activeIndex+step;if(next<0||next>=activeCards.length)return;activeIndex=next;const focused=document.activeElement;displayLook();if(focused?.disabled)closeButton.focus();};
         const openLook=card=>{
-          previousFocus=document.activeElement;
+          previousFocus=card;
+          previousOverflow=document.body.style.overflow;
           const allCards=[...body.querySelectorAll('.fau-archive-entry')];
           activeCards=card.dataset.evolutionOwner!==undefined?allCards.filter(c=>c.dataset.evolutionOwner===card.dataset.evolutionOwner):allCards.filter(c=>c.closest('[data-archive-panel="gallery"]')&&!c.classList.contains('hidden')&&!c.closest('.fau-look-week-group')?.classList.contains('hidden'));
           activeIndex=activeCards.indexOf(card);if(activeIndex<0){activeCards=[card];activeIndex=0;}
           viewer.hidden=false;document.body.style.overflow='hidden';displayLook();viewer.querySelector('[data-close-archive]')?.focus();
         };
-        viewer.querySelector('[data-close-archive]').onclick=closeViewer;
+        const openRelated=(tabKey,selector,dataKey,value)=>{
+          const tab=tabs.find(t=>t.dataset.archiveTab===tabKey);
+          activateTab(tab);
+          const target=[...body.querySelectorAll(selector)].find(el=>el.dataset[dataKey]===value);
+          const heading=target?.querySelector('h4');
+          if(heading){heading.tabIndex=-1;heading.focus();}else tab.focus();
+        };
+        designerLink.onclick=()=>{
+          const author=activeCards[activeIndex]?.dataset.lookAuthor;
+          closeViewer(false);
+          openRelated('designers','[data-archive-person]','archivePerson',author);
+        };
+        chapterLink.onclick=()=>{
+          const round=activeCards[activeIndex]?.dataset.round;
+          closeViewer(false);
+          openRelated('story','[data-archive-chapter]','archiveChapter',round);
+        };
+        body.querySelectorAll('[data-archive-gallery-round]').forEach(button=>button.onclick=()=>{
+          select.value=button.dataset.archiveGalleryRound;
+          search.value='';
+          filterArchive();
+          openRelated('gallery','.fau-look-week-group','week',select.value);
+        });
+        closeButton.onclick=()=>closeViewer();
         viewer.querySelectorAll('[data-lb-prev]').forEach(b=>b.onclick=()=>moveLook(-1));
         viewer.querySelectorAll('[data-lb-next]').forEach(b=>b.onclick=()=>moveLook(1));
-        viewer.querySelector('[data-lb-concept]').onclick=()=>{conceptPanel.hidden=false;viewer.querySelector('[data-lb-concept]').setAttribute('aria-expanded','true');};
-        viewer.querySelector('[data-lb-concept-close]').onclick=hideConcept;
+        conceptButton.onclick=()=>{
+          conceptPanel.hidden=false;
+          conceptButton.setAttribute('aria-expanded','true');
+          conceptPanel.querySelector('button').focus();
+        };
+        viewer.querySelector('[data-lb-concept-close]').onclick=()=>hideConcept(true);
         viewer.addEventListener('click',e=>{if(e.target===viewer)closeViewer();});
-        viewer.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!conceptPanel.hidden)hideConcept();else closeViewer();}if(conceptPanel.hidden&&e.key==='ArrowRight')moveLook(1);if(conceptPanel.hidden&&e.key==='ArrowLeft')moveLook(-1);});
+        viewer.addEventListener('keydown',e=>{
+          if(e.key==='Tab'){
+            const scope=conceptPanel.hidden?viewer:conceptPanel;
+            const buttons=[...scope.querySelectorAll('button:not([disabled]):not([hidden]):not([tabindex="-1"])')].filter(b=>!b.closest('[hidden]'));
+            if(!buttons.length)return;
+            const index=buttons.indexOf(document.activeElement);
+            if(index<0||(e.shiftKey?index===0:index===buttons.length-1)){
+              e.preventDefault();
+              buttons[e.shiftKey?buttons.length-1:0].focus();
+            }
+          }
+          if(e.key==='Escape'){e.preventDefault();if(!conceptPanel.hidden)hideConcept(true);else closeViewer();}
+          if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();moveLook(e.key==='ArrowRight'?1:-1);}
+        });
         viewer.addEventListener('touchstart',e=>{if(e.touches.length===1)touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
         viewer.addEventListener('touchend',e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;touchStart=null;if(!conceptPanel.hidden||e.target.closest('button'))return;if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.25)moveLook(dx<0?1:-1);},{passive:true});
         body.addEventListener('click',e=>{const card=e.target.closest('.fau-archive-entry');if(card)openLook(card);});
         body.addEventListener('keydown',e=>{const card=e.target.closest('.fau-archive-entry');if(card&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openLook(card);}});
         const filterArchive=()=>{
-          const q=(search?.value||'').trim().toLocaleLowerCase('pt-BR'),round=select?.value||'';
+          const q=fauArchiveText(search.value),round=select.value;
+          navigation.query=search.value;navigation.round=round;
+          clear.hidden=!q&&!round;
           let visible=0;
           body.querySelectorAll('[data-archive-panel="gallery"] .fau-archive-entry').forEach(card=>{const show=(!round||card.dataset.round===round)&&(!q||(card.dataset.search||'').includes(q));card.classList.toggle('hidden',!show);card.classList.toggle('fau-look-single-week',!!round);if(show)visible++;});
           body.querySelectorAll('.fau-look-week-group').forEach(group=>{
@@ -5175,11 +5273,15 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             group.classList.toggle('hidden',count===0);
             const label=group.querySelector('.fau-look-week-count');if(label)label.textContent=`${count} ${count===1?'look':'looks'}`;
           });
-          const counter=body.querySelector('#fauArchiveCount');if(counter)counter.textContent=`${visible} ${visible===1?'look encontrado':'looks encontrados'}${round?' · '+weekLabel(round):''}`;
+          const counter=body.querySelector('#fauArchiveCount');if(counter&&!galleryUnavailable)counter.textContent=`${visible} ${visible===1?'look encontrado':'looks encontrados'}${round?' · '+weekLabel(round):''}`;
           body.querySelector('#fauArchiveEmpty')?.classList.toggle('hidden',visible>0||totalLooks===0);
         };
         search?.addEventListener('input',filterArchive);select?.addEventListener('change',filterArchive);filterArchive();
+        const selectedTab=tabs.find(tab=>tab.dataset.archiveTab===navigation.tab)||tabs[0];
+        activateTab(selectedTab);
         loading?.remove();
+        if(restoreFocus)selectedTab.focus({preventScroll:true});
+        if(navigation.scroll)requestAnimationFrame(()=>{if(body.isConnected)window.scrollTo(0,navigation.scroll);});
       }catch(e){console.error('Fashion Archive',e);if(loading?.isConnected)loading.textContent='Não foi possível abrir o arquivo agora.';}
     };
 
@@ -6068,27 +6170,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 foBox.classList.add('hidden');
             }
 
-            if(globalState.themeId==='theme_next_supreme') {
-                const box=$('#supremeVotingBox');
-                const pairs=[...new Set(looks.map(l=>l.uid))].map(uid=>({uid,items:looks.filter(l=>l.uid===uid)})).filter(p=>p.items.length===2);
-                if(supremeBroadcast?.phase==='voting' && currentUser.role==='estilista') {
-                    box.innerHTML=`<div class="border border-fashion-gold rounded-xl bg-fashion-950 p-5 space-y-5"><h3 class="font-cinzel text-fashion-gold text-xl">👑 THE SUPREME VOTE · THE PEOPLE DECIDE</h3><p class="text-xs text-gray-300">Escolha secretamente UMA Suprema por Designer. Não é permitido votar na próprio Designer.</p>${pairs.filter(p=>p.uid!==currentUser.uid).map(p=>{
-                        const old=p.items.find(l=>l.slot===1),next=p.items.find(l=>l.slot===2);
-                        const mine=supremeMyVotes.find(v=>v.targetUid===p.uid);
-                        return `<section class="border-t border-fashion-gold/30 pt-4 space-y-3"><h4 class="font-cinzel text-white">${esc(runwayName(old||next))}</h4><div class="grid grid-cols-2 gap-3">${[old,next].map((l,i)=>`<div class="space-y-2"><img src="${esc(l?.url||'')}" class="w-full img-look rounded"><p class="text-xs text-fashion-gold">${i===0?'👑 OLD SUPREME':'⚡ NEXT SUPREME'}</p><button data-supreme-vote="${esc(p.uid)}|${i+1}" class="w-full rounded px-2 py-2 text-xs ${mine?.slot===i+1?'bg-fashion-gold text-black':'bg-fashion-800 text-white border border-fashion-gold/40'}">${mine?.slot===i+1?'✓ Seu voto':'Votar para salvar'}</button></div>`).join('')}</div></section>`;
-                    }).join('')}</div>`;
-                    $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML=''; return;
-                }
-                box.innerHTML='';
-                if(supremeBroadcast?.phase==='selected') {
-                    const winners=supremeBroadcast.winners||[];
-                    $('#runwayGrid').innerHTML=looks.filter(l=>winners.some(w=>w.uid===l.uid&&w.slot===l.slot)).map(renderLook).join('');
-                    $('#runwayGroups').innerHTML='';return;
-                }
-                if(!isAdmin) {
-                    $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML='<div class="text-center text-gray-300 bg-fashion-900 border border-fashion-gold/30 rounded p-8">👑 As Supremas permanecem nos bastidores até a decisão da produção.</div>';return;
-                }
-            }
             const grouped = globalState.themeId === 'theme_traitors' && banquetBroadcast?.activated && (isAdmin || globalState.liberado);
             const groupsBox = $('#runwayGroups');
             const renderLook = look => {
@@ -6139,6 +6220,27 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     </div>
                 `;
             };
+            if(globalState.themeId==='theme_next_supreme') {
+                const box=$('#supremeVotingBox');
+                const pairs=[...new Set(looks.map(l=>l.uid))].map(uid=>({uid,items:looks.filter(l=>l.uid===uid)})).filter(p=>p.items.length===2);
+                if(supremeBroadcast?.phase==='voting' && currentUser.role==='estilista') {
+                    box.innerHTML=`<div class="border border-fashion-gold rounded-xl bg-fashion-950 p-5 space-y-5"><h3 class="font-cinzel text-fashion-gold text-xl">👑 THE SUPREME VOTE · THE PEOPLE DECIDE</h3><p class="text-xs text-gray-300">Escolha secretamente UMA Suprema por Designer. Não é permitido votar na próprio Designer.</p>${pairs.filter(p=>p.uid!==currentUser.uid).map(p=>{
+                        const old=p.items.find(l=>l.slot===1),next=p.items.find(l=>l.slot===2);
+                        const mine=supremeMyVotes.find(v=>v.targetUid===p.uid);
+                        return `<section class="border-t border-fashion-gold/30 pt-4 space-y-3"><h4 class="font-cinzel text-white">${esc(runwayName(old||next))}</h4><div class="grid grid-cols-2 gap-3">${[old,next].map((l,i)=>`<div class="space-y-2"><img src="${esc(l?.url||'')}" class="w-full img-look rounded"><p class="text-xs text-fashion-gold">${i===0?'👑 OLD SUPREME':'⚡ NEXT SUPREME'}</p><button data-supreme-vote="${esc(p.uid)}|${i+1}" class="w-full rounded px-2 py-2 text-xs ${mine?.slot===i+1?'bg-fashion-gold text-black':'bg-fashion-800 text-white border border-fashion-gold/40'}">${mine?.slot===i+1?'✓ Seu voto':'Votar para salvar'}</button></div>`).join('')}</div></section>`;
+                    }).join('')}</div>`;
+                    $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML=''; return;
+                }
+                box.innerHTML='';
+                if(supremeBroadcast?.phase==='selected') {
+                    const winners=supremeBroadcast.winners||[];
+                    $('#runwayGrid').innerHTML=looks.filter(l=>winners.some(w=>w.uid===l.uid&&w.slot===l.slot)).map(renderLook).join('');
+                    $('#runwayGroups').innerHTML='';return;
+                }
+                if(!isAdmin) {
+                    $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML='<div class="text-center text-gray-300 bg-fashion-900 border border-fashion-gold/30 rounded p-8">👑 As Supremas permanecem nos bastidores até a decisão da produção.</div>';return;
+                }
+            }
             if (globalState.themeId==='theme_beauty_eye' && (isAdmin || (globalState.liberado && beautyBroadcast?.phase==='exhibition'))) {
                 const assignments=beautyBroadcast?.assignments||[];
                 const originals=looks.filter(l=>Number(l.slot)===1);
@@ -6847,8 +6949,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="The Critique Call"><div><p class="text-[10px] tracking-[.25em] text-fashion-gold">🎤 THE CRITIQUE CALL · PRODUCTION</p><h3 class="font-cinzel text-lg">Críticas pendentes</h3><p class="text-xs text-gray-400">Após publicar o ranking, convoque os jurados. Textos chegam automaticamente pelo site; áudios do WhatsApp são confirmados aqui com um toque. Nenhuma crítica é publicada automaticamente.</p></div><div class="grid sm:grid-cols-2 gap-3"><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das notas</p><p class="text-xs text-gray-400">${globalState.notasEncerradas?'Encerrado':'Aberto'} · controlar edição das avaliações</p><button type="button" id="fauToggleScoreWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.notasEncerradas?'Reabrir notas':'Encerrar notas'}</button></div><div class="bg-fashion-950 border border-fashion-700 rounded-lg p-3 space-y-2"><p class="text-xs font-bold text-white">Prazo das críticas</p><p class="text-xs text-gray-400">${globalState.criticasEncerradas?'Encerrado':'Aberto'} · controlar edição dos textos</p><button type="button" id="fauToggleCritiqueWindow" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs text-fashion-gold">${globalState.criticasAbertas&&!globalState.criticasEncerradas?'Encerrar críticas':'Abrir críticas'}</button><div class="flex gap-2 mt-2"><label class="text-xs text-gray-300">HIGH (inclui WIN) <input id="fauCritiqueTopCount" type="number" min="0" max="30" value="${Number(globalState.critiqueTopCount||0)}" class="w-16 p-2 rounded border border-fashion-700 bg-fashion-950"></label><label class="text-xs text-gray-300">BOTTOM + LOW (total) <input id="fauCritiqueBottomCount" type="number" min="0" max="30" value="${Number(globalState.critiqueBottomCount||0)}" class="w-16 p-2 rounded border border-fashion-700 bg-fashion-950"></label><button id="fauSaveCritiqueCounts" type="button" class="border border-fashion-gold/60 rounded px-3 py-2 text-xs">Salvar vagas</button></div><p class="text-[10px] text-gray-400">BOTTOM = sempre os dois últimos; 4 vagas = 2 BOTTOM + 2 LOW, 5 vagas = 2 BOTTOM + 3 LOW. 0 = distribuição automática. WIN atual e WIN anterior também são convocados.</p></div></div><div id="fauCritiqueAdmin" class="space-y-3"><p class="text-xs text-gray-400">Carregando...</p></div><div class="flex flex-wrap gap-2"><button id="fauCritiquePublish" class="bg-fashion-gold text-black rounded px-4 py-2 text-xs font-bold">🎬 Publicar críticas com texto</button><button id="fauCritiqueHide" class="border border-fashion-700 rounded px-4 py-2 text-xs">Ocultar críticas</button></div><p id="fauCritiquePublishStatus" class="text-xs text-gray-400">Áudios do WhatsApp só aparecem publicamente se você registrar uma transcrição.</p></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="The Results Desk" id="fauResultsDesk"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">🏆 THE RESULTS DESK · PRODUCTION ONLY</p><h3 class="font-cinzel text-xl">Apuração & WhatsApp</h3><p class="text-xs text-gray-300">Confira o ranking oficial, prepare o anúncio e copie para o WhatsApp. Nenhum resultado será revelado no site antes de você confirmar a publicação.</p></div><div class="flex flex-wrap gap-2"><button type="button" id="fauDeskLoad" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">Ver resultado — somente ADM</button><button type="button" id="fauDeskCopy" class="border border-fashion-700 rounded px-4 py-2 text-xs">Copiar para WhatsApp</button></div><div id="fauBroadcast" class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3"><div><p class="text-[10px] tracking-widest text-fashion-gold">WHATSAPP BROADCAST · ADM</p><h4 class="font-cinzel text-lg">Ranking + críticas individuais</h4><p class="text-xs text-gray-400">Prévia exclusiva do ADM, disponível mesmo antes de abrir as críticas. Assim que as notas forem encerradas, calcula o ranking privado com WIN/HIGH/SAFE/LOW/BOTTOM, sem exigir apuração ou publicação oficial. As críticas continuam separadas por jurado. Áudios recebidos no WhatsApp são identificados para encaminhamento manual.</p></div><button type="button" id="fauBroadcastLoad" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Preparar sequência de publicação</button><div id="fauBroadcastContent" class="space-y-3" aria-live="polite"></div></div><section class="border border-fashion-gold/40 bg-fashion-950 rounded-xl p-4 space-y-3" id="fauPenaltyDesk"><h4 class="font-cinzel text-fashion-gold text-lg">Penalidades da rodada</h4><p class="text-xs text-gray-300">Desconto percentual na nota final da Week. Afeta ranking e acumulado, sem alterar as notas dos jurados. Configure antes de publicar os resultados.</p><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs text-gray-300">Designer<select id="fauPenaltyDesigner" class="block w-full mt-1 p-2 bg-fashion-900 border border-fashion-700 rounded"></select></label><label class="text-xs text-gray-300">Desconto (%)<input id="fauPenaltyPercent" type="number" min="0" max="100" step="0.5" value="10" class="block w-full mt-1 p-2 bg-fashion-900 border border-fashion-700 rounded"></label></div><label class="block text-xs text-gray-300">Motivo<input id="fauPenaltyReason" maxlength="300" placeholder="Ex.: entrega fora do Workroom" class="block w-full mt-1 p-2 bg-fashion-900 border border-fashion-700 rounded"></label><div class="flex flex-wrap gap-2"><button type="button" id="fauPenaltySave" class="bg-fashion-gold text-black font-bold rounded px-4 py-2 text-xs">Salvar penalidade</button><button type="button" id="fauPenaltyRemove" class="border border-fashion-700 rounded px-4 py-2 text-xs">Remover penalidade</button></div><div id="fauPenaltyStatus" class="text-xs text-gray-300" aria-live="polite"></div></section><div id="fauDeskPrivateSummary" class="text-xs text-gray-300 bg-fashion-950 border border-fashion-700 rounded-lg p-4" aria-live="polite">Carregue os resultados para conferir os dados da rodada.</div><label class="block text-xs text-gray-300">Texto do anúncio — editável antes de copiar<textarea id="fauDeskWhatsApp" rows="10" class="mt-2 w-full bg-fashion-950 border border-fashion-700 rounded-lg p-3 text-sm text-gray-100" placeholder="Carregue os resultados para gerar um rascunho. Revise o texto antes de publicar no WhatsApp."></textarea></label><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-4 space-y-3"><p class="text-xs text-fashion-gold font-semibold">PUBLICAÇÃO OFICIAL NO SITE</p><p class="text-xs text-gray-300">Um clique calcula os resultados disponíveis e publica WIN, ranking, Ícone da Moda e Fora de Moda. Sem apuração manual.</p><label class="flex gap-2 text-xs text-gray-200 items-start"><input type="checkbox" id="fauDeskAnnounced" class="mt-0.5"> <span>Já anunciei os resultados no WhatsApp e conferi os nomes, desempates e dinâmica especial.</span></label><button type="button" id="fauPublishAllResults" class="bg-fashion-gold text-black font-bold rounded px-4 py-3 text-sm w-full">PUBLICAR RESULTADOS OFICIAIS — WIN, RANKING, ÍCONE E FORA DE MODA</button><p class="text-[11px] text-gray-400">Calcula automaticamente quando necessário. Em caso de empate não resolvido, avisa antes de publicar. As notas individuais continuam privadas.</p><button type="button" id="fauSyncAggregate" class="border border-fashion-gold text-fashion-gold rounded px-4 py-3 text-xs w-full">SINCRONIZAR ACUMULADOS PRIVADOS</button><p id="fauSyncAggregateStatus" class="text-xs text-gray-300" role="status">Recupera somente avaliações de rodadas oficialmente publicadas. Não altera o ranking nem a Week atual.</p><button type="button" id="fauDeskPublish" class="border border-fashion-gold/50 text-fashion-gold rounded px-4 py-2 text-xs">REGISTRAR ANÚNCIO NO WHATSAPP</button></div><p id="fauDeskStatus" class="text-xs text-gray-300" role="status"></p></section>
-                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Auto Fashion Archive"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👗 THE FASHION ARCHIVE · ONE-CLICK CURATION</p><h3 class="font-cinzel text-lg">Publicar os looks da rodada</h3><p class="text-xs text-gray-400">Depois de liberar o desfile, copie as criações da rodada para o acervo público. Evita cadastro manual e não inclui notas, votos ou prompts. Operação idempotente: repetir não duplica os looks.</p><button id="fauArchiveSync" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold">📸 Arquivar looks liberados</button><button id="fauArchiveBackfill" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold ml-2">Sincronizar Weeks já publicadas</button><p id="fauArchiveSyncStatus" class="text-xs text-gray-400" role="status"></p></section>
-                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Broadcast Studio"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">📺 BROADCAST STUDIO · ADMIN ONLY</p><h3 class="font-cinzel text-xl">The Fashion Press & The Fashion Archive</h3><p class="text-xs text-gray-400">Publique somente conteúdos já liberados para a plateia. O arquivo público não consulta notas nem votos secretos.</p></div><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs text-gray-300">Tipo<select id="fauBroadcastKind" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2"><option value="press">Fashion Press · Manchete</option><option value="archive">Fashion Archive · Look</option></select></label><label class="text-xs text-gray-300">Rodada / edição<input id="fauBroadcastRound" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2" placeholder="Ex.: WEEK 06"></label></div><input id="fauBroadcastTitle" maxlength="120" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Título do anúncio ou nome do look"><textarea id="fauBroadcastDescription" maxlength="700" rows="2" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Texto editorial público"></textarea><label class="block text-xs text-gray-300">Fotografia do acervo (arquivo, opcional)<input id="fauBroadcastImage" type="file" accept="image/*" class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"></label><button id="fauBroadcastPublish" class="rounded bg-fashion-gold text-black font-bold px-4 py-2 text-xs">Publicar no site</button><p id="fauBroadcastStatus" class="text-xs text-gray-400"></p><details id="fauReunionAdmin" class="border-t border-fashion-700 pt-4 space-y-2"><summary class="cursor-pointer font-cinzel text-fashion-gold">🏆 The Reunion · Season Finale (abrir somente no encerramento)</summary><p class="text-xs text-gray-400">Cole uma curiosidade por linha, no formato Título | Revelação. Revise os números no Season Secrets antes de publicar. Nenhum dado privado é publicado automaticamente.</p><textarea id="fauReunionInput" rows="4" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Mais votos para Ícone | Designer Exemplo — 12 votos"></textarea><div class="flex flex-wrap gap-2"><button id="fauReunionGenerate" class="rounded border border-fashion-700 px-3 py-2 text-xs">✨ Preparar curiosidades reais</button><button id="fauReunionPublish" class="rounded border border-fashion-gold text-fashion-gold px-3 py-2 text-xs">Revelar Reunion</button><button id="fauReunionHide" class="rounded border border-fashion-700 px-3 py-2 text-xs">Ocultar Reunion</button></div></details></section>
+                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-3" aria-label="Auto Fashion Archive"><p class="text-[10px] tracking-[.3em] text-fashion-gold">👗 THE FASHION ARCHIVE · ONE-CLICK CURATION</p><h3 class="font-cinzel text-lg">Publicar os looks da rodada</h3><p class="text-xs text-gray-400">A abertura da passarela arquiva as criações autorizadas. Use este botão para completar o arquivamento enquanto a passarela da rodada estiver aberta.</p><button id="fauArchiveSync" class="border border-fashion-gold rounded px-4 py-2 text-xs text-fashion-gold">📸 Arquivar looks liberados</button><p id="fauArchiveSyncStatus" class="text-xs text-gray-400" role="status"></p></section>
+                <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Broadcast Studio"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">📺 BROADCAST STUDIO · ADMIN ONLY</p><h3 class="font-cinzel text-xl">The Fashion Press</h3><p class="text-xs text-gray-400">Publique somente conteúdos já liberados para a plateia. O arquivo público não consulta notas nem votos secretos.</p></div><div class="grid sm:grid-cols-2 gap-3"><label class="text-xs text-gray-300">Tipo<select id="fauBroadcastKind" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2"><option value="press">Fashion Press · Manchete</option></select></label><label class="text-xs text-gray-300">Rodada / edição<input id="fauBroadcastRound" class="block w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2" placeholder="Ex.: WEEK 06"></label></div><input id="fauBroadcastTitle" maxlength="120" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Título do anúncio ou nome do look"><textarea id="fauBroadcastDescription" maxlength="700" rows="2" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Texto editorial público"></textarea><label class="block text-xs text-gray-300">Fotografia do acervo (arquivo, opcional)<input id="fauBroadcastImage" type="file" accept="image/*" class="w-full mt-1 bg-fashion-950 border border-fashion-700 rounded p-2 text-xs"></label><button id="fauBroadcastPublish" class="rounded bg-fashion-gold text-black font-bold px-4 py-2 text-xs">Publicar no site</button><p id="fauBroadcastStatus" class="text-xs text-gray-400"></p><details id="fauReunionAdmin" class="border-t border-fashion-700 pt-4 space-y-2"><summary class="cursor-pointer font-cinzel text-fashion-gold">🏆 The Reunion · Season Finale (abrir somente no encerramento)</summary><p class="text-xs text-gray-400">Cole uma curiosidade por linha, no formato Título | Revelação. Revise os números no Season Secrets antes de publicar. Nenhum dado privado é publicado automaticamente.</p><textarea id="fauReunionInput" rows="4" class="w-full bg-fashion-950 border border-fashion-700 rounded p-2 text-xs" placeholder="Mais votos para Ícone | Designer Exemplo — 12 votos"></textarea><div class="flex flex-wrap gap-2"><button id="fauReunionGenerate" class="rounded border border-fashion-700 px-3 py-2 text-xs">✨ Preparar curiosidades reais</button><button id="fauReunionPublish" class="rounded border border-fashion-gold text-fashion-gold px-3 py-2 text-xs">Revelar Reunion</button><button id="fauReunionHide" class="rounded border border-fashion-700 px-3 py-2 text-xs">Ocultar Reunion</button></div></details></section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Season Flow da produção">
                     <div class="flex flex-wrap items-center justify-between gap-3"><div><p class="text-[10px] text-fashion-gold tracking-[.25em]">PRODUCTION TIMELINE · SEASON FLOW</p><h3 class="font-cinzel text-white text-lg">🎬 Direção de cena</h3><p class="text-xs text-gray-400">Escolha a etapa oficial. Cada mudança fica registrada na auditoria; os controles de cada twist continuam independentes.</p></div><span class="text-[10px] border border-fashion-gold/40 rounded px-3 py-2 text-fashion-gold">${esc((FLOW_STAGES.find(x=>x.id===currentFlowStage())||FLOW_STAGES[0]).title)}</span></div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">${FLOW_STAGES.map((f,i)=>`<button type="button" data-flow-stage="${f.id}" class="text-left rounded-lg border p-3 transition ${currentFlowStage()===f.id?'bg-fashion-gold/15 border-fashion-gold text-white':'bg-fashion-950 border-fashion-700 text-gray-300 hover:border-fashion-gold'}"><span class="text-sm">${f.icon} ${f.title}</span><span class="block text-[11px] text-gray-400 mt-1">${f.desc}</span></button>`).join('')}</div>
@@ -8673,23 +8775,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             })),
             action:'official_results_published_together'
           });
-          // A publicação oficial também arquiva as imagens já liberadas no desfile.
-          // O público só consulta fau_publications, nunca a coleção privada looks. As imagens de entregas são data:image/...;base64, não apenas HTTPS.
-          let archiveCount=0,archiveError='';
-          try {
-            const lookSnap=await db.collection('looks').where('rodada','==',state.rodada).get();
-            let imageBatch=db.batch(),pending=0;
-            for(const doc of lookSnap.docs){
-              const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
-              if(typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image)||!l.uid)continue;
-              const id='round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
-              imageBatch.set(db.collection('fau_publications').doc(id),{kind:'archive',round,title:String(l.titulo||l.title||l.ate||'Look').slice(0,LOOK_TITLE_MAX_LENGTH),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid,designer:l.ate||'',slot:l.slot||null,createdAt:stamp,createdBy:context.actor},{merge:true});
-              archiveCount++;pending++;
-              if(pending===400){await imageBatch.commit();imageBatch=db.batch();pending=0;}
-            }
-            if(pending)await imageBatch.commit();
-          }catch(err){archiveError=err?.message||'Falha ao sincronizar imagens';console.warn('Archive sync',err);}
-          deskStatus.textContent='Vencedor, ranking, Ícone da Moda e Fora de Moda publicados. '+(archiveError?'Atenção: imagens não sincronizadas ('+archiveError+').':archiveCount+' imagem(ns) arquivada(s).');
+          deskStatus.textContent='Vencedor, ranking, Ícone da Moda e Fora de Moda publicados. As criações entram no acervo pela liberação da passarela.';
           showToast('Todos os resultados publicados!');
         });
         // Desempate oficial do Ícone: votos > ranking da rodada > acumulado.
@@ -8817,56 +8903,64 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           });
           $('#fauOfficialStatus').textContent='Títulos registrados. Cada Designer verá sua distinção no After Show.';
         });
-        $('#fauArchiveBackfill').onclick=safeExec(async()=>{
-          if(!isAdmin)throw new Error('Acesso exclusivo da produção.');
-          const published=await db.collection('ranking_historico_publico').get();
-          const rounds=[...new Set(published.docs.filter(d=>Array.isArray(d.data().rows)).map(d=>String(d.id)))];
-          if(!rounds.length)throw new Error('Nenhuma Week com ranking oficialmente publicado.');
-          if(!productionConfirm('Sincronizar as fotos das '+rounds.length+' Weeks já publicadas? Nenhuma Week futura será liberada.'))return;
-          let count=0,missing=0,found=0;let batch=db.batch(),pending=0;
-          for(const round of rounds){
-            const snap=await db.collection('looks').where('rodada','==',round).get();
-            for(const doc of snap.docs){
-              const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
-              if(typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image)||!l.uid)continue;
-              const id='round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
-              batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round,title:String(l.titulo||l.title||l.ate||'Look').slice(0,LOOK_TITLE_MAX_LENGTH),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid,designer:l.ate||'',slot:l.slot||null,createdAt:now(),createdBy:currentUser.uid},{merge:true});
-              count++;pending++;
-              if(pending>=400){await batch.commit();batch=db.batch();pending=0;}
-            }
+        // Revalida a etapa e as entregas na mesma transação que cria o registro público.
+        const archiveReleasedLooks = async (round, actor) => {
+          const seasonRef=db.doc('config/estado');
+          const state=(await seasonRef.get()).data()||{};
+          if(String(state.rodada)!==round||state.liberado!==true)throw new Error('A passarela desta rodada precisa estar aberta para arquivar criações.');
+          const candidates=await db.collection('looks').where('rodada','==',state.rodada).get();
+          const archive=db.collection('fau_publications');
+          let count=0;
+          // Lotes pequenos mantêm margem para imagens Base64 no limite da transação.
+          for(let offset=0;offset<candidates.docs.length;offset+=4){
+            const refs=candidates.docs.slice(offset,offset+4).map(look=>({
+              source:look.ref,
+              target:archive.doc('round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+look.id)
+            }));
+            count+=await db.runTransaction(async tx=>{
+              const current=(await tx.get(seasonRef)).data()||{};
+              if(!isAdmin||auth.currentUser?.uid!==actor||String(current.rodada)!==round||current.liberado!==true)
+                throw new Error('A sessão ou a rodada mudou, ou a passarela foi fechada.');
+              const [sources,targets]=await Promise.all([
+                Promise.all(refs.map(({source})=>tx.get(source))),
+                Promise.all(refs.map(({target})=>tx.get(target)))
+              ]);
+              let reveal=null;
+              if(current.themeId==='theme_beauty_eye')reveal=(await tx.get(db.doc(`beauty_dinamicas/${round}`))).data();
+              if(current.themeId==='theme_next_supreme')reveal=(await tx.get(db.doc(`supreme_etapas/${round}`))).data();
+              let added=0;
+              sources.forEach((doc,index)=>{
+                const look=doc.data();
+                if(targets[index].exists||!look||String(look.rodada)!==round||!fauArchiveAllowsLook(current,reveal,look))return;
+                const image=look.url||look.image||look.img||look.foto||'';
+                if(!fauArchiveImage(image))return;
+                tx.set(refs[index].target,{kind:'archive',round,title:String(look.titulo||look.title||look.ate||'Look').slice(0,LOOK_TITLE_MAX_LENGTH),description:String(look.mem||look.concept||look.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:look.uid,designer:look.ate||'',slot:look.slot||null,createdAt:now(),createdBy:actor});
+                added++;
+              });
+              return added;
+            });
           }
-          if(pending)await batch.commit();
-          $('#fauArchiveSyncStatus').textContent=count+' looks sincronizados de '+rounds.length+' Weeks oficiais.'+(count?' Abra o Fashion Archive para conferir.':' Nenhuma imagem válida encontrada; confira os envios e as permissões de leitura.');
-          await productionLog('fashion_archive_backfill',{rounds,count});
-        });
+          return count;
+        };
         $('#fauArchiveSync').onclick=safeExec(async()=>{
           if(!isAdmin||!globalState.rodada)throw new Error('Configure a rodada primeiro.');
+          const round=String(globalState.rodada),actor=currentUser.uid;
           if(!globalState.liberado)throw new Error('Libere o desfile antes de arquivar as criações.');
-          const looksSnap=await db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada').get();
-          if(looksSnap.empty)throw new Error('Nenhum look enviado nesta rodada.');
-          if(!productionConfirm(`Publicar ${looksSnap.size} look(s) no acervo público da rodada ${globalState.rodada}?`))return;
-          let count=0;const batches=[];let batch=db.batch(),n=0;
-          for(const doc of looksSnap.docs){
-            const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
-            if(!image||typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image))continue;
-            const id='round_'+String(globalState.rodada).replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
-            batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round:String(globalState.rodada),title:String(l.titulo||l.title||l.ate||'Look').slice(0,LOOK_TITLE_MAX_LENGTH),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid||'',designer:l.ate||'',slot:l.slot||null,createdAt:now(),createdBy:currentUser.uid},{merge:true});count++;n++;
-            if(n>=400){batches.push(batch);batch=db.batch();n=0;}
-          }
-          if(n)batches.push(batch);
-          if(!count)throw new Error('Não encontrei imagens válidas nos looks desta rodada. Verifique os registros e os envios.');
-          for(const b of batches)await b.commit();
-          await productionLog('fashion_archive_synced',{round:globalState.rodada,count});
-          $('#fauArchiveSyncStatus').textContent=`${count} criação(ões) sincronizada(s) com o acervo.`;
+          if(!productionConfirm('Arquivar as criações autorizadas na passarela desta rodada?'))return;
+          const count=await archiveReleasedLooks(round,actor);
+          await productionLog('fashion_archive_synced',{round,count});
+          const status=$('#fauArchiveSyncStatus');
+          if(status)status.textContent=count?`${count} criação(ões) adicionada(s) ao acervo.`:'Nenhuma criação nova autorizada para arquivar.';
         });
         $('#fauBroadcastPublish').onclick=safeExec(async()=>{
             if(!isAdmin)throw new Error('Somente a produção pode publicar.');
             const kind=$('#fauBroadcastKind').value,title=$('#fauBroadcastTitle').value.trim(),description=$('#fauBroadcastDescription').value.trim(),round=$('#fauBroadcastRound').value.trim();
+            if(kind!=='press')throw new Error('Para looks oficiais, use Arquivar looks liberados.');
             const imageFile=$('#fauBroadcastImage').files[0];
             const image=imageFile ? await compressImageToBase64(imageFile) : '';
             if(image.length>850000)throw new Error('Imagem muito grande após compressão. Escolha um arquivo menor.');
             if(!title)throw new Error('Informe um título.');
-            if(!productionConfirm(`Publicar ${kind==='press'?'esta manchete':'este look'} para toda a plateia?`))return;
+            if(!productionConfirm('Publicar esta manchete para toda a plateia?'))return;
             await db.collection('fau_publications').add({kind,title,description,round,image,published:true,createdAt:now(),createdBy:currentUser.uid});
             await productionLog('public_broadcast_published',{kind,title,round});
             $('#fauBroadcastStatus').textContent='Publicado. O conteúdo aparecerá na passarela.';
@@ -8913,36 +9007,42 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         renderFlowChecklist();
 
         $('#btnTogglePublic').onclick = safeExec(async () => {
-            if(globalState.themeId==='theme_beauty_eye' && !globalState.liberado && ((await beautyState()).phase!=='exhibition'||Number(globalState.prazo)>now())) throw new Error('Aguarde o segundo prazo e autorize a exposição Beauty.');
-            if(globalState.themeId==='theme_next_supreme' && !globalState.liberado && (await supremeState()).phase!=='selected') throw new Error('Conclua a Supreme Vote e confirme as vencedoras antes de abrir a passarela oficial.');
-            
-            if (!productionConfirm(globalState.liberado ? 'Ocultar o desfile para todos?' : 'LIBERAR todas as criações enviadas na passarela?')) return;
-            const openingRunway=!globalState.liberado;
-            if(openingRunway&&globalState.themeId==='theme_beauty_eye'){
-                const es=await db.collection('avaliacoes').where('rodada','==',globalState.rodada).get();
+            const context=resultContext();
+            const {state,round,actor}=context;
+            const openingRunway=!state.liberado;
+            if(openingRunway&&state.themeId==='theme_beauty_eye'&&((await beautyState()).phase!=='exhibition'||Number(state.prazo)>now()))
+              throw new Error('Aguarde o segundo prazo e autorize a exposição Beauty.');
+            if(openingRunway&&state.themeId==='theme_next_supreme'&&(await supremeState()).phase!=='selected')
+              throw new Error('Conclua a Supreme Vote e confirme as vencedoras antes de abrir a passarela oficial.');
+            if(!productionConfirm(openingRunway?'Liberar as criações autorizadas na passarela?':'Ocultar o desfile para todos?'))return;
+            if(openingRunway&&state.themeId==='theme_beauty_eye'){
+                const es=await db.collection('avaliacoes').where('rodada','==',state.rodada).get();
                 let batch=db.batch(),n=0;
                 for(const d of es.docs){const x=d.data();batch.set(db.collection('avaliacoes_resumo').doc(d.id),{look:x.look,alvo:x.alvo,ate:x.alvoAte||'',rodada:x.rodada,jurado:x.jurado,total:x.total});if(++n%400===0){await batch.commit();batch=db.batch();}}
                 if(n%400)await batch.commit();
             }
-            await db.doc('config/estado').update({ liberado: openingRunway });
-            // Arquivamento automático apenas depois da abertura pública confirmada.
-            // A leitura privada ocorre exclusivamente na sessão da produção.
-            if(openingRunway && globalState.rodada){
+            await db.runTransaction(async tx=>{
+              const current=await readResultState(tx,context);
+              if(current.themeId!==state.themeId||Boolean(current.liberado)!==Boolean(state.liberado))
+                throw new Error('A etapa da passarela mudou. Confira o estado atual.');
+              if(openingRunway&&current.themeId==='theme_beauty_eye'){
+                const reveal=(await tx.get(db.doc(`beauty_dinamicas/${round}`))).data();
+                if(reveal?.phase!=='exhibition'||Number(current.prazo)>now())throw new Error('A exposição Beauty ainda não está autorizada.');
+              }
+              if(openingRunway&&current.themeId==='theme_next_supreme'){
+                const reveal=(await tx.get(db.doc(`supreme_etapas/${round}`))).data();
+                if(reveal?.phase!=='selected')throw new Error('A seleção Supreme ainda não está autorizada.');
+              }
+              tx.update(roundStateRef,{liberado:openingRunway});
+            });
+            if(openingRunway && round){
               try{
-                const round=String(globalState.rodada);
-                const snap=await db.collection('looks').where('rodada','==',globalState.rodada).get();
-                let batch=db.batch(),pending=0,archived=0;
-                for(const doc of snap.docs){
-                  const l=doc.data(),image=l.url||l.image||l.img||l.foto||'';
-                  if(typeof image!=='string'||!/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(image)||!l.uid)continue;
-                  const id='round_'+round.replace(/[^a-zA-Z0-9_-]/g,'_')+'_'+doc.id;
-                  batch.set(db.collection('fau_publications').doc(id),{kind:'archive',round,title:String(l.titulo||l.title||l.ate||'Look').slice(0,LOOK_TITLE_MAX_LENGTH),description:String(l.mem||l.concept||l.conceito||'').slice(0,700),image,published:true,sourceLookId:doc.id,uid:l.uid,designer:l.ate||'',slot:l.slot||null,createdAt:now(),createdBy:currentUser.uid},{merge:true});
-                  pending++;archived++;
-                  if(pending>=400){await batch.commit();batch=db.batch();pending=0;}
-                }
-                if(pending)await batch.commit();
-                await productionLog('runway_archive_auto_synced',{round,count:archived});
-              }catch(err){console.warn('Falha no arquivamento automático da runway',err);showToast('Runway liberada. Não foi possível sincronizar o arquivo automaticamente; use Arquivar looks liberados.');}
+                const count=await archiveReleasedLooks(round,actor);
+                await productionLog('runway_archive_auto_synced',{round,count});
+              }catch(err){
+                console.warn('Falha no arquivamento automático da runway',err);
+                showToast('Runway liberada. O arquivamento não foi concluído. Use Arquivar looks liberados para tentar novamente.');
+              }
             }
             await productionLog('runway_visibility_changed', {visible:openingRunway});
             showToast('Status da passarela atualizado.');
