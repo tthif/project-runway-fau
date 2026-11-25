@@ -5543,15 +5543,17 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 `;
             }).join('');
 
-            container.innerHTML = looks.map((look,index) => {
+            container.innerHTML = (beautyJury?`<nav class="col-span-full flex flex-wrap gap-2 border border-fashion-700 rounded p-3">${[1,2].filter(slot=>looks.some(l=>Number(l.slot||1)===slot)).map(slot=>`<button type="button" data-action="jury-jump" data-slot="${slot}" class="border border-fashion-gold/50 rounded p-2 text-xs text-fashion-gold">${slot===1?'MY VISION':'ANOTHER POINT OF VIEW'} · ${looks.filter(l=>Number(l.slot||1)===slot&&evaluations[l.id]?.nota).length}/${looks.filter(l=>Number(l.slot||1)===slot).length}</button>`).join('')}<button type="button" data-action="jury-pending" class="border border-fashion-700 rounded p-2 text-xs">PRÓXIMO PENDENTE</button></nav>`:'')+looks.map((look,index) => {
                 const secondVision=beautyJury&&Number(look.slot)===2;
                 const sectionStart=beautyJury&&(index===0||Number(looks[index-1].slot||1)!==Number(look.slot||1));
+                const matches=secondVision&&look.mem?looks.filter(l=>Number(l.slot||1)===1&&l.uid!==look.uid&&l.mem===look.mem):[];
+                const original=matches.length===1?matches[0]:null;
                 const ev = evaluations[look.id] || {};
                 const scores = draftScores.get(look.id) || ev.nota || [5.0, 5.0, 5.0, 5.0, 5.0];
                 const commentAdmin = ev.comentAdmin || '';
 
                 return `
-                    ${sectionStart?`<section class="col-span-full border-b border-fashion-gold/40 py-4"><h3 class="font-cinzel text-fashion-gold text-lg">${secondVision?"02 · ANOTHER POINT OF VIEW":"01 · MY VISION"}</h3><p class="text-xs text-gray-400 mt-1">${secondVision?"Releituras dos conceitos recebidos":"Criações originais"}</p></section>`:""}<div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
+                    ${sectionStart?`<section data-jury-section="${secondVision?2:1}" class="col-span-full border-b border-fashion-gold/40 py-4"><h3 class="font-cinzel text-fashion-gold text-lg">${secondVision?"02 · ANOTHER POINT OF VIEW":"01 · MY VISION"}</h3><p class="text-xs text-gray-400 mt-1">${secondVision?"Releituras dos conceitos recebidos":"Criações originais"}</p></section>`:""}<div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
                                 <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div>
@@ -5578,7 +5580,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                                       <details class="fau-jury-dossier border border-fashion-700 rounded"><summary class="p-3 text-xs text-fashion-gold cursor-pointer">LER CONCEITO NOVO ⌄</summary><p class="text-xs text-gray-300 whitespace-pre-wrap px-3 pb-3">${esc(look.mem||'Sem conceito')}</p></details>
                                     </div>
                                   </section>`;
-                                })() : `<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">${creativeDossier(look)}${secondVision?`<p class="font-cinzel text-fashion-gold text-sm">${esc(look.titulo||"Sem título")}</p>`:""}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>${secondVision?'LER CONCEITO ORIGINAL RECEBIDO':`LER CONCEITO · ${esc(look.titulo || 'Sem título')}`}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
+                                })() : `<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">${secondVision&&original?`<details class="border border-fashion-gold/40 rounded p-3"><summary class="cursor-pointer text-fashion-gold text-xs font-semibold">COMPARAR COM MY VISION</summary><div class="grid grid-cols-2 gap-2 mt-3"><div><p class="text-xs text-fashion-gold">MY VISION</p><img src="${esc(original.url)}" class="w-full aspect-[3/4] object-contain" loading="lazy"><p class="text-xs">${esc(original.titulo||"")} · ${esc(juryLiveName(original))}</p></div><div><p class="text-xs text-fashion-gold">ANOTHER POINT OF VIEW</p><img src="${esc(look.url)}" class="w-full aspect-[3/4] object-contain" loading="lazy"><p class="text-xs">${esc(look.titulo||"")}</p></div></div></details>`:""}${creativeDossier(look)}${secondVision?`<p class="font-cinzel text-fashion-gold text-sm">${esc(look.titulo||"Sem título")}</p>`:""}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>${secondVision?('LER CONCEITO ORIGINAL RECEBIDO'+(original?' · '+esc(original.titulo||'')+' — '+esc(juryLiveName(original)):'')):`LER CONCEITO · ${esc(look.titulo || 'Sem título')}`}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
                             </div>
                             <div class="fau-jury-scoring md:col-span-8 space-y-4 text-xs">
                                 <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
@@ -5643,9 +5645,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const act = btn.dataset.action;
             const lookId = btn.dataset.look;
 
+            if(act==='jury-jump'){document.querySelector('[data-jury-section="'+Number(btn.dataset.slot)+'"]')?.scrollIntoView({behavior:'smooth',block:'start'});return;}
+            const jumpPending=()=>{const next=looks.find(l=>!evaluations[l.id]?.nota);if(next){[...document.querySelectorAll('.fau-jury-card')].find(el=>el.dataset.look===next.id)?.scrollIntoView({behavior:'smooth',block:'start'});}else showToast('Todas as avaliações foram salvas.');};
+            if(act==='jury-pending'){jumpPending();return;}
             if (act === 'save-evaluation') {
                 await saveSingleEvaluation(lookId);
                 showToast('Avaliação salva com sucesso.');
+                if(beautyJury&&looks.some(l=>!evaluations[l.id]?.nota))jumpPending();
             }
         });
 
