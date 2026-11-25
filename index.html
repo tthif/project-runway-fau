@@ -5856,12 +5856,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const title=card?.querySelector('.font-cinzel.text-fashion-gold.font-bold')?.textContent?.trim()||active.alt||'Editorial';
             const concept=card?.querySelector('p.italic')?.textContent?.trim()||'';
 
-            viewer.querySelector('[data-viewer-count]').textContent=`LOOK ${index+1} / ${images.length}`;
+            viewer.querySelector('[data-viewer-count]').textContent=`LOOK ${index+1} / ${images.length}${card?.dataset.beautyVision?' · '+card.dataset.beautyVision:''}`;
             viewer.querySelector('[data-viewer-title]').textContent=title;
             const lookTitle=card?.querySelector('.fau-collection-title')?.textContent?.trim()||card?.querySelector('.font-cinzel.text-fashion-gold.font-bold')?.textContent?.trim()||'';
             const lookTitleNode=viewer.querySelector('[data-viewer-look-title]');
             lookTitleNode.textContent=lookTitle;lookTitleNode.hidden=!lookTitle;
-            viewer.querySelector('[data-viewer-concept]').textContent=concept;
+            viewer.querySelector('[data-viewer-concept]').textContent=card?.dataset.beautySource?`CONCEITO ORIGINAL — ${card.dataset.beautySource}\n\n${card.dataset.beautyConcept||concept}`:concept;
 
             viewer.querySelector('[data-viewer-prev]').disabled=images.length<2;
             viewer.querySelector('[data-viewer-next]').disabled=images.length<2;
@@ -6084,9 +6084,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if (globalState.themeId==='theme_beauty_eye' && (isAdmin || (globalState.liberado && beautyBroadcast?.phase==='exhibition'))) {
                 const assignments=beautyBroadcast?.assignments||[];
                 const originals=looks.filter(l=>Number(l.slot)===1);
-                const card=(look,label)=>renderLook(look).replace('<div class="space-y-2">',`<div class="space-y-2"><p class="text-[10px] text-fashion-gold tracking-wider">${label}</p>`);
+                const card=(look,label,source)=>renderLook(look).replace('<div class="bg-fashion-900','<div data-beauty-vision="'+esc(label)+'" data-beauty-source="'+esc(source?runwayName(source):'')+'" data-beauty-concept="'+esc(source?.mem||look.mem||'')+'" class="bg-fashion-900');
                 groupsBox.innerHTML='';
-                $('#runwayGrid').innerHTML=originals.map(original=>{const recipient=assignments.find(a=>a.sourceUid===original.uid);const second=looks.find(l=>Number(l.slot)===2&&l.uid===recipient?.uid);return card(original,'MY VISION')+(second?card(second,'ANOTHER POINT OF VIEW'):'<div class="border border-fashion-700 rounded-lg p-4 text-xs text-gray-400">Releitura aguardando entrega ou sorteio.</div>');}).join('');
+                $('#runwayGrid').innerHTML=originals.map(original=>{const recipient=assignments.find(a=>a.sourceUid===original.uid);const second=looks.find(l=>Number(l.slot)===2&&l.uid===recipient?.uid);return card(original,'MY VISION')+(second?card(second,'ANOTHER POINT OF VIEW',original):'<div class="fau-beauty-pending border border-fashion-700 rounded-lg p-4 text-xs text-gray-400">AWAITING ANOTHER POINT OF VIEW</div>');}).join('');
             } else if (grouped) {
                 const byUid = new Map((banquetBroadcast.members || []).map(m => [m.uid,m.faction]));
                 const makeSection = (faction, heading, symbol) => {
@@ -11306,7 +11306,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    for(const child of [...content.children])if(child!==name&&child!==photo)body.appendChild(child);
    for(const child of [...card.children])if(child!==content)body.appendChild(child);
    details.append(summary,body);
-   if(name)copy.append(name);copy.append(title);if(excerpt.textContent)copy.append(excerpt);copy.append(details);
+   if(card.dataset.beautyVision){const vision=document.createElement('div');vision.className='fau-beauty-vision';vision.textContent=card.dataset.beautyVision;copy.append(vision);}if(name)copy.append(name);copy.append(title);if(excerpt.textContent)copy.append(excerpt);copy.append(details);
    // Production sharing stays visible even when the editorial details are collapsed.
    const share=details.querySelector('[data-fau-whatsapp]');
    if(share){share.classList.add('fau-gallery-share-visible');content.append(share);}
@@ -11361,6 +11361,10 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
 </script>
 
 <style id="fau-gallery-photo-first-final">
+#runwayGrid .fau-beauty-vision{display:block!important;color:#d6b583;font-size:10px;letter-spacing:.08em;line-height:1.4;margin-bottom:4px}
+#runwayGrid .fau-beauty-pending{display:flex!important;align-items:center;justify-content:center;text-align:center;letter-spacing:.1em;min-height:120px;color:#d6b583!important}
+#mainView:has(#runwayGrid [data-beauty-vision]) #runwayGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.fau-runway-viewer [data-viewer-concept]{white-space:pre-wrap!important}
 /* Gallery: only the designer and the photo. Existing full photo viewer retained. */
 #runwayGrid .fau-collection-card .fau-collection-title,
 #runwayGrid .fau-collection-card .fau-collection-excerpt,
