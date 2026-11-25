@@ -3978,6 +3978,64 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     }
     // 3. HISTÓRICO DA TEMPORADA & GALERIA DE ELIMINAÇÕES
     // Personal dossier: only the authenticated designer's own aggregate, never another person's.
+    function fauOfficialTrackRounds(history){
+                const rounds = history.docs.map(d=>({round:d.id,...d.data()}))
+                    .filter(r=>Array.isArray(r.rows)&&r.rows.length)
+                    .sort((a,b)=>{
+                        // IDs do Firestore não são a ordem da temporada: o tema da W03
+                        // pode ter um ID alfabético anterior ao da W01.
+                        const order=v=>{
+                            const raw=String([v.round,v.rodada,v.titulo,v.tema,v.theme,v.nome].filter(Boolean).join(' ')).toLowerCase();
+                            if(/first.?garment|firstgarment/.test(raw))return 1;
+                            if(/new.?form|newform/.test(raw))return 2;
+                            if(/once.?upon.?a.?runway|themesevendeadly|onceuponarunway/.test(raw))return 3;
+                            if(/tarantino/.test(raw))return 4;
+                            const match=String(v.round||v.rodada||'').match(/^w(?:eek)?\s*0*(\d+)/i);
+                            return match?Number(match[1]):Number.MAX_SAFE_INTEGER;
+                        };
+                        return order(a)-order(b)||String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});
+                    });
+        const normalizeName = name => String(name||'').trim().toLocaleLowerCase('pt-BR');
+                    rounds.forEach(r=>{
+                        const judged=r.rows.filter(e=>e.uid && String(e.status||'').trim().toUpperCase()!=='OUT');
+                        const n=judged.length, bottom=Math.min(2,Math.max(0,n-1));
+                        const slots=r.classificationSlots||{};
+                        const original=judged.map(e=>String(e.status||'').toUpperCase());
+                        const top=Math.min(Math.max(1,Number(slots.top)||original.filter(x=>/\b(WIN|HIGH|TOP)\b/.test(x)).length||1),Math.max(1,n-bottom));
+                        const lower=Math.max(bottom,slots.low!==undefined?Number(slots.low)+bottom:original.filter(x=>/\b(LOW|BOTTOM)\b/.test(x)).length);
+                        const low=Math.min(Math.max(0,lower-bottom),Math.max(0,n-top-bottom));
+                        r.rows=r.rows.map(e=>{
+                            const pos=judged.findIndex(x=>x.uid===e.uid);
+                            if(pos<0)return e;
+                            const status=pos===0?'WIN':pos<top?'HIGH':pos>=n-bottom?'BOTTOM':pos>=n-bottom-low?'LOW':'SAFE';
+                            return {...e,status:status+(/\bOUT\b/i.test(String(e.status||''))?' + OUT':'')};
+                        });
+                    });
+                    // W03: posições oficiais confirmadas pela produção. A votação
+                    // de salvação define quem sai, não a classificação dos demais.
+                    // O eliminado aparece no fim da tabela, sem alterar suas notas.
+                    if(rounds[2]){
+                        const confirmedW03=new Map([
+                            ['vénus','SAFE'],['venus','SAFE'],
+                            ['yvette ferrete','LOW'],['fio robert','LOW'],
+                            ['thýco mia','BOTTOM'],['thyco mia','BOTTOM'],
+                            ['dolce & banana','OUT']
+                        ]);
+                        rounds[2].rows=rounds[2].rows.map(entry=>{
+                            const corrected=confirmedW03.get(normalizeName(entry.ate));
+                            return corrected?{...entry,status:corrected}:entry;
+                        });
+                    }
+                    // W04 — Double Kill: classificação e ordem de saída confirmadas pela produção.
+                    if(rounds[3]){
+                        const confirmedW04=new Map([['thýco mia','LOW + OUT'],['thyco mia','LOW + OUT'],['lince d’oro','BOTTOM'],["lince d'oro",'BOTTOM'],['dr chucodromo','BOTTOM + OUT'],['giuseppe cadura','LOW'],["l'amour",'SAFE'],['l’amour','SAFE'],['lamour','SAFE'],['wout ahi','SAFE']]);
+                        rounds[3].rows=rounds[3].rows.map(entry=>{
+                            const corrected=confirmedW04.get(normalizeName(entry.ate));
+                            return corrected?{...entry,status:corrected}:entry;
+                        });
+                    }
+        return rounds;
+    }
     VIEWS.meu_perfil = async () => {
         if(currentUser.role!=='estilista') {navigate('home');return;}
         const uid=currentUser.uid;
@@ -4004,7 +4062,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           try{
             const rs=await db.collection('ranking_historico_publico').get();
             if(activeTab!=='meu_perfil'||!stats?.isConnected)return;
-            const rounds=rs.docs.map(d=>({...d.data(),round:d.id})).filter(r=>Array.isArray(r.rows)).sort((a,b)=>{const weekNumber=r=>{const m=fauWeekLabel(r.round).match(/WEEK\s+(\d+)/i);return m?Number(m[1]):Number.POSITIVE_INFINITY;};const na=weekNumber(a),nb=weekNumber(b);return na-nb || String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});});
+            const rounds=fauOfficialTrackRounds(rs);
             let profileName=String(currentUser.ate||'').trim();
             try {const profileDoc=await db.collection('perfis').doc(uid).get();const profile=profileDoc.data()||{};profileName=String(profile.ate||profile.nomeDesigner||profile.designerName||profileName).trim();}catch(e){console.warn('Designer profile name unavailable',e);}
             const name=profileName.toLocaleLowerCase('pt-BR');
@@ -4019,7 +4077,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               const match=raw.match(/^(WIN|HIGH|TOP|SAFE|LOW|BOTTOM|BTM|OUT|ELIM)(?=$|[\s(+\-/])/);
               return match?({TOP:'HIGH',BTM:'BOTTOM',ELIM:'OUT'}[match[1]]||match[1]):raw;
             };
-            const legacyDisplayStatus=value=>String(value||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase();
+            const legacyDisplayStatus=value=>String(value||'—').replace(/\s*\(PROTEGIDO\)/ig,'').trim().toUpperCase().replace(/^SAFE\b/,'IN');
             const played=entries.filter(x=>legacyBaseStatus(x.row.status)!=='OUT');
             const wins=played.filter(x=>legacyBaseStatus(x.row.status)==='WIN').length;
             const highlights=played.filter(x=>['WIN','HIGH'].includes(legacyBaseStatus(x.row.status))).length;
@@ -4199,22 +4257,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const slot = $('#trackRecordTableContainer');
             try {
                 const history = await db.collection('ranking_historico_publico').get();
-                const rounds = history.docs.map(d=>({round:d.id,...d.data()}))
-                    .filter(r=>Array.isArray(r.rows)&&r.rows.length)
-                    .sort((a,b)=>{
-                        // IDs do Firestore não são a ordem da temporada: o tema da W03
-                        // pode ter um ID alfabético anterior ao da W01.
-                        const order=v=>{
-                            const raw=String([v.round,v.rodada,v.titulo,v.tema,v.theme,v.nome].filter(Boolean).join(' ')).toLowerCase();
-                            if(/first.?garment|firstgarment/.test(raw))return 1;
-                            if(/new.?form|newform/.test(raw))return 2;
-                            if(/once.?upon.?a.?runway|themesevendeadly|onceuponarunway/.test(raw))return 3;
-                            if(/tarantino/.test(raw))return 4;
-                            const match=String(v.round||v.rodada||'').match(/^w(?:eek)?\s*0*(\d+)/i);
-                            return match?Number(match[1]):Number.MAX_SAFE_INTEGER;
-                        };
-                        return order(a)-order(b)||String(a.round).localeCompare(String(b.round),'pt-BR',{numeric:true});
-                    });
+                const rounds = fauOfficialTrackRounds(history);
                 if (!slot?.isConnected) return;
                 if (!rounds.length) {
                     slot.innerHTML='<p class="text-gray-400 text-center py-8">Nenhuma classificação oficial foi publicada ainda.</p>';
@@ -4245,44 +4288,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         {week:1,name:'Aogust Flintherin',reason:'ELIMINATION POOL'},
                         {week:2,name:'Dolce & Banana',reason:'ELIMINATION POOL'}
                     ];
-                    rounds.forEach(r=>{
-                        const judged=r.rows.filter(e=>e.uid && String(e.status||'').trim().toUpperCase()!=='OUT');
-                        const n=judged.length, bottom=Math.min(2,Math.max(0,n-1));
-                        const slots=r.classificationSlots||{};
-                        const original=judged.map(e=>String(e.status||'').toUpperCase());
-                        const top=Math.min(Math.max(1,Number(slots.top)||original.filter(x=>/\b(WIN|HIGH|TOP)\b/.test(x)).length||1),Math.max(1,n-bottom));
-                        const lower=Math.max(bottom,slots.low!==undefined?Number(slots.low)+bottom:original.filter(x=>/\b(LOW|BOTTOM)\b/.test(x)).length);
-                        const low=Math.min(Math.max(0,lower-bottom),Math.max(0,n-top-bottom));
-                        r.rows=r.rows.map(e=>{
-                            const pos=judged.findIndex(x=>x.uid===e.uid);
-                            if(pos<0)return e;
-                            const status=pos===0?'WIN':pos<top?'HIGH':pos>=n-bottom?'BOTTOM':pos>=n-bottom-low?'LOW':'SAFE';
-                            return {...e,status:status+(/\bOUT\b/i.test(String(e.status||''))?' + OUT':'')};
-                        });
-                    });
-                    // W03: posições oficiais confirmadas pela produção. A votação
-                    // de salvação define quem sai, não a classificação dos demais.
-                    // O eliminado aparece no fim da tabela, sem alterar suas notas.
-                    if(rounds[2]){
-                        const confirmedW03=new Map([
-                            ['vénus','SAFE'],['venus','SAFE'],
-                            ['yvette ferrete','LOW'],['fio robert','LOW'],
-                            ['thýco mia','BOTTOM'],['thyco mia','BOTTOM'],
-                            ['dolce & banana','OUT']
-                        ]);
-                        rounds[2].rows=rounds[2].rows.map(entry=>{
-                            const corrected=confirmedW03.get(normalizeName(entry.ate));
-                            return corrected?{...entry,status:corrected}:entry;
-                        });
-                    }
-                    // W04 — Double Kill: classificação e ordem de saída confirmadas pela produção.
-                    if(rounds[3]){
-                        const confirmedW04=new Map([['thýco mia','LOW + OUT'],['thyco mia','LOW + OUT'],['lince d’oro','BOTTOM'],["lince d'oro",'BOTTOM'],['dr chucodromo','BOTTOM + OUT'],['giuseppe cadura','LOW'],["l'amour",'SAFE'],['l’amour','SAFE'],['lamour','SAFE'],['wout ahi','SAFE']]);
-                        rounds[3].rows=rounds[3].rows.map(entry=>{
-                            const corrected=confirmedW04.get(normalizeName(entry.ate));
-                            return corrected?{...entry,status:corrected}:entry;
-                        });
-                    }
+
                     rounds.forEach((r,roundIndex)=>r.rows.forEach((entry,position)=>{
                         const name=String(entry.ate||'Designer').trim();
                         const person=ensurePerson(name,String(entry.uid||'').trim());
