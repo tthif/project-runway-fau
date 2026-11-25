@@ -1390,11 +1390,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 code: "WEEK — REST IN STYLE",
                 fixedOrder: null,
                 title: "REST IN STYLE",
-                subtitle: "Primeiro, um funeral sem preto. Depois do ranking, o Elimination Pool cria o próprio funeral sem branco, julgado pelos demais estilistas.",
+                subtitle: "Crie um editorial de moda para um funeral sem usar preto.",
                 elimTipo: "funeral_twist",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🕯️ THE FINAL FAREWELL: crie um look editorial apropriado para um funeral, sem nenhum detalhe preto. A produção revelará uma segunda etapa apenas depois da avaliação inicial.",
+                mandate: "🕯️ THE FINAL FAREWELL: crie um look editorial apropriado para um funeral, sem nenhum detalhe preto.",
                 extraField: null
             },
             "theme_tarantino": {
@@ -1406,7 +1406,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 elimTipo: "double",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🎬 ONCE UPON A TIME IN YOUR RUNWAY: crie um personagem autoral inspirado no cinema de Tarantino. Envie sua referência, look, título, conceito. O twist será revelado pela produção depois das avaliações.",
+                mandate: "🎬 ONCE UPON A TIME IN YOUR RUNWAY: crie um personagem autoral inspirado no cinema de Tarantino. Envie sua referência, look, título, conceito.",
                 extraField: { key: "filmeReferencia", label: "Obra / Referência Cinematográfica", placeholder: "Ex: Kill Bill Vol. 1 / Pulp Fiction / Jackie Brown..." }
             },
             "theme_next_supreme": {
@@ -1414,12 +1414,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 code: "WEEK — THE NEXT SUPREME",
                 fixedOrder: null,
                 title: "THE NEXT SUPREME",
-                subtitle: "Duas Supremas por Designer. Votação secreta do elenco escolhe apenas uma imagem por Designer para avaliação dos jurados.",
+                subtitle: "Crie duas identidades de alta moda: Old Supreme e Next Supreme.",
                 elimTipo: "single",
                 numSubmissoes: 2,
                 slotLabels: ["Slot 1 — OLD SUPREME · The Reigning Queen", "Slot 2 — NEXT SUPREME · The Heir Apparent"],
                 drawType: "none",
-                mandate: "👑 TWO SUPREMES, ONE THRONE: crie duas identidades igualmente poderosas. Envie Old Supreme e Next Supreme com título editorial, conceito da relação entre elas (até 500 caracteres). A votação secreta do elenco decidirá qual será avaliada pelos jurados.",
+                mandate: "👑 TWO SUPREMES, ONE THRONE: crie duas identidades igualmente poderosas. Envie Old Supreme e Next Supreme com título editorial, conceito da relação entre elas (até 500 caracteres).",
                 extraField: null
             },
             "theme_plaid_bay": {
@@ -1427,11 +1427,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 code: "WEEK — PLAID IN THE BAY",
                 fixedOrder: null,
                 title: "PLAID IN THE BAY",
-                subtitle: "Reinvente o uniforme xadrez da Baia para um ex-peão de A Fazenda. Após as notas, o WIN inicia o Resta Um.",
+                subtitle: "Reinvente o uniforme xadrez da Baia para um ex-peão de A Fazenda.",
                 elimTipo: "resta_um",
                 numSubmissoes: 1,
                 drawType: "none",
-                mandate: "🤠 A FAZENDA: ALL STARS — Escolha um ex-peão e reinvente seu uniforme da Baia. Xadrez obrigatório e relevante, sem copiar o uniforme tradicional. Envie nome do ex-participante, look completo, título, conceito (até 500 caracteres). O Resta Um começa após o ranking, sob comando da produção.",
+                mandate: "🤠 A FAZENDA: ALL STARS — Escolha um ex-peão e reinvente seu uniforme da Baia. Xadrez obrigatório e relevante, sem copiar o uniforme tradicional. Envie nome do ex-participante, look completo, título, conceito (até 500 caracteres).",
                 extraField: { key: "exPeao", label: "Ex-participante de A Fazenda escolhido", placeholder: "Nome do ex-peão que vestirá o uniforme All Stars" }
             },
             "theme_seven_deadly": {
@@ -1598,6 +1598,28 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     Object.values(SEASON_THEMES).forEach(theme => {
         if (theme.extraField && theme.extraField.type !== 'select') theme.extraField = null;
     });
+    const fauUnrevealedChallengeCopy={
+        theme_rest_in_style:/\s*(?:A produção revelará uma segunda etapa apenas depois da avaliação inicial|Depois do ranking, o Elimination Pool cria o próprio funeral sem branco, julgado pelos demais estilistas)\./gi,
+        theme_tarantino:/\s*O twist será revelado pela produção depois das avaliações\./gi,
+        theme_plaid_bay:/\s*(?:Após as notas, o WIN inicia o Resta Um|O Resta Um começa após o ranking, sob comando da produção)\./gi,
+        theme_next_supreme:/\s*(?:Votação secreta do elenco escolhe apenas uma imagem por Designer para avaliação dos jurados|A votação secreta do elenco decidirá qual será avaliada pelos jurados)\./gi
+    };
+    const fauPublicChallengeText=(themeId,value)=>{
+        const copy=String(value||'').trim();
+        const legacy=Object.hasOwn(fauUnrevealedChallengeCopy,themeId)?fauUnrevealedChallengeCopy[themeId]:null;
+        if(!legacy)return copy;
+        const briefing=copy.replace(legacy,'').trim();
+        return themeId==='theme_rest_in_style'
+            ?briefing.replace(/Primeiro, um funeral sem preto\./gi,SEASON_THEMES.theme_rest_in_style.subtitle)
+            :briefing;
+    };
+    const fauBeautyTwistVisible=(state,role,runwayOpen)=>{
+        if(role==='admin')return true;
+        const revealed=['assigned','exhibition'].includes(state?.phase);
+        if(role==='estilista')return revealed;
+        if(role==='jurado')return revealed&&state.jurySecond===true;
+        return state?.phase==='exhibition'&&runwayOpen===true;
+    };
     const fauThemeIdsByRound=new Map(Object.values(SEASON_THEMES).flatMap(theme=>[[slug(theme.id),theme.id],[slug(theme.title),theme.id]]));
     const fauThemeIdForRound=round=>{
         const key=slug(String(round||''));
@@ -2768,7 +2790,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
     // SEASON HUB: only published state and permitted navigation; no private ranking queries.
     VIEWS.home = async () => {
-        const hideBeautyTwist=globalState.themeId==='theme_beauty_eye' && (await beautyState().catch(()=>({phase:'first'}))).phase==='first';
+        const beauty=globalState.themeId==='theme_beauty_eye'?await beautyState().catch(()=>({phase:'first'})):null;
+        const hideBeautyTwist=beauty&&!fauBeautyTwistVisible(beauty,currentUser.role,globalState.liberado);
+        const publicSummary=hideBeautyTwist?SEASON_THEMES.theme_beauty_eye.mandate:fauPublicChallengeText(globalState.themeId,globalState.regras);
         const flow=getSeasonFlow(),role=currentUser.role,allowed=getAvailableTabs();
         const theme=SEASON_THEMES[globalState.themeId]||{};
         const title=flow.configured?(theme.title||theme.nome||globalState.themeId):'THE CASTING EXPERIENCE';
@@ -2814,7 +2838,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const [cta,...others]=available.length?available:fallback;
         const shortcuts=allowed.filter(t=>t!=='home'&&t!==cta?.[0]).slice(0,4);
         const roleNames={admin:'PRODUCTION HQ',estilista:'DESIGNER ACCESS',jurado:'JUDGES’ ACCESS',plateia:'FRONT ROW ACCESS'};
-        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&globalState.regras?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">RESUMO DA RODADA</p><p class="fau-hub-official-text">${esc(hideBeautyTwist?'THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.':globalState.regras)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
+        renderView(`<section class="fau-season-hub max-w-5xl mx-auto space-y-5" aria-label="Central da temporada"><div class="fau-hub-hero rounded-2xl p-6 md:p-10 border border-fashion-gold/30"><p class="text-fashion-gold text-[10px] tracking-[.32em]">PROJECT RUNWAY: FAU · ${esc(roleNames[role]||'SEASON HUB')}</p><h2 class="font-cinzel text-2xl md:text-4xl text-white mt-4">${esc(flow.configured?title:'YOUR JOURNEY STARTS HERE')}</h2><p class="text-fashion-gold text-xs tracking-[.18em] mt-3">${esc(flow.label)}</p>${flow.configured&&publicSummary?`<div class="fau-hub-official-brief"><p class="fau-hub-official-label">RESUMO DA RODADA</p><p class="fau-hub-official-text">${esc(publicSummary)}</p></div>`:!flow.configured?`<p class="text-gray-300 text-sm mt-4 max-w-2xl">${esc(flowHint(role).tip)}</p>`:''}${flow.submissionsOpen&&role==='estilista'&&deadline?`<p class="text-xs text-gray-300 mt-3">ENTREGAS ATÉ · <strong class="text-white">${esc(deadline)}</strong></p>`:''}</div><div class="rounded-2xl bg-fashion-900/70 border border-fashion-700 p-5 md:p-7 space-y-4"><p class="text-[10px] tracking-[.22em] text-fashion-gold">YOUR NEXT STEP · ${esc(roleNames[role]||"SEASON HUB")}</p><h3 class="font-cinzel text-xl md:text-2xl text-white">${esc(cta?.[1]||'STAY TUNED')}</h3><p class="text-sm text-gray-300">${esc(cta?.[2]||'Aguarde novas informações da produção.')}</p>${cta?`<button type="button" data-hub-go="${cta[0]}" class="bg-fashion-gold text-black rounded-lg px-6 py-3 text-xs font-bold w-full sm:w-auto">${esc(ROTULOS_ABAS[cta[0]])} →</button>`:''}</div>${shortcuts.length?`<section class="space-y-3"><h3 class="text-xs text-fashion-gold tracking-[.2em]">EXPLORE THE SEASON</h3><div class="grid grid-cols-2 md:grid-cols-4 gap-3">${shortcuts.map(t=>`<button type="button" data-hub-go="${t}" class="text-left rounded-xl border border-fashion-700 bg-fashion-900/60 p-4 hover:border-fashion-gold transition"><span class="text-sm text-white">${esc(ROTULOS_ABAS[t])}</span><span class="block text-[10px] text-gray-400 mt-2">OPEN SECTION →</span></button>`).join('')}</div></section>`:''}<p class="text-[11px] text-gray-500 text-center">As próximas etapas e os resultados só aparecem quando a produção autorizar.</p></section>`);
         // A próxima ação vem antes do comunicado longo, sobretudo no celular.
         const hubRoot=document.querySelector('.fau-season-hub');
         if(hubRoot){const hero=hubRoot.querySelector('.fau-hub-hero');const action=hero?.nextElementSibling;if(hero){hero.dataset.theme=globalState.themeId||'';hero.insertAdjacentHTML('afterbegin','<p class="fau-editorial-kicker">THE SEASON HUB · NOW ON FAU</p>');}
@@ -3418,7 +3442,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
                 <div id="restaUmWorkroom" class="mb-5"></div><div id="atelierSetupModule"></div>
                 <section id="fauBriefingCard" class="rounded-2xl border border-fashion-gold/40 bg-fashion-900 p-4 space-y-3" aria-label="Briefing da rodada">
-                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(isBeautyWorkroom ? 'THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.' : String(globalState.briefing?.trim() || getTheme()?.mandate || 'Aguarde as instruções da produção.'))}</div></details>
+                    <details class="fau-brief-open"><summary class="cursor-pointer text-sm text-fashion-gold font-semibold flex items-center justify-between gap-3"><span>Briefing do desafio</span><span class="text-gray-400 font-normal text-xs">Toque para abrir ou recolher <i class="fa-solid fa-chevron-up ml-1" aria-hidden="true"></i></span></summary><div class="fau-brief-body mt-3 text-sm text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(isBeautyWorkroom ? SEASON_THEMES.theme_beauty_eye.mandate : fauPublicChallengeText(globalState.themeId,globalState.briefing) || getTheme()?.mandate || 'Aguarde as instruções da produção.')}</div></details>
                 </section>
 
                 <section class="fau-submission-suite" aria-label="Envio do desafio">
@@ -3530,29 +3554,36 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
               <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a sincronização da produção.':`${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${submissionPulse?.updatedAt?.toDate ? ' · Atualizado '+submissionPulse.updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`}</p>`;
 
-            if(beauty){const brief=document.querySelector('#fauBriefingCard .fau-brief-body');if(brief)brief.textContent=beautyReleased ? 'ANOTHER POINT OF VIEW — Reinterprete o conceito recebido em uma criação autoral. Envie uma imagem e um título próprio, sem escrever outro conceito.' : 'THE CHALLENGE — Traduza sua visão pessoal da beleza em um look autoral. O conceito deve expressar o que você considera belo e sustentar sua proposta criativa por si só.';}
+            if(beauty){const brief=document.querySelector('#fauBriefingCard .fau-brief-body');if(brief)brief.textContent=beautyReleased ? 'ANOTHER POINT OF VIEW — Reinterprete o conceito recebido em uma criação autoral. Envie uma imagem e um título próprio, sem escrever outro conceito.' : SEASON_THEMES.theme_beauty_eye.mandate;}
             const beautyAssignment = beautyReleased ? beauty?.assignments?.find(a=>a.uid===currentUser.uid) : null;
             if (globalState.themeId === 'theme_rest_in_style') {
                 const rest = await restState();
-                const nominated = (rest.pool||[]).some(x=>x.uid===currentUser.uid);
-                const restLook = await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).get();
-                const box = document.createElement('section');
-                box.className='bg-fashion-950 border border-fashion-gold/50 rounded-lg p-5 mb-5 space-y-3';
-                if(rest.phase==='first') box.innerHTML='<h3 class="font-cinzel text-fashion-gold">🕯️ REST IN STYLE · THE FINAL FAREWELL</h3><p class="text-sm text-gray-300">Primeira etapa: funeral sem preto. A segunda cerimônia permanece lacrada.</p>';
-                else if(nominated && ['twist','judging','closed'].includes(rest.phase)) box.innerHTML=`<h3 class="font-cinzel text-fashion-gold">⚰️ YOUR OWN FUNERAL — THE LAST LOOK</h3><p class="text-sm text-gray-300">Você está entre os três homenageados. Crie seu último look sem NENHUM detalhe branco. Esta entrega é separada da primeira passarela.</p>${restLook.exists?'<p class="text-green-300">Seu último look já foi entregue.</p>':rest.phase==='twist'?`<input id="restTitle" maxlength="${LOOK_TITLE_MAX_LENGTH}" class="w-full bg-black border border-fashion-700 rounded p-2 text-white" placeholder="Título do último look"><textarea id="restConcept" maxlength="500" class="w-full bg-black border border-fashion-700 rounded p-2 text-white" placeholder="Conceito (até 500 caracteres)"></textarea><input id="restFile" type="file" accept="image/*" class="text-xs text-white"><button id="restSubmit" class="bg-fashion-gold text-black px-4 py-2 rounded text-xs font-bold">Enviar meu último look</button>`:'<p class="text-amber-300">Prazo encerrado pela produção.</p>'}`;
-                else box.innerHTML='<h3 class="font-cinzel text-fashion-gold">🕯️ THE LAST FAREWELL</h3><p class="text-sm text-gray-300">A produção convocou três estilistas para seu próprio funeral. Os demais serão convidados a avaliar as novas criações após a liberação.</p>';
-                document.querySelector('#workroomFormModule').before(box);
-                const submit=box.querySelector('#restSubmit');
-                if(submit) submit.onclick=safeExec(async()=>{
-                    const title=box.querySelector('#restTitle').value.trim(), concept=box.querySelector('#restConcept').value.trim(), file=box.querySelector('#restFile').files[0];
-                    if(!title||!concept||!file||concept.length>500) throw new Error('Preencha título, conceito e imagem (conceito até 500 caracteres).');
-                    checkLookTitleLength(title);
-                    if((await restState()).phase!=='twist') throw new Error('A segunda etapa foi encerrada.');
-                    if((await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).get()).exists) throw new Error('Seu último look já foi entregue.');
-                    const url=await compressImageToBase64(file);
-                    await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).set({uid:currentUser.uid,ate:currentUser.ate,rodada:globalState.rodada,titulo:title,mem:concept,url,t:now()});
-                    showToast('Seu último look foi entregue em sigilo.'); navigate('work');
-                });
+                if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
+                $('#fauRestSecondLook')?.remove();
+                if(['twist','judging','closed','eliminated'].includes(rest.phase)){
+                    const nominated = (rest.pool||[]).some(x=>x.uid===currentUser.uid);
+                    const restLook = nominated && ['twist','judging','closed'].includes(rest.phase)
+                        ? await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).get()
+                        : null;
+                    if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
+                    const box = document.createElement('section');
+                    box.id='fauRestSecondLook';
+                    box.className='bg-fashion-950 border border-fashion-gold/50 rounded-lg p-5 mb-5 space-y-3';
+                    if(nominated && ['twist','judging','closed'].includes(rest.phase)) box.innerHTML=`<h3 class="font-cinzel text-fashion-gold">⚰️ YOUR OWN FUNERAL — THE LAST LOOK</h3><p class="text-sm text-gray-300">Você está entre os três homenageados. Crie seu último look sem NENHUM detalhe branco. Esta entrega é separada da primeira passarela.</p>${restLook.exists?'<p class="text-green-300">Seu último look já foi entregue.</p>':rest.phase==='twist'?`<input id="restTitle" maxlength="${LOOK_TITLE_MAX_LENGTH}" class="w-full bg-black border border-fashion-700 rounded p-2 text-white" placeholder="Título do último look"><textarea id="restConcept" maxlength="500" class="w-full bg-black border border-fashion-700 rounded p-2 text-white" placeholder="Conceito (até 500 caracteres)"></textarea><input id="restFile" type="file" accept="image/*" class="text-xs text-white"><button id="restSubmit" class="bg-fashion-gold text-black px-4 py-2 rounded text-xs font-bold">Enviar meu último look</button>`:'<p class="text-amber-300">Prazo encerrado pela produção.</p>'}`;
+                    else box.innerHTML='<h3 class="font-cinzel text-fashion-gold">🕯️ THE LAST FAREWELL</h3><p class="text-sm text-gray-300">A produção convocou três estilistas para seu próprio funeral. Os demais serão convidados a avaliar as novas criações após a liberação.</p>';
+                    document.querySelector('#workroomFormModule').before(box);
+                    const submit=box.querySelector('#restSubmit');
+                    if(submit) submit.onclick=safeExec(async()=>{
+                        const title=box.querySelector('#restTitle').value.trim(), concept=box.querySelector('#restConcept').value.trim(), file=box.querySelector('#restFile').files[0];
+                        if(!title||!concept||!file||concept.length>500) throw new Error('Preencha título, conceito e imagem (conceito até 500 caracteres).');
+                        checkLookTitleLength(title);
+                        if((await restState()).phase!=='twist') throw new Error('A segunda etapa foi encerrada.');
+                        if((await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).get()).exists) throw new Error('Seu último look já foi entregue.');
+                        const url=await compressImageToBase64(file);
+                        await db.doc(`rest_looks/${restSecondLookId(currentUser.uid)}`).set({uid:currentUser.uid,ate:currentUser.ate,rodada:globalState.rodada,titulo:title,mem:concept,url,t:now()});
+                        showToast('Seu último look foi entregue em sigilo.'); navigate('work');
+                    });
+                }
             }
             if(globalState.themeId==='theme_next_supreme') {
                 const ss=await supremeState();
@@ -5597,7 +5628,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 </div>
 
                 ${globalState.criticasAbertas && !globalState.criticasEncerradas ? `<div class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4 space-y-2"><p class="text-[10px] tracking-widest text-fashion-gold">ETAPA ATUAL · CRÍTICAS ABERTAS</p><h3 class="font-cinzel text-xl">The Critique Call</h3><p class="text-xs text-gray-300">As notas estão encerradas. Escreva suas críticas abaixo, sem revelar as classificações.</p><a href="#fauCritiqueJury" class="inline-block rounded bg-fashion-gold px-4 py-3 text-black text-xs font-bold">IR PARA AS CRÍTICAS ↓</a></div>` : ''}
-                ${beautyJury&&beautyFirstOpen()?`<section class="rounded-xl border border-fashion-gold/40 p-4 text-sm text-gray-300"><strong class="text-fashion-gold">Julgamento privado · ${beautySecondOpen()?'Duas criações por Designer':'My Vision'}</strong><p class="mt-2">${beautySecondOpen()?'Avalie as novas criações e revise as notas anteriores se desejar.':'Avalie as criações originais. As notas poderão ser revisadas posteriormente.'} A passarela continua sob controle da produção.</p></section>`:''}
+                ${beautyJury&&beautyFirstOpen()?`<section class="rounded-xl border border-fashion-gold/40 p-4 text-sm text-gray-300"><strong class="text-fashion-gold">Julgamento privado · ${beautySecondOpen()?'Duas criações por Designer':'Avaliação das criações'}</strong><p class="mt-2">${beautySecondOpen()?'Avalie as novas criações e revise as notas anteriores se desejar.':'Avalie as criações disponíveis na bancada.'} A passarela continua sob controle da produção.</p></section>`:''}
                 <section id="fauCritiqueJury" class="scroll-mt-24"></section>
                 ${globalState.notasEncerradas ? `<details id="fauClosedScoreDetails" class="rounded-xl border border-fashion-700 bg-fashion-900 p-4"><summary class="cursor-pointer text-fashion-gold font-semibold text-sm py-2">CONSULTAR NOTAS ENCERRADAS · Exibir avaliações</summary><div class="mt-4 space-y-5">` : ''}
                 <section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-4 space-y-2" aria-label="Progresso de avaliação"><div class="flex justify-between items-center gap-2"><span class="text-xs uppercase tracking-widest text-fashion-gold">⚖️ YOUR JUDGING DESK</span><span id="fauJuryProgressText" class="text-xs text-gray-300">Preparando avaliações...</span></div><div class="h-2 rounded-full bg-fashion-950 overflow-hidden"><div id="fauJuryProgressBar" class="h-full bg-fashion-gold transition-all duration-500" style="width:0%"></div></div><p class="text-[11px] text-gray-400">Avalie cada criação e salve suas notas antes de sair.</p></section>
@@ -5750,13 +5781,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 return `
                     <div class="bg-fashion-950 p-2 rounded border border-fashion-700 text-center space-y-1">
                         <img src="${esc(l.url)}" class="w-full aspect-[3/4] object-cover rounded" alt="Look de ${esc(juryLiveName(l))}" loading="lazy" decoding="async">
-                        <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(juryLiveName(l))}</div>${beautyJury?`<div class="text-[10px] text-fashion-gold">${Number(l.slot)===2?'02 · Another Point of View':'01 · My Vision'}</div>`:''}
+                        <div class="font-cinzel font-bold text-white truncate text-[11px]">${esc(juryLiveName(l))}</div>${beautyJury&&beautySecondOpen()?`<div class="text-[10px] text-fashion-gold">${Number(l.slot)===2?'02 · Another Point of View':'01 · My Vision'}</div>`:''}
                         <div class="text-fashion-gold font-mono font-bold text-xs">${tot}${tot==='—'?'':' / 50'}</div><div class="text-[10px] ${draftScores.has(l.id)?'text-amber-300':ev.nota?'text-green-300':'text-gray-400'}">${draftScores.has(l.id)?'Não salvo':ev.nota?'Salvo':'Pendente'}</div>
                     </div>
                 `;
             }).join('');
 
-            container.innerHTML = (beautyJury?`<nav class="col-span-full flex flex-wrap gap-2 border border-fashion-700 rounded p-3">${[1,2].filter(slot=>looks.some(l=>Number(l.slot||1)===slot)).map(slot=>`<button type="button" data-action="jury-jump" data-slot="${slot}" class="border border-fashion-gold/50 rounded p-2 text-xs text-fashion-gold">${slot===1?'MY VISION':'ANOTHER POINT OF VIEW'} · ${looks.filter(l=>Number(l.slot||1)===slot&&evaluations[l.id]?.nota).length}/${looks.filter(l=>Number(l.slot||1)===slot).length}</button>`).join('')}<button type="button" data-action="jury-pending" class="border border-fashion-700 rounded p-2 text-xs">PRÓXIMO PENDENTE</button></nav>`:'')+looks.map((look,index) => {
+            container.innerHTML = (beautyJury?`<nav class="col-span-full flex flex-wrap gap-2 border border-fashion-700 rounded p-3">${[1,2].filter(slot=>looks.some(l=>Number(l.slot||1)===slot)).map(slot=>`<button type="button" data-action="jury-jump" data-slot="${slot}" class="border border-fashion-gold/50 rounded p-2 text-xs text-fashion-gold">${beautySecondOpen()?(slot===1?'MY VISION':'ANOTHER POINT OF VIEW'):'AVALIAÇÕES'} · ${looks.filter(l=>Number(l.slot||1)===slot&&evaluations[l.id]?.nota).length}/${looks.filter(l=>Number(l.slot||1)===slot).length}</button>`).join('')}<button type="button" data-action="jury-pending" class="border border-fashion-700 rounded p-2 text-xs">PRÓXIMO PENDENTE</button></nav>`:'')+looks.map((look,index) => {
                 const secondVision=beautyJury&&Number(look.slot)===2;
                 const sectionStart=beautyJury&&(index===0||Number(looks[index-1].slot||1)!==Number(look.slot||1));
                 const matches=secondVision&&look.mem?looks.filter(l=>Number(l.slot||1)===1&&l.uid!==look.uid&&l.mem===look.mem):[];
@@ -5766,11 +5797,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const commentAdmin = ev.comentAdmin || '';
 
                 return `
-                    ${sectionStart?`<section data-jury-section="${secondVision?2:1}" class="col-span-full border-b border-fashion-gold/40 py-4"><h3 class="font-cinzel text-fashion-gold text-lg">${secondVision?"02 · ANOTHER POINT OF VIEW":"01 · MY VISION"}</h3><p class="text-xs text-gray-400 mt-1">${secondVision?"Releituras dos conceitos recebidos":"Criações originais"}</p></section>`:""}<div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
+                    ${sectionStart?`<section data-jury-section="${secondVision?2:1}" class="col-span-full border-b border-fashion-gold/40 py-4"><h3 class="font-cinzel text-fashion-gold text-lg">${beautySecondOpen()?(secondVision?"02 · ANOTHER POINT OF VIEW":"01 · MY VISION"):"CRIAÇÕES"}</h3>${beautySecondOpen()?`<p class="text-xs text-gray-400 mt-1">${secondVision?"Releituras dos conceitos recebidos":"Criações originais"}</p>`:""}</section>`:""}<div class="fau-jury-card bg-fashion-900 border border-fashion-700 rounded-lg p-6 space-y-6" data-look="${look.id}">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                             <div class="md:col-span-4 space-y-3">
                                 <div class="font-cinzel font-bold text-fashion-gold text-sm">${esc(juryLiveName(look))}</div>
-                                ${beautyJury?`<div class="rounded border ${Number(look.slot)===2?'border-purple-400/60 text-purple-200':'border-fashion-gold/60 text-fashion-gold'} p-2 text-xs font-semibold">${Number(look.slot)===2?'02 · Another Point of View — Reinterpretação':'01 · My Vision — Criação original'}</div>`:''}
+                                ${beautyJury&&beautySecondOpen()?`<div class="rounded border ${Number(look.slot)===2?'border-purple-400/60 text-purple-200':'border-fashion-gold/60 text-fashion-gold'} p-2 text-xs font-semibold">${Number(look.slot)===2?'02 · Another Point of View — Reinterpretação':'01 · My Vision — Criação original'}</div>`:''}
                                 <p class="text-xs ${ev.nota?'text-green-300':'text-amber-200'}">${draftScores.has(look.id)?'● Alterações não salvas':ev.nota?'✓ Avaliação salva':'○ Avaliação pendente'}</p>
                                 ${globalState.themeId==='w02_new_form' ? (()=>{
                                   const previous=week01References.get(String(look.uid));
