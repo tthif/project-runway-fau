@@ -7252,6 +7252,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const extras=makeFold('fauEpisodeSecondary','Controles específicos','Recursos de produção que não fazem parte do roteiro principal',operationalLoose);
             if(extras)episode.append(extras);
           }
+          // Control Room navigation phase 1
+          const areas=[['jury','Julgamento','Criticas dos jurados'],['voting','Votações','Urnas e titulos'],['broadcast','Transmissão','Apuracao e revelacoes'],['system','Sistema','Contas e manutencao']];
+          areas.forEach(([id,label,hint])=>{groups.push({id,label,hint});const p=document.createElement('div');p.id='fau-panel-'+id;p.className='space-y-5';p.setAttribute('role','tabpanel');p.setAttribute('aria-labelledby','fau-tab-'+id);p.hidden=true;panels.append(p);});
+          const relocate=(selector,id)=>{const el=shell.querySelector(selector);const target=panels.querySelector('#fau-panel-'+id);if(el&&target&&!el.contains(target)&&!el.closest('#fauUnifiedOperations'))target.append(el);};
+          relocate('#fauCritiqueAdmin','jury');
+          relocate('#fauEpisodeCommentsDisclosure','jury');
+          relocate('#fauCastVotingControls','voting');
+          relocate('#fauOfficialTitlesPanel','voting');
+          relocate('#fauEpisodeResultsDisclosure','broadcast');
+          relocate('#fauCastAccounts','system');
           const tabs=shell.querySelector('#fauDirectorTabs');
           const activate=id=>{
             if(!groups.some(g=>g.id===id))id='episode';
@@ -11446,7 +11456,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'&&e.key!==' ')return;c
    const msg=document.getElementById('fauCommandMessage');
    if(!target){if(msg)msg.textContent='Este controle não está disponível nesta etapa. Consulte os controles específicos da rodada abaixo.';return;}
    if(target.matches('button')){
-     if(id==='fauDeskLoad'||id==='fauDeskPublish'){const tab=document.querySelector('#fauDirectorTabs button[data-director-tab="episode"]');tab?.click();const disclosure=document.getElementById('fauEpisodeResultsDisclosure');if(disclosure)disclosure.open=true;document.getElementById('fauResultsDesk')?.scrollIntoView({behavior:'smooth',block:'start'});if(id==='fauDeskLoad')target.click();else if(msg)msg.textContent='Confira os dados e confirme a publicação na seção oficial.';return;}
+     if(id==='fauDeskLoad'||id==='fauDeskPublish'){const disclosure=document.getElementById('fauEpisodeResultsDisclosure');const panel=disclosure?.closest('[role="tabpanel"]');if(panel)document.querySelector('#fauDirectorTabs button[data-director-tab="'+panel.id.replace('fau-panel-','')+'"]')?.click();if(disclosure)disclosure.open=true;document.getElementById('fauResultsDesk')?.scrollIntoView({behavior:'smooth',block:'start'});if(id==='fauDeskLoad')target.click();else if(msg)msg.textContent='Confira os dados e confirme a publicação na seção oficial.';return;}
      const containingPanel=target.closest('[role=\"tabpanel\"]');if(containingPanel){const tab=document.querySelector('#fauDirectorTabs button[data-director-tab=\"'+containingPanel.id.replace('fau-panel-','')+'\"]');if(tab)tab.click();}for(const disclosure of (function*(el){while(el){if(el.tagName==='DETAILS')yield el;el=el.parentElement;}})(target)){disclosure.open=true;}if(target.disabled){if(msg)msg.textContent='Controle indisponível nesta etapa.';return;}target.click();if(msg)msg.textContent='';}
    else{target.scrollIntoView({behavior:'smooth',block:'center'});if(msg)msg.textContent='Seção de produção localizada abaixo.';}
  });
