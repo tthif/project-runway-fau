@@ -6031,19 +6031,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     $('#runwayGrid').innerHTML=''; $('#runwayGroups').innerHTML='<div class="text-center text-gray-300 bg-fashion-900 border border-fashion-gold/30 rounded p-8">👑 As Supremas permanecem nos bastidores até a decisão da produção.</div>';return;
                 }
             }
-            if (globalState.themeId==='theme_beauty_eye' && beautyBroadcast?.phase==='exhibition') {
-                const originals=looks.filter(l=>Number(l.slot)===1);
-                const assignments=beautyBroadcast.assignments||[];
-                $('#runwayGroups').innerHTML=`<div class="space-y-6">${originals.map(original=>{
-                    const recipient=assignments.find(a=>a.sourceUid===original.uid);
-                    const second=looks.find(l=>Number(l.slot)===2 && l.uid===recipient?.uid);
-                    return `<section class="bg-fashion-950 border border-fashion-gold/40 p-5 rounded-lg space-y-4"><h3 class="font-cinzel text-fashion-gold">${esc(original.titulo)}</h3><p class="text-sm text-gray-300 italic">${esc(original.mem)}</p><div class="grid grid-cols-1 gap-4">
-                    <div><p class="text-xs text-fashion-gold mb-2">MY VISION · ${esc(original.ate)}</p><img class="w-full img-look rounded" src="${esc(original.url)}">${isAdmin?`<button data-fau-whatsapp="${esc(original.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>
-                    ${second?`<div><p class="text-xs text-fashion-gold mb-2">ANOTHER POINT OF VIEW · ${esc(second.ate)}</p><img class="w-full img-look rounded" src="${esc(second.url)}"><p class="text-xs text-gray-300 mt-2">${esc(second.titulo)}</p>${isAdmin?`<button data-fau-whatsapp="${esc(second.id)}" class="text-xs text-fashion-gold py-2">Compartilhar no WhatsApp</button>`:''}</div>`:'<p class="text-xs">Releitura indisponível</p>'}</div></section>`;
-                }).join('')}</div>`;
-                $('#runwayGrid').innerHTML='';
-                return;
-            }
             const grouped = globalState.themeId === 'theme_traitors' && banquetBroadcast?.activated && (isAdmin || globalState.liberado);
             const groupsBox = $('#runwayGroups');
             const renderLook = look => {
@@ -6094,7 +6081,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     </div>
                 `;
             };
-            if (grouped) {
+            if (globalState.themeId==='theme_beauty_eye' && (isAdmin || (globalState.liberado && beautyBroadcast?.phase==='exhibition'))) {
+                const assignments=beautyBroadcast?.assignments||[];
+                const originals=looks.filter(l=>Number(l.slot)===1);
+                const card=(look,label)=>renderLook(look).replace('<div class="space-y-2">',`<div class="space-y-2"><p class="text-[10px] text-fashion-gold tracking-wider">${label}</p>`);
+                groupsBox.innerHTML='';
+                $('#runwayGrid').innerHTML=originals.map(original=>{const recipient=assignments.find(a=>a.sourceUid===original.uid);const second=looks.find(l=>Number(l.slot)===2&&l.uid===recipient?.uid);return card(original,'MY VISION')+(second?card(second,'ANOTHER POINT OF VIEW'):'<div class="border border-fashion-700 rounded-lg p-4 text-xs text-gray-400">Releitura aguardando entrega ou sorteio.</div>');}).join('');
+            } else if (grouped) {
                 const byUid = new Map((banquetBroadcast.members || []).map(m => [m.uid,m.faction]));
                 const makeSection = (faction, heading, symbol) => {
                     const items = looks.filter(l => byUid.get(l.uid) === faction);
@@ -6217,7 +6210,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(currentUser.role==='estilista') sub(db.collection('supreme_votos').where('rodada','==',globalState.rodada || 'sem-rodada').where('voterUid','==',currentUser.uid),snap=>{supremeMyVotes=snap.docs.map(d=>d.data());refreshRunwayUI();});
         }
         if (globalState.themeId === 'theme_beauty_eye') {
-            sub(beautyRef(), snap => {beautyBroadcast=snap.exists?snap.data():null;refreshRunwayUI();});
+            let privateAssignments=null;
+            sub(beautyRef(), snap => {beautyBroadcast=snap.exists?snap.data():null;if(isAdmin&&beautyBroadcast&&privateAssignments)beautyBroadcast.assignments=privateAssignments;refreshRunwayUI();});
+            if(isAdmin)sub(beautyPrivateRef(),snap=>{privateAssignments=snap.data()?.assignments||null;if(beautyBroadcast&&privateAssignments)beautyBroadcast.assignments=privateAssignments;refreshRunwayUI();});
         }
         if (globalState.themeId === 'theme_traitors') {
             sub(db.doc(`revelacoes_traitors/${globalState.rodada}`), snap => {
