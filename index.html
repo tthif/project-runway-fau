@@ -3582,6 +3582,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     wrap.classList.remove('hidden');
                 });
 
+                if(beautyReleased && currentRoundLooks.length===1) { const field=$('#lookMemorialText'); field.closest('div').style.display='none'; field.disabled=true; }
                 $('#lookMemorialText').oninput = e => {
                     $('#charCounter').textContent = `${e.target.value.length} / 500 letras`;
                 };
@@ -3651,7 +3652,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const inlineHost=document.getElementById('fauInlineEditHost');
                 if(inlineHost){inlineHost.replaceChildren(panel);document.querySelectorAll('#fauInlineLookTabs [data-edit-look]').forEach(b=>{const active=b.dataset.editLook===look.id;b.classList.toggle('bg-fashion-gold',active);b.classList.toggle('text-black',active);});}
                 else {document.getElementById('workroomFormModule').after(panel);panel.scrollIntoView({behavior:'smooth',block:'start'});}
-                if(editSecond)panel.querySelector('#fauEditConcept').closest('label').hidden=true;
+                if(editSecond){const field=panel.querySelector('#fauEditConcept');field.closest('label').style.display='none';field.disabled=true;}
                 const count=()=>panel.querySelector('#fauEditCount').textContent=`${panel.querySelector('#fauEditConcept').value.length}/500`;
                 panel.querySelector('#fauEditConcept').addEventListener('input',count);count();
                 panel.querySelector('#fauEditCancel').onclick=()=>{if(inlineHost){navigate('work');}else panel.remove();};
@@ -3743,8 +3744,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const lookTitle = $('#lookTitleInput').value.trim();
                 const memorial = $('#lookMemorialText').value.trim();
 
-                if (!file || !lookTitle || !memorial) throw new Error('Preencha imagem, título e conceito da criação.');
-                if (memorial.length > 500) throw new Error('O conceito deve ter até 500 caracteres.');
+                const beautySecond=isBeautyWorkroom && allMyLooks.some(l=>l.rodada===globalState.rodada && Number(l.slot)===1);
+                if (!file || !lookTitle || (!beautySecond && !memorial)) throw new Error(beautySecond?'Preencha imagem e título.':'Preencha imagem, título e conceito da criação.');
+                if (!beautySecond && memorial.length > 500) throw new Error('O conceito deve ter até 500 caracteres.');
                 if(file.size>5*1024*1024) throw new Error('A fotografia deve ter no máximo 5 MB. Escolha uma imagem menor.');
 
                 const theme = getTheme();
@@ -3801,7 +3803,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     finaleMeta: finaleMeta,
                     titulo: lookTitle,
                     url: photoBase64,
-                    mem: memorial,
+                    mem: beautySecond ? (beauty.assignments.find(a=>a.uid===currentUser.uid)?.concept||'') : memorial,
                     t: now()
                 });
                 batch.set(db.doc(`envios/${lookDocId}`), {
