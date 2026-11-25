@@ -5953,7 +5953,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     mutationLine=`*Mutação:* ${mutationName}\n\n`;
                     files=[await makeFile(past.url,'01-Criacao-Original'),newFile];
                 }
-                const caption=`*${runwayName(look)}*\n\n${mutationLine}_${look.titulo||'Nova criação'}_\n\n${look.mem||''}`;
+                const beautyShare=globalState.themeId==='theme_beauty_eye';
+                const secondVision=beautyShare&&Number(look.slot)===2;
+                const sourceAssignment=secondVision?beautyBroadcast?.assignments?.find(a=>a.uid===look.uid):null;
+                const sourceLook=secondVision?looks.find(l=>Number(l.slot)===1&&l.uid===sourceAssignment?.sourceUid):null;
+                const caption=beautyShare?`*${runwayName(look)}*\n\n*${secondVision?'ANOTHER POINT OF VIEW':'MY VISION'}*\n\n_${look.titulo||'Nova criação'}_${secondVision?(sourceLook?`\n\nReleitura de _${sourceLook.titulo}_ — ${runwayName(sourceLook)}`:''):`\n\n${look.mem||''}`}`:`*${runwayName(look)}*\n\n${mutationLine}_${look.titulo||'Nova criação'}_\n\n${look.mem||''}`;
                 if(navigator.share && navigator.canShare?.({files})){
                     try{
                         await navigator.share({files,text:caption});
@@ -5971,7 +5975,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 }
                 await copyCaption(caption);
                 files.forEach(downloadFile);
-                showToast('Fotos baixadas e legenda copiada. Selecione as duas no WhatsApp.');
+                showToast(files.length===1?'Foto baixada e legenda copiada. Envie a foto no WhatsApp.':'Fotos baixadas e legenda copiada. Selecione as duas no WhatsApp.');
             }catch(error){showError(error.message||'Não foi possível preparar o compartilhamento.');}
             finally{button.disabled=false;button.innerHTML=original;}
         };
