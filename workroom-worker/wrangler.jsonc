@@ -1,0 +1,13 @@
+{
+  "name": "project-runway-fau-counter",
+  "main": "index.mjs",
+  "compatibility_date": "2026-11-26",
+  "workers_dev": false,
+  "preview_urls": false,
+  "vars": {
+    "FIREBASE_PROJECT": "project-runway-fau"
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  }
+}
