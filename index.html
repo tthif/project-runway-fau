@@ -4079,56 +4079,24 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // Notas individuais são privadas; o designer consulta apenas o acumulado no perfil.
 
         const board = $('#workroomThermometer');
-        const round = globalState.rodada;
-        let senders = null;
-        let activeDesigners = null;
-        let published = null;
-
-        const renderDeliveryProgress = () => {
+        const round = String(globalState.rodada);
+        const renderDeliveryProgress = (data) => {
             if (!board.isConnected) return;
-            const live = senders !== null && activeDesigners !== null;
-            const sent = live ? senders : published?.enviados ?? null;
-            const total = live ? activeDesigners : published?.total ?? 0;
-            const pending = sent === null ? null : Math.max(0, total-sent);
-            const percent = sent === null || !total ? 0 : Math.min(100,Math.round(100*sent/total));
-            const note = live ? `${percent}% dos Designers enviaram pelo menos um look.`
-                : sent === null ? 'Aguardando a atualização das entregas.'
-                : workroomPulseNote(percent,published.updatedAt);
+            const ready = data && String(data.rodada) === round &&
+                Number.isInteger(data.enviados) && Number.isInteger(data.total) &&
+                data.enviados >= 0 && data.total >= data.enviados;
+            const sent = ready ? data.enviados : null;
+            const pending = ready ? data.total-sent : null;
+            const percent = ready && data.total ? Math.round(100*sent/data.total) : 0;
+            const note = ready ? workroomPulseNote(percent,data.updatedAt) : 'Aguardando a atualização das entregas.';
             board.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div></div>
-              <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent??'—'}</strong><span class="text-gray-300 text-xs">${live||sent===null?'JÁ ENVIARAM':'CONCLUÍRAM'}</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending??'—'}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
+              <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent??'—'}</strong><span class="text-gray-300 text-xs">CONCLUÍRAM</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending??'—'}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
               <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
               <p class="mt-2 text-[11px] text-gray-400">${note}</p>`;
         };
         renderDeliveryProgress();
-
-        // Os registros de envio existentes têm UID e rodada. O cartão só exibe os totais.
-        // Se o Firebase restringir a leitura, mantemos o placar publicado pela Direção.
-        const deliveryReads = [];
-        let liveUnavailable = false;
-        const fallback = () => {
-            liveUnavailable = true;
-            deliveryReads.forEach(unsubscribe => unsubscribe());
-            senders = null;
-            activeDesigners = null;
-            renderDeliveryProgress();
-        };
-        deliveryReads.push(db.collection('envios').where('rodada','==',round).onSnapshot(snap => {
-            if (liveUnavailable) return;
-            senders = new Set(snap.docs.map(doc => doc.data().uid).filter(Boolean)).size;
-            renderDeliveryProgress();
-        }, fallback));
-        deliveryReads.push(db.collection('perfis').where('role','==','estilista').onSnapshot(snap => {
-            if (liveUnavailable) return;
-            activeDesigners = snap.docs.filter(doc => !doc.data().out && !doc.data().disabled).length;
-            renderDeliveryProgress();
-        }, fallback));
-        unsubsTab.push(() => deliveryReads.forEach(unsubscribe => unsubscribe()));
-        sub(db.doc('config/entregas_publicas'), snap => {
-            const data = snap.data();
-            published = data && String(data.rodada) === String(round) &&
-                Number.isFinite(data.enviados) && Number.isFinite(data.total) ? data : null;
-            if (senders === null || activeDesigners === null) renderDeliveryProgress();
-        });
+        // O servidor publica apenas totais. O navegador do Designer não abre registros de outros envios.
+        sub(db.doc('config/entregas_publicas'), snap => renderDeliveryProgress(snap.data()));
     };
 
     // Perfil: apenas proporções visuais agregadas de rodadas oficialmente publicadas.
@@ -7240,7 +7208,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                   <div id="fauStatusDashboard" tabindex="-1" class="space-y-3" role="status" aria-live="polite"><p class="text-xs text-gray-400">Carregando registros da rodada...</p></div>
                   <div class="border-t border-fashion-700 pt-3 space-y-2">
                     <button type="button" id="fauSyncPublicPulse" class="min-h-[44px] rounded border border-fashion-gold/50 text-fashion-gold px-3 text-xs" ${globalState.rodada?'':'disabled'}>Sincronizar contador público de entregas</button>
-                    <p id="fauPublicPulseStatus" class="text-xs text-gray-400" role="status">O contador anônimo é atualizado enquanto a Direção mantém o Control Room aberto.</p>
+                    <p id="fauPublicPulseStatus" class="text-xs text-gray-400" role="status">Use a sincronização manual para recalcular o total imediatamente.</p>
                   </div>
                   <p class="text-[11px] text-gray-500">Somente a produção visualiza nomes e pendências. Nunca exibir escolhas, notas ou comentários neste painel.</p>
                 </section>
