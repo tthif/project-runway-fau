@@ -1812,28 +1812,42 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const snap=await db.collection('supreme_votos').where('rodada','==',globalState.rodada || 'sem-rodada').get();
         return snap.docs.map(d=>d.data());
     };
-    const supremeResults = async () => {
-        if(!isAdmin) throw new Error('Apuração restrita à produção.');
-        const [ls, ps, votes]=await Promise.all([db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada').get(),db.collection('perfis').where('role','==','estilista').get(),supremeVotes()]);
-        const eligible=ps.docs.filter(d=>!d.data().out&&!d.data().disabled);
-        const looks=ls.docs.map(d=>({id:d.id,...d.data()}));
-        const missing=eligible.filter(p=>![1,2].every(slot=>looks.some(l=>l.uid===p.id&&l.slot===slot)));
-        if(missing.length) throw new Error('Faltam duas imagens de: '+missing.map(p=>p.data().ate||p.id).join(', '));
-        const absent=eligible.filter(p=>eligible.some(v=>v.id!==p.id&&!votes.some(x=>x.targetUid===p.id&&x.voterUid===v.id)));
-        if(absent.length) throw new Error('Votação incompleta para: '+absent.map(p=>p.data().ate||p.id).join(', '));
-        return eligible.map(p=>{
-            const a=votes.filter(v=>v.targetUid===p.id&&v.slot===1).length;
-            const b=votes.filter(v=>v.targetUid===p.id&&v.slot===2).length;
-            return {uid:p.id,ate:p.data().ate,old:a,next:b,slot:a>b?1:b>a?2:null};
+    const supremeBallotDesk = async () => {
+        if(!isAdmin)throw new Error('Apuração restrita à produção.');
+        const [lookSnap,profileSnap,votes]=await Promise.all([
+            db.collection('looks').where('rodada','==',globalState.rodada).get(),
+            db.collection('perfis').where('role','==','estilista').get(),supremeVotes()
+        ]);
+        const eligible=profileSnap.docs.filter(d=>!d.data().out&&!d.data().disabled).map(d=>({uid:d.id,ate:d.data().ate||d.id}));
+        if(eligible.length<2)throw new Error('A Supreme Vote precisa de pelo menos dois Designers ativos.');
+        const ids=new Set(eligible.map(row=>row.uid));
+        const looks=lookSnap.docs.map(doc=>doc.data());
+        const missingLooks=eligible.filter(row=>![1,2].every(slot=>looks.some(l=>l.uid===row.uid&&Number(l.slot)===slot)));
+        const ballots=new Map();
+        for(const vote of votes){
+            if(!ids.has(vote.voterUid)||!ids.has(vote.targetUid)||vote.voterUid===vote.targetUid||![1,2].includes(vote.slot))continue;
+            const key=JSON.stringify([vote.voterUid,vote.targetUid]);
+            if(!ballots.has(key)||Number(vote.t||0)>Number(ballots.get(key).t||0))ballots.set(key,vote);
+        }
+        const pending=eligible.map(voter=>({...voter,targets:eligible.filter(target=>target.uid!==voter.uid&&!ballots.has(JSON.stringify([voter.uid,target.uid])))})).filter(voter=>voter.targets.length);
+        return {eligible,ballots:[...ballots.values()],missingLooks,pending};
+    };
+    const supremePendingMessage=desk=>desk.pending.map(row=>row.ate+' ('+row.targets.length+')').join(', ');
+    const supremeResults = async (desk=null) => {
+        desk=desk||await supremeBallotDesk();
+        if(desk.missingLooks.length)throw new Error('Faltam duas imagens de: '+desk.missingLooks.map(row=>row.ate).join(', '));
+        if(desk.pending.length)throw new Error('Votação incompleta. Faltam votos de: '+supremePendingMessage(desk));
+        return desk.eligible.map(row=>{
+            const old=desk.ballots.filter(v=>v.targetUid===row.uid&&v.slot===1).length;
+            const next=desk.ballots.filter(v=>v.targetUid===row.uid&&v.slot===2).length;
+            return {...row,old,next,slot:old>next?1:next>old?2:null};
         });
     };
     const supremeTieRef = (uid) => db.doc(`supreme_desempates/${globalState.rodada}_${uid}`);
-    const supremeResolveTies = async (results) => {
+    const supremeResolveTies = async (results,votes) => {
         const tied=results.filter(r=>!r.slot);
         if(!tied.length) return results.map(r=>({...r,decidedBy:'majority'}));
-        const [votes,standings,icons,winVotes]=await Promise.all([
-            supremeVotes(),computeSeasonStandings({allowIncomplete:true}),tallyVotes('veto'),Promise.resolve(null)
-        ]);
+        const [standings,icons]=await Promise.all([computeSeasonStandings({allowIncomplete:true}),tallyVotes('veto')]);
         const iconEntries=Object.entries(icons).filter(([,n])=>n>0);
         let iconUid=null;
         if(iconEntries.length){
@@ -1869,9 +1883,27 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     const restaRef = () => db.doc(`resta_um/${globalState.rodada}`);
     const restaState = async () => (await restaRef().get()).data() || null;
     const restaCandidates = async () => {
-        const standings = await computeSeasonStandings();
-        if (standings.length < 4) throw new Error('O Resta Um exige ao menos quatro estilistas ativos.');
-        return [...standings].sort((a,b)=>b.rd-a.rd || b.tot-a.tot || a.uid.localeCompare(b.uid));
+        const round=String(globalState.rodada||'');
+        const history=(await db.doc(`ranking_historico/${round}`).get()).data();
+        if(history?.published!==true||!Array.isArray(history.rows)||!Array.isArray(history.restaScores))
+            throw new Error('Publique o ranking oficial de Plaid in the Bay para fixar o WIN e as notas da corrente.');
+        const scores=new Map(history.restaScores.map(row=>[row.uid,row]));
+        const rows=history.rows.filter(row=>scores.has(row.uid)).map(row=>({...row,...scores.get(row.uid)}));
+        if(rows.length<4||rows.some(row=>!Number.isFinite(row.rd)||!Number.isFinite(row.tot)))throw new Error('O Resta Um exige pelo menos quatro Designers com notas oficiais.');
+        return rows;
+    };
+    const restaPoolFromRanking=(state,rows)=>{
+        const eligible=new Set(state.eligible.map(row=>row.uid));
+        const last=rows.find(row=>row.uid===state.lastUid&&eligible.has(row.uid)&&row.uid!==state.winUid);
+        if(!last)return [];
+        const candidates=rows.filter(row=>eligible.has(row.uid)&&row.uid!==last.uid&&row.uid!==state.winUid);
+        const low=[...candidates].sort((a,b)=>a.rd-b.rd||a.tot-b.tot)[0];
+        const accumulated=candidates.filter(row=>row.uid!==low?.uid).sort((a,b)=>a.tot-b.tot||a.rd-b.rd)[0];
+        return low&&accumulated?[
+            {uid:last.uid,ate:last.ate,reason:'RESTA UM'},
+            {uid:low.uid,ate:low.ate,reason:'LOWEST SCORE'},
+            {uid:accumulated.uid,ate:accumulated.ate,reason:"SEASON'S LOWEST"}
+        ]:[];
     };
     const restaChoose = async (targetUid) => {
         if(globalState.themeId!=='theme_plaid_bay') throw new Error('O Resta Um não está ativo nesta semana.');
@@ -1971,6 +2003,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     let isAdmin = false;
     let globalState = {};
     let activeTab = 'home';
+    const fauSalvationPoolReady=(theme,pool)=>Array.isArray(pool)&&pool.every(row=>row?.uid)&&new Set(pool.map(row=>row.uid)).size===pool.length&&
+        (theme==='theme_tarantino'?pool.length===2:pool.length===3||(theme==='theme_traitors'&&pool.length===2));
     const isCastBallotOpen = state => !!state.rodada && !!state.liberado && !(Array.isArray(state.berlinda) && state.berlinda.length);
     const isCastBallotTypeOpen = (state, type) => isCastBallotOpen(state) && state.castVoteLocks?.[String(state.rodada)]?.[type] !== true;
     const hasMaisonIdentity = () => !!(currentUser?.ate && currentUser.ate !== 'Público' && currentUser.ate.trim());
@@ -5628,6 +5662,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const sortJuryLooks = items => [...items].sort((a,b)=>(beautyJury?(Number(a.slot||1)-Number(b.slot||1)):0) || juryLiveName(a).localeCompare(juryLiveName(b),'pt-BR',{sensitivity:'base',numeric:true}) || (Number(a.slot)||0)-(Number(b.slot)||0) || String(a.id).localeCompare(String(b.id)));
         const beautyJury = globalState.themeId==='theme_beauty_eye';
         let beautyJuryState=beautyJury?(await beautyRef().get()).data()||{}:{};
+        let beautyJuryPairings=new Map();
         let beautyPhase=beautyJuryState.phase||'first';
         const beautyDeadlinePassed=()=>Number(globalState.prazo)>0&&Number(globalState.prazo)<=now();
         const beautyFirstOpen=()=>isAdmin||beautyJuryState.juryFirst===true||beautyJuryState.jurySecond===true;
@@ -5831,8 +5866,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             container.innerHTML = (beautyJury?`<nav class="col-span-full flex flex-wrap gap-2 border border-fashion-700 rounded p-3">${[1,2].filter(slot=>looks.some(l=>Number(l.slot||1)===slot)).map(slot=>`<button type="button" data-action="jury-jump" data-slot="${slot}" class="border border-fashion-gold/50 rounded p-2 text-xs text-fashion-gold">${beautySecondOpen()?(slot===1?'MY VISION':'ANOTHER POINT OF VIEW'):'AVALIAÇÕES'} · ${looks.filter(l=>Number(l.slot||1)===slot&&evaluations[l.id]?.nota).length}/${looks.filter(l=>Number(l.slot||1)===slot).length}</button>`).join('')}<button type="button" data-action="jury-pending" class="border border-fashion-700 rounded p-2 text-xs">PRÓXIMO PENDENTE</button></nav>`:'')+looks.map((look,index) => {
                 const secondVision=beautyJury&&Number(look.slot)===2;
                 const sectionStart=beautyJury&&(index===0||Number(looks[index-1].slot||1)!==Number(look.slot||1));
-                const matches=secondVision&&look.mem?looks.filter(l=>Number(l.slot||1)===1&&l.uid!==look.uid&&l.mem===look.mem):[];
-                const original=matches.length===1?matches[0]:null;
+                const sourceUid=secondVision?beautyJuryPairings.get(look.uid):null;
+                const original=sourceUid?looks.find(l=>Number(l.slot||1)===1&&l.uid===sourceUid):null;
                 const ev = evaluations[look.id] || {};
                 const scores = draftScores.get(look.id) || ev.nota || [5.0, 5.0, 5.0, 5.0, 5.0];
                 const commentAdmin = ev.comentAdmin || '';
@@ -5865,7 +5900,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                                       <details class="fau-jury-dossier border border-fashion-700 rounded"><summary class="p-3 text-xs text-fashion-gold cursor-pointer">LER CONCEITO NOVO ⌄</summary><p class="text-xs text-gray-300 whitespace-pre-wrap px-3 pb-3">${esc(look.mem||'Sem conceito')}</p></details>
                                     </div>
                                   </section>`;
-                                })() : `${secondVision&&original?`<div class="fau-jury-compare"><div class="fau-jury-compare-tabs" role="group" aria-label="Modo de visualização"><button type="button" data-action="jury-compare" data-mode="second" aria-pressed="true">ANOTHER POINT OF VIEW</button><button type="button" data-action="jury-compare" data-mode="both" aria-pressed="false">COMPARE</button></div><div class="fau-jury-compare-grid" data-mode="second">${[original,look].map((item,i)=>`<figure data-vision="${i?"second":"original"}"><figcaption>${i?"ANOTHER POINT OF VIEW":"MY VISION"}</figcaption><button type="button" data-action="jury-enlarge" data-src="${esc(item.url)}" aria-label="Ampliar ${esc(item.titulo||"look")}"><img src="${esc(item.url)}" alt="${esc(item.titulo||"Look")}" loading="lazy"></button><strong>${esc(item.titulo||"Sem título")}</strong><small>${esc(juryLiveName(item))}</small></figure>`).join("")}</div></div>`:`<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">`}${creativeDossier(look)}${secondVision&&!original?`<p class="font-cinzel text-fashion-gold text-sm">${esc(look.titulo||"Sem título")}</p>`:""}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>${secondVision?('LER CONCEITO ORIGINAL RECEBIDO'+(original?' · '+esc(original.titulo||'')+' — '+esc(juryLiveName(original)):'')):`LER CONCEITO · ${esc(look.titulo || 'Sem título')}`}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
+                                })() : `${secondVision&&original?`<div class="fau-jury-compare"><div class="fau-jury-compare-tabs" role="group" aria-label="Modo de visualização"><button type="button" data-action="jury-compare" data-mode="second" aria-pressed="true">ANOTHER POINT OF VIEW</button><button type="button" data-action="jury-compare" data-mode="both" aria-pressed="false">COMPARE</button></div><div class="fau-jury-compare-grid" data-mode="second">${[original,look].map((item,i)=>`<figure data-vision="${i?"second":"original"}"><figcaption>${i?"ANOTHER POINT OF VIEW":"MY VISION"}</figcaption><button type="button" data-action="jury-enlarge" data-src="${esc(item.url)}" aria-label="Ampliar ${esc(item.titulo||"look")}"><img src="${esc(item.url)}" alt="${esc(item.titulo||"Look")}" loading="lazy"></button><strong>${esc(item.titulo||"Sem título")}</strong><small>${esc(i||isAdmin||globalState.liberado?juryLiveName(item):'Criação original')}</small></figure>`).join("")}</div></div>`:`<img src="${esc(look.url)}" class="fau-jury-look-photo w-full img-look rounded border border-fashion-700 shadow-lg" loading="lazy">`}${creativeDossier(look)}${secondVision&&!original?`<p class="font-cinzel text-fashion-gold text-sm">${esc(look.titulo||"Sem título")}</p>`:""}<details class="fau-jury-dossier bg-fashion-950 rounded border border-fashion-700"><summary class="flex items-center justify-between gap-2 p-3 cursor-pointer text-fashion-gold text-xs font-semibold"><span>${secondVision?('LER CONCEITO ORIGINAL RECEBIDO'+(original?' · '+esc(original.titulo||'')+' — '+esc(juryLiveName(original)):'')):`LER CONCEITO · ${esc(look.titulo || 'Sem título')}`}</span><span aria-hidden="true">⌄</span></summary><p class="text-xs text-gray-300 leading-relaxed whitespace-pre-wrap px-3 pb-3">${esc(look.mem)}</p></details>`}
                             </div>
                             <div class="fau-jury-scoring md:col-span-8 space-y-4 text-xs">
                                 <div class="flex justify-between items-center border-b border-fashion-700 pb-2">
@@ -5958,6 +5993,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             await db.runTransaction(async tx=>{
               const state=(await tx.get(db.doc('config/estado'))).data()||{};
               if(auth.currentUser?.uid!==jurorUid||String(state.rodada)!==String(targetLook.rodada)||state.notasEncerradas)throw new Error('A rodada mudou ou as notas foram encerradas.');
+              if(beautyJury){
+                const phase=(await tx.get(db.doc(`beauty_dinamicas/${state.rodada}`))).data();
+                if(state.themeId!=='theme_beauty_eye'||(!isAdmin&&(Number(targetLook.slot)===2?phase?.jurySecond!==true:phase?.juryFirst!==true&&phase?.jurySecond!==true)))
+                    throw new Error('As avaliações deste look ainda aguardam liberação.');
+              }
               tx.set(scoreRef,{
                 look: lookId,
                 alvo: targetLook.uid,
@@ -6019,6 +6059,19 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             week01References=new Map(snap.docs.map(d=>[String(d.data().uid),{id:d.id,...d.data()}]));
             refreshJuryUI();
         });
+        if(beautyJury&&beautySecondOpen()){
+            const installPairs=rows=>{
+                beautyJuryPairings=new Map((Array.isArray(rows)?rows:[]).filter(row=>row?.uid&&row.sourceUid&&row.uid!==row.sourceUid).map(row=>[row.uid,row.sourceUid]));
+            };
+            installPairs(globalState.liberado?beautyJuryState.assignments:[]);
+            // Existing Firestore permissions decide whether this account can read the private distribution.
+            const juryHost=$('#juryCardsContainer');
+            beautyPrivateRef().get().then(snap=>{
+                if(!juryHost?.isConnected)return;
+                const rows=snap.data()?.assignments;
+                if(Array.isArray(rows)){installPairs(rows);refreshJuryUI();}
+            }).catch(err=>console.warn('[Beauty] Pareamento privado indisponível para esta conta:',err.code||err.message));
+        }
         if(beautyJury){
             let gate=String(beautyFirstOpen())+'|'+String(beautySecondOpen());
             const checkGate=()=>{const next=String(beautyFirstOpen())+'|'+String(beautySecondOpen());if(next!==gate){gate=next;navigate('bancada');}};
@@ -6026,7 +6079,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             sub(beautyRef(),snap=>{beautyJuryState=snap.data()||{};beautyPhase=beautyJuryState.phase||'first';checkGate();});
         }
         if(juryCanViewLooks()) sub(beautyJury&&!beautySecondOpen()?db.collection('looks').where('rodada','==',globalState.rodada).where('slot','==',1):db.collection('looks').where('rodada', '==', globalState.rodada || '-'), snap => {
-            supremeAllJuryLooks=snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            supremeAllJuryLooks=snap.docs.map(d => ({ ...d.data(), id: d.id }));
             refreshSupremeJury();
         });
         if(juryCanViewLooks() && globalState.themeId==='theme_next_supreme') sub(supremeRef(),snap=>{supremeJuryState=snap.data()||null;refreshSupremeJury();});
@@ -6310,7 +6363,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 foBox.classList.add('hidden');
             }
 
-            const grouped = globalState.themeId === 'theme_traitors' && banquetBroadcast?.activated && (isAdmin || globalState.liberado);
+            const grouped = globalState.themeId === 'theme_traitors' && banquetBroadcast?.published===true && (isAdmin || globalState.liberado);
             const groupsBox = $('#runwayGroups');
             const renderLook = look => {
                 const reactCounts = {};
@@ -6616,7 +6669,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     await db.runTransaction(async tx=>{
                         const [fresh,published]=await Promise.all([tx.get(ref),tx.get(history)]);
                         const state=fresh.data()||{},oldPool=published.data()?.eliminationPool;
-                        if(!isAdmin||String(state.rodada)!==round||state.urna!==true||state.berlinda?.length===3||state.resultsInputVersion!==version)throw new Error('O estado da urna mudou. Confira os indicados oficiais.');
+                        if(!isAdmin||String(state.rodada)!==round||state.urna!==true||fauSalvationPoolReady(state.themeId,state.berlinda)||state.resultsInputVersion!==version)throw new Error('O estado da urna mudou. Confira os indicados oficiais.');
                         if(oldPool?.length&&JSON.stringify(oldPool)!==JSON.stringify(pool))throw new Error('Já existem indicados oficiais no histórico. Revise o registro.');
                         tx.set(history,{eliminationPool:pool},{merge:true});
                         tx.update(ref,{berlinda:pool});
@@ -6795,6 +6848,40 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         return fauNumericScore(total,50)??Number(scores.reduce((sum,value)=>sum+value,0).toFixed(1));
     };
 
+        const fauResultJury = async (round,evaluations,saved,directionRequired=false) => {
+            if(Array.isArray(saved)&&saved.length)return new Set(saved);
+            const jury=await db.collection('perfis').where('role','==','jurado').get();
+            const roster=new Set(jury.docs.filter(doc=>!doc.data().disabled).map(doc=>doc.id));
+            const candidates=[...new Set(evaluations.filter(e=>String(e.rodada)===round&&e.jurado&&!roster.has(e.jurado)).map(e=>e.jurado))];
+            const direction=(await Promise.all(candidates.map(async uid=>{
+                const [admin,profile]=await Promise.all([db.doc(`admins/${uid}`).get(),db.doc(`perfis/${uid}`).get()]);
+                return (admin.exists||profile.data()?.role==='admin')&&!profile.data()?.disabled?uid:null;
+            }))).filter(Boolean);
+            if(direction.length>1)throw new Error('Há mais de uma conta da Direção avaliando. Confira qual compõe a bancada oficial.');
+            if(directionRequired&&!direction.length){
+                if(directionRequired==='whenAvailable')return null;
+                throw new Error('Faltam as avaliações da Direção Executiva nesta rodada.');
+            }
+            direction.forEach(uid=>roster.add(uid));
+            if(!roster.size)throw new Error('Nenhum jurado definido para esta rodada.');
+            return roster;
+        };
+        const fauRequireScoredSlots=(profiles,looks,evaluations,round,slots,jury,stage)=>{
+            const missing=[];
+            for(const profile of profiles){
+                const own=looks.filter(doc=>doc.data().uid===profile.id);
+                if(own.some(doc=>!slots.includes(Number(doc.data().slot))))missing.push((profile.data().ate||profile.id)+' · look fora dos slots oficiais');
+                for(const slot of slots){
+                    const entries=own.filter(doc=>Number(doc.data().slot)===slot);
+                    if(entries.length!==1){missing.push((profile.data().ate||profile.id)+' · look '+slot+(entries.length?' duplicado':' ausente'));continue;}
+                    const rated=new Set(evaluations.filter(e=>String(e.rodada)===round&&e.look===entries[0].id&&e.alvo===profile.id&&fauEvaluationTotal(e)!==null).map(e=>e.jurado));
+                    const pending=[...jury].filter(uid=>!rated.has(uid)).length;
+                    if(pending)missing.push((profile.data().ate||profile.id)+' · look '+slot+' ('+pending+' notas faltantes)');
+                }
+            }
+            if(missing.length)throw new Error(stage+': '+missing.join(', ')+'.');
+        };
+
         const computeSeasonStandings = async ({allowIncomplete=false}={}) => {
             const [profilesSnap, evalsSnap, penaltiesSnap] = await Promise.all([
                 db.collection('perfis').where('role', '==', 'estilista').get(),
@@ -6806,11 +6893,29 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!allowIncomplete&&supremeRankingState&&supremeRankingState.phase!=='selected')throw new Error('A Supreme Vote precisa ser concluída antes de apurar o ranking.');
             const supremeWinners=new Map((supremeRankingState?.winners||[]).map(w=>[w.uid,`${globalState.rodada}_${w.uid}_${w.slot-1}`]));
             const round=String(globalState.rodada??'');
+            const beauty=globalState.themeId==='theme_beauty_eye';
+            const isFinal=globalState.fase==='final';
+            const evaluations=evalsSnap.docs.map(doc=>doc.data());
+            let requiredJury=null;
+            if(!allowIncomplete&&(beauty||isFinal)){
+                const state=beauty?await beautyState():globalState;
+                if(beauty&&(state.phase==='first'||Number(globalState.prazo)>now()))throw new Error('Aguarde o encerramento da segunda etapa.');
+                requiredJury=await fauResultJury(round,evaluations,beauty?state.juryUids:null,beauty);
+            }
+            const lookSnap=!allowIncomplete&&round?await db.collection('looks').where('rodada','==',globalState.rodada).get():null;
+            const currentLooks=new Map(requiredJury?lookSnap.docs.map(doc=>[doc.id,doc.data()]):[]);
+            const latestScores=new Map();
+            for(const evaluation of evaluations){
+                const look=currentLooks.get(evaluation.look);
+                if(String(evaluation.rodada)!==round||!requiredJury?.has(evaluation.jurado)||!look||look.uid!==evaluation.alvo)continue;
+                const key=JSON.stringify([evaluation.jurado,evaluation.look]);
+                if(!latestScores.has(key)||Number(evaluation.t||0)>Number(latestScores.get(key).t||0))latestScores.set(key,evaluation);
+            }
             const evaluationsByLook = new Map();
             const pendingDesigners = new Set();
             const ratedLooks=new Map();
-            for(const doc of evalsSnap.docs){
-                const evaluation=doc.data();
+            const scoreInputs=requiredJury?[...evaluations.filter(e=>String(e.rodada)!==round),...latestScores.values()]:evaluations;
+            for(const evaluation of scoreInputs){
                 const evaluationRound=String(evaluation.rodada??'');
                 if(!evaluation.alvo||!evaluationRound)continue;
                 if(supremeRankingState&&evaluationRound===round&&supremeWinners.get(evaluation.alvo)!==evaluation.look)continue;
@@ -6833,8 +6938,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const absencesSnap = globalState.themeId === 'theme_traitors' ? await db.collection('ausencias_rodada').where('rodada','==',globalState.rodada || 'sem-rodada').get() : null;
             const absentUids = new Set(absencesSnap ? absencesSnap.docs.map(d=>d.data().uid) : []);
             const activeStylists = profilesSnap.docs.filter(d => !d.data().out && !d.data().disabled && !absentUids.has(d.id));
-            const beauty=globalState.themeId==='theme_beauty_eye';
-            const lookSnap=(!allowIncomplete||beauty)&&round?await db.collection('looks').where('rodada','==',globalState.rodada).get():null;
             if(!allowIncomplete){
                 const pendingLooks=new Set((lookSnap?.docs||[]).filter(doc=>{
                     const uid=doc.data().uid;
@@ -6845,23 +6948,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(!round||!activeStylists.length)throw new Error('Nenhuma avaliação válida na rodada ativa.');
                 if(pending.length)throw new Error('Avaliações incompletas ou ausentes: '+pending.map(doc=>doc.data().ate||doc.id).join(', ')+'. Confira as notas antes de concluir a apuração.');
             }
-            if (beauty) {
-                if((await beautyState()).phase==='first'||Number(globalState.prazo)>now())throw new Error('Aguarde o encerramento da segunda etapa.');
-                const slotsByUid = {};
-                lookSnap.docs.forEach(d => {const l=d.data(); (slotsByUid[l.uid] ??= new Set()).add(l.slot);});
-                const missing = activeStylists.filter(d => {
-                    const slots=slotsByUid[d.id];
-                    if (!slots?.has(1) || !slots?.has(2)) return true;
-                    const scored=[...(evaluationsByLook.get(d.id)?.values()||[])].filter(x=>x.r===round);
-                    return scored.length < 2;
-                });
-                const jury=await db.collection('perfis').where('role','==','jurado').get();
-                const expected=new Set(jury.docs.filter(d=>!d.data().disabled).map(d=>d.id));expected.add(currentUser.uid);
-                const activeIds=new Set(activeStylists.map(d=>d.id));
-                const rated=new Set(evalsSnap.docs.map(d=>d.data()).filter(e=>String(e.rodada)===round&&fauEvaluationTotal(e)!==null).map(e=>e.jurado+'|'+e.look));
-                const pending=lookSnap.docs.filter(d=>activeIds.has(d.data().uid)).flatMap(d=>[...expected].filter(uid=>!rated.has(uid+'|'+d.id)).map(uid=>uid+' / '+d.id));
-                if(pending.length)throw new Error('Beauty: faltam '+pending.length+' avaliações individuais da bancada.');
-                if (missing.length) throw new Error('Beauty: os dois looks de cada estilista precisam estar enviados e avaliados antes da apuração: '+missing.map(d=>d.data().ate||d.id).join(', '));
+            if(requiredJury){
+                if(isFinal){
+                    const finalists=new Set(Array.isArray(globalState.finalistUids)?globalState.finalistUids:[]);
+                    if(finalists.size!==3||activeStylists.length!==3||activeStylists.some(profile=>!finalists.has(profile.id)))
+                        throw new Error('Confirme os três finalistas oficiais antes de apurar a Grande Final.');
+                }
+                fauRequireScoredSlots(activeStylists,lookSnap.docs,[...latestScores.values()],round,beauty?[1,2]:[1,2,3,4],requiredJury,beauty?'Beauty':'Grande Final');
             }
             const penaltyMap=new Map(penaltiesSnap.docs.map(d=>[String(d.data().rodada||'')+'_'+String(d.data().uid||''),Number(d.data().percentual)||0]));
             const rows = activeStylists.map(doc => {
@@ -6876,7 +6969,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 for (const r in perRound) {
                     // Rodadas antigas (sem modo salvo) continuam somando, como antes.
                     const isBeautyRound = r === round && beauty;
-                    const v = !isBeautyRound && globalState.modos?.[r] === 'media' ? perRound[r].sum / perRound[r].n : perRound[r].sum;
+                    const v = !isBeautyRound && !isFinal && globalState.modos?.[r] === 'media' ? perRound[r].sum / perRound[r].n : perRound[r].sum;
                     const penalty=Math.max(0,Math.min(100,penaltyMap.get(String(r)+'_'+doc.id)||0));
                     const adjusted=v*(1-penalty/100);
                     if (r === round) currentRoundScore = adjusted;
@@ -6886,6 +6979,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 return {uid:doc.id,ate:doc.data().ate,tot:totalAccumulated===null?null:Number(totalAccumulated.toFixed(2)),rd:currentRoundScore===null?null:Number(currentRoundScore.toFixed(2)),pending:pendingDesigners.has(doc.id)||currentRoundScore===null};
             });
 
+            if(isFinal)return rows.sort((a,b)=>(b.rd??-Infinity)-(a.rd??-Infinity));
             // Desempate oficial do acumulado: WIN > Ícone da Moda > HIGH > nome.
             // Os títulos são históricos e não adicionam pontos às notas.
             const [rankHistory, titleHistory] = await Promise.all([
@@ -6941,12 +7035,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         if (isAdmin) {
             const pool = Array.isArray(globalState.berlinda) ? globalState.berlinda : [];
             const photos = pool.length ? await fauPortraitDirectory() : new Map();
-            const open = !!globalState.urna && pool.length === (globalState.themeId==='theme_tarantino'?2:3);
+            const open = !!globalState.urna && fauSalvationPoolReady(globalState.themeId,pool);
             const cards = pool.map((b,i)=>`<div class="flex items-center gap-4 rounded-xl border border-fashion-700 bg-fashion-950 p-4">${fauPortraitMarkup(b.uid,photos,true)}<div class="flex-1"><p class="text-[10px] tracking-widest text-fashion-gold">INDICADO ${String(i+1).padStart(2,'0')}</p><p class="font-cinzel text-white text-xl">${esc(b.ate)}</p></div></div>`).join('');
             renderView(`<div class="max-w-2xl mx-auto space-y-5 pb-12">
               <header class="rounded-2xl bg-fashion-900 border border-fashion-red/40 p-8 text-center space-y-3"><div class="text-4xl">⚖️</div><p class="text-fashion-red text-xs tracking-widest">PRIMEIRA VOTAÇÃO · SALVAÇÃO</p><h2 class="font-cinzel text-3xl text-white">THE ELIMINATION POOL</h2><p class="text-sm text-gray-300">${open?'Escolha quem merece continuar.':'A votação de salvação ainda não foi liberada.'}</p></header>
               <div class="rounded-xl border border-fashion-gold/50 bg-fashion-900 p-4"><p class="text-fashion-gold text-xs tracking-widest">VISUALIZAÇÃO DO ADM · SOMENTE LEITURA</p><p class="text-sm text-gray-300 mt-2">Prévia da votação de salvação na The Voting Room. Veja a experiência dos Designers sem registrar votos. ${open?'A urna está aberta.':'A urna ainda não está aberta.'}</p><button type="button" id="fauAdminPoolControl" class="mt-3 border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Ir para o painel de controle</button></div>
-              ${pool.length===(globalState.themeId==='theme_tarantino'?2:3)?`<div class="flex flex-wrap gap-2"><button type="button" data-admin-pool-view="voter" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Quem pode votar</button><button type="button" data-admin-pool-view="nominee" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Quem está no Pool</button><button type="button" data-admin-pool-view="voted" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Após votar</button></div><section id="fauAdminPoolRolePreview" class="rounded-xl bg-fashion-900 border border-fashion-700 p-5 space-y-4"></section>`:`<section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-6 text-center text-sm text-gray-300">O Elimination Pool oficial ainda não tem indicados oficiais. A urna aberta precisa sincronizar os indicados oficiais. Use o controle de atualização na The Voting Room; não é necessário publicar o ranking.</section>`}
+              ${fauSalvationPoolReady(globalState.themeId,pool)?`<div class="flex flex-wrap gap-2"><button type="button" data-admin-pool-view="voter" class="border border-fashion-gold text-fashion-gold rounded-lg px-4 py-2 text-xs">Quem pode votar</button><button type="button" data-admin-pool-view="nominee" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Quem está no Pool</button><button type="button" data-admin-pool-view="voted" class="border border-fashion-700 rounded-lg px-4 py-2 text-xs">Após votar</button></div><section id="fauAdminPoolRolePreview" class="rounded-xl bg-fashion-900 border border-fashion-700 p-5 space-y-4"></section>`:`<section class="rounded-xl border border-fashion-gold/30 bg-fashion-900 p-6 text-center text-sm text-gray-300">O Elimination Pool oficial ainda não tem indicados oficiais. A urna aberta precisa sincronizar os indicados oficiais. Use o controle de atualização na The Voting Room; não é necessário publicar o ranking.</section>`}
             </div>`);
             document.getElementById('fauAdminPoolControl')?.addEventListener('click',()=>navigate('direcao'));
             const stage=document.getElementById('fauAdminPoolRolePreview');
@@ -6971,7 +7065,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         if(globalState.themeId==='theme_rest_in_style'){renderView('<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 p-8 text-center"><h2 class="font-cinzel text-fashion-gold">🕯️ THE LAST JUDGMENT</h2><p class="text-sm text-gray-300 mt-3">Esta dinâmica utiliza a avaliação especial dos looks, não o voto de salvação.</p></div>');return;}
         const pool=globalState.berlinda||[], round=globalState.rodada;
         const poolPhotos=pool.length?await fauPortraitDirectory():new Map();
-        if(!globalState.urna||pool.length!==(globalState.themeId==='theme_tarantino'?2:3)){renderView(`<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 border border-fashion-gold/30 p-10 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">🔒 THE ELIMINATION POOL</h2><p class="text-sm text-gray-300 mt-3">${globalState.urna ? 'A urna está aberta, mas os indicados oficiais ainda não foram sincronizados pela produção. Aguarde a atualização da cabine.' : 'A votação de salvação ainda não foi aberta pela produção. Volte aqui quando a urna estiver aberta.'}</p></div>`);return;}
+        if(!globalState.urna||!fauSalvationPoolReady(globalState.themeId,pool)){renderView(`<div class="max-w-xl mx-auto my-12 rounded-2xl bg-fashion-900 border border-fashion-gold/30 p-10 text-center"><h2 class="font-cinzel text-fashion-gold text-xl">🔒 THE ELIMINATION POOL</h2><p class="text-sm text-gray-300 mt-3">${globalState.urna ? 'A urna está aberta, mas os indicados oficiais ainda não foram sincronizados pela produção. Aguarde a atualização da cabine.' : 'A votação de salvação ainda não foi aberta pela produção. Volte aqui quando a urna estiver aberta.'}</p></div>`);return;}
         if(pool.some(x=>x.uid===currentUser.uid)){
           renderView(`<div class="max-w-2xl mx-auto py-8 space-y-6 fau-elimination-enter">
             <div class="relative overflow-hidden rounded-3xl border border-red-800/60 bg-fashion-950 p-8 md:p-12 text-center space-y-5">
@@ -7894,6 +7988,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const immuneUids=[bestFaithful,bestTraitor]
                 .filter(x=>(x.faction==='Faithful'?faithfuls.length:traitors.length)>1 || x.uid===win.uid)
                 .map(x=>x.uid);
+            const twoSeats=(win.uid===bestFaithful.uid&&faithfuls.length===1)||(win.uid===bestTraitor.uid&&traitors.length===1);
             const protectedSet=new Set(immuneUids);
             const selected=[];
             const add=x=>{if(x&&!protectedSet.has(x.uid)&&!selected.some(y=>y.uid===x.uid))selected.push(x);};
@@ -7904,7 +7999,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             add(worstFaithful[0]);
             add(worstTraitor[0]);
             let fallback=false;
-            if (selected.length<2) {
+            if (!twoSeats&&selected.length<2) {
                 const replacementPool = worstFaithful.length===0 ? worstTraitor
                     : worstTraitor.length===0 ? worstFaithful
                     : [...members].filter(x=>!protectedSet.has(x.uid)).sort(byWorst);
@@ -7913,9 +8008,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }
             // Terceira vaga: pior acumulado elegível que ainda não esteja no Pool.
             add([...members].sort(byAccum).find(x=>!protectedSet.has(x.uid)&&!selected.some(y=>y.uid===x.uid)));
-            if (selected.length!==3) throw new Error(`Não foi possível formar o Elimination Pool com três pessoas: há apenas ${selected.length} elegíveis. Confira os participantes, as notas e as imunidades.`);
+            const expectedSeats=twoSeats?2:3;
+            if (selected.length!==expectedSeats)throw new Error(`Elimination Pool exige ${expectedSeats} indicados. Há ${selected.length} elegíveis.`);
             return {pool:selected,members,win,bestFaithful,bestTraitor,immuneUids,fallback,
-                reason:fallback?'Uma facção não tinha participante elegível: as duas vagas de facção foram preenchidas pelos dois piores elegíveis da outra facção. Terceira vaga: pior acumulado elegível. Imunidades preservadas; um único WIN oficial.':'Pior Faithful + pior Traitor + pior acumulado elegível. Líder de facção única só é imune se for o WIN geral. Um único WIN oficial exerce desempates.'};
+                reason:twoSeats?'O WIN é o único integrante da facção. Pool com dois indicados: pior nota da outra facção e pior acumulado elegível.':fallback?'Uma facção não tinha participante elegível: as duas vagas de facção foram preenchidas pelos dois piores elegíveis da outra facção. Terceira vaga: pior acumulado elegível. Imunidades preservadas; um único WIN oficial.':'Pior Faithful + pior Traitor + pior acumulado elegível. Líder de facção única só é imune se for o WIN geral. Um único WIN oficial exerce desempates.'};
         };
 
         const printTable = rows => `
@@ -8209,11 +8305,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
         // Contextual twist director: existing specialized controls remain authoritative.
         const twistDirectives={
-          theme_traitors:['🏰 The Black Banquet','Ative o twist após as entregas; confira as facções e o Elimination Pool antes de revelar.',['btnPreviewBanquet','btnRevealBanquet']],
+          theme_traitors:['🏰 The Black Banquet','Ative o twist após as entregas; confira as facções e o Elimination Pool antes de revelar.',['btnActivateBanquet','btnPreviewBanquet','btnRevealBanquet']],
           theme_plaid_bay:['🤠 Resta Um','Inicie a corrente, acompanhe os salvamentos e só depois confirme o Bottom 3.',['btnRestaStart','btnRestaPreview','btnRestaPublish']],
           theme_next_supreme:['👑 The Next Supreme','Abra a votação entre as duas Supremes, encerre a urna e confira o dossiê antes de confirmar.',['btnSupremeOpen','btnSupremeClose','btnSupremePreview','btnSupremePublish']],
           theme_tarantino:['🎞️ Tarantino','Use o dossiê First Kill / Last Stand e as regras específicas de dupla eliminação. Evite publicar o Bottom 3 padrão.',['btnApurarRanking']],
-          theme_rest_in_style:['🕯️ Rest in Style','Confira o julgamento especial do funeral antes de confirmar a eliminação.',['btnApurarRanking']]
+          theme_rest_in_style:['🕯️ Rest in Style','Confira o julgamento especial do funeral antes de confirmar a eliminação.',['btnRestActivate','btnRestJudge','btnRestVerdict','btnRestEliminate']]
         };
         const twist=twistDirectives[globalState.themeId];
         const twistBox=$('#fauTwistDirector');
@@ -8573,6 +8669,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(state.themeId==='theme_plaid_bay' && await restaState()) throw new Error('Ranking já publicado: não recalcule a classificação durante ou depois do Resta Um.');
             const count = standings.length;
             const isFinal = state.fase === 'final';
+            if(isFinal&&standings.some((row,index)=>index>0&&row.rd===standings[index-1].rd))
+                throw new Error('Empate na Grande Final. O resultado permanece pendente até a produção definir o critério oficial.');
             const isNonElim=state.elimTipo==='none'||state.naoEliminatoria||state.semEliminacao||state.themeId==='w01_first_garment';
 
             // Classificação semanal proporcional ao elenco, independente do Elimination Pool.
@@ -8651,7 +8749,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const ranking = {
                 rodada: state.rodada,
                 rows: officialOrder.map((row,i)=>({uid:row.uid,ate:row.ate,status:statuses[i]})),
-                classificationSlots: {...weeklyGroups}
+                classificationSlots: {...weeklyGroups},
+                ...(state.themeId==='theme_plaid_bay'?{restaScores:officialOrder.map(({uid,rd,tot})=>({uid,rd,tot}))}:{})
             };
             drafts.push({kind:'ranking',payload:{ranking,stateUpdate}});
             return {ranking,stateUpdate,drafts};
@@ -8667,7 +8766,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const published=officialRanking(previous,publicPrevious);
             if(published&&(!titles||previous.resultsComplete===true||state.rankingLiberado===true))throw new Error('O ranking desta Week já foi publicado.');
             if(!state.notasEncerradas)throw new Error('Encerre as notas dos jurados antes de publicar.');
-            const sameRoundInputs=['fase','themeId','elimTipo','naoEliminatoria','semEliminacao','numSubmissoes','critiqueTopCount','critiqueBottomCount','resultsInputVersion','berlinda','castVoteLocks','salvationBallotVersion'];
+            const sameRoundInputs=['fase','themeId','elimTipo','naoEliminatoria','semEliminacao','numSubmissoes','finalistUids','critiqueTopCount','critiqueBottomCount','resultsInputVersion','berlinda','castVoteLocks','salvationBallotVersion'];
             if(sameRoundInputs.some(key=>JSON.stringify(state[key])!==JSON.stringify(context.state[key]))||
               state.modos?.[context.round]!==context.state.modos?.[context.round])throw new Error('A apuração mudou. Confira os dados antes de confirmar novamente.');
             if(published!==!!officialRows||(published&&!sameResultRows(previous.rows,officialRows)))throw new Error('O ranking mudou. Recarregue antes de concluir a publicação.');
@@ -8676,8 +8775,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(oldTitles?.published===true&&(oldTitles.icon!==titles.icon||oldTitles.fora!==titles.fora))throw new Error('Os títulos já registrados divergem da apuração. Confira antes de publicar.');
             if(!published){
               const {round,actor}=context;
-              const {rodada,rows,classificationSlots}=ranking;
-              tx.set(db.doc('ranking/atual'),ranking);
+              const {restaScores,...displayRanking}=ranking;
+              const {rodada,rows,classificationSlots}=displayRanking;
+              tx.set(db.doc('ranking/atual'),displayRanking);
               tx.set(db.doc('ranking_publico/atual'),{rodada,rows:publicRows});
               const pool=stateUpdate.berlinda??state.berlinda;
               const previousPool=publicPrevious?.eliminationPool;
@@ -9230,6 +9330,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         $('#btnToggleUrn').onclick = safeExec(async () => {
             const context=resultContext();
             const opening=!context.state.urna;
+            if(opening&&context.state.themeId==='theme_rest_in_style')throw new Error('Rest in Style usa o julgamento especial. A urna comum não se aplica.');
             if(globalState.themeId==='w01_first_garment' && !globalState.urna) throw new Error('THE FIRST GARMENT não tem votação de eliminação. As notas continuam contando para o ranking acumulado.');
             if(globalState.themeId==='theme_plaid_bay' && !globalState.urna){
                 const state=await restaState();
@@ -9247,14 +9348,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(twist?.phase!=='duel_ready'||!Array.isArray(twist.duel)||twist.duel.length!==2||new Set(twist.duel.map(x=>x.uid)).size!==2) throw new Error('Confirme os dois indicados do First Kill.');
                 poolToOpen=twist.duel.map(({uid,ate})=>({uid,ate}));
             }
-            if (!globalState.urna && poolToOpen.length !== (globalState.themeId==='theme_tarantino'?2:3) && globalState.themeId !== 'theme_rest_in_style') {
+            if (!globalState.urna && !fauSalvationPoolReady(globalState.themeId,poolToOpen)) {
                 const specialThemes = ['theme_traitors','theme_tarantino','theme_plaid_bay'];
                 if (specialThemes.includes(globalState.themeId) || globalState.fase !== 'normal' || globalState.elimTipo === 'none' || globalState.naoEliminatoria) {
                     throw new Error('Esta rodada possui regras especiais. Confirme os indicados oficiais pelo fluxo próprio antes de abrir a urna.');
                 }
                 poolToOpen = await fauResolveStandardPool();
             }
-            if (!globalState.urna && globalState.themeId!=='theme_rest_in_style' && poolToOpen.length!==(globalState.themeId==='theme_tarantino'?2:3))
+            if (!globalState.urna && !fauSalvationPoolReady(globalState.themeId,poolToOpen))
                 throw new Error('O Elimination Pool precisa ter indicados oficiais para abrir a votação.');
             if (!productionConfirm(globalState.urna ? 'Encerrar votação agora?' : `ABRIR a urna e mostrar estes indicados oficiais na The Voting Room?\n\n${poolToOpen.map(x=>x.ate).join(' • ')}`)) return;
             const auditRef=db.collection('auditoria_producao').doc();
@@ -9887,14 +9988,19 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
             const existing=await restaState();
             if(existing)throw new Error('O Resta Um já foi iniciado nesta rodada.');
-            const rows=await restaCandidates(),win=rows[0];
-            const ranking=await db.doc('ranking/atual').get();
-            if(!ranking.exists || ranking.data().rodada!==globalState.rodada)throw new Error('Publique primeiro o ranking e o WIN, sem revelar o Bottom 3.');
+            const context=resultContext(),ref=restaRef();
+            const rows=await restaCandidates(),win=rows.find(row=>fauArchiveIsWinner(row.status));
+            if(!win)throw new Error('O ranking oficial ainda não tem um WIN.');
             if(!productionConfirm(`INICIAR O RESTA UM? ${win.ate} será o primeiro a salvar. A corrente ficará visível no Workroom.`))return;
-            await restaRef().set({phase:'active',round:globalState.rodada,winUid:win.uid,currentUid:win.uid,
-                eligible:rows.map(x=>({uid:x.uid,ate:x.ate})),saved:[win.uid],history:[],
-                startedBy:currentUser.uid,startedAt:firebase.firestore.FieldValue.serverTimestamp()});
-            await productionLog('resta_um_started',{round:globalState.rodada,win:win.uid});
+            const auditRef=db.collection('auditoria_producao').doc();
+            await db.runTransaction(async tx=>{
+                const {twist}=await readTwistResult(tx,context,ref);
+                if(twist.phase)throw new Error('O Resta Um já foi iniciado nesta rodada.');
+                tx.set(ref,{phase:'active',round:context.state.rodada,winUid:win.uid,currentUid:win.uid,
+                    eligible:rows.map(({uid,ate})=>({uid,ate})),saved:[win.uid],history:[],
+                    startedBy:context.actor,startedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                writeResultAudit(tx,auditRef,context,'resta_um_started',{win:win.uid});
+            });
             showToast('Resta Um iniciado. O WIN já pode salvar.');
         });
         if ($('#btnRestaPreview')) $('#btnRestaPreview').onclick = safeExec(async()=>{
@@ -9902,11 +10008,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const state=await restaState();
             if(!state)throw new Error('A corrente ainda não começou.');
             const names=new Map(state.eligible.map(x=>[x.uid,x.ate]));
-            const rows=await restaCandidates();
-            const last=state.lastUid;
-            const worstRound=last? [...rows].sort((a,b)=>a.rd-b.rd||a.tot-b.tot).find(x=>x.uid!==last&&x.uid!==state.winUid):null;
-            const worstAccum=last&&worstRound?[...rows].sort((a,b)=>a.tot-b.tot||a.rd-b.rd).find(x=>![last,worstRound.uid,state.winUid].includes(x.uid)):null;
-            const pool=last&&worstRound&&worstAccum?[{uid:last,ate:names.get(last),reason:'RESTA UM'}, {...worstRound,reason:'LOWEST SCORE'}, {...worstAccum,reason:"SEASON'S LOWEST"}]:[];
+            const pool=restaPoolFromRanking(state,await restaCandidates());
             $('#adminOutput').innerHTML=`<section class="border border-fashion-gold rounded p-5 space-y-3">
                 <h3 class="font-cinzel text-fashion-gold">🔒 DIRECTOR'S CUT — RESTA UM</h3>
                 <p class="text-xs">Estado: ${esc(state.phase)} · WIN: ${esc(names.get(state.winUid))}</p>
@@ -9921,14 +10023,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(globalState.themeId!=='theme_plaid_bay')throw new Error('Esta ação é exclusiva de Plaid in the Bay.');
             const state=await restaState();
             if(!state || state.phase!=='pending_confirmation')throw new Error('Aguarde o fim da corrente de salvamentos.');
-            const rows=await restaCandidates();
-            const last=state.lastUid;
-            const byRound=[...rows].sort((a,b)=>a.rd-b.rd||a.tot-b.tot);
-            const byAccum=[...rows].sort((a,b)=>a.tot-b.tot||a.rd-b.rd);
-            const low=byRound.find(x=>x.uid!==last&&x.uid!==state.winUid);
-            const accum=byAccum.find(x=>![last,low?.uid,state.winUid].includes(x.uid));
-            if(!low||!accum)throw new Error('Não há três participantes elegíveis.');
-            const pool=[{uid:last,ate:state.eligible.find(x=>x.uid===last)?.ate},{uid:low.uid,ate:low.ate},{uid:accum.uid,ate:accum.ate}];
+            const picks=restaPoolFromRanking(state,await restaCandidates());
+            if(picks.length!==3)throw new Error('Não há três participantes elegíveis.');
+            const pool=picks.map(({uid,ate})=>({uid,ate}));
             $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">⚖️ BOTTOM 3 · PRÉVIA PRIVADA</h3>
             <p>🤠 RESTA UM: ${esc(pool[0].ate)}</p><p>📉 LOWEST SCORE: ${esc(pool[1].ate)}</p><p>📊 SEASON'S LOWEST: ${esc(pool[2].ate)}</p></div>`;
             if(!productionConfirm('CONFIRMAR o Bottom 3 do Resta Um? A berlinda será disponibilizada aos participantes quando a produção abrir a urna.'))return;
@@ -9943,33 +10040,48 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         });
 
         if ($('#btnSupremeOpen')) $('#btnSupremeOpen').onclick = safeExec(async()=>{
-            if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
+            const context=resultContext(),ref=supremeRef();
+            if(context.state.themeId!=='theme_next_supreme')throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
-            if(st.phase!=='submissions') throw new Error('A votação já foi iniciada.');
-            const ps=await db.collection('perfis').where('role','==','estilista').get();
-            const active=ps.docs.filter(d=>!d.data().out&&!d.data().disabled);
-            const ls=await db.collection('looks').where('rodada','==',globalState.rodada || 'sem-rodada').get();
-            const looks=ls.docs.map(d=>d.data());
-            const missing=active.filter(p=>![1,2].every(slot=>looks.some(l=>l.uid===p.id&&l.slot===slot)));
-            if(missing.length) throw new Error('Entregas incompletas: '+missing.map(p=>p.data().ate||p.id).join(', '));
-            if(!productionConfirm('Abrir a votação secreta OLD vs NEXT para o elenco? Os dois looks de cado Designer serão mostrados aos votantes.')) return;
-            await supremeRef().set({phase:'voting',round:globalState.rodada,openedBy:currentUser.uid,openedAt:firebase.firestore.FieldValue.serverTimestamp()});
-            await productionLog('supreme_vote_open',{round:globalState.rodada});
-            showToast('A sucessão começou. O elenco pode votar.');
+            if(!['submissions','closed'].includes(st.phase))throw new Error('A votação já está em andamento ou as Supremas foram confirmadas.');
+            const desk=await supremeBallotDesk();
+            if(desk.missingLooks.length)throw new Error('Entregas incompletas: '+desk.missingLooks.map(row=>row.ate).join(', '));
+            const reopening=st.phase==='closed';
+            if(reopening&&!desk.pending.length)throw new Error('Todas as cédulas estão completas. Confira o dossiê e confirme as Supremas.');
+            if(!productionConfirm(reopening?'Reabrir a Supreme Vote para completar os votos? As cédulas registradas serão preservadas.':'Abrir a votação secreta OLD vs NEXT para o elenco?'))return;
+            const auditRef=db.collection('auditoria_producao').doc();
+            await db.runTransaction(async tx=>{
+                const {twist}=await readTwistResult(tx,context,ref);
+                if((twist.phase||'submissions')!==st.phase)throw new Error('A votação mudou. Atualize a tela.');
+                tx.set(ref,{phase:'voting',round:context.state.rodada,openedBy:context.actor,openedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+                writeResultAudit(tx,auditRef,context,reopening?'supreme_vote_reopened':'supreme_vote_open',{});
+            });
+            showToast(reopening?'Urna reaberta. Os votos anteriores foram preservados.':'A sucessão começou. O elenco pode votar.');
         });
         if ($('#btnSupremeClose')) $('#btnSupremeClose').onclick = safeExec(async()=>{
-            if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
-            const st=await supremeState();
-            if(st.phase!=='voting') throw new Error('A votação não está aberta.');
-            if(!productionConfirm('Encerrar a votação Supreme? Nenhum novo voto será aceito.')) return;
-            await supremeRef().update({phase:'closed',closedBy:currentUser.uid,closedAt:firebase.firestore.FieldValue.serverTimestamp()});
-            await productionLog('supreme_vote_closed',{round:globalState.rodada});
+            const context=resultContext(),ref=supremeRef();
+            if(context.state.themeId!=='theme_next_supreme')throw new Error('Disponível apenas em The Next Supreme.');
+            if((await supremeState()).phase!=='voting')throw new Error('A votação não está aberta.');
+            await supremeResults();
+            if(!productionConfirm('Encerrar a votação Supreme? Nenhum novo voto será aceito.'))return;
+            const auditRef=db.collection('auditoria_producao').doc();
+            await db.runTransaction(async tx=>{
+                const {twist}=await readTwistResult(tx,context,ref);
+                if(twist.phase!=='voting')throw new Error('A votação mudou. Atualize a tela.');
+                tx.update(ref,{phase:'closed',closedBy:context.actor,closedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                writeResultAudit(tx,auditRef,context,'supreme_vote_closed',{});
+            });
             showToast('Urnas Supreme fechadas. Confira o dossiê.');
         });
         if ($('#btnSupremePreview')) $('#btnSupremePreview').onclick = safeExec(async()=>{
             if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
-            const results=await supremeResolveTies(await supremeResults());
+            const desk=await supremeBallotDesk();
+            if(desk.pending.length){
+                $('#adminOutput').innerHTML=`<h3 class="font-cinzel text-fashion-gold">Cédulas pendentes</h3><p>${esc(supremePendingMessage(desk))}</p>`;
+                return;
+            }
+            const results=await supremeResolveTies(await supremeResults(desk),desk.ballots);
             if(st.phase==='closed') {
                 const batch=db.batch();
                 for(const r of results.filter(r=>r.decidedBy==='pending_self')) batch.set(db.doc(`supreme_pendencias/${globalState.rodada}_${r.uid}`),{pending:true,uid:r.uid,round:globalState.rodada});
@@ -9982,7 +10094,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(globalState.themeId!=='theme_next_supreme') throw new Error('Disponível apenas em The Next Supreme.');
             const st=await supremeState();
             if(st.phase!=='closed') throw new Error('Encerre a votação antes de confirmar vencedoras.');
-            const results=await supremeResolveTies(await supremeResults());
+            const desk=await supremeBallotDesk();
+            const results=await supremeResolveTies(await supremeResults(desk),desk.ballots);
             if(!results.length||results.some(r=>!r.slot))throw new Error('Há empate sem voto válido do Ícone ou WIN. A próprio Designer empatada precisa escolher no Workroom antes da confirmação.');
             if(!productionConfirm('CONFIRMAR as Supremas vencedoras e liberar APENAS essas imagens para os jurados? As perdedoras não receberão notas.')) return;
             const winners=results.map(r=>({uid:r.uid,slot:r.slot,ate:r.ate,old:r.old,next:r.next,decidedBy:r.decidedBy,deciderUid:r.deciderUid||null}));
@@ -10209,7 +10322,22 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(!Number(deadline)||Number(deadline)>now())throw new Error('Aguarde o encerramento do prazo desta etapa.');
                 if(slot===2&&st.phase==='first')throw new Error('Confirme o sorteio primeiro.');
                 
-                await beautyRef().set({phase:st.phase||'first',...(slot===1?{juryFirst:true}:{juryFirst:true,jurySecond:true})},{merge:true});
+                let juryUids=st.juryUids;
+                if(slot===2&&!juryUids){
+                    const scores=await db.collection('avaliacoes').where('rodada','==',round).get();
+                    const roster=await fauResultJury(String(round),scores.docs.map(doc=>doc.data()),null,'whenAvailable');
+                    if(roster)juryUids=[...roster];
+                }
+                const context=resultContext(),ref=beautyRef();
+                await db.runTransaction(async tx=>{
+                    const {state,twist}=await readTwistResult(tx,context,ref);
+                    const currentDeadline=slot===1?(twist.firstDeadline||state.prazo):state.prazo;
+                    if(String(state.rodada)!==String(round)||!Number(currentDeadline)||Number(currentDeadline)>now()||
+                      (slot===2&&!['assigned','exhibition'].includes(twist.phase)))throw new Error('A etapa de Beauty mudou. Atualize o dossiê.');
+                    const knownRoster=twist.juryUids||juryUids;
+                    tx.set(ref,{phase:twist.phase||'first',juryFirst:true,...(slot===2?{jurySecond:true}:{}),
+                        ...(slot===2&&knownRoster?.length?{juryUids:knownRoster}:{})},{merge:true});
+                });
                 await refresh();
             };
             $('#btnBeautyJury1').onclick=safeExec(()=>release(1));
@@ -10260,12 +10388,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const existing = await ref.get();
             if(existing.exists&&existing.data().activated) throw new Error('Twist já ativado.');
             const oneFaction = new Set(members.map(x=>x.faction)).size===1;
+            if(oneFaction)throw new Error('Todos escolheram a mesma facção. Defina a regra para este caso antes de ativar o Black Banquet.');
             $('#adminOutput').innerHTML=`<div class="border border-fashion-gold p-4 space-y-2"><h3 class="font-cinzel text-fashion-gold">THE BLACK BANQUET — PRÉVIA PRIVADA</h3><p>${members.length} looks · ${attendance.length-members.length} ausência(s) registrada(s)</p><p>${oneFaction?'Facção única: regra normal de eliminação.':'Duas facções: regra especial de eliminação.'}</p>${members.map(x=>`<p>${esc(x.ate)} — ${esc(x.faction)}</p>`).join('')}</div>`;
-            if(!productionConfirm('ATIVAR O TWIST? O desfile será dividido por facção quando você liberar a passarela.'))return;
+            if(!productionConfirm('Ativar o Black Banquet? As facções serão divulgadas pelo comando de revelação.'))return;
             await db.runTransaction(async tx=>{
                 const latest=await tx.get(ref);
                 if(latest.exists&&latest.data().activated)throw new Error('Twist já ativado em outra sessão.');
-                tx.set(ref,{round:globalState.rodada,themeId:'theme_traitors',activated:true,members,published:false,absent:attendance.filter(x=>!x.submitted).map(x=>({uid:x.uid,ate:x.ate,reason:x.absence?.reason})),activatedBy:currentUser.uid,activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                tx.set(ref,{round:globalState.rodada,themeId:'theme_traitors',activated:true,published:false,activatedBy:currentUser.uid,activatedAt:firebase.firestore.FieldValue.serverTimestamp()});
             });
             await productionLog('traitors_twist_activated',{members:members.length,absent:attendance.length-members.length,oneFaction});
             showToast('Twist ativado. Aguardando sua liberação do desfile.');
@@ -10288,17 +10417,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         });
         if ($('#btnRevealBanquet')) $('#btnRevealBanquet').onclick = safeExec(async () => {
             if (globalState.themeId !== 'theme_traitors') throw new Error('Esta ação pertence apenas ao Black Banquet.');
-            const standings = await computeSeasonStandings();
-            const result = await computeTraitorsPool(standings);
-            const activation = await db.doc(`revelacoes_traitors/${globalState.rodada}`).get();
-            if (!activation.exists || !activation.data().activated) throw new Error('Ative o twist após as entregas antes de revelar as facções.');
-            if (!productionConfirm('REVELAÇÃO IRREVERSÍVEL: divulgar as facções escolhidas aos participantes? Confira o dossiê primeiro.')) return;
-            await db.doc(`revelacoes_traitors/${globalState.rodada}`).set({
-                round:globalState.rodada, themeId:'theme_traitors', published:true,
-                members:result.members.map(x=>({uid:x.uid, ate:x.ate, faction:x.faction})),
-                publishedBy:currentUser.uid, publishedAt:firebase.firestore.FieldValue.serverTimestamp()
-            }, {merge:true});
-            await productionLog('traitors_factions_revealed',{round:globalState.rodada, fallback:result.fallback});
+            const context=resultContext(),ref=db.doc(`revelacoes_traitors/${context.round}`);
+            const activation=(await ref.get()).data();
+            if(!activation?.activated)throw new Error('Ative o Black Banquet antes de revelar as facções.');
+            if(activation.published===true)throw new Error('As facções já foram reveladas.');
+            const result=await computeTraitorsPool(await computeSeasonStandings());
+            if(!productionConfirm('Divulgar as facções escolhidas aos participantes? Confira o dossiê primeiro.'))return;
+            const auditRef=db.collection('auditoria_producao').doc();
+            await db.runTransaction(async tx=>{
+                const {twist}=await readTwistResult(tx,context,ref);
+                if(!twist.activated||twist.published===true)throw new Error('As facções já foram reveladas ou a dinâmica mudou.');
+                tx.update(ref,{published:true,members:result.members.map(({uid,ate,faction})=>({uid,ate,faction})),
+                    publishedBy:context.actor,publishedAt:firebase.firestore.FieldValue.serverTimestamp()});
+                writeResultAudit(tx,auditRef,context,'traitors_factions_revealed',{fallback:result.fallback});
+            });
             showToast('Facções autorizadas para revelação.');
         });
 
@@ -10455,7 +10587,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 return;
             }
             const berlinda = globalState.berlinda || [];
-            if(berlinda.length!==3)throw new Error('O Elimination Pool oficial precisa ter três participantes.');
+            if(!fauSalvationPoolReady(globalState.themeId,berlinda))throw new Error('O Elimination Pool oficial está incompleto.');
 
             const votes=await tallyVotes('ber');
             if(!berlinda.some(row=>(votes[row.uid]||0)>0))throw new Error('A urna não possui votos válidos para apurar o OUT.');
@@ -10502,7 +10634,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const roundEliminated = middleThree[0];
             const finalTop3 = [directFinalist, middleThree[1], middleThree[2]];
 
-            calculationState={context:resultContext(),outList:[directEliminated,roundEliminated]};
+            calculationState={context:resultContext(),outList:[directEliminated,roundEliminated],finalistUids:finalTop3.map(row=>row.uid)};
 
             $('#adminOutput').innerHTML = `
                 <div class="space-y-3">
@@ -10854,7 +10986,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     showToast(item.ate+' está OUT.');
                 }
                 if(execAct==='apply-top5'&&calculationState){
-                    const {context,outList}=calculationState;
+                    const {context,outList,finalistUids}=calculationState;
                     if(!productionConfirm('Confirmar os três finalistas e os dois desligamentos da semifinal?'))return;
                     const auditRef=db.collection('auditoria_producao').doc();
                     const refs=outList.map(item=>db.doc(`perfis/${item.uid}`));
@@ -10864,8 +10996,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         if(state.fase!=='top5'||!state.notasEncerradas||state.resultsInputVersion!==context.state.resultsInputVersion||
                           profiles.some(profile=>!profile.exists||profile.data().out))throw new Error('A semifinal mudou. Refaça a apuração antes de confirmar.');
                         refs.forEach(ref=>tx.update(ref,{out:true}));
-                        tx.update(roundStateRef,{fase:'final'});
-                        writeResultAudit(tx,auditRef,context,'top5_confirmed',{out:outList.map(item=>item.uid)});
+                        tx.update(roundStateRef,{fase:'final',finalistUids});
+                        writeResultAudit(tx,auditRef,context,'top5_confirmed',{out:outList.map(item=>item.uid),finalistUids});
                     });
                     await Promise.all(outList.map(item=>fauPublishOutIdentity(item.uid)));
                     showToast('Top 3 definido para a Grande Final.');
