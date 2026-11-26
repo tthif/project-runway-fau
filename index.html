@@ -7938,11 +7938,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             let html='';
             if(mode==='jury'){
               const grouped=new Map();
+              const beautyPreview=globalState.themeId==='theme_beauty_eye';
+              const beautyScores=new Map();
               rows.forEach(v=>{
                 const sum=fauEvaluationTotal(v);
                 if(!v.alvo||sum===null)return;
                 if(!grouped.has(v.alvo))grouped.set(v.alvo,[]);
                 grouped.get(v.alvo).push(sum);
+                if(beautyPreview&&[1,2].includes(Number(v.slot))){
+                  const key=JSON.stringify([v.alvo,Number(v.slot)]);
+                  if(!beautyScores.has(key))beautyScores.set(key,[]);
+                  beautyScores.get(key).push(sum);
+                }
               });
               // Mesma fonte de notas efetivas usada pela apuração oficial.
               const standings=await computeSeasonStandings({allowIncomplete:true});
@@ -7972,11 +7979,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const status=i===0?'WIN':i<topEnd?'HIGH':i>=bottomStart?'BOTTOM':i>=bottomStart-lowSlots?'LOW':'SAFE';
                 return {...x,status};
               });
-              const incomplete=ordered.some(x=>x.count!==Math.max(...ordered.map(y=>y.count)));
+              const beautyNote=(id,slot)=>{const scores=beautyScores.get(JSON.stringify([id,slot]));return scores?.length?`${(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2)}/50 (${scores.length} avaliações)`:'Pendente';};
+              const incomplete=ordered.some(x=>x.count!==Math.max(...ordered.map(y=>y.count))||(beautyPreview&&(!beautyScores.has(JSON.stringify([x.id,1]))||!beautyScores.has(JSON.stringify([x.id,2])))));
               html='<p class="text-fashion-gold font-semibold">RANKING DO JÚRI · PRÉVIA PRIVADA</p><p class="text-gray-400">Classificações provisórias pela nota válida após penalidades. HIGH (inclui WIN): '+topSlots+' · LOW: '+lowSlots+' · BOTTOM: '+bottomSlots+'. Empates e notas pendentes podem alterar a classificação.</p>';
               if(!configuredTop&&!configuredBottom&&!official.length)html+='<p class="text-amber-200">Vagas TOP/BOTTOM não configuradas e sem ranking anterior: a distribuição exibida é apenas indicativa. Configure as vagas no painel de críticas.</p>';
               if(incomplete||standings.some(x=>x.pending))html+='<p class="text-amber-200">Há avaliações incompletas, ausentes ou em quantidades diferentes. Esta prévia é parcial.</p>';
-              html+=classifications.length?classifications.map((x,i)=>`<div class="flex items-center justify-between gap-3 border-b border-fashion-700 py-2"><span>${i+1}º · ${escPreview(label(x.id))} <small class="text-gray-400">(${x.count} avaliações)</small><span class="ml-2 text-fashion-gold font-semibold">${x.status}</span></span><strong class="whitespace-nowrap">${x.avg.toFixed(2)} pts${x.penalty>0?` <small class="text-amber-200">(antes: ${x.original.toFixed(2)} · penalidade de ${x.penalty}%)</small>`:""}</strong></div>`).join(''):'<p>Nenhuma avaliação completa nesta rodada.</p>';
+              html+=classifications.length?classifications.map((x,i)=>`<div class="flex items-center justify-between gap-3 border-b border-fashion-700 py-2"><span>${i+1}º · ${escPreview(label(x.id))} <small class="text-gray-400">(${x.count} avaliações)</small><span class="ml-2 text-fashion-gold font-semibold">${x.status}</span>${beautyPreview?`<small class="block text-gray-400 mt-1">MY VISION: ${beautyNote(x.id,1)} · ANOTHER POINT OF VIEW: ${beautyNote(x.id,2)}</small>`:""}</span><strong class="whitespace-nowrap">${x.avg.toFixed(2)}${beautyPreview?"/100":""} pts${x.penalty>0?` <small class="text-amber-200">(antes: ${x.original.toFixed(2)} · penalidade de ${x.penalty}%)</small>`:""}</strong></div>`).join(''):'<p>Nenhuma avaliação completa nesta rodada.</p>';
               if(globalState.semEliminacao||globalState.naoEliminatoria){html+='<p class="text-gray-400">ELIMINATION POOL: rodada não eliminatória.</p>';}
               else {html+='<p class="text-gray-400">ELIMINATION POOL: depende também do acumulado, das elegibilidades e das regras especiais da rodada. Consulte a apuração oficial; esta prévia não define o Pool.</p>';}
             }else{
