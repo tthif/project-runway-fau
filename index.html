@@ -2098,24 +2098,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     const workroomRequiredLooks = (state, beautyReleased) => state.themeId === 'theme_beauty_eye'
         ? (beautyReleased ? 2 : 1)
         : (state.fase === 'final' ? 4 : Number(state.numSubmissoes) || 1);
-    const workroomPulseNote = (percent, updatedAt) =>
-        `${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${updatedAt?.toDate ? ' · Atualizado '+updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`;
-    const notifyWorkroomCounter = async lookId => {
-        const host = location.hostname.match(/^project-runway-fau(\.[a-z0-9-]+\.workers\.dev)$/);
-        const user = auth.currentUser;
-        if (!host || !user) return;
-        try {
-            const token = await user.getIdToken();
-            const url = new URL(`https://project-runway-fau-counter${host[1]}/sync-submission`);
-            url.searchParams.set('look', lookId);
-            await fetch(url, {
-                method: 'POST', headers: { Authorization: `Bearer ${token}` },
-                keepalive: true, redirect: 'error', referrerPolicy: 'no-referrer'
-            });
-        } catch {
-            // A checagem periódica recupera avisos perdidos sem interferir na entrega.
-        }
-    };
     const _subErr = { m: '', t: 0 };
     const sub = (query, callback) => unsubsTab.push(query.onSnapshot(callback, err => {
         console.error('[listener]', err.code, err.message);
@@ -3527,6 +3509,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         }
         if(currentUser?.role !== 'estilista'){navigate('home');return;}
         let allMyLooks = [];
+        let submissionPulse = null;
+        const activeStylistsCount = 0;
         let looksLoaded = false;
         let workroomRenderVersion = 0;
         if (!hasMaisonIdentity()) { navigate('meu_perfil'); return; }
@@ -3664,6 +3648,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const beautyReleased = ['assigned','exhibition'].includes(beauty?.phase);
             const requiredLooks = isBeautyWorkroom ? (beautyReleased ? 2 : 1) : (isFinalPhase ? 4 : (globalState.numSubmissoes || 1));
             const currentRoundLooks = allMyLooks.filter(l => String(l.rodada) === String(globalState.rodada) && (!isBeautyWorkroom || beautyReleased || Number(l.slot||1)===1));
+            // Public aggregate only: never query or reveal other designers' individual submissions.
+            const pulseReady = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
+            const sent = pulseReady ? Math.max(0, Number(submissionPulse.enviados)) : null;
+            const rawTotal = pulseReady && Number.isFinite(Number(submissionPulse.total)) ? Math.max(0, Number(submissionPulse.total)) : activeStylistsCount;
+            const total = globalState.themeId === 'w02_new_form' ? Math.min(18, rawTotal) : rawTotal;
+            const pending = sent===null ? null : Math.max(0,total-Math.min(sent,total));
+            const percent = sent===null || total<=0 ? 0 : Math.min(100,Math.round(Math.min(sent,total)/total*100));
+            $('#workroomThermometer').innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div></div>
+              <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent===null?'—':sent}</strong><span class="text-gray-300 text-xs">JÁ ENVIARAM</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending===null?'—':pending}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
+              <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
+              <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a sincronização da produção.':`${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${submissionPulse?.updatedAt?.toDate ? ' · Atualizado '+submissionPulse.updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`}</p>`;
+
             if(beauty){const brief=document.querySelector('#fauBriefingCard .fau-brief-body');if(brief)brief.textContent=beautyReleased ? 'ANOTHER POINT OF VIEW — Reinterprete o conceito recebido em uma criação autoral. Envie uma imagem e um título próprio, sem escrever outro conceito.' : SEASON_THEMES.theme_beauty_eye.mandate;}
             const beautyAssignment = beautyReleased ? beauty?.assignments?.find(a=>a.uid===currentUser.uid) : null;
             if (globalState.themeId === 'theme_rest_in_style') {
@@ -3980,7 +3976,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         batch.set(db.doc(`envios/${id}`),{rodada:globalState.rodada,uid:currentUser.uid});
                     });
                     await batch.commit();
-                    void notifyWorkroomCounter(`${globalState.rodada}_${currentUser.uid}_0`);
                     showToast('OLD SUPREME e NEXT SUPREME recebidas! MAKE IT WORK!');
                 }catch(error){button.disabled=false;button.textContent='TENTAR ENVIAR AS DUAS SUPREMAS';throw error;}
                 return;
@@ -4063,7 +4058,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(now() >= Number(globalState.prazo))throw new Error('TIME IS UP · O prazo terminou durante o envio da imagem.');
                 try {await batch.commit();}
                 catch(error){if(submitButton){submitButton.disabled=now()>=Number(globalState.prazo);submitButton.textContent=submitButton.disabled?'PRAZO ENCERRADO':'TENTAR NOVAMENTE';}throw error;}
-                void notifyWorkroomCounter(lookDocId);
                 showToast('Entrega confirmada pelo servidor! Make it work!');
             }
         });
@@ -4096,25 +4090,34 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
         // Notas individuais são privadas; o designer consulta apenas o acumulado no perfil.
 
-        const board = $('#workroomThermometer');
-        const round = String(globalState.rodada);
-        const renderDeliveryProgress = (data) => {
-            if (!board.isConnected) return;
-            const ready = data && String(data.rodada) === round &&
-                Number.isInteger(data.enviados) && Number.isInteger(data.total) &&
-                data.enviados >= 0 && data.total >= data.enviados;
-            const sent = ready ? data.enviados : null;
-            const pending = ready ? data.total-sent : null;
-            const percent = ready && data.total ? Math.round(100*sent/data.total) : 0;
-            const note = ready ? workroomPulseNote(percent,data.updatedAt) : 'Aguardando a atualização das entregas.';
-            board.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div></div>
-              <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent??'—'}</strong><span class="text-gray-300 text-xs">CONCLUÍRAM</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending??'—'}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
-              <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
-              <p class="mt-2 text-[11px] text-gray-400">${note}</p>`;
-        };
-        renderDeliveryProgress();
-        // O servidor publica apenas totais. O navegador do Designer não abre registros de outros envios.
-        sub(db.doc('config/entregas_publicas'), snap => renderDeliveryProgress(snap.data()));
+        // A Direção publica somente os totais; Designers nunca leem envios alheios.
+        // Schema: config/entregas_publicas -> {rodada, enviados, total}.
+        sub(db.doc('config/entregas_publicas'), doc => {
+            const data = doc.exists ? doc.data() : null;
+            submissionPulse = data && String(data.rodada)===String(globalState.rodada) ? data : null;
+            // Atualiza o painel inteiro, inclusive o texto e a barra, sem recriar
+            // o formulário nem apagar o que o Designer está preenchendo.
+            const board = document.getElementById('workroomThermometer');
+            if (board) {
+                const ready = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
+                const sent = ready ? Math.max(0, Number(submissionPulse.enviados)) : null;
+                const rawTotal = ready ? Math.max(0, Number(submissionPulse.total)||0) : 0;
+                const total = globalState.themeId === 'w02_new_form' ? Math.min(18, rawTotal) : rawTotal;
+                const pending = ready ? Math.max(0, total-Math.min(sent,total)) : null;
+                const percent = ready && total ? Math.min(100,Math.round(100*Math.min(sent,total)/total)) : 0;
+                const counts = board.querySelectorAll('.grid strong');
+                if (counts.length >= 2) {
+                    counts[0].textContent = sent===null ? '—' : String(sent);
+                    counts[1].textContent = pending===null ? '—' : String(pending);
+                }
+                const bar = board.querySelector('.h-full.bg-fashion-gold');
+                if (bar) bar.style.width = percent+'%';
+                const note = board.querySelector('p.mt-2');
+                if (note) note.textContent = ready
+                    ? `${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.`
+                    : 'Aguardando a sincronização da produção.';
+            }
+        });
     };
 
     // Perfil: apenas proporções visuais agregadas de rodadas oficialmente publicadas.
@@ -7224,10 +7227,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Production Status">
                   <div class="flex flex-wrap justify-between gap-3 items-start"><div><p class="text-[10px] tracking-[.3em] text-fashion-gold">📊 THE PRODUCTION STATUS</p><h3 class="font-cinzel text-xl text-white">Pendências da rodada</h3><p class="text-xs text-gray-400">Visão exclusiva da produção: veja quem concluiu e quem falta, por tarefa. Os demais perfis recebem somente totais.</p></div><button id="fauStatusRefresh" class="rounded border border-fashion-gold/50 text-fashion-gold px-3 py-2 text-xs">↻ Atualizar</button></div>
                   <div id="fauStatusDashboard" tabindex="-1" class="space-y-3" role="status" aria-live="polite"><p class="text-xs text-gray-400">Carregando registros da rodada...</p></div>
-                  <div class="border-t border-fashion-700 pt-3 space-y-2">
-                    <button type="button" id="fauSyncPublicPulse" class="min-h-[44px] rounded border border-fashion-gold/50 text-fashion-gold px-3 text-xs" ${globalState.rodada?'':'disabled'}>Sincronizar contador público de entregas</button>
-                    <p id="fauPublicPulseStatus" class="text-xs text-gray-400" role="status">Use a sincronização manual para recalcular o total imediatamente.</p>
-                  </div>
                   <p class="text-[11px] text-gray-500">Somente a produção visualiza nomes e pendências. Nunca exibir escolhas, notas ou comentários neste painel.</p>
                 </section>
                 <section class="bg-fashion-900 border border-fashion-gold/50 rounded-xl p-5 space-y-4" aria-label="Live Show Director">
@@ -8181,87 +8180,63 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         };
         $('#fauStatusRefresh')?.addEventListener('click',refreshFauStatus);
         refreshFauStatus();
-        const pulseButton=$('#fauSyncPublicPulse');
-        const pulseStatus=$('#fauPublicPulseStatus');
-        let pulseBusy=false;
-        let pulseQueued=false;
-        let pulseTimer;
-        const queuePublicPulse=()=>{
-          clearTimeout(pulseTimer);
-          pulseTimer=setTimeout(syncPublicPulse,200);
-        };
-        const syncPublicPulse=async()=>{
-          if(!pulseButton.isConnected||!isAdmin||!auth.currentUser||!globalState.rodada)return;
-          if(pulseBusy){pulseQueued=true;return;}
-          pulseBusy=true;
-          const uid=auth.currentUser.uid;
-          const round=globalState.rodada;
-          const themeId=globalState.themeId;
-          const roundPhase=globalState.fase;
-          const requiredLooks=globalState.numSubmissoes;
-          const beauty=themeId==='theme_beauty_eye';
-          const stateRef=db.doc('config/estado');
-          const publicRef=db.doc('config/entregas_publicas');
-          pulseButton.disabled=true;
-          pulseStatus.textContent='Conferindo entregas da rodada…';
-          try{
-            const baseline=(await publicRef.get({source:'server'})).data()||{};
-            const [profiles,looks]=await Promise.all([
-              db.collection('perfis').where('role','==','estilista').get({source:'server'}),
-              workroomRoundLooks(round).get({source:'server'})
-            ]);
-            const active=new Set(profiles.docs.filter(doc=>{
-              const p=doc.data();
-              return !p.disabled&&!p.out&&!p.eliminado&&p.ativo!==false&&String(p.status||'').toUpperCase()!=='OUT';
-            }).map(doc=>doc.id));
-            const total=Number(round)===2||themeId==='w02_new_form'?Math.min(active.size,18):active.size;
-            const result=await db.runTransaction(async tx=>{
-              const state=(await tx.get(stateRef)).data()||{};
-              if(state.rodada!==round||state.themeId!==themeId||state.fase!==roundPhase||state.numSubmissoes!==requiredLooks)throw new Error('A rodada mudou. Confira o estado e tente novamente.');
-              const publicCount=(await tx.get(publicRef)).data()||{};
-              const sameTime=publicCount.updatedAt===baseline.updatedAt||(baseline.updatedAt&&publicCount.updatedAt?.isEqual?.(baseline.updatedAt));
-              if(!sameTime||['rodada','enviados','total'].some(key=>publicCount[key]!==baseline[key]))return 'superseded';
-              const beautyPhase=beauty?(await tx.get(db.doc(`beauty_dinamicas/${round}`))).data()?.phase:null;
-              const required=workroomRequiredLooks(state,['assigned','exhibition'].includes(beautyPhase));
-              const counts=new Map();
-              looks.docs.forEach(doc=>{
-                const look=doc.data();
-                if(active.has(look.uid)&&(!beauty||required===2||Number(look.slot||1)===1))counts.set(look.uid,(counts.get(look.uid)||0)+1);
-              });
-              const enviados=Math.min(total,[...counts.values()].filter(count=>count>=required).length);
-              const rodada=String(round);
-              if(!pulseButton.isConnected||!isAdmin||auth.currentUser?.uid!==uid)return 'superseded';
-              if(String(publicCount.rodada)===rodada&&publicCount.enviados===enviados&&publicCount.total===total)return 'unchanged';
-              tx.set(publicRef,{rodada,enviados,total,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-              return 'updated';
-            });
-            pulseStatus.textContent=result==='updated'?'Contador público de entregas atualizado.':'O contador público já está atualizado.';
-          }catch(error){
-            pulseStatus.textContent='Falha ao atualizar o contador público. '+error.message;
-          }finally{
-            pulseBusy=false;
-            pulseButton.disabled=!globalState.rodada;
-            if(pulseQueued&&pulseButton.isConnected){
-              pulseQueued=false;
-              queuePublicPulse();
-            }
-          }
-        };
-        pulseButton.onclick=syncPublicPulse;
-        unsubsTab.push(()=>clearTimeout(pulseTimer));
-
-        // Só a Direção consulta os registros individuais. O Workroom recebe os totais.
-        const pulseRound=globalState.rodada || 'sem-rodada';
-        const refreshDeliveryStatus=()=>{
-          refreshFauStatus();
-          queuePublicPulse();
-        };
-        sub(workroomRoundLooks(pulseRound),refreshDeliveryStatus);
-        sub(db.collection('perfis'),refreshDeliveryStatus);
-        ['avaliacoes','votos'].forEach(name=>{
-          sub(db.collection(name).where('rodada','==',pulseRound),refreshFauStatus);
+        // Atualização em tempo real sem renderizar informações identificáveis.
+        ['looks','avaliacoes','votos','perfis'].forEach(name=>{
+          const query=name==='perfis'?db.collection(name):db.collection(name).where('rodada','==',globalState.rodada || 'sem-rodada');
+          sub(query,()=>refreshFauStatus());
         });
-        if(globalState.themeId==='theme_beauty_eye')sub(beautyRef(),refreshDeliveryStatus);
+
+        // Contagem anônima sem Cloud Functions: a Direção sincroniza o placar
+        // com dados privados, publicando apenas números no documento público.
+        // Não há leitura de nomes/envios alheios pelo Designer.
+        let fauRosterForPulse = null;
+        let fauLooksForPulse = null;
+        let fauPulseWriting = false;
+        let fauPulsePending = false;
+        let fauLastPulseSignature = '';
+        const syncFauPublicPulse = async () => {
+            if (!isAdmin || !globalState.rodada || !fauRosterForPulse || !fauLooksForPulse) return;
+            const round = String(globalState.rodada);
+            const active = new Set(fauRosterForPulse.docs.filter(d => {
+                const p = d.data();
+                return p.role === 'estilista' && p.disabled !== true && p.ativo !== false && p.eliminado !== true && p.out !== true && String(p.status || '').toUpperCase() !== 'OUT';
+            }).map(d => d.id));
+            const required = globalState.themeId==='theme_beauty_eye'?(['assigned','exhibition'].includes((await beautyState().catch(()=>({phase:'first'}))).phase)?2:1):Number(getTheme()?.numSubmissoes || globalState.numSubmissoes || 1);
+            const counts = new Map();
+            fauLooksForPulse.docs.forEach(d => {
+                const l = d.data();
+                if(active.has(l.uid) && (globalState.themeId!=='theme_beauty_eye'||required===2||Number(l.slot||1)===1)) counts.set(l.uid, (counts.get(l.uid)||0)+1);
+            });
+            const eligibleTotal = (Number(globalState.rodada) === 2 || String(globalState.themeId) === 'w02_new_form') ? Math.min(active.size, 18) : active.size;
+            const sent = Math.min(eligibleTotal, [...counts.values()].filter(n => n >= required).length);
+            const signature = [round, sent, eligibleTotal, required].join('|');
+            if(signature === fauLastPulseSignature) return;
+            if(fauPulseWriting){fauPulsePending=true;return;}
+            fauPulseWriting=true;
+            try {
+                const publicRef = db.doc('config/entregas_publicas');
+                await db.runTransaction(async tx => {
+                    const state = (await tx.get(db.doc('config/estado'))).data();
+                    if (!fauStatusEl.isConnected || !isAdmin || String(state?.rodada) !== round) return;
+                    const previous = (await tx.get(publicRef)).data();
+                    if (String(previous?.rodada) === round && previous.enviados === sent && previous.total === eligibleTotal) return;
+                    tx.set(publicRef, {
+                        rodada:round, enviados:sent, total:eligibleTotal,
+                        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                    }, {merge:true});
+                });
+                fauLastPulseSignature=signature;
+            }catch(error){console.warn('Não foi possível atualizar a contagem anônima:',error);}
+            finally {
+                fauPulseWriting=false;
+                if(fauPulsePending){fauPulsePending=false;queueMicrotask(syncFauPublicPulse);}
+            }
+        };
+        if(globalState.themeId==='theme_beauty_eye')sub(beautyRef(),()=>{syncFauPublicPulse();refreshFauStatus();});
+        sub(db.collection('perfis'), snap=>{fauRosterForPulse=snap;syncFauPublicPulse();});
+        sub(db.collection('looks').where('rodada','==',globalState.rodada||'sem-rodada'), snap=>{
+            fauLooksForPulse=snap;syncFauPublicPulse();
+        });
 
         sub(db.collection('perfis'), snap => {
             const container = $('#profileManagerContainer');
@@ -11005,7 +10980,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         batch.set(lookRef,data,{merge:true});
                         batch.set(db.doc(`envios/${id}`),{rodada:round,uid},{merge:true});
                         await batch.commit();
-                        void notifyWorkroomCounter(id);
                         dialog.remove();showToast(previous?'Entrega do Designer atualizada.':'Look enviado pelo Designer com sucesso.');
                     }catch(error){console.error('[Admin · envio de look]',error);const message=error.code==='permission-denied'?'Permissão negada pelo Firestore. Publique as regras atualizadas e confirme que sua conta está cadastrada em admins/{seu UID}.':error.code==='resource-exhausted'?'O documento excedeu o limite do Firestore. Tente uma imagem menor.':(error.message||'Não foi possível salvar a entrega.');errorBox.textContent=message;errorBox.classList.remove('hidden');showToast(message);}finally{save.disabled=false;save.textContent='Salvar entrega';}
                 };
