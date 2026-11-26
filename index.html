@@ -1932,11 +1932,30 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     const beautyRef = () => db.doc(`beauty_dinamicas/${globalState.rodada}`);
     const beautyEnvelopeRef = uid => beautyRef().collection('envelopes').doc(uid);
     const beautyPrivateRef = () => beautyRef().collection('private').doc('distribution');
-    const beautyState = async () => {
+    const fauValidBeautyEnvelope = value => !!value&&typeof value.title==='string'&&!!value.title.trim()&&
+        typeof value.concept==='string'&&!!value.concept.trim();
+    const beautyState = async ({retryEnvelope=false}={}) => {
         const st=(await beautyRef().get()).data() || {phase:'first'};
-        if(isAdmin && ['assigned','exhibition'].includes(st.phase)){const privateRows=(await beautyPrivateRef().get()).data()?.assignments;st.assignments=privateRows||st.assignments||[];}
-        else if(currentUser?.role==='estilista' && ['assigned','exhibition'].includes(st.phase)){const a=(await beautyEnvelopeRef(currentUser.uid).get()).data();const legacy=st.assignments?.find(x=>x.uid===currentUser.uid);const own=a||legacy;st.assignments=own?[{uid:currentUser.uid,title:own.title,concept:own.concept}]:[];}
-        else if(!isAdmin && !globalState.liberado) delete st.assignments;
+        if(isAdmin && ['assigned','exhibition'].includes(st.phase)){
+            const privateRows=(await beautyPrivateRef().get()).data()?.assignments;
+            st.assignments=privateRows||st.assignments||[];
+        }else if(currentUser?.role==='estilista' && ['assigned','exhibition'].includes(st.phase)){
+            const uid=currentUser.uid;
+            const legacy=st.assignments?.find(x=>x.uid===uid);
+            let own;
+            try{
+                const ref=beautyEnvelopeRef(uid);
+                let snapshot=retryEnvelope?await ref.get({source:'server'}):await ref.get();
+                if(!retryEnvelope&&!fauValidBeautyEnvelope(snapshot.data())&&snapshot.metadata?.fromCache)
+                    snapshot=await ref.get({source:'server'});
+                own=snapshot.data();
+            }catch(error){
+                st.envelopeUnavailable=true;
+                console.warn('[Beauty] Consulta ao próprio envelope indisponível:',error.code||error.message);
+            }
+            const envelope=fauValidBeautyEnvelope(own)?own:legacy;
+            st.assignments=fauValidBeautyEnvelope(envelope)?[{uid,title:envelope.title,concept:envelope.concept}]:[];
+        }else if(!isAdmin && !globalState.liberado)delete st.assignments;
         return st;
     };
     const beautyAssign = async (deadline, previewOnly=false, approved=null) => {
@@ -3599,7 +3618,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             };
             sub(restaRef(),snap=>renderResta(snap.exists?snap.data():null));
         }
-        const refreshWorkroomUI = async () => {
+        const refreshWorkroomUI = async ({retryEnvelope=false}={}) => {
             const renderVersion = ++workroomRenderVersion;
             if (!looksLoaded) return;
             const maisonName = currentUser.ate || '';
@@ -3614,11 +3633,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 $('#atelierSetupModule').innerHTML = '';
             }
 
-            const beauty = isBeautyWorkroom ? await beautyState() : null;
+            const beauty = isBeautyWorkroom ? await beautyState({retryEnvelope}) : null;
             if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
             const beautyReleased = ['assigned','exhibition'].includes(beauty?.phase);
             const requiredLooks = isBeautyWorkroom ? (beautyReleased ? 2 : 1) : (isFinalPhase ? 4 : (globalState.numSubmissoes || 1));
-            const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada && (!isBeautyWorkroom || beautyReleased || Number(l.slot||1)===1));
+            const currentRoundLooks = allMyLooks.filter(l => String(l.rodada) === String(globalState.rodada) && (!isBeautyWorkroom || beautyReleased || Number(l.slot||1)===1));
             // Public aggregate only: never query or reveal other designers' individual submissions.
             const pulseReady = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
             const sent = pulseReady ? Math.max(0, Number(submissionPulse.enviados)) : null;
@@ -3684,7 +3703,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if (renderVersion !== workroomRenderVersion || !document.getElementById('workroomFormModule')) return;
             const formSlot = $('#workroomFormModule');
             if (beauty?.phase==='exhibition' && currentRoundLooks.length<requiredLooks) { formSlot.innerHTML='<p>Exposição autorizada. Entregas encerradas.</p>'; } else if (beauty && currentRoundLooks.length===1 && beauty.phase==='assigned' && !beautyAssignment) {
-                formSlot.innerHTML = '<p class="text-amber-300">Seu envelope ainda não foi distribuído. Avise a produção.</p>';
+                formSlot.innerHTML = `<section class="rounded-xl border border-fashion-gold/40 bg-fashion-950 p-4 space-y-3" role="status">
+                    <h3 class="font-cinzel text-white">Conceito da releitura</h3>
+                    <p class="text-sm text-amber-200">${beauty.envelopeUnavailable?'Não foi possível consultar seu envelope agora.':'Seu envelope ainda não aparece nesta conta.'} Se o aviso continuar, peça à produção para conferir seu cadastro e o envelope já sorteado.</p>
+                    <button id="fauRetryBeautyEnvelope" type="button" class="min-h-[44px] rounded border border-fashion-gold/50 px-4 py-2 text-sm text-fashion-gold">Consultar envelope novamente</button>
+                </section>`;
+                const retry=formSlot.querySelector('#fauRetryBeautyEnvelope');
+                retry.onclick=async()=>{
+                    retry.disabled=true;
+                    try{await refreshWorkroomUI({retryEnvelope:true});}
+                    catch(error){showWorkroomError(error);}
+                    finally{if(retry.isConnected)retry.disabled=false;}
+                };
             } else if (currentRoundLooks.length >= requiredLooks) {
                 const editable = Number(globalState.prazo)>now() && beauty?.phase!=='exhibition';
                 formSlot.innerHTML = `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-xl p-5 space-y-4">
@@ -3948,19 +3978,19 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 checkLookTitleLength(lookTitle);
                 const memorial = $('#lookMemorialText').value.trim();
 
-                const beautySecond=isBeautyWorkroom && allMyLooks.some(l=>l.rodada===globalState.rodada && Number(l.slot)===1);
+                const beautySecond=isBeautyWorkroom && allMyLooks.some(l=>String(l.rodada)===String(globalState.rodada) && Number(l.slot)===1);
                 if (!file || !lookTitle || (!beautySecond && !memorial)) throw new Error(beautySecond?'Preencha imagem e título.':'Preencha imagem, título e conceito da criação.');
                 if (!beautySecond && memorial.length > 500) throw new Error('O conceito deve ter até 500 caracteres.');
                 if(file.size>5*1024*1024) throw new Error('A fotografia deve ter no máximo 5 MB. Escolha uma imagem menor.');
 
                 const theme = getTheme();
                 const beauty = theme?.id === 'theme_beauty_eye' ? await beautyState() : null;
-                const previousLooks = allMyLooks.filter(l=>l.rodada===globalState.rodada);
-                if (beauty && previousLooks.length===1 && (beauty.phase!=='assigned' || !beauty.assignments?.some(a=>a.uid===currentUser.uid))) throw new Error('Aguarde a produção liberar seu conceito.');
+                const previousLooks = allMyLooks.filter(l=>String(l.rodada)===String(globalState.rodada));
+                if (beauty && previousLooks.length===1 && (beauty.phase!=='assigned' || !beauty.assignments?.some(a=>a.uid===currentUser.uid))) throw new Error(beauty.envelopeUnavailable?'Não foi possível consultar seu envelope. Tente novamente.':'Seu conceito da releitura ainda não está disponível para esta conta. Confira seu envelope no Workroom.');
                 if (beauty && previousLooks.length===0 && beauty.phase!=='first') throw new Error('A primeira etapa já foi encerrada. Procure a produção.');
                 if(theme?.id==='w02_new_form' && !(await fauMutationRef(globalState.rodada,currentUser.uid).get()).exists) throw new Error('Abra seu envelope na Mutation Machine antes de enviar o look.');
                 if(theme?.id==='w02_new_form' && !allMyLooks.some(l=>l.themeId==='w01_first_garment')) throw new Error('Sua criação da Week 01 não foi encontrada. Procure a produção para regularizar o histórico antes de enviar A New Form.');
-                const draw = theme ? await getPersonalTwist() : null;
+                const draw = theme&&!beauty ? await getPersonalTwist() : null;
                 if (theme && (themeHasDraw(theme) || theme.drawType === 'faction_choice') && !draw) throw new Error('Abra seu envelope antes de enviar o look.');
                 if (theme?.extraField && !(false && (await getPersonalTwist()).value) && !document.getElementById('themeExtraInput')?.value.trim()) throw new Error('Preencha a exigência especial deste desafio.');
                 if(theme?.id==='theme_climate_chaos') {
@@ -3982,7 +4012,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         finaleMeta.archiveReference=archive;
                     }
                 }
-                const currentRoundLooks = allMyLooks.filter(l => l.rodada === globalState.rodada);
+                const currentRoundLooks = allMyLooks.filter(l => String(l.rodada) === String(globalState.rodada));
                 if (currentRoundLooks.length >= (beauty ? (beauty.phase==='assigned'?2:1) : (theme?.numSubmissoes || globalState.numSubmissoes || 1))) throw new Error('Todas as entregas desta rodada já foram enviadas.');
                 showToast('Otimizando a fotografia e enviando...');
                 const index = currentRoundLooks.length;
@@ -10311,7 +10341,39 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const has=(uid,slot)=>ls.docs.some(d=>d.data().uid===uid&&Number(d.data().slot||1)===slot);
                 return {st,names,active,has};
             };
-            const drawRows=(rows,d)=>rows.map(a=>`<details class="border border-fashion-700 rounded p-3"><summary class="text-sm text-fashion-gold cursor-pointer">${esc(d.names.get(a.uid)||a.uid)} recebe de ${esc(d.names.get(a.sourceUid)||a.sourceUid)} · ${esc(a.title)}</summary><p class="text-xs text-gray-300 mt-2">${esc(a.concept||'')}</p><p class="text-xs mt-2">Releitura: ${d.has(a.uid,2)?'entregue':'pendente'}</p></details>`).join('');
+            const drawRows=(rows,d,recovery=false)=>rows.map(a=>`<details class="border border-fashion-700 rounded p-3">
+              <summary class="text-sm text-fashion-gold cursor-pointer">${esc(d.names.get(a.uid)||a.uid)} recebe de ${esc(d.names.get(a.sourceUid)||a.sourceUid)} · ${esc(a.title)}</summary>
+              <p class="text-xs text-gray-300 mt-2">${esc(a.concept||'')}</p>
+              <p class="text-xs mt-2">Releitura: ${d.has(a.uid,2)?'entregue':'pendente'}</p>
+              ${recovery&&!d.has(a.uid,2)?`<button type="button" data-beauty-check-envelope="${esc(a.uid)}" class="mt-2 min-h-[44px] border border-fashion-gold/40 rounded px-3 py-2 text-xs text-fashion-gold">Conferir envelope desta conta</button><p class="text-xs mt-1" role="status" data-beauty-envelope-status></p>`:''}
+            </details>`).join('');
+            const repairEnvelope=async(uid)=>{
+                const context=resultContext(),ref=beautyRef(),envelope=beautyEnvelopeRef(uid),distribution=beautyPrivateRef();
+                const auditRef=db.collection('auditoria_producao').doc();
+                return db.runTransaction(async tx=>{
+                    const {state,twist}=await readTwistResult(tx,context,ref);
+                    if(state.themeId!=='theme_beauty_eye'||String(state.rodada)!==String(round)||twist.phase!=='assigned')
+                        throw new Error('A recuperação está disponível apenas durante Another Point of View, antes da exposição.');
+                    const [profile,saved,snapshot]=await Promise.all([
+                        tx.get(db.doc(`perfis/${uid}`)),tx.get(distribution),tx.get(envelope)
+                    ]);
+                    const person=profile.data();
+                    if(person?.role!=='estilista'||person.out||person.disabled)throw new Error('Designer ausente ou inativo nesta conta.');
+                    const source=saved.data()?.assignments;
+                    const matches=(Array.isArray(source)?source:[]).filter(row=>row?.uid===uid);
+                    const assignment=matches.length===1?matches[0]:null;
+                    if(!fauValidBeautyEnvelope(assignment)||!assignment.sourceUid||assignment.sourceUid===uid)
+                        throw new Error('O sorteio salvo não tem um conceito confirmado para esta conta. Confira o cadastro do Designer.');
+                    if(snapshot.exists){
+                        const current=snapshot.data();
+                        if(current.title===assignment.title&&current.concept===assignment.concept)return false;
+                        throw new Error('O envelope existente diverge do sorteio. Confira o registro antes de qualquer alteração.');
+                    }
+                    tx.set(envelope,{title:assignment.title,concept:assignment.concept});
+                    writeResultAudit(tx,auditRef,context,'beauty_envelope_restored',{uid});
+                    return true;
+                });
+            };
             const refresh=async()=>{
                 const d=await readDesk(), st=d.st;
                 if(!$('#beautyDeskStatus'))return;
@@ -10319,7 +10381,29 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 $('#btnBeautyAssign').disabled=st.phase!=='first';
                 $('#btnBeautyJury1').disabled=!!st.juryFirst;
                 $('#btnBeautyJury2').disabled=!!st.jurySecond||st.phase==='first';
-                $('#beautyDeskDetails').innerHTML=drawRows(st.assignments||[],d)||'<p class="text-xs text-gray-400">Nenhum envelope confirmado.</p>';
+                const details=$('#beautyDeskDetails');
+                details.innerHTML=drawRows(st.assignments||[],d,st.phase==='assigned')||'<p class="text-xs text-gray-400">Nenhum envelope confirmado.</p>';
+                details.querySelectorAll('[data-beauty-check-envelope]').forEach(button=>button.onclick=safeExec(async()=>{
+                    const uid=button.dataset.beautyCheckEnvelope,status=button.nextElementSibling;
+                    button.disabled=true;
+                    try{
+                        const current=(await beautyEnvelopeRef(uid).get({source:'server'})).data();
+                        if(fauValidBeautyEnvelope(current)){
+                            const assignment=(st.assignments||[]).find(row=>row.uid===uid);
+                            status.textContent=current.title===assignment?.title&&current.concept===assignment?.concept
+                                ?'Envelope já disponível nesta conta. Oriente o Designer a consultar novamente no Workroom.'
+                                :'O envelope não corresponde ao sorteio salvo. Confira o registro.';
+                            return;
+                        }
+                        if(current){status.textContent='O envelope existente está incompleto. Confira o registro antes de qualquer alteração.';return;}
+                        status.textContent='Envelope individual ausente. A recuperação usa o conceito que já foi sorteado.';
+                        if(!productionConfirm('Restaurar somente o envelope de '+(d.names.get(uid)||uid)+' com o conceito já sorteado?'))return;
+                        const restored=await repairEnvelope(uid);
+                        status.textContent=restored?'Envelope restaurado. O Designer já pode consultar novamente no Workroom.':'O envelope já está disponível nesta conta.';
+                        showToast(status.textContent);
+                    }finally{if(button.isConnected)button.disabled=false;}
+                }));
+
             };
             const release=async(slot)=>{
                 const st=await beautyState();
