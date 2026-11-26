@@ -2,11 +2,15 @@
   "name": "project-runway-fau-counter",
   "main": "index.mjs",
   "compatibility_date": "2026-11-26",
-  "workers_dev": false,
+  "workers_dev": true,
   "preview_urls": false,
   "vars": {
     "FIREBASE_PROJECT": "project-runway-fau"
   },
+  "ratelimits": [
+    { "name": "REQUEST_LIMIT", "namespace_id": "1001", "simple": { "limit": 50, "period": 60 } },
+    { "name": "DESIGNER_LIMIT", "namespace_id": "1002", "simple": { "limit": 6, "period": 60 } }
+  ],
   "triggers": {
     "crons": ["*/5 * * * *"]
   }

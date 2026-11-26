@@ -1,15 +1,54 @@
 const tokenUrl = 'https://oauth2.googleapis.com/token';
 const firestoreUrl = 'https://firestore.googleapis.com/v1';
+const firebaseKeysUrl = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 let cachedToken;
+let cachedKeys;
 
 function base64url(bytes) {
   return btoa(String.fromCharCode(...new Uint8Array(bytes)))
     .replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
 
+function decodeBase64url(value) {
+  return Uint8Array.from(atob(value.replaceAll('-', '+').replaceAll('_', '/')), char => char.charCodeAt(0));
+}
+
+async function verifyFirebaseUser(token, project) {
+  if (!/^[\w-]+\.[\w-]+\.[\w-]+$/.test(token) || token.length > 4096) return null;
+  const [header, payload, signature] = token.split('.');
+  let keyInfo, claims;
+  try {
+    keyInfo = JSON.parse(decoder.decode(decodeBase64url(header)));
+    claims = JSON.parse(decoder.decode(decodeBase64url(payload)));
+  } catch {
+    return null;
+  }
+  const now = Math.floor(Date.now() / 1000);
+  if (keyInfo?.alg !== 'RS256' || !keyInfo.kid ||
+      claims?.iss !== `https://securetoken.google.com/${project}` || claims.aud !== project ||
+      !Number.isFinite(claims.exp) || claims.exp <= now || !Number.isFinite(claims.iat) || claims.iat > now ||
+      typeof claims.sub !== 'string' || !claims.sub || claims.sub.length > 128 || claims.sub.includes('/') ||
+      claims.firebase?.sign_in_provider === 'anonymous') return null;
+  if (!cachedKeys || cachedKeys.expires <= now) {
+    const response = await fetch(firebaseKeysUrl);
+    const { keys } = await readResponse(response, 'Chaves de autenticação Firebase');
+    const age = Number(response.headers.get('Cache-Control')?.match(/max-age=(\d+)/)?.[1] || 300);
+    cachedKeys = { keys, expires: now + age };
+  }
+  const jwk = cachedKeys.keys.find(key => key.kid === keyInfo.kid);
+  if (!jwk) return null;
+  const algorithm = { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' };
+  const key = await crypto.subtle.importKey('jwk', jwk, algorithm, false, ['verify']);
+  const valid = await crypto.subtle.verify(algorithm, key, decodeBase64url(signature), encoder.encode(`${header}.${payload}`));
+  return valid ? { uid: claims.sub, email: claims.email_verified ? claims.email : null } : null;
+}
+
 async function readResponse(response, operation) {
-  if (!response.ok) throw new Error(`${operation}: HTTP ${response.status}`);
+  if (!response.ok) {
+    throw Object.assign(new Error(`${operation}: HTTP ${response.status}`), { status: response.status });
+  }
   return response.json();
 }
 
@@ -66,7 +105,7 @@ function isEligible(profile) {
     profile.ativo !== false && String(profile.status || '').toUpperCase() !== 'OUT';
 }
 
-export async function updateCounter(env) {
+export async function updateCounter(env, submission) {
   const token = await getAccessToken(env);
   const documents = `projects/${env.FIREBASE_PROJECT}/databases/(default)/documents`;
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -77,9 +116,11 @@ export async function updateCounter(env) {
   }), `Firestore ${method}`);
 
   const { transaction } = await post('beginTransaction', { options: { readWrite: {} } });
-  const getDocument = async path => {
-    const response = await firestore(`/${path}?transaction=${encodeURIComponent(transaction)}`);
-    return response.status === 404 ? {} : documentFields(await readResponse(response, 'Firestore get'));
+  const getDocument = async (path, fields = []) => {
+    const query = new URLSearchParams({ transaction });
+    fields.forEach(field => query.append('mask.fieldPaths', field));
+    const response = await firestore(`/${path}?${query}`);
+    return response.status === 404 ? null : documentFields(await readResponse(response, 'Firestore get'));
   };
   const query = async (collectionId, fieldPath, values, fields) => {
     const op = values.length === 1 ? 'EQUAL' : 'IN';
@@ -99,8 +140,20 @@ export async function updateCounter(env) {
   let committed = false;
   try {
     const state = await getDocument('config/estado');
-    if (!state.rodada) return false;
+    if (!state?.rodada) return false;
     const rodada = String(state.rodada);
+    if (submission) {
+      const look = await getDocument(`looks/${encodeURIComponent(submission.lookId)}`, ['uid', 'rodada', 't', 'adminUpdatedAt']);
+      if (!look?.uid || String(look.rodada) !== rodada) return false;
+      const ownLook = look.uid === submission.uid;
+      const timestamp = ownLook ? look.t : look.adminUpdatedAt;
+      if (!Number.isFinite(timestamp) || Math.abs(Date.now() - timestamp) > 120000) return false;
+      if (!ownLook) {
+        const admin = await getDocument(`admins/${encodeURIComponent(submission.uid)}`, ['role']);
+        const byEmail = !admin && typeof submission.email === 'string' && await getDocument(`admins/${encodeURIComponent(submission.email)}`, ['role']);
+        if (!admin && !byEmail) return false;
+      }
+    }
     const beauty = state.themeId === 'theme_beauty_eye';
     const rounds = /^\d+$/.test(rodada) && String(Number(rodada)) === rodada
       ? [rodada, Number(rodada)]
@@ -124,7 +177,7 @@ export async function updateCounter(env) {
     }
     const total = Number(rodada) === 2 || state.themeId === 'w02_new_form' ? Math.min(18, counts.size) : counts.size;
     const enviados = Math.min(total, [...counts.values()].filter(count => count >= required).length);
-    if (String(published.rodada) === rodada && published.enviados === enviados && published.total === total) return false;
+    if (String(published?.rodada) === rodada && published.enviados === enviados && published.total === total) return false;
 
     const fields = Object.fromEntries(Object.entries({ rodada, enviados, total })
       .map(([field, value]) => [field, firestoreValue(value)]));
@@ -144,6 +197,46 @@ export async function updateCounter(env) {
 }
 
 export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const origin = request.headers.get('Origin');
+    const host = url.hostname.match(/^project-runway-fau-counter(\.[a-z0-9-]+\.workers\.dev)$/);
+    if (url.pathname !== '/sync-submission' || !host || origin !== `https://project-runway-fau${host[1]}`) {
+      return new Response(null, { status: 404 });
+    }
+    const headers = {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Authorization',
+      'Cache-Control': 'no-store',
+      Vary: 'Origin',
+    };
+    const respond = status => new Response(null, { status, headers });
+    if (request.method === 'OPTIONS') return respond(204);
+    if (request.method !== 'POST') return respond(405);
+
+    const lookId = url.searchParams.get('look');
+    const auth = request.headers.get('Authorization');
+    if (!lookId || !/^[a-zA-Z0-9_-]{1,200}$/.test(lookId) || !auth?.startsWith('Bearer ')) return respond(400);
+    try {
+      const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+      if (!(await env.REQUEST_LIMIT.limit({ key: ip })).success) return respond(429);
+      const user = await verifyFirebaseUser(auth.slice(7), env.FIREBASE_PROJECT);
+      if (!user) return respond(401);
+      if (!(await env.DESIGNER_LIMIT.limit({ key: user.uid })).success) return respond(429);
+      const submission = { ...user, lookId };
+      try {
+        await updateCounter(env, submission);
+      } catch (error) {
+        if (error.status !== 409) throw error;
+        await updateCounter(env, submission);
+      }
+      return respond(204);
+    } catch (error) {
+      console.error(error.message);
+      return respond(503);
+    }
+  },
   async scheduled(_event, env) {
     try {
       await updateCounter(env);

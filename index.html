@@ -2100,6 +2100,22 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         : (state.fase === 'final' ? 4 : Number(state.numSubmissoes) || 1);
     const workroomPulseNote = (percent, updatedAt) =>
         `${percent}% dos Designers concluíram as entregas. Nenhuma identidade é revelada.${updatedAt?.toDate ? ' · Atualizado '+updatedAt.toDate().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : ''}`;
+    const notifyWorkroomCounter = async lookId => {
+        const host = location.hostname.match(/^project-runway-fau(\.[a-z0-9-]+\.workers\.dev)$/);
+        const user = auth.currentUser;
+        if (!host || !user) return;
+        try {
+            const token = await user.getIdToken();
+            const url = new URL(`https://project-runway-fau-counter${host[1]}/sync-submission`);
+            url.searchParams.set('look', lookId);
+            await fetch(url, {
+                method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                keepalive: true, redirect: 'error', referrerPolicy: 'no-referrer'
+            });
+        } catch {
+            // A checagem periódica recupera avisos perdidos sem interferir na entrega.
+        }
+    };
     const _subErr = { m: '', t: 0 };
     const sub = (query, callback) => unsubsTab.push(query.onSnapshot(callback, err => {
         console.error('[listener]', err.code, err.message);
@@ -3964,6 +3980,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         batch.set(db.doc(`envios/${id}`),{rodada:globalState.rodada,uid:currentUser.uid});
                     });
                     await batch.commit();
+                    void notifyWorkroomCounter(`${globalState.rodada}_${currentUser.uid}_0`);
                     showToast('OLD SUPREME e NEXT SUPREME recebidas! MAKE IT WORK!');
                 }catch(error){button.disabled=false;button.textContent='TENTAR ENVIAR AS DUAS SUPREMAS';throw error;}
                 return;
@@ -4046,6 +4063,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(now() >= Number(globalState.prazo))throw new Error('TIME IS UP · O prazo terminou durante o envio da imagem.');
                 try {await batch.commit();}
                 catch(error){if(submitButton){submitButton.disabled=now()>=Number(globalState.prazo);submitButton.textContent=submitButton.disabled?'PRAZO ENCERRADO':'TENTAR NOVAMENTE';}throw error;}
+                void notifyWorkroomCounter(lookDocId);
                 showToast('Entrega confirmada pelo servidor! Make it work!');
             }
         });
@@ -10987,6 +11005,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         batch.set(lookRef,data,{merge:true});
                         batch.set(db.doc(`envios/${id}`),{rodada:round,uid},{merge:true});
                         await batch.commit();
+                        void notifyWorkroomCounter(id);
                         dialog.remove();showToast(previous?'Entrega do Designer atualizada.':'Look enviado pelo Designer com sucesso.');
                     }catch(error){console.error('[Admin · envio de look]',error);const message=error.code==='permission-denied'?'Permissão negada pelo Firestore. Publique as regras atualizadas e confirme que sua conta está cadastrada em admins/{seu UID}.':error.code==='resource-exhausted'?'O documento excedeu o limite do Firestore. Tente uma imagem menor.':(error.message||'Não foi possível salvar a entrega.');errorBox.textContent=message;errorBox.classList.remove('hidden');showToast(message);}finally{save.disabled=false;save.textContent='Salvar entrega';}
                 };
