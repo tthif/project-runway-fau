@@ -3511,8 +3511,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         }
         if(currentUser?.role !== 'estilista'){navigate('home');return;}
         let allMyLooks = [];
-        let submissionPulse = null;
-        let activeStylistsCount = 0;
         let looksLoaded = false;
         let workroomRenderVersion = 0;
         if (!hasMaisonIdentity()) { navigate('meu_perfil'); return; }
@@ -3650,18 +3648,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const beautyReleased = ['assigned','exhibition'].includes(beauty?.phase);
             const requiredLooks = isBeautyWorkroom ? (beautyReleased ? 2 : 1) : (isFinalPhase ? 4 : (globalState.numSubmissoes || 1));
             const currentRoundLooks = allMyLooks.filter(l => String(l.rodada) === String(globalState.rodada) && (!isBeautyWorkroom || beautyReleased || Number(l.slot||1)===1));
-            // Public aggregate only: never query or reveal other designers' individual submissions.
-            const pulseReady = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
-            const sent = pulseReady ? Math.max(0, Number(submissionPulse.enviados)) : null;
-            const rawTotal = pulseReady && Number.isFinite(Number(submissionPulse.total)) ? Math.max(0, Number(submissionPulse.total)) : activeStylistsCount;
-            const total = globalState.themeId === 'w02_new_form' ? Math.min(18, rawTotal) : rawTotal;
-            const pending = sent===null ? null : Math.max(0,total-Math.min(sent,total));
-            const percent = sent===null || total<=0 ? 0 : Math.min(100,Math.round(Math.min(sent,total)/total*100));
-            $('#workroomThermometer').innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div></div>
-              <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent===null?'—':sent}</strong><span class="text-gray-300 text-xs">JÁ ENVIARAM</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending===null?'—':pending}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
-              <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
-              <p class="mt-2 text-[11px] text-gray-400">${sent===null?'Aguardando a atualização das entregas.':workroomPulseNote(percent,submissionPulse.updatedAt)}</p>`;
-
             if(beauty){const brief=document.querySelector('#fauBriefingCard .fau-brief-body');if(brief)brief.textContent=beautyReleased ? 'ANOTHER POINT OF VIEW — Reinterprete o conceito recebido em uma criação autoral. Envie uma imagem e um título próprio, sem escrever outro conceito.' : SEASON_THEMES.theme_beauty_eye.mandate;}
             const beautyAssignment = beautyReleased ? beauty?.assignments?.find(a=>a.uid===currentUser.uid) : null;
             if (globalState.themeId === 'theme_rest_in_style') {
@@ -4092,32 +4078,56 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
 
         // Notas individuais são privadas; o designer consulta apenas o acumulado no perfil.
 
-        // O Workroom recebe somente os totais publicados pelo Firebase.
-        sub(db.doc('config/entregas_publicas'), doc => {
-            const data = doc.exists ? doc.data() : null;
-            submissionPulse = data && String(data.rodada)===String(globalState.rodada) ? data : null;
-            // Atualiza o painel inteiro, inclusive o texto e a barra, sem recriar
-            // o formulário nem apagar o que o Designer está preenchendo.
-            const board = document.getElementById('workroomThermometer');
-            if (board) {
-                const ready = submissionPulse && Number.isFinite(Number(submissionPulse.enviados));
-                const sent = ready ? Math.max(0, Number(submissionPulse.enviados)) : null;
-                const rawTotal = ready ? Math.max(0, Number(submissionPulse.total)||0) : 0;
-                const total = globalState.themeId === 'w02_new_form' ? Math.min(18, rawTotal) : rawTotal;
-                const pending = ready ? Math.max(0, total-Math.min(sent,total)) : null;
-                const percent = ready && total ? Math.min(100,Math.round(100*Math.min(sent,total)/total)) : 0;
-                const counts = board.querySelectorAll('.grid strong');
-                if (counts.length >= 2) {
-                    counts[0].textContent = sent===null ? '—' : String(sent);
-                    counts[1].textContent = pending===null ? '—' : String(pending);
-                }
-                const bar = board.querySelector('.h-full.bg-fashion-gold');
-                if (bar) bar.style.width = percent+'%';
-                const note = board.querySelector('p.mt-2');
-                if (note) note.textContent = ready
-                    ? workroomPulseNote(percent,submissionPulse.updatedAt)
-                    : 'Aguardando a atualização das entregas.';
-            }
+        const board = $('#workroomThermometer');
+        const round = globalState.rodada;
+        let senders = null;
+        let activeDesigners = null;
+        let published = null;
+
+        const renderDeliveryProgress = () => {
+            if (!board.isConnected) return;
+            const live = senders !== null && activeDesigners !== null;
+            const sent = live ? senders : published?.enviados ?? null;
+            const total = live ? activeDesigners : published?.total ?? 0;
+            const pending = sent === null ? null : Math.max(0, total-sent);
+            const percent = sent === null || !total ? 0 : Math.min(100,Math.round(100*sent/total));
+            const note = live ? `${percent}% dos Designers enviaram pelo menos um look.`
+                : sent === null ? 'Aguardando a atualização das entregas.'
+                : workroomPulseNote(percent,published.updatedAt);
+            board.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="font-cinzel text-white text-lg">Entregas da rodada</h3></div></div>
+              <div class="grid grid-cols-2 gap-3 text-center"><div class="rounded-lg border border-fashion-gold/30 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-fashion-gold">${sent??'—'}</strong><span class="text-gray-300 text-xs">${live||sent===null?'JÁ ENVIARAM':'CONCLUÍRAM'}</span></div><div class="rounded-lg border border-fashion-700 bg-fashion-950 p-3"><strong class="block text-3xl font-cinzel text-white">${pending??'—'}</strong><span class="text-gray-300 text-xs">AINDA FALTAM</span></div></div>
+              <div class="mt-3 h-1.5 rounded-full bg-fashion-950 overflow-hidden"><div class="h-full bg-fashion-gold transition-all duration-500" style="width:${percent}%"></div></div>
+              <p class="mt-2 text-[11px] text-gray-400">${note}</p>`;
+        };
+        renderDeliveryProgress();
+
+        // Os registros de envio existentes têm UID e rodada. O cartão só exibe os totais.
+        // Se o Firebase restringir a leitura, mantemos o placar publicado pela Direção.
+        const deliveryReads = [];
+        let liveUnavailable = false;
+        const fallback = () => {
+            liveUnavailable = true;
+            deliveryReads.forEach(unsubscribe => unsubscribe());
+            senders = null;
+            activeDesigners = null;
+            renderDeliveryProgress();
+        };
+        deliveryReads.push(db.collection('envios').where('rodada','==',round).onSnapshot(snap => {
+            if (liveUnavailable) return;
+            senders = new Set(snap.docs.map(doc => doc.data().uid).filter(Boolean)).size;
+            renderDeliveryProgress();
+        }, fallback));
+        deliveryReads.push(db.collection('perfis').where('role','==','estilista').onSnapshot(snap => {
+            if (liveUnavailable) return;
+            activeDesigners = snap.docs.filter(doc => !doc.data().out && !doc.data().disabled).length;
+            renderDeliveryProgress();
+        }, fallback));
+        unsubsTab.push(() => deliveryReads.forEach(unsubscribe => unsubscribe()));
+        sub(db.doc('config/entregas_publicas'), snap => {
+            const data = snap.data();
+            published = data && String(data.rodada) === String(round) &&
+                Number.isFinite(data.enviados) && Number.isFinite(data.total) ? data : null;
+            if (senders === null || activeDesigners === null) renderDeliveryProgress();
         });
     };
 
