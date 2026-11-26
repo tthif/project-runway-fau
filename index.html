@@ -663,6 +663,12 @@ header .font-cinzel+span{display:inline!important;flex-shrink:0!important}
 #mainView:has(#fauRunwayOpening) #fauV83Launch{display:none!important}
 #fauRunwayOpening{max-width:100%;}
 #fauRunwayOpening #fauEnterRunway{max-width:100%;font-size:11px;letter-spacing:.09em;padding:11px 14px}
+    .fau-envelope-group{min-width:0;border:0;margin:0;padding:0}
+    .fau-envelope-group legend{font-size:.75rem;color:#d1b38b;margin-bottom:.35rem}
+    .fau-envelope-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(44px,1fr));gap:8px}
+    .fau-envelope-grid .fau-envelope{display:grid;place-items:center;gap:2px;min-height:56px;padding:6px;border:1px solid #705b50;border-radius:8px;background:#1c171c;color:#e0c39d;font-size:.75rem}
+    .fau-envelope-grid .fau-envelope span:first-child{font-size:1.35rem;line-height:1}
+    .fau-envelope-grid .fau-envelope[aria-pressed="true"],.fau-envelope-grid .fau-envelope:focus-visible{border-color:#d1b38b;outline:2px solid #d1b38b;outline-offset:1px;background:#493321}
 </style>
 </style>
 <style id="fau-admin-audit-cleanup">
@@ -1487,7 +1493,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 code: "WEEK 05 — THE ART OF SEDUCTION",
                 fixedOrder: null,
                 title: "THE ART OF SEDUCTION",
-                subtitle: "Um editorial de moda sobre sedução, com um dos cinco códigos obrigatórios definido por envelope lacrado e revelado somente pela produção.",
+                subtitle: "Um editorial de moda sobre sedução, com um dos cinco códigos obrigatórios definido ao confirmar um envelope no Workroom.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "seduction_elements",
@@ -1498,7 +1504,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     "🕸️ SHEER DESIRE — Transparência",
                     "🩶 SECOND SKIN — Segunda pele"
                 ],
-                mandate: "💋 THE SEDUCTION ELEMENTS — Escolha um envelope lacrado no Workroom e aguarde a revelação da produção. Seu elemento obrigatório será um entre LEATHER FETISH (couro relevante), BARE SHOULDERS (ombros expostos), THE CORSET (corseteria), SHEER DESIRE (transparência) ou SECOND SKIN (silhueta ajustada). Crie UM look editorial original com IA, título, conceito de até 500 caracteres. O elemento deve estar claramente presente, integrado ao look e identificável pelos jurados. A sedução deve ser interpretada como linguagem de moda, não apenas exposição do corpo. Cinco critérios oficiais, até 50 pontos. Rodada eliminatória.",
+                mandate: "💋 THE SEDUCTION ELEMENTS — Escolha e confirme um envelope no Workroom para revelar seu elemento. Seu elemento obrigatório será um entre LEATHER FETISH (couro relevante), BARE SHOULDERS (ombros expostos), THE CORSET (corseteria), SHEER DESIRE (transparência) ou SECOND SKIN (silhueta ajustada). Crie UM look editorial original com IA, título, conceito de até 500 caracteres. O elemento deve estar claramente presente, integrado ao look e identificável pelos jurados. A sedução deve ser interpretada como linguagem de moda, não apenas exposição do corpo. Cinco critérios oficiais, até 50 pontos. Rodada eliminatória.",
                 extraField: null
             },
             "theme_wedding_party": {
@@ -1516,7 +1522,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     elements: ["1. Alfinetes de segurança", "2. Pelúcia", "3. Penas", "4. Correntes", "5. Madeira"],
                     prints: ["1. Camuflagem", "2. Op art", "3. Toile de Jouy", "4. Estampa de cobra", "5. Pied-de-poule"]
                 },
-                mandate: "💍 DOIS MODELOS, UM CASAMENTO, TRÊS SEGREDOS: Escolha três envelopes lacrados (01 a 05): um para COR, um para ELEMENTO e um para ESTAMPA. A produção revelará os resultados. Os três devem aparecer no conjunto dos dois looks, não necessariamente em ambos.",
+                mandate: "💍 DOIS MODELOS, UM CASAMENTO, TRÊS SEGREDOS: Escolha três envelopes lacrados (01 a 05): um para COR, um para ELEMENTO e um para ESTAMPA. Confirme os envelopes no Workroom para revelar os resultados. Os três devem aparecer no conjunto dos dois looks, não necessariamente em ambos.",
                 extraField: null
             },
             "theme_the_awards": {
@@ -1524,7 +1530,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 code: "WEEK 07 — THE AWARDS: WRONG PLACE?",
                 fixedOrder: null,
                 title: "THE AWARDS: AM I IN THE WRONG PLACE?",
-                subtitle: "Look de grande premiação internacional (Oscar, Grammy, Emmy, BAFTA) fundido ao compromisso inesperado revelado após a escolha de um envelope lacrado.",
+                subtitle: "Look de grande premiação internacional (Oscar, Grammy, Emmy, BAFTA) fundido ao compromisso inesperado revelado ao confirmar um envelope no Workroom.",
                 elimTipo: "single",
                 numSubmissoes: 1,
                 drawType: "wrong_appointment",
@@ -1540,7 +1546,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     "🦷 Consulta Odontológica",
                     "🏊 Aula de Hidroginástica"
                 ],
-                mandate: "🏆 TAPETE VERMELHO + COMPROMISSO ERRADO: Escolha um envelope lacrado no site. Após a revelação da produção, transforme o compromisso sorteado em alta-costura digna de premiação, mantendo a referência reconhecível sem criar uma fantasia literal.",
+                mandate: "🏆 TAPETE VERMELHO + COMPROMISSO ERRADO: Escolha e confirme um envelope no Workroom. Transforme o compromisso sorteado em alta-costura digna de premiação, mantendo a referência reconhecível sem criar uma fantasia literal.",
                 extraField: null
             },
             "theme_bia_do_bras": {
@@ -1604,8 +1610,21 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         theme_plaid_bay:/\s*(?:Após as notas, o WIN inicia o Resta Um|O Resta Um começa após o ranking, sob comando da produção)\./gi,
         theme_next_supreme:/\s*(?:Votação secreta do elenco escolhe apenas uma imagem por Designer para avaliação dos jurados|A votação secreta do elenco decidirá qual será avaliada pelos jurados)\./gi
     };
+    const fauEnvelopeBriefingUpdates={
+        theme_art_seduction:[
+            [/definido por envelope lacrado e revelado somente pela produção\./gi,'definido ao confirmar um envelope no Workroom.'],
+            [/Escolha um envelope lacrado no Workroom e aguarde a revelação da produção\./gi,'Escolha e confirme um envelope no Workroom para revelar seu elemento.']
+        ],
+        theme_wedding_party:[
+            [/A produção revelará os resultados\./gi,'Confirme os envelopes no Workroom para revelar os resultados.']
+        ],
+        theme_the_awards:[
+            [/Escolha um envelope lacrado no site\. Após a revelação da produção, transforme o compromisso sorteado/gi,'Escolha e confirme um envelope no Workroom. Transforme o compromisso sorteado']
+        ]
+    };
     const fauPublicChallengeText=(themeId,value)=>{
-        const copy=String(value||'').trim();
+        const envelopeUpdates=Object.hasOwn(fauEnvelopeBriefingUpdates,themeId)?fauEnvelopeBriefingUpdates[themeId]:[];
+        const copy=envelopeUpdates.reduce((text,[oldCopy,newCopy])=>text.replace(oldCopy,newCopy),String(value||'').trim());
         const legacy=Object.hasOwn(fauUnrevealedChallengeCopy,themeId)?fauUnrevealedChallengeCopy[themeId]:null;
         if(!legacy)return copy;
         const briefing=copy.replace(legacy,'').trim();
@@ -1679,93 +1698,105 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         return {value:order[number-1],order};
     }
     async function getPersonalTwist() { return (await db.doc(`sorteios/${drawKey()}`).get()).data() || null; }
-    // Sorteios: o estilista escolhe um envelope numerado sem visualizar o conteúdo.
-    // A produção libera a revelação de forma independente para cada rodada.
-    const drawGateRef = () => db.doc(`sorteios_controle/${globalState.rodada}`);
-    const getDrawGate = async () => (await drawGateRef().get()).data() || {phase:'selection'};
+    const fauWeddingEnvelopeGroups=[['color','Cor','colors'],['element','Elemento','elements'],['print','Estampa','prints']];
+    const fauEnvelopeNumber=number=>String(number).padStart(2,'0');
+    const fauEnvelopeButtons=(count,attributes,selected=null)=>Array.from({length:count},(_,index)=>{
+        const number=index+1;
+        return `<button type="button" ${attributes(number)} aria-label="Envelope ${fauEnvelopeNumber(number)}" aria-pressed="${selected===number}" class="fau-envelope"><span aria-hidden="true">✉</span><span>${fauEnvelopeNumber(number)}</span></button>`;
+    }).join('');
+    const fauEnvelopeGroup=(count,attributes,label='',selected=null,fields='')=>
+        `<fieldset class="fau-envelope-group">${label?`<legend>${esc(label)}</legend>`:''}${fields}<div class="fau-envelope-grid">${fauEnvelopeButtons(count,attributes,selected)}</div></fieldset>`;
+    const fauWeddingResult=(theme,choices)=>fauWeddingEnvelopeGroups.map(([key,,pool])=>theme.invitationBoxMap[pool][choices[key]-1]).join(' • ');
     async function revealPersonalTwist() {
-        const t=getTheme();
-        if(!t || !currentUser || currentUser.role!=='estilista')throw new Error('Escolha exclusiva dos estilistas.');
-        if(!themeHasDraw(t) && t.drawType!=='faction_choice' && t.id!=='theme_seven_deadly')throw new Error('Esta rodada não tem escolha confirmável.');
-        const wedding=t.drawType==='invitation_box_3d';
-        const choices=wedding?['color','element','print'].map(k=>document.getElementById('wedding_'+k)?.value):[];
-        const chosen=wedding?choices.join('-'):(t.drawType==='faction_choice'?document.getElementById('factionChoice')?.value:(false?document.getElementById('themeExtraInput')?.value:document.getElementById('sealedEnvelope')?.value));
-        if(wedding && (choices.length!==3 || choices.some(n=>!n || !/^[1-5]$/.test(n))))throw new Error('Escolha um envelope de 01 a 05 em cada categoria.');
-        if(!chosen)throw new Error(false?'Escolha um dos sete anões antes de confirmar.':'Faça sua escolha antes de confirmar.');
-        if(false && !t.extraField.options.includes(chosen))throw new Error('Personagem inválido.');
-        const ref=db.doc(`sorteios/${drawKey()}`);
-        await db.runTransaction(async tx=>{
-            const snap=await tx.get(ref);
-            if(snap.exists)throw new Error('Você já confirmou sua escolha. Não é possível alterar.');
-            const assignment=(!wedding&&t.drawType!=='faction_choice'&&t.id!=='theme_seven_deadly')?fauEnvelopeAssignment(t,Number(chosen)):null;
-            const value=wedding?[t.invitationBoxMap.colors[Number(choices[0])-1],t.invitationBoxMap.elements[Number(choices[1])-1],t.invitationBoxMap.prints[Number(choices[2])-1]].join(' • '):(t.drawType==='faction_choice'||false?chosen:assignment.value);
-            tx.set(ref,{uid:currentUser.uid,rodada:globalState.rodada,themeId:t.id,envelope:chosen,value,...(assignment?{envelopeDistribution:assignment.order}:{}),...(wedding?{weddingNumbers:{color:Number(choices[0]),element:Number(choices[1]),print:Number(choices[2])}}:{}),
-                createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-        });
-        await renderPersonalTwist();
-        showToast(false?'Personagem confirmado! Sua escolha foi salva.':t.drawType==='faction_choice'?'Facção confirmada! Sua escolha foi salva.':'Envelope aberto! Seu resultado foi salvo e estará disponível sempre que entrar.');
+        const t=getTheme(), user=currentUser, round=globalState.rodada;
+        if(!t||!round||user?.role!=='estilista'||user.out||user.disabled)throw new Error('Escolha exclusiva dos Designers ativos.');
+        const faction=t.drawType==='faction_choice', wedding=t.drawType==='invitation_box_3d';
+        if(!themeHasDraw(t)&&!faction)throw new Error('Esta rodada não tem escolha confirmável.');
+        if(!faction&&!(Number(globalState.prazo)>now()))throw new Error('O prazo de escolha foi encerrado.');
+        const numbers=wedding?Object.fromEntries(fauWeddingEnvelopeGroups.map(([key,,pool])=>{
+            const number=Number(document.getElementById('wedding_'+key)?.value);
+            if(!Number.isInteger(number)||number<1||number>t.invitationBoxMap[pool].length)
+                throw new Error('Escolha um envelope em cada categoria.');
+            return [key,number];
+        })):null;
+        const chosen=wedding?Object.values(numbers).join('-'):document.getElementById(faction?'factionChoice':'sealedEnvelope')?.value;
+        if(!chosen)throw new Error('Faça sua escolha antes de confirmar.');
+        if(faction&&!['Faithful','Traitor'].includes(chosen))throw new Error('Escolha uma facção válida.');
+        const assignment=wedding||faction?null:fauEnvelopeAssignment(t,Number(chosen));
+        const value=wedding?fauWeddingResult(t,numbers):faction?chosen:assignment.value;
+        const ref=db.doc(`sorteios/${round}_${user.uid}`);
+        const button=document.getElementById('btnRevealTwist');
+        if(button)button.disabled=true;
+        try{
+            await db.runTransaction(async tx=>{
+                const [snapshot,season]=await Promise.all([tx.get(ref),tx.get(db.doc('config/estado'))]);
+                const state=season.data()||{};
+                if(snapshot.exists)throw new Error('Você já confirmou sua escolha. Não é possível alterar.');
+                if(auth.currentUser?.uid!==user.uid||String(state.rodada)!==String(round)||state.themeId!==t.id||(!faction&&!(Number(state.prazo)>now())))
+                    throw new Error('A rodada mudou ou o prazo de escolha terminou.');
+                tx.set(ref,{uid:user.uid,rodada:round,themeId:t.id,envelope:chosen,value,
+                    ...(assignment?{envelopeDistribution:assignment.order}:{}),...(numbers?{weddingNumbers:numbers}:{}),
+                    createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+            });
+            if(button?.isConnected)await renderPersonalTwist();
+            showToast(faction?'Facção confirmada! Sua escolha foi salva.':'Escolha confirmada. Seu resultado está no Workroom.');
+        }finally{
+            if(button?.isConnected)button.disabled=false;
+        }
     }
     function fauSealedEnvelopeHeading(t){
-        const headings={theme_climate_chaos:['CLIMATE CHAOS','TWO SEASONS. ONE LOOK.'],theme_art_seduction:['THE ART OF SEDUCTION','ONE ELEMENT. ONE SEDUCTION.'],theme_awards:['THE AWARDS','ONE INVITATION. ONE RED CARPET.'],theme_wedding_party:['THE INVITATION BOX','THREE SECRETS. ONE LOOK.']};
+        const headings={theme_climate_chaos:['CLIMATE CHAOS','TWO SEASONS. ONE LOOK.'],theme_art_seduction:['THE ART OF SEDUCTION','ONE ELEMENT. ONE SEDUCTION.'],theme_the_awards:['THE AWARDS','ONE INVITATION. ONE RED CARPET.'],theme_wedding_party:['THE INVITATION BOX','THREE ENVELOPES. TWO LOOKS.']};
         const found=headings[t.id]||[String(t.title||t.name||t.id).replace(/^WEEK\s*\d+\s*[—–-]\s*/i,''),'CHOOSE YOUR FATE.'];
-        return `<div class="text-center space-y-2"><p class="text-[10px] tracking-[.22em] text-fashion-gold">THE TWIST · SEALED ENVELOPES</p><h3 class="font-cinzel text-2xl md:text-3xl text-white leading-tight">${esc(found[0])}</h3><p class="text-xs tracking-wide text-gray-300">${esc(found[1])}</p><p class="text-sm text-gray-300">${t.drawType==='invitation_box_3d'?'Escolha um envelope em cada categoria. Suas escolhas serão definitivas.':'Escolha um envelope. Seu destino será definitivo.'}</p></div>`;
+        return `<div class="text-center space-y-2"><p class="text-[10px] tracking-[.22em] text-fashion-gold">THE TWIST · SEALED ENVELOPES</p><h3 class="font-cinzel text-2xl md:text-3xl text-white leading-tight">${esc(found[0])}</h3><p class="text-xs tracking-wide text-gray-300">${esc(found[1])}</p><p class="text-sm text-gray-300">${t.drawType==='invitation_box_3d'?'Escolha um envelope por categoria. Confirme para abrir os três.':'Escolha um envelope e confirme para ver seu resultado.'}</p></div>`;
     }
     async function renderPersonalTwist() {
-        const slot=document.getElementById('personalTwistSlot');if(!slot)return;
-        const t=getTheme();if(!t){slot.innerHTML='';return;}
-        if(t.id==='theme_beauty_eye'){slot.innerHTML='';return;}
-        const draw=await getPersonalTwist();
-        const released=true;
-        const isDraw=themeHasDraw(t);
-        if(!t.extraField && !t.slotLabels && !isDraw && t.drawType!=='faction_choice' && !draw){slot.innerHTML='';return;}
+        const slot=document.getElementById('personalTwistSlot'),t=getTheme();
+        if(!slot||!t||t.id==='theme_beauty_eye')return;
+        const round=globalState.rodada;
+        const isDraw=themeHasDraw(t), faction=t.drawType==='faction_choice', wedding=t.drawType==='invitation_box_3d';
+        if(isDraw||faction)slot.innerHTML='<p class="text-sm text-gray-300" role="status">Carregando sua escolha…</p>';
+        let draw;
+        try{draw=await getPersonalTwist();}
+        catch(error){
+            if(!slot.isConnected)return;
+            console.error('[workroom choice]',error);
+            if(isDraw||faction){
+                slot.innerHTML='<p class="text-sm text-amber-200" role="status">Não foi possível abrir sua escolha.</p><button type="button" class="underline text-fashion-gold">Tentar novamente</button>';
+                slot.querySelector('button').onclick=renderPersonalTwist;
+            }
+            return;
+        }
+        if(!slot.isConnected||globalState.rodada!==round)return;
+        if(!t.extraField&&!t.slotLabels&&!isDraw&&!faction&&!draw){slot.innerHTML='';return;}
+        const choice=()=>{
+            if(isDraw&&!(Number(globalState.prazo)>now()))return '<p class="text-sm text-gray-300">O prazo de escolha foi encerrado.</p>';
+            const groups=wedding?fauWeddingEnvelopeGroups.map(([key,label,pool])=>
+                fauEnvelopeGroup(t.invitationBoxMap[pool].length,n=>`data-wedding-category="${key}" data-wedding-envelope="${n}"`,label,null,`<input type="hidden" id="wedding_${key}" value="">`)
+            ).join(''):faction?
+                '<div class="space-y-2"><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE BLACK BANQUET · YOUR ALLEGIANCE</p><h3 class="font-cinzel text-xl text-white">CHOOSE YOUR SIDE</h3><p class="text-xs text-gray-300">Você decide sua facção. A escolha é definitiva.</p><label class="block text-xs text-fashion-gold">Facção<select id="factionChoice" class="block w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-3 text-sm text-white"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Joia amaldiçoada</option></select></label></div>':
+                fauEnvelopeGroup(fauEnvelopePool(t).length,n=>`data-sealed-envelope="${n}"`,'Envelopes',null,'<input type="hidden" id="sealedEnvelope" value="">');
+            return `<div class="space-y-3">${groups}<p class="text-xs text-gray-300" data-envelope-status aria-live="polite">${faction?'':wedding?'0 de 3 envelopes selecionados.':'Selecione um envelope para confirmar.'}</p><button type="button" id="btnRevealTwist" class="w-full bg-fashion-gold text-black rounded px-4 py-3 text-sm font-bold disabled:opacity-50" ${faction?'':'disabled'}>${faction?'Selar minha escolha':wedding?'Confirmar envelopes':'Confirmar envelope'}</button></div>`;
+        };
         slot.innerHTML=`<div class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-3">
-          ${t.extraField && !(false&&draw)?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}${t.extraField.type==='select'?`<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha seu personagem...</option>${(t.extraField.options||[]).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`:`<input id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-2 mt-2" placeholder="${esc(t.extraField.placeholder||'')}">`}</label>`:''}
-          ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
-          ${isDraw?fauSealedEnvelopeHeading(t):''}
-          ${draw?`<div class="border border-fashion-gold/50 rounded p-4 text-center">
-              <div class="text-[10px] uppercase text-gray-400">${false?'PERSONAGEM CONFIRMADO':t.drawType==='faction_choice'?'FACÇÃO CONFIRMADA':'ENVELOPE ABERTO'}</div>
-              <strong class="text-fashion-gold">${released?esc(draw.value):(t.drawType==='invitation_box_3d'?`COLOR ${esc(draw.weddingNumbers?.color||'?')} · ELEMENT ${esc(draw.weddingNumbers?.element||'?')} · PRINT ${esc(draw.weddingNumbers?.print||'?')} — aguardando revelação`:`Envelope ${esc(draw.envelope||'confirmado')} — aguardando liberação da produção`)}</strong>
-            </div>`:
-            (isDraw||t.drawType==='faction_choice'||false)?
-            `<div class="space-y-3">${false?'<p class="text-xs text-gray-300">Escolha livremente um dos sete anões acima. A confirmação é definitiva.</p>':t.drawType==='invitation_box_3d'?`<div class="grid grid-cols-1 lg:grid-cols-3 gap-3">${[['color','🎨 COLOR'],['element','🧵 ELEMENT'],['print','🪡 PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded-lg p-3 bg-fashion-950/50"><div class="text-xs text-fashion-gold font-bold mb-2">${label}</div><input type="hidden" id="wedding_${key}" value=""><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-wedding-category="${key}" data-wedding-envelope="${n}" aria-pressed="false" class="wedding-envelope border border-fashion-gold/30 rounded-md py-3 px-0.5 text-center bg-fashion-900 hover:bg-fashion-gold/20 hover:border-fashion-gold transition-colors"><span class="block text-lg">✉️</span><span class="block text-[10px] text-fashion-gold mt-1">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><div id="wedding_status_${key}" class="text-[11px] text-gray-400 mt-2">🔒 Escolha um envelope</div></div>`).join('')}</div>`:t.drawType==='faction_choice'?
-                '<div class="space-y-2"><p class="text-[10px] tracking-[.2em] text-fashion-gold text-center">THE BLACK BANQUET · YOUR ALLEGIANCE</p><h3 class="font-cinzel text-xl text-white text-center">CHOOSE YOUR SIDE</h3><p class="text-xs text-gray-300 text-center">Você decide sua facção. Não há sorteio. Sua escolha será definitiva.</p><label class="block text-xs text-fashion-gold">SUA FACÇÃO<select id="factionChoice" class="block w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-3 text-sm text-white"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Joia amaldiçoada</option></select></label></div>':
-                `<input type="hidden" id="sealedEnvelope" value=""><div class="grid grid-cols-3 gap-3">${Array.from({length:fauEnvelopePool(t).length},(_,i)=>`<button type="button" data-sealed-envelope="${i+1}" aria-pressed="false" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold"><span class="block text-4xl text-fashion-gold mb-1" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p id="sealedEnvelopeStatus" class="text-xs text-gray-400 text-center">Selecione um envelope para confirmar.</p>`}
-                <button id="btnRevealTwist"  class="w-full bg-fashion-gold text-black rounded px-4 py-3 text-xs font-bold disabled:opacity-50">${false?'CONFIRMAR PERSONAGEM':t.drawType==='faction_choice'?'Selar minha escolha':t.drawType==='invitation_box_3d'?'💌 Selar minha Invitation Box':'🔒 Confirmar envelope lacrado'}</button></div>`:''}
+            ${t.extraField?`<label class="block text-xs text-gray-300">${esc(t.extraField.label)}<select id="themeExtraInput" class="block w-full bg-fashion-950 border border-fashion-700 rounded p-3 mt-2"><option value="">Escolha uma opção</option>${t.extraField.options.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select></label>`:''}
+            ${t.slotLabels?`<p class="text-xs text-fashion-gold">ENTREGAS: ${t.slotLabels.map(esc).join(' / ')}</p>`:''}
+            ${isDraw?fauSealedEnvelopeHeading(t):''}
+            ${draw?`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-[10px] uppercase text-gray-400">${faction?'FACÇÃO CONFIRMADA':wedding?'ENVELOPES ABERTOS':'ENVELOPE ABERTO'}</p><strong class="text-fashion-gold">${esc(draw.value)}</strong></div>`:isDraw||faction?choice():''}
         </div>`;
-        slot.querySelectorAll('[data-wedding-envelope]').forEach(envelope=>{
-            envelope.addEventListener('click',()=>{
-
-                const category=envelope.dataset.weddingCategory;
-                const number=envelope.dataset.weddingEnvelope;
-                const field=document.getElementById('wedding_'+category);
-                if(!field)return;
-                field.value=number;
-                slot.querySelectorAll('[data-wedding-category="'+category+'"]').forEach(el=>{
-                    const active=el===envelope;
-                    el.setAttribute('aria-pressed',String(active));
-                    el.classList.toggle('border-fashion-gold',active);
-                    el.classList.toggle('bg-fashion-gold/20',active);
-                    el.classList.toggle('ring-2',active);
-                    el.classList.toggle('ring-fashion-gold',active);
-                });
-                const status=document.getElementById('wedding_status_'+category);
-                if(status)status.textContent='💌 Envelope '+String(number).padStart(2,'0')+' selecionado — conteúdo lacrado';
+        const confirmButton=slot.querySelector('#btnRevealTwist');
+        if(confirmButton)confirmButton.onclick=safeExec(revealPersonalTwist);
+        slot.querySelectorAll('.fau-envelope-group').forEach(group=>{
+            const field=group.querySelector('input');
+            group.querySelectorAll('button').forEach(envelope=>envelope.onclick=()=>{
+                field.value=envelope.dataset.weddingEnvelope||envelope.dataset.sealedEnvelope;
+                group.querySelectorAll('button').forEach(option=>option.setAttribute('aria-pressed',String(option===envelope)));
+                const count=[...slot.querySelectorAll('.fau-envelope-group input')].filter(input=>input.value).length;
+                confirmButton.disabled=wedding?count!==fauWeddingEnvelopeGroups.length:count!==1;
+                slot.querySelector('[data-envelope-status]').textContent=wedding
+                    ?`${count} de ${fauWeddingEnvelopeGroups.length} envelopes selecionados.`
+                    :`Envelope ${fauEnvelopeNumber(field.value)} selecionado.`;
             });
         });
-        slot.querySelectorAll('[data-sealed-envelope]').forEach(envelope=>envelope.addEventListener('click',()=>{
-
-            const number=envelope.dataset.sealedEnvelope;
-            const field=slot.querySelector('#sealedEnvelope');if(!field)return;
-            field.value=number;
-            slot.querySelectorAll('[data-sealed-envelope]').forEach(el=>{
-                const active=el===envelope;el.setAttribute('aria-pressed',String(active));
-                el.classList.toggle('ring-2',active);el.classList.toggle('ring-fashion-gold',active);
-                el.classList.toggle('bg-fashion-gold/20',active);
-            });
-            const status=slot.querySelector('#sealedEnvelopeStatus');
-            if(status)status.textContent='Envelope '+String(number).padStart(2,'0')+' selecionado — conteúdo lacrado';
-        }));
-        const btn=document.getElementById('btnRevealTwist');if(btn)btn.onclick=safeExec(revealPersonalTwist);
     }
 
     // REST IN STYLE — segunda etapa isolada da nota oficial da primeira passarela.
@@ -3207,7 +3238,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     function fauMutationPanel(data, locked){
       if(data){const m=fauMutationResult(data);return `<section class="fau-mutation-card rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-[.22em] text-fashion-gold">THE MUTATION MACHINE · ENVELOPE ${String(data.envelope).padStart(2,'0')}</p><h3 class="font-cinzel text-2xl text-white">${esc(m?.[0]||'MUTATION')}</h3><p class="text-sm text-gray-300">${esc(m?.[1]||'')}</p><p class="text-xs text-fashion-gold">YOUR FATE IS SEALED · Escolha livremente qual elemento visual da Week 01 preservar.</p></section>`;}
       if(locked)return `<section class="rounded-xl border border-fashion-700 bg-fashion-900 p-5 text-sm text-gray-300">THE MUTATION MACHINE · O prazo de escolha foi encerrado.</section>`;
-      return `<section class="fau-mutation-card rounded-xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-4"><div class="text-center"><p class="text-[10px] tracking-[.22em] text-fashion-gold">WEEK 02 · THE TWIST</p><h3 class="font-cinzel text-3xl text-white mt-2">THE MUTATION MACHINE</h3><p class="text-xs text-gray-300 mt-2">FOUR ENVELOPES. FOUR MUTATIONS. ONE NEW FORM.</p><p class="text-xs text-gray-300 mt-2">Escolha um envelope. Sua mutação será definitiva.</p></div><div class="grid grid-cols-2 sm:grid-cols-4 gap-3">${[1,2,3,4].map(n=>`<button type="button" data-mutation-envelope="${n}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold focus-visible:outline"><span class="block text-4xl text-fashion-gold" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(n).padStart(2,'0')}</span></button>`).join('')}</div><p id="fauMutationStatus" class="text-xs text-gray-400 text-center" role="status">O conteúdo só será revelado após confirmar sua escolha.</p></section>`;
+      return `<section class="fau-mutation-card rounded-xl border border-fashion-gold/40 bg-fashion-900 p-5 space-y-4"><div class="text-center"><p class="text-[10px] tracking-[.22em] text-fashion-gold">WEEK 02 · THE TWIST</p><h3 class="font-cinzel text-3xl text-white mt-2">THE MUTATION MACHINE</h3><p class="text-xs text-gray-300 mt-2">FOUR ENVELOPES. FOUR MUTATIONS. ONE NEW FORM.</p><p class="text-xs text-gray-300 mt-2">Escolha um envelope. Sua mutação será definitiva.</p></div>${fauEnvelopeGroup(FAU_MUTATIONS.length,n=>`data-mutation-envelope="${n}"`,'Envelopes')}</section>`;
     }
     // TEST LAB: admin-only, read-only preview using the same Workroom markup and mutation panel.
     // No globalState mutation, no Firebase writes, no impersonation of Designer accounts.
@@ -3227,8 +3258,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
       if(false)control='<p class="text-xs text-gray-300">Escolha livremente um personagem acima e confirme. Sua escolha será definitiva.</p><button type="button" id="fauLabDrawConfirm" class="w-full bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">CONFIRMAR PERSONAGEM</button>';
       else if(t.drawType==='faction_choice')control=`<div class="space-y-3"><div class="text-center space-y-2"><p class="text-[10px] tracking-[.2em] text-fashion-gold">THE BLACK BANQUET · YOUR ALLEGIANCE</p><h3 class="font-cinzel text-2xl text-white">CHOOSE YOUR SIDE</h3><p class="text-xs text-gray-300">Você decide sua facção. Não há sorteio. Sua escolha será definitiva.</p></div><label class="block text-xs text-gray-300">ESCOLHA SUA FACÇÃO<select id="fauLabFaction" class="block w-full mt-2 p-3 bg-fashion-950 border border-fashion-700 rounded"><option value="Faithful">Faithful — Escudo</option><option value="Traitor">Traitor — Traidor</option></select></label><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA ESCOLHA</button></div>`;
       else if(t.drawType==='blind_concept_swap')control=fauTestLabState.phaseTwo?`<div class="space-y-3"><p class="text-[10px] tracking-[.18em] text-fashion-gold">THE TWIST — ANOTHER POINT OF VIEW</p><p class="text-xs text-gray-300">Você recebeu um conceito de outro Designer. A imagem e a autoria permanecem em segredo.</p><div class="rounded-xl border border-fashion-gold/50 bg-fashion-950 p-5 space-y-3"><p class="text-[10px] tracking-widest text-fashion-gold">YOUR SEALED CONCEPT · SORTEIO EXCLUSIVO</p><h3 class="font-cinzel text-2xl text-white">${esc(fauLabBeautyConcept().title)}</h3><p class="text-sm text-gray-200 whitespace-pre-wrap">${esc(fauLabBeautyConcept().concept)}</p><p class="text-[11px] text-gray-400">Conceito fictício para o Test Lab. No Workroom real, cada Designer recebe um conceito original diferente, sem repetição e sem receber o próprio.</p></div></div>`:'';
-      else if(t.drawType==='invitation_box_3d')control=`<div class="text-center text-fashion-gold font-cinzel">THE INVITATION BOX</div><div class="grid grid-cols-1 md:grid-cols-3 gap-3">${[['color','COLOR'],['element','ELEMENT'],['print','PRINT']].map(([key,label])=>`<div class="border border-fashion-gold/30 rounded p-3"><p class="text-xs text-fashion-gold mb-2">${label}</p><div class="grid grid-cols-5 gap-1">${[1,2,3,4,5].map(n=>`<button type="button" data-lab-wedding="${key}|${n}" class="border border-fashion-gold/30 rounded p-2 text-xs ${fauTestLabState.wedding[key]===n?'bg-fashion-gold text-black':'text-fashion-gold'}">✉<br>${n}</button>`).join('')}</div></div>`).join('')}</div><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold">SELAR MINHA INVITATION BOX</button>`;
-      else if(t.drawType&&t.drawType!=='none')control=`<div class="grid grid-cols-3 gap-3">${Array.from({length:fauEnvelopePool(t).length},(_,i)=>`<button type="button" data-lab-envelope="${i+1}" aria-pressed="${fauTestLabState.selectedEnvelope===i+1}" class="fau-envelope rounded-xl border border-fashion-gold/40 bg-fashion-950 p-3 text-center hover:border-fashion-gold ${fauTestLabState.selectedEnvelope===i+1?'ring-2 ring-fashion-gold bg-fashion-gold/20':''}"><span class="block text-4xl text-fashion-gold mb-1" aria-hidden="true">✉</span><span class="text-xs text-fashion-gold">${String(i+1).padStart(2,'0')}</span></button>`).join('')}</div><p class="text-xs text-gray-400 text-center">${fauTestLabState.selectedEnvelope?`Envelope ${String(fauTestLabState.selectedEnvelope).padStart(2,'0')} selecionado — conteúdo lacrado`:'Escolha um envelope para confirmar.'}</p><button id="fauLabDrawConfirm" class="bg-fashion-gold text-black px-4 py-3 rounded text-xs font-bold w-full">CONFIRMAR ENVELOPE LACRADO</button>`;
+      else if(t.drawType==='invitation_box_3d'){
+        const groups=fauWeddingEnvelopeGroups.map(([key,label,pool])=>
+          fauEnvelopeGroup(t.invitationBoxMap[pool].length,n=>`data-lab-wedding="${key}|${n}"`,label,fauTestLabState.wedding[key])
+        ).join('');
+        const complete=fauWeddingEnvelopeGroups.every(([key])=>fauTestLabState.wedding[key]);
+        control=`<div class="space-y-3">${groups}<button type="button" id="fauLabDrawConfirm" class="w-full bg-fashion-gold text-black rounded px-4 py-3 text-sm font-bold disabled:opacity-50" ${complete?'':'disabled'}>Confirmar envelopes</button></div>`;
+      }else if(themeHasDraw(t)){
+        const selected=fauTestLabState.selectedEnvelope;
+        control=`<div class="space-y-3">${fauEnvelopeGroup(fauEnvelopePool(t).length,n=>`data-lab-envelope="${n}"`,'Envelopes',selected)}<button type="button" id="fauLabDrawConfirm" class="w-full bg-fashion-gold text-black rounded px-4 py-3 text-sm font-bold disabled:opacity-50" ${selected?'':'disabled'}>Confirmar envelope</button></div>`;
+      }
       if(draw)control=`<div class="border border-fashion-gold/50 rounded p-4 text-center"><p class="text-[10px] tracking-[.2em] text-fashion-gold">${false?'PERSONAGEM CONFIRMADO':t.drawType==='faction_choice'?'THE BLACK BANQUET · FACÇÃO CONFIRMADA':'YOUR FATE IS SEALED · RESULTADO DEFINITIVO'}</p><strong class="text-fashion-gold">${esc(draw.value)}</strong></div><button id="fauLabDrawReset" class="border border-fashion-700 rounded px-4 py-2 text-xs">REINICIAR TESTE</button>`;
       return `<section class="bg-fashion-900 border border-fashion-gold/40 rounded-lg p-5 space-y-4">${extra}${slots}${themeHasDraw(t)?fauSealedEnvelopeHeading(t):''}${control}</section>`;
     }
@@ -3293,7 +3332,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         else if(theme.drawType==='faction_choice'){value=document.getElementById('fauLabFaction').value;label='Facção escolhida';}
         else if(theme.drawType==='invitation_box_3d'){
           const w=fauTestLabState.wedding;if(!w.color||!w.element||!w.print){showToast('Escolha um envelope em cada uma das três categorias.');return;}
-          value=[theme.invitationBoxMap.colors[w.color-1],theme.invitationBoxMap.elements[w.element-1],theme.invitationBoxMap.prints[w.print-1]].join(' • ');label=`COLOR ${w.color} · ELEMENT ${w.element} · PRINT ${w.print}`;
+          value=fauWeddingResult(theme,w);label=`COR ${w.color} · ELEMENTO ${w.element} · ESTAMPA ${w.print}`;
         }else{const n=fauTestLabState.selectedEnvelope;if(!n){showToast('Escolha um envelope antes de confirmar.');return;}const assignment=fauEnvelopeAssignment(theme,n);value=assignment.value;label=`Envelope ${String(n).padStart(2,'0')}`;}
         fauTestLabState.draw={value,label};fauTestLabState.released=true;VIEWS.testlab();
       };
@@ -3419,10 +3458,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         }
         const isFinalPhase = globalState.fase === 'final';
         const isBeautyWorkroom = globalState.themeId === 'theme_beauty_eye';
+        const startsWithEnvelope=themeHasDraw(getTheme());
         let observedBeautyPhase = null;
 
         renderView(`
             <div class="space-y-6">
+                ${startsWithEnvelope?'<section id="personalTwistSlot" aria-label="Envelopes do desafio"></section>':''}
                 <section class="fau-workroom-overview bg-fashion-900 border border-fashion-700 p-4 md:p-5 rounded-xl" aria-label="Prazo e entregas da rodada">
                     <div class="fau-workroom-overview-heading">
                         <h2 class="font-cinzel text-2xl text-white font-normal">Seu espaço de criação</h2>
@@ -3446,7 +3487,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 </section>
 
                 <section class="fau-submission-suite" aria-label="Envio do desafio">
-                    <div id="personalTwistSlot"></div>
+                    ${startsWithEnvelope?'':'<div id="personalTwistSlot"></div>'}
                     <div id="fauMutationModule"></div>
                     <div id="workroomFormModule"></div>
                 </section>
@@ -3463,6 +3504,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 </div>
             </div>
         `);
+
+        renderPersonalTwist();
 
         if(globalState.themeId==='w02_new_form'){
             const host=document.getElementById('fauMutationModule');
@@ -3740,8 +3783,6 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             }
 
             fauUpdateClock();
-            renderPersonalTwist().catch(console.error);
-            if(themeHasDraw(getTheme())) sub(drawGateRef(),()=>renderPersonalTwist().catch(console.error));
             const visibleMyLooks = allMyLooks.filter(l=>!isBeautyWorkroom || beautyReleased || l.rodada!==globalState.rodada || Number(l.slot||1)===1);
             $('#myLooksCount').textContent = `${visibleMyLooks.length} looks`;
             $('#myLooksArchiveGrid').innerHTML = visibleMyLooks.map(l => {
