@@ -6841,15 +6841,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // Exibe a criação enviada nesta rodada, nunca a foto de perfil do Designer.
         const ballotLooksSnap=await db.collection('looks').where('rodada','==',roundAtOpen).get();
         const ballotLooks=new Map();
+        const dualBallot=globalState.themeId==='theme_beauty_eye';
+        const ballotSecondLooks=new Map();
         ballotLooksSnap.docs.forEach(doc=>{
           const look=doc.data();
-          if(look.uid && look.url && !ballotLooks.has(look.uid))ballotLooks.set(look.uid,look.url);
+          if(!look.uid || !look.url)return;
+          const target=dualBallot && Number(look.slot)===2 ? ballotSecondLooks : ballotLooks;
+          if(!target.has(look.uid))target.set(look.uid,look.url);
         });
         const renderCandidates=(type)=>{
           const conf=ballot[type];
           $(`#${conf.box}`).innerHTML=candidates.length?candidates.map((d,i)=>{
             const photo=ballotLooks.get(d.id);
-            const preview=photo?`<img src="${esc(photo)}" alt="Look da rodada de ${esc(d.data().ate||'Designer')}" loading="lazy" class="w-10 h-12 sm:w-12 sm:h-14 object-cover rounded-md border border-fashion-700 flex-shrink-0">`:`<span class="w-10 h-12 sm:w-12 sm:h-14 rounded-md border border-fashion-700 bg-fashion-800 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs text-center">Sem foto</span>`;
+            const photoMarkup=(photo)=>photo?`<img src="${esc(photo)}" alt="Look da rodada de ${esc(d.data().ate||'Designer')}" loading="lazy" class="w-10 h-12 sm:w-12 sm:h-14 object-cover rounded-md border border-fashion-700 flex-shrink-0">`:`<span class="w-10 h-12 sm:w-12 sm:h-14 rounded-md border border-fashion-700 bg-fashion-800 flex-shrink-0 flex items-center justify-center text-gray-400 text-xs text-center">Sem foto</span>`;
+            const preview=dualBallot?`<span class="flex items-center gap-1 flex-shrink-0">${photoMarkup(photo)}${photoMarkup(ballotSecondLooks.get(d.id))}</span>`:photoMarkup(photo);
             return `<label class="flex items-center gap-3 p-2 rounded-lg border border-fashion-700 bg-fashion-950 hover:border-fashion-gold/60 cursor-pointer transition-colors"><input type="radio" name="ballot_${type}" value="${esc(d.id)}" class="accent-yellow-500 flex-shrink-0" ${(!canVote||!ballotTypeOpen(type))?'disabled':''}>${preview}<span class="text-white text-sm">${esc(d.data().ate||'Designer')}</span></label>`;
           }).join(''):'<p class="text-sm text-gray-400">Nenhum Designer elegível nesta rodada.</p>';
           refreshStatus(type);
