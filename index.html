@@ -2022,6 +2022,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     let isAdmin = false;
     let globalState = {};
     let activeTab = 'home';
+    let workroomCounterVisit = null;
     const fauSalvationPoolReady=(theme,pool)=>Array.isArray(pool)&&pool.every(row=>row?.uid)&&new Set(pool.map(row=>row.uid)).size===pool.length&&
         (theme==='theme_tarantino'?pool.length===2:pool.length===3||(theme==='theme_traitors'&&pool.length===2));
     const isCastBallotOpen = state => !!state.rodada && !!state.liberado && !(Array.isArray(state.berlinda) && state.berlinda.length);
@@ -2098,6 +2099,38 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     const workroomRequiredLooks = (state, beautyReleased) => state.themeId === 'theme_beauty_eye'
         ? (beautyReleased ? 2 : 1)
         : (state.fase === 'final' ? 4 : Number(state.numSubmissoes) || 1);
+    const workroomCounterSubmissionsOpen = () => !!globalState.rodada && Number(globalState.prazo) > now();
+    const requestWorkroomCounterRefresh = async (round, lookId) => {
+        const host = location.hostname.match(/^project-runway-fau(\.[a-z0-9-]+\.workers\.dev)$/);
+        const user = auth.currentUser;
+        if (!host || !user || !workroomCounterSubmissionsOpen()) return;
+        try {
+            const token = await user.getIdToken();
+            if (auth.currentUser?.uid !== user.uid || String(globalState.rodada) !== round ||
+                !workroomCounterSubmissionsOpen()) return;
+            if (!lookId && activeTab !== 'work') return;
+            const url = new URL(`https://project-runway-fau-counter${host[1]}/sync-workroom`);
+            url.searchParams.set('round', round);
+            if (lookId) url.searchParams.set('look', lookId);
+            await fetch(url, {
+                method: 'POST', headers: { Authorization: `Bearer ${token}` },
+                keepalive: !!lookId, redirect: 'error', referrerPolicy: 'no-referrer'
+            });
+        } catch {
+            // A checagem agendada continua em caso de falha.
+        }
+    };
+    const refreshCounterOnWorkroomEntry = () => {
+        if (!workroomCounterSubmissionsOpen()) {
+            workroomCounterVisit = null;
+            return;
+        }
+        const round = String(globalState.rodada);
+        const visit = `${auth.currentUser?.uid}:${round}`;
+        if (workroomCounterVisit === visit) return;
+        workroomCounterVisit = visit;
+        void requestWorkroomCounterRefresh(round);
+    };
     const _subErr = { m: '', t: 0 };
     const sub = (query, callback) => unsubsTab.push(query.onSnapshot(callback, err => {
         console.error('[listener]', err.code, err.message);
@@ -2654,6 +2687,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         }
         const allowedTabs = getAvailableTabs();
         activeTab = allowedTabs.includes(tabKey) ? tabKey : allowedTabs[0];
+        if (activeTab !== 'work') workroomCounterVisit = null;
         unsubsTab.forEach(u => u());
         unsubsTab = [];
 
@@ -3520,6 +3554,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             return;
         }
         const isFinalPhase = globalState.fase === 'final';
+        refreshCounterOnWorkroomEntry();
         const isBeautyWorkroom = globalState.themeId === 'theme_beauty_eye';
         const startsWithEnvelope=themeHasDraw(getTheme());
         let observedBeautyPhase = null;
@@ -3969,13 +4004,16 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     showToast('Otimizando as duas fotografias...');
                     const photos=[];for(const item of inputs)photos.push(await compressImageToBase64(item.file));
                     if(now()>=Number(globalState.prazo))throw new Error('TIME IS UP · O prazo terminou durante o envio.');
+                    const round=globalState.rodada;
+                    const uid=currentUser.uid;
                     const batch=db.batch();
                     inputs.forEach((item,i)=>{
-                        const id=`${globalState.rodada}_${currentUser.uid}_${i}`;
-                        batch.set(db.doc(`looks/${id}`),{uid:currentUser.uid,ate:currentUser.ate,rodada:globalState.rodada,themeId:'theme_next_supreme',slot:i+1,twistValue:null,beautySourceUid:null,themeExtra:'',finaleMeta:null,titulo:item.title,url:photos[i],mem:item.concept,t:now()});
-                        batch.set(db.doc(`envios/${id}`),{rodada:globalState.rodada,uid:currentUser.uid});
+                        const id=`${round}_${uid}_${i}`;
+                        batch.set(db.doc(`looks/${id}`),{uid,ate:currentUser.ate,rodada:round,themeId:'theme_next_supreme',slot:i+1,twistValue:null,beautySourceUid:null,themeExtra:'',finaleMeta:null,titulo:item.title,url:photos[i],mem:item.concept,t:now()});
+                        batch.set(db.doc(`envios/${id}`),{rodada:round,uid});
                     });
                     await batch.commit();
+                    void requestWorkroomCounterRefresh(String(round), `${round}_${uid}_0`);
                     showToast('OLD SUPREME e NEXT SUPREME recebidas! MAKE IT WORK!');
                 }catch(error){button.disabled=false;button.textContent='TENTAR ENVIAR AS DUAS SUPREMAS';throw error;}
                 return;
@@ -4034,11 +4072,12 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 try {photoBase64 = await compressImageToBase64(file);}
                 catch(error){if(submitButton){submitButton.disabled=now()>=Number(globalState.prazo);submitButton.textContent=submitButton.disabled?'PRAZO ENCERRADO':'Enviar Look Oficial para a Passarela';}throw error;}
 
+                const round = globalState.rodada;
                 const batch = db.batch();
                 batch.set(db.doc(`looks/${lookDocId}`), {
                     uid: currentUser.uid,
                     ate: currentUser.ate,
-                    rodada: globalState.rodada,
+                    rodada: round,
                     themeId: theme?.id || null,
                     slot: index + 1,
                     twistValue: ['theme_traitors','theme_beauty_eye'].includes(theme?.id) ? null : (draw?.value || null),
@@ -4051,13 +4090,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     t: now()
                 });
                 batch.set(db.doc(`envios/${lookDocId}`), {
-                    rodada: globalState.rodada,
+                    rodada: round,
                     uid: currentUser.uid
                 });
 
                 if(now() >= Number(globalState.prazo))throw new Error('TIME IS UP · O prazo terminou durante o envio da imagem.');
                 try {await batch.commit();}
                 catch(error){if(submitButton){submitButton.disabled=now()>=Number(globalState.prazo);submitButton.textContent=submitButton.disabled?'PRAZO ENCERRADO':'TENTAR NOVAMENTE';}throw error;}
+                void requestWorkroomCounterRefresh(String(round), lookDocId);
                 showToast('Entrega confirmada pelo servidor! Make it work!');
             }
         });
