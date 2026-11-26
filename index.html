@@ -7230,7 +7230,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                   <div id="fauStatusDashboard" tabindex="-1" class="space-y-3" role="status" aria-live="polite"><p class="text-xs text-gray-400">Carregando registros da rodada...</p></div>
                   <div class="border-t border-fashion-700 pt-3 space-y-2">
                     <button type="button" id="fauSyncPublicPulse" class="min-h-[44px] rounded border border-fashion-gold/50 text-fashion-gold px-3 text-xs" ${globalState.rodada?'':'disabled'}>Sincronizar contador público de entregas</button>
-                    <p id="fauPublicPulseStatus" class="text-xs text-gray-400" role="status">A sincronização manual publica apenas os totais de entregas.</p>
+                    <p id="fauPublicPulseStatus" class="text-xs text-gray-400" role="status">O contador anônimo é atualizado enquanto a Direção mantém o Control Room aberto.</p>
                   </div>
                   <p class="text-[11px] text-gray-500">Somente a produção visualiza nomes e pendências. Nunca exibir escolhas, notas ou comentários neste painel.</p>
                 </section>
@@ -8142,7 +8142,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const round=globalState.rodada;
             const [profiles,looks,evals,votes]=await Promise.all([
               db.collection('perfis').get(),
-              db.collection('looks').where('rodada','==',round).get(),
+              workroomRoundLooks(round).get(),
               db.collection('avaliacoes').where('rodada','==',round).get(),
               db.collection('votos').where('rodada','==',round).get()
             ]);
@@ -8151,10 +8151,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const jurors=profiles.docs.filter(d=>d.data().role==='jurado'&&!d.data().disabled);
             const castIds=new Set(cast.map(d=>d.id));
             const jurorIds=new Set(jurors.map(d=>d.id));
-            const theme=getTheme();
-            const required=globalState.themeId==='theme_beauty_eye'?(['assigned','exhibition'].includes((await beautyState().catch(()=>({phase:'first'}))).phase)?2:1):Math.max(1,Number(theme?.numSubmissoes)||1);
+            const beauty=globalState.themeId==='theme_beauty_eye'?await beautyState().catch(()=>null):null;
+            const beautyReleased=['assigned','exhibition'].includes(beauty?.phase);
+            const required=workroomRequiredLooks(globalState,beautyReleased);
             const looksByUser=new Map();
-            looks.docs.forEach(d=>{const l=d.data();if(castIds.has(l.uid))looksByUser.set(l.uid,(looksByUser.get(l.uid)||0)+1);});
+            looks.docs.forEach(d=>{const l=d.data();if(castIds.has(l.uid)&&(globalState.themeId!=='theme_beauty_eye'||beautyReleased||Number(l.slot||1)===1))looksByUser.set(l.uid,(looksByUser.get(l.uid)||0)+1);});
             const submitted=new Set(cast.filter(d=>(looksByUser.get(d.id)||0)>=required).map(d=>d.id));
             const lookIds=new Set(looks.docs.filter(d=>castIds.has(d.data().uid)).map(d=>d.id));
             const juryByUser=new Map();
@@ -8184,19 +8185,20 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         };
         $('#fauStatusRefresh')?.addEventListener('click',refreshFauStatus);
         refreshFauStatus();
-        // Atualização em tempo real sem renderizar informações identificáveis.
-        ['looks','avaliacoes','votos','perfis'].forEach(name=>{
-          const query=name==='perfis'?db.collection(name):db.collection(name).where('rodada','==',globalState.rodada || 'sem-rodada');
-          sub(query,()=>refreshFauStatus());
-        });
-
-        if(globalState.themeId==='theme_beauty_eye')sub(beautyRef(),refreshFauStatus);
-
-        // Contingência e sincronização inicial para uma rodada já em andamento.
         const pulseButton=$('#fauSyncPublicPulse');
         const pulseStatus=$('#fauPublicPulseStatus');
-        pulseButton.onclick=safeExec(async()=>{
-          if(!isAdmin||!auth.currentUser||!globalState.rodada)throw new Error('Escolha uma rodada ativa para sincronizar as entregas.');
+        let pulseBusy=false;
+        let pulseQueued=false;
+        let pulseTimer;
+        const queuePublicPulse=()=>{
+          clearTimeout(pulseTimer);
+          pulseTimer=setTimeout(syncPublicPulse,200);
+        };
+        const syncPublicPulse=async()=>{
+          if(!pulseButton.isConnected||!isAdmin||!auth.currentUser||!globalState.rodada)return;
+          if(pulseBusy){pulseQueued=true;return;}
+          pulseBusy=true;
+          const uid=auth.currentUser.uid;
           const round=globalState.rodada;
           const themeId=globalState.themeId;
           const roundPhase=globalState.fase;
@@ -8232,17 +8234,38 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
               });
               const enviados=Math.min(total,[...counts.values()].filter(count=>count>=required).length);
               const rodada=String(round);
+              if(!pulseButton.isConnected||!isAdmin||auth.currentUser?.uid!==uid)return 'superseded';
               if(String(publicCount.rodada)===rodada&&publicCount.enviados===enviados&&publicCount.total===total)return 'unchanged';
               tx.set(publicRef,{rodada,enviados,total,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
               return 'updated';
             });
             pulseStatus.textContent=result==='updated'?'Contador público de entregas atualizado.':'O contador público já está atualizado.';
           }catch(error){
-            pulseStatus.textContent=error.message;
+            pulseStatus.textContent='Falha ao atualizar o contador público. '+error.message;
           }finally{
-            pulseButton.disabled=false;
+            pulseBusy=false;
+            pulseButton.disabled=!globalState.rodada;
+            if(pulseQueued&&pulseButton.isConnected){
+              pulseQueued=false;
+              queuePublicPulse();
+            }
           }
+        };
+        pulseButton.onclick=syncPublicPulse;
+        unsubsTab.push(()=>clearTimeout(pulseTimer));
+
+        // Só a Direção consulta os registros individuais. O Workroom recebe os totais.
+        const pulseRound=globalState.rodada || 'sem-rodada';
+        const refreshDeliveryStatus=()=>{
+          refreshFauStatus();
+          queuePublicPulse();
+        };
+        sub(workroomRoundLooks(pulseRound),refreshDeliveryStatus);
+        sub(db.collection('perfis'),refreshDeliveryStatus);
+        ['avaliacoes','votos'].forEach(name=>{
+          sub(db.collection(name).where('rodada','==',pulseRound),refreshFauStatus);
         });
+        if(globalState.themeId==='theme_beauty_eye')sub(beautyRef(),refreshDeliveryStatus);
 
         sub(db.collection('perfis'), snap => {
             const container = $('#profileManagerContainer');
