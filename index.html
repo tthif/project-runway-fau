@@ -5557,6 +5557,29 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         return new Set(profiles.docs.filter(d=>!d.data().disabled&&!d.data().out&&(counts.get(d.id)||0)>=required)
             .map(d=>d.data().ate).filter(Boolean));
     };
+    const fauPreviousCritiqueWinner = async (round,eligible) => {
+        const previous=Number(round)-1;
+        if(!(previous>=1))return null;
+        const winnerOf=rows=>Array.isArray(rows)?rows.find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||'')):null;
+        let winner=null;
+        for(const collection of ['ranking_historico_publico','ranking_historico']){
+            try{
+                const snap=await db.collection(collection).doc(String(previous)).get();
+                if(snap.exists)winner=winnerOf(snap.data().rows);
+                if(winner)break;
+            }catch(error){console.warn('Critique Call: previous ranking unavailable',collection,error);}
+        }
+        if(!winner)return null;
+        const normalize=name=>String(name||'').trim().toLocaleLowerCase('pt-BR');
+        if(winner.uid){
+            try{
+                const profile=await db.collection('perfis').doc(String(winner.uid)).get();
+                const name=profile.data()?.ate;
+                if(eligible.has(name))return name;
+            }catch(error){console.warn('Critique Call: winner profile unavailable',error);}
+        }
+        return [...eligible].find(name=>normalize(name)===normalize(winner.ate))||null;
+    };
     const fauCritiqueTargets = async () => {
         const round=String(globalState.rodada||'');
         if(!round)return [];
@@ -5564,18 +5587,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // A convocação privada pode ser preparada antes da publicação do ranking.
         const call=globalState.critiqueCall;
         if(call && String(call.round)===round && Array.isArray(call.names)){
-            const prevRound=Number(round)-1;
-            const prev=prevRound>=1 ? await db.collection('ranking_historico').doc(String(prevRound)).get() : {exists:false};
-            const previousWinner=prev.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
+            const previousWinner=await fauPreviousCritiqueWinner(round,eligible);
             return [...new Set([...call.names,previousWinner].filter(name=>eligible.has(name)))].map(ate=>({ate}))
                 .sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
         }
         const current=await db.collection('ranking_historico').doc(round).get();
         if(!current.exists)return [];
         const currentRows=Array.isArray(current.data().rows)?current.data().rows:[];
-        const prevRound=Number(round)-1;
-        const prev=prevRound>=1 ? await db.collection('ranking_historico').doc(String(prevRound)).get() : {exists:false};
-        const previousWinner=prev.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
+        const previousWinner=await fauPreviousCritiqueWinner(round,eligible);
         const topCount=Number(globalState.critiqueTopCount||0);
         const bottomCount=Number(globalState.critiqueBottomCount||0);
         const selected=new Map();
@@ -8156,11 +8175,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 let names=[];
                 if(official.exists && Array.isArray(official.data().rows)){
                     const rows=official.data().rows;
-                    const prev=Number(round)>1?await db.collection('ranking_historico').doc(String(Number(round)-1)).get():null;
-                    const prevWin=prev?.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
                     const top=Math.max(0,Number(globalState.critiqueTopCount||0));
                     const bottom=Math.max(0,Number(globalState.critiqueBottomCount||0));
-                    names=rows.filter((r,i)=>/\b(WIN|TOP|HIGH)\b/i.test(r.status||'')||(bottom===0&&/\b(BOTTOM|LOW)\b/i.test(r.status||''))||r.ate===prevWin||(top>0&&i<top)||(bottom>0&&i>=rows.length-bottom)).map(r=>r.ate);
+                    names=rows.filter((r,i)=>/\b(WIN|TOP|HIGH)\b/i.test(r.status||'')||(bottom===0&&/\b(BOTTOM|LOW)\b/i.test(r.status||''))||(top>0&&i<top)||(bottom>0&&i>=rows.length-bottom)).map(r=>r.ate);
                 }else{
                     // Apuração privada: não publica resultados nem revela posições aos jurados.
                     const eligible=await fauEligibleCritiqueNames();
@@ -8171,14 +8188,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     const desiredTop=n>=16?5:n>=11?4:n>=7?3:n===6?2:Math.min(2,n);
                     const top=Math.min(Math.max(0,Number(globalState.critiqueTopCount||0))||desiredTop,Math.max(1,n-bottom));
                     names=standings.filter((r,i)=>i<top||i>=n-bottom).map(r=>r.ate);
-                    if(Number(round)>1){
-                        const prev=await db.collection('ranking_historico').doc(String(Number(round)-1)).get();
-                        const prevWin=prev.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
-                        if(prevWin && standings.some(r=>r.ate===prevWin))names.push(prevWin);
-                    }
                 }
                 const eligible=await fauEligibleCritiqueNames();
-                names=[...new Set(names.filter(name=>eligible.has(name)))].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
+                const previousWinner=await fauPreviousCritiqueWinner(round,eligible);
+                names=[...new Set([...names,previousWinner].filter(name=>eligible.has(name)))].sort((a,b)=>a.localeCompare(b,'pt-BR',{sensitivity:'base'}));
                 if(!names.length)throw new Error('Nenhum Designer elegível para críticas.');
                 update.critiqueCall={round,names};
             }
