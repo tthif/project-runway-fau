@@ -5564,7 +5564,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // A convocação privada pode ser preparada antes da publicação do ranking.
         const call=globalState.critiqueCall;
         if(call && String(call.round)===round && Array.isArray(call.names)){
-            return [...new Set(call.names.filter(name=>eligible.has(name)))].map(ate=>({ate}))
+            const prevRound=Number(round)-1;
+            const prev=prevRound>=1 ? await db.collection('ranking_historico').doc(String(prevRound)).get() : {exists:false};
+            const previousWinner=prev.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
+            return [...new Set([...call.names,previousWinner].filter(name=>eligible.has(name)))].map(ate=>({ate}))
                 .sort((a,b)=>a.ate.localeCompare(b.ate,'pt-BR',{sensitivity:'base'}));
         }
         const current=await db.collection('ranking_historico').doc(round).get();
@@ -5572,7 +5575,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         const currentRows=Array.isArray(current.data().rows)?current.data().rows:[];
         const prevRound=Number(round)-1;
         const prev=prevRound>=1 ? await db.collection('ranking_historico').doc(String(prevRound)).get() : {exists:false};
-        const previousWinner=prev.exists?(prev.data().rows||[]).find(r=>/\bWIN\b/i.test(r.status||''))?.ate:null;
+        const previousWinner=prev.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
         const topCount=Number(globalState.critiqueTopCount||0);
         const bottomCount=Number(globalState.critiqueBottomCount||0);
         const selected=new Map();
@@ -8154,7 +8157,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 if(official.exists && Array.isArray(official.data().rows)){
                     const rows=official.data().rows;
                     const prev=Number(round)>1?await db.collection('ranking_historico').doc(String(Number(round)-1)).get():null;
-                    const prevWin=prev?.exists?(prev.data().rows||[]).find(r=>/\bWIN\b/i.test(r.status||''))?.ate:null;
+                    const prevWin=prev?.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
                     const top=Math.max(0,Number(globalState.critiqueTopCount||0));
                     const bottom=Math.max(0,Number(globalState.critiqueBottomCount||0));
                     names=rows.filter((r,i)=>/\b(WIN|TOP|HIGH)\b/i.test(r.status||'')||(bottom===0&&/\b(BOTTOM|LOW)\b/i.test(r.status||''))||r.ate===prevWin||(top>0&&i<top)||(bottom>0&&i>=rows.length-bottom)).map(r=>r.ate);
@@ -8170,7 +8173,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     names=standings.filter((r,i)=>i<top||i>=n-bottom).map(r=>r.ate);
                     if(Number(round)>1){
                         const prev=await db.collection('ranking_historico').doc(String(Number(round)-1)).get();
-                        const prevWin=prev.exists?(prev.data().rows||[]).find(r=>/\bWIN\b/i.test(r.status||''))?.ate:null;
+                        const prevWin=prev.exists?(prev.data().rows||[]).find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||''))?.ate:null;
                         if(prevWin && standings.some(r=>r.ate===prevWin))names.push(prevWin);
                     }
                 }
