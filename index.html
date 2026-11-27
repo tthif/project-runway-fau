@@ -8562,12 +8562,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const selectedLooks=r=>{const all=broadcastLooks(r);return dual?[all.find(l=>Number(l.slot||1)===1),all.find(l=>Number(l.slot)===2)].filter(Boolean):all.slice(0,1);};
           const lookLabel=l=>Number(l.slot)===2?'Another Point of View':'My Vision';
           const titlesFor=ls=>ls.length?ls.map(l=>(dual?lookLabel(l)+' — ':'')+String(l.titulo||'Criação sem título').trim()).join('\n'):'Criação sem título';
+          const captionTitlesFor=ls=>ls.length?ls.map(l=>(dual?lookLabel(l)+' — ':'')+'_'+String(l.titulo||'Criação sem título').trim().replace(/_/g,' ')+'_').join('\n'):'_Criação sem título_';
           const cards=rank.map((r,index)=>{
             const name=String(r.ate||r.nome||'Designer');
             const position=hasRank?(Number(r.pos||r.posicao)||index+1):null;
             const status=String(r.status||'').toUpperCase().replace(/\bTOP\b/g,'HIGH').replace(/^WIN.*$/,'WIN');
             const selected=selectedLooks(r),look=selected[0],photo=photoUrl(look);
-            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${titlesFor(selected)}${status?`\n\n*${status}*`:''}`;
+            const caption=`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${captionTitlesFor(selected)}${status?`\n\n*${status}*`:''}`;
             const related=critiques.filter(c=>c.maison===name);
             const sorted=related.slice().sort(orderCritiques);
             const label=`${position?position+'º LUGAR — ':''}${name}`;
@@ -8576,7 +8577,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             <div class="mt-3 space-y-3">
               <div class="border border-fashion-700 rounded-lg p-3 space-y-2">
                 <p class="text-xs text-fashion-gold">01 · ${dual?'DUAS CRIAÇÕES + LEGENDA':'CRIAÇÃO ENVIADA PELO DESIGNER + LEGENDA'}</p>${!hasRank?'<p class="text-xs text-amber-200">Prévia: posição e classificação aparecem quando as notas forem encerradas.</p>':''}
-                ${dual?`<div class="grid grid-cols-2 gap-2">${selected.map(l=>`<div><img src="${escAttr(photoUrl(l))}" class="w-full object-contain rounded bg-black"><p class="text-[10px]">${lookLabel(l)}</p></div>`).join('')}</div>${selected.length!==2?'<p class="text-xs text-amber-200">Uma das criações está indisponível.</p>':''}`:photo?`<img src="${escAttr(photo)}" alt="Look de ${escAttr(name)}" loading="lazy" class="max-h-72 w-full object-contain rounded bg-black">`:'<p class="text-xs text-amber-200">Criação não encontrada nos envios desta rodada. Nenhuma foto de perfil será usada como substituta.</p>'}
+                ${dual?`<div class="grid grid-cols-2 gap-2">${selected.map(l=>`<div><img src="${escAttr(photoUrl(l))}" class="w-full aspect-[3/4] object-contain rounded bg-black"><p class="text-xs text-fashion-gold font-semibold text-center mt-2 leading-tight">${lookLabel(l)}</p></div>`).join('')}</div>${selected.length!==2?'<p class="text-xs text-amber-200">Uma das criações está indisponível.</p>':''}`:photo?`<img src="${escAttr(photo)}" alt="Look de ${escAttr(name)}" loading="lazy" class="max-h-72 w-full object-contain rounded bg-black">`:'<p class="text-xs text-amber-200">Criação não encontrada nos envios desta rodada. Nenhuma foto de perfil será usada como substituta.</p>'}
                 <p class="text-sm font-semibold">${escAttr(label)}</p><p class="text-sm italic text-gray-200 whitespace-pre-line">${escAttr(titlesFor(selected))}</p><p class="text-xs font-bold ${statusColor}">${escAttr(status||'CLASSIFICAÇÃO INDISPONÍVEL')}</p>
                 <div class="flex flex-wrap gap-2"><button type="button" data-broadcast-copy="${index}" class="border border-fashion-gold rounded px-3 py-2 text-xs">Copiar legenda</button>${(dual?selected.length===2:photo)?`<button type="button" data-broadcast-photo="${index}" class="border border-fashion-700 rounded px-3 py-2 text-xs">${dual?'Compartilhar montagem + legenda':'Compartilhar foto + legenda'}</button>`:''}<label class="text-xs flex items-center gap-2"><input type="checkbox" data-broadcast-done="${index}:foto" ${progress[`${index}:foto`]?'checked':''}> Enviado</label></div>
               </div>
@@ -8600,7 +8601,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const name=String(r.ate||r.nome||'Designer');
             const position=hasRank?(Number(r.pos)||i+1):null,status=String(r.status||'').toUpperCase();
             const selected=selectedLooks(r);
-            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${titlesFor(selected)}${status?`\n\n*${status}*`:''}`});
+            messages.push({key:`${i}:foto`,text:`*${position?position+'º LUGAR — ':''}${name.replace(/[*~_`]/g,' ')}*\n\n${captionTitlesFor(selected)}${status?`\n\n*${status}*`:''}`});
             const related=critiques.filter(c=>c.maison===name).sort(orderCritiques);
             related.forEach((c,j)=>{
               const juror=isHostJuror(c)?'FAU':jurorName(c);
@@ -8638,9 +8639,9 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const images=await Promise.all(blobs.map(b=>createImageBitmap(b)));
                 try{
                   const canvas=document.createElement('canvas'),w=900,h=1200,gap=16;
-                  canvas.width=w*2+gap;canvas.height=h+70;
+                  canvas.width=w*2+gap;canvas.height=h+110;
                   const ctx=canvas.getContext('2d');ctx.fillStyle='#141214';ctx.fillRect(0,0,canvas.width,canvas.height);
-                  images.forEach((im,j)=>{const scale=Math.min(w/im.width,h/im.height),x=j*(w+gap);ctx.drawImage(im,x+(w-im.width*scale)/2,(h-im.height*scale)/2,im.width*scale,im.height*scale);ctx.fillStyle='#d5bc93';ctx.font='28px sans-serif';ctx.textAlign='center';ctx.fillText(lookLabel(selected[j]),x+w/2,h+45);});
+                  images.forEach((im,j)=>{const scale=Math.min(w/im.width,h/im.height),x=j*(w+gap);ctx.drawImage(im,x+(w-im.width*scale)/2,(h-im.height*scale)/2,im.width*scale,im.height*scale);ctx.fillStyle='#d5bc93';ctx.font='bold 52px sans-serif';ctx.textAlign='center';ctx.fillText(lookLabel(selected[j]),x+w/2,h+70);});
                   blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Montagem indisponível')),'image/jpeg',0.94));
                 }finally{images.forEach(im=>im.close());}
               }
