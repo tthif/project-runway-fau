@@ -5548,7 +5548,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     const fauEligibleCritiqueNames = async () => {
         const round=String(globalState.rodada||'');
         const [looks,profiles]=await Promise.all([
-            db.collection('looks').where('rodada','==',round).get(),
+            workroomRoundLooks(round).get(),
             db.collection('perfis').where('role','==','estilista').get()
         ]);
         const required=Math.max(1,Number(getTheme()?.numSubmissoes)||1);
@@ -5558,19 +5558,24 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             .map(d=>d.data().ate).filter(Boolean));
     };
     const fauPreviousCritiqueWinner = async (round,eligible) => {
-        const previous=Number(round)-1;
-        if(!(previous>=1))return null;
-        const winnerOf=rows=>Array.isArray(rows)?rows.find(r=>/\b(?:WIN|WINNER)\b/i.test(r.status||'')):null;
-        let winner=null;
+        const currentWeek=fauArchiveWeekNumber(round);
+        if(currentWeek===null||currentWeek<=1)return null;
+        const candidates=[];
         for(const collection of ['ranking_historico_publico','ranking_historico']){
             try{
-                const snap=await db.collection(collection).doc(String(previous)).get();
-                if(snap.exists)winner=winnerOf(snap.data().rows);
-                if(winner)break;
+                const snap=await db.collection(collection).get();
+                snap.docs.forEach(doc=>{
+                    const data=doc.data(),week=fauArchiveWeekNumber(doc.id,data);
+                    if(week!==null&&week<currentWeek&&data.published!==false&&Array.isArray(data.rows)&&data.rows.length)
+                        candidates.push({week,rows:data.rows,public:collection==='ranking_historico_publico'});
+                });
             }catch(error){console.warn('Critique Call: previous ranking unavailable',collection,error);}
         }
+        candidates.sort((a,b)=>b.week-a.week||Number(b.public)-Number(a.public));
+        const latest=candidates[0]?.week;
+        const winner=candidates.filter(c=>c.week===latest).map(c=>c.rows.find(r=>fauArchiveIsWinner(r.status))).find(Boolean);
         if(!winner)return null;
-        const normalize=name=>String(name||'').trim().toLocaleLowerCase('pt-BR');
+        const normalize=name=>fauArchiveText(name);
         if(winner.uid){
             try{
                 const profile=await db.collection('perfis').doc(String(winner.uid)).get();
@@ -5635,7 +5640,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!root.isConnected)return;
             // Fotos das criações desta rodada, vinculadas ao nome do Designer.
             const [critiqueLooksSnap,critiqueProfilesSnap]=await Promise.all([
-                db.collection('looks').where('rodada','==',round).get(),
+                workroomRoundLooks(round).get(),
                 db.collection('perfis').where('role','==','estilista').get()
             ]);
             if(!root.isConnected)return;
