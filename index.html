@@ -7387,7 +7387,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         <div class="flex gap-2">
                             <button id="btnAdd15Min" class="flex-1 bg-fashion-800 hover:bg-fashion-700 border border-fashion-600 text-fashion-gold py-1 rounded text-[10px] font-bold uppercase">+15 Min</button>
                             <button id="btnEndTimer" class="flex-1 bg-fashion-red/80 hover:bg-fashion-red text-white py-1 rounded text-[10px] font-bold uppercase">Encerrar</button>
-                        </div>
+                        </div><label class="block text-xs text-gray-300">Novo prazo da rodada atual<input id="fauCurrentDeadline" type="datetime-local" class="block w-full mt-2 bg-fashion-950 border border-fashion-700 rounded p-2 text-white"></label><button id="fauSaveDeadline" type="button" class="w-full border border-fashion-gold rounded p-2 text-fashion-gold text-xs font-bold">ALTERAR PRAZO DE ENTREGA</button>
                     </div>
                 </div>
 
@@ -9559,6 +9559,23 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             });
             showToast(extend?'+15 minutos concedidos.':'Tempo esgotado para as designers.');
         };
+        const deadlineInput=$('#fauCurrentDeadline');
+        const currentDeadline=Number(globalState.prazo);
+        if(Number.isFinite(currentDeadline)&&currentDeadline>0){const d=new Date(currentDeadline);deadlineInput.value=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}
+        $('#fauSaveDeadline').onclick=safeExec(async()=>{
+            const context=resultContext(),next=new Date(deadlineInput.value).getTime();
+            if(!Number.isFinite(next)||next<=now())throw new Error('Escolha uma data e hora futuras.');
+            if(!productionConfirm('Alterar apenas o prazo da rodada atual para '+new Date(next).toLocaleString('pt-BR')+'?'))return;
+            const auditRef=db.collection('auditoria_producao').doc();
+            await db.runTransaction(async tx=>{
+                const state=await readResultState(tx,context);
+                if(state.liberado||state.notasEncerradas||state.rankingLiberado)throw new Error('A passarela ou os resultados já foram liberados. Não é possível alterar o prazo.');
+                if(next<=now())throw new Error('O novo prazo precisa estar no futuro.');
+                tx.update(roundStateRef,{prazo:next});
+                writeResultAudit(tx,auditRef,context,'deadline_changed',{deadline:next});
+            });
+            showToast('Prazo da rodada atualizado.');
+        });
         $('#btnAdd15Min').onclick=safeExec(()=>changeDeadline(true));
         $('#btnEndTimer').onclick=safeExec(()=>changeDeadline(false));
 
