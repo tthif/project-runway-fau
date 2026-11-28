@@ -5084,9 +5084,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           grouped.get(k).types.add(a.type);
         });
         const hall=[...grouped.values()].sort((a,b)=>fauArchiveSort(b.round,a.round)).map(a=>{
+          const candidates=publications.filter(p=>roundKey(p.round)===roundKey(a.round)&&p.uid===a.uid&&fauArchiveImage(p.image));
+          const pair=archiveWeekNumber(a.round)===5&&candidates.length===2&&new Set(candidates.map(p=>Number(p.slot))).size===2&&candidates.every(p=>[1,2].includes(Number(p.slot)))?candidates.sort((x,y)=>Number(x.slot)-Number(y.slot)):[];
           const pub=findImage(a.round,a.uid),types=[...a.types].map(t=>/^WIN$/i.test(t)?'Winner da Rodada':t).join(' + ');
           return `<article class="rounded-xl border border-fashion-gold/25 bg-fashion-950 overflow-hidden">
-            ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
+            ${pair.length===2?`<div class="grid grid-cols-2">${pair.map((p,i)=>`<div><img src="${esc(p.image)}" loading="lazy" alt="Look ${i+1} de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img"><p class="text-center text-xs p-2">${i===0?"My Vision":"Another Point of View"}</p></div>`).join("")}</div>`:pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
             <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
           </article>`;
         }).join('');
@@ -7843,12 +7845,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           let ranks=[];
           try{
             const snap=await db.collection('ranking_historico_publico').get();
-            ranks=snap.docs.filter(d=>Array.isArray(d.data().rows)&&String(d.id)!==String(globalState.rodada)).sort((a,b)=>Number(b.id)-Number(a.id));
-            picker.innerHTML='<option value="">Escolher rodada encerrada</option>'+ranks.map(d=>`<option value="${esc(d.id)}">${esc(fauWeekLabel(d.id))}</option>`).join('');
-            if(!ranks.length)slot.textContent='Nenhuma rodada anterior com ranking público foi encontrada.';
+            ranks=snap.docs.filter(d=>Array.isArray(d.data().rows)).sort((a,b)=>fauArchiveSort(b.id,a.id,b.data(),a.data()));
+            picker.innerHTML='<option value="">Escolher rodada publicada</option>'+ranks.map(d=>`<option value="${esc(d.id)}">${esc(fauWeekLabel(d.id))}${String(d.id)===String(globalState.rodada)?' · Atual':''}</option>`).join('');
+            if(!ranks.length)slot.textContent='Nenhuma rodada com ranking público foi encontrada.';
           }catch(e){slot.textContent='Não foi possível consultar o histórico: '+e.message;return;}
           inspect.onclick=safeExec(async()=>{
-            const round=picker.value, doc=ranks.find(d=>d.id===round);if(!doc)throw new Error('Escolha uma rodada anterior.');
+            const round=picker.value, doc=ranks.find(d=>d.id===round);if(!doc)throw new Error('Escolha uma rodada publicada.');
+            const current=String(globalState.rodada)===round;
             slot.textContent='Consultando votos e registros…';
             const [rankSnap,voteSnap]=await Promise.all([db.collection('ranking_historico_publico').doc(round).get(),db.collection('votos').where('rodada','==',round).get()]);
             const data=rankSnap.data()||{},rows=data.rows||[];
@@ -7859,7 +7862,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const name=id=>rows.find(r=>String(r.uid||r.id)===String(id))?.ate||String(id);
             const candidates=rows.filter(r=>r.uid).sort((a,b)=>String(a.ate||a.nome||a.uid).localeCompare(String(b.ate||b.nome||b.uid),'pt-BR',{sensitivity:'base'}));
             const select=(id,exclude)=>`<select id="${id}" class="w-full bg-fashion-900 border border-fashion-700 rounded p-2 text-white"><option value="">Selecionar Designer</option>${candidates.map(r=>`<option value="${esc(String(r.uid))}">${esc(r.ate||r.nome||r.uid)}</option>`).join('')}</select>`;
-            slot.innerHTML=`<div class="rounded border border-fashion-700 p-3 space-y-2"><strong class="text-fashion-gold">${esc(fauWeekLabel(round))}</strong><p>Ranking: ${rows.length} Designers · Votos de salvação encontrados: ${votes.length}</p>${noPool?'<p>Rodada sem Elimination Pool.</p>':`<p>Elimination Pool: ${pool.length===3?pool.map(p=>esc(p.ate||name(p.uid))).join(' · '):'Registro incompleto'}</p>${pool.length!==3?`<p class="text-amber-200">Informe os três indicados oficiais, sem deduzir pelo BOTTOM.</p>${select('fauRepairPool1')}${select('fauRepairPool2')}${select('fauRepairPool3')}<button id="fauRepairSavePool" class="fau-command-btn">SALVAR OS 3 INDICADOS</button>`:''}`}</div>${!noPool?`<div class="rounded border border-fashion-700 p-3 space-y-2"><strong class="text-fashion-gold">VOTAÇÃO DE SALVAÇÃO</strong>${pool.length===3?pool.map(p=>`<p>${esc(p.ate||name(p.uid))}: ${totals.get(String(p.uid))||0} voto(s)</p>`).join(''):'<p>Registre os indicados antes de confirmar o OUT.</p>'}<p>${data.eliminatedByVote?.uid?'Eliminado registrado: '+esc(data.eliminatedByVote.ate||name(data.eliminatedByVote.uid)):'Eliminado ainda não registrado no histórico.'}</p>${pool.length===3&&!data.eliminatedByVote?.uid?`${select('fauRepairOut')}<button id="fauRepairSaveOut" class="fau-command-btn fau-command-btn-critical">CONFIRMAR OUT HISTÓRICO</button><p class="text-gray-400">Confira os votos e o desempate. Apenas registra o histórico; não elimina novamente.</p>`:''}</div>`:''}`;
+            slot.innerHTML=`<div class="rounded border border-fashion-700 p-3 space-y-2"><strong class="text-fashion-gold">${esc(fauWeekLabel(round))}</strong><p>Ranking: ${rows.length} Designers · Votos de salvação encontrados: ${votes.length}</p>${noPool?'<p>Rodada sem Elimination Pool.</p>':`<p>Elimination Pool: ${pool.length===3?pool.map(p=>esc(p.ate||name(p.uid))).join(' · '):'Registro incompleto'}</p>${!current&&pool.length!==3?`<p class="text-amber-200">Informe os três indicados oficiais, sem deduzir pelo BOTTOM.</p>${select('fauRepairPool1')}${select('fauRepairPool2')}${select('fauRepairPool3')}<button id="fauRepairSavePool" class="fau-command-btn">SALVAR OS 3 INDICADOS</button>`:''}`}</div>${!noPool?`<div class="rounded border border-fashion-700 p-3 space-y-2"><strong class="text-fashion-gold">VOTAÇÃO DE SALVAÇÃO</strong>${pool.length===3?pool.map(p=>`<p>${esc(p.ate||name(p.uid))}: ${totals.get(String(p.uid))||0} voto(s)</p>`).join(''):'<p>Registre os indicados antes de confirmar o OUT.</p>'}<p>${data.eliminatedByVote?.uid?'Eliminado registrado: '+esc(data.eliminatedByVote.ate||name(data.eliminatedByVote.uid)):'Eliminado ainda não registrado no histórico.'}</p>${!current&&pool.length===3&&!data.eliminatedByVote?.uid?`${select('fauRepairOut')}<button id="fauRepairSaveOut" class="fau-command-btn fau-command-btn-critical">CONFIRMAR OUT HISTÓRICO</button><p class="text-gray-400">Confira os votos e o desempate. Apenas registra o histórico; não elimina novamente.</p>`:''}</div>`:''}`;
+            if(current){
+              slot.insertAdjacentHTML('beforeend','<p>Rodada atual: use a apuração oficial para confirmar o OUT e atualizar o perfil.</p><button id="fauCurrentOut" class="fau-command-btn">APURAR OUT DA RODADA</button>');
+              slot.querySelector('#fauCurrentOut').onclick=()=>{const button=document.getElementById('btnApurarBerlinda');button?.click();document.getElementById('adminOutput')?.scrollIntoView({block:'center'});};
+            }
             slot.querySelector('#fauRepairSavePool')?.addEventListener('click',safeExec(async()=>{
               const ids=[1,2,3].map(i=>slot.querySelector('#fauRepairPool'+i)?.value);
               if(ids.some(x=>!x)||new Set(ids).size!==3)throw new Error('Selecione três Designers diferentes.');
