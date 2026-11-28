@@ -2023,6 +2023,18 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
     let globalState = {};
     let activeTab = 'home';
     let workroomCounterVisit = null;
+    // Firestore maps have no meaningful property order; arrays retain their order.
+    const fauSameStateValue=(a,b)=>{
+        if(Object.is(a,b))return true;
+        if(a==null||b==null||typeof a!==typeof b)return false;
+        if(typeof a!=='object')return false;
+        if(typeof a.isEqual==='function')return a.isEqual(b);
+        if(typeof b.isEqual==='function')return b.isEqual(a);
+        if(a instanceof Date||b instanceof Date)return a instanceof Date&&b instanceof Date&&a.getTime()===b.getTime();
+        if(Array.isArray(a)||Array.isArray(b))return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((v,i)=>fauSameStateValue(v,b[i]));
+        const ak=Object.keys(a).sort(),bk=Object.keys(b).sort();
+        return ak.length===bk.length&&ak.every((k,i)=>k===bk[i]&&fauSameStateValue(a[k],b[k]));
+    };
     const fauSalvationPoolReady=(theme,pool)=>Array.isArray(pool)&&pool.every(row=>row?.uid)&&new Set(pool.map(row=>row.uid)).size===pool.length&&
         (theme==='theme_tarantino'?pool.length===2:pool.length===3||(theme==='theme_traitors'&&pool.length===2));
     const isCastBallotOpen = state => !!state.rodada && !!state.liberado && !(Array.isArray(state.berlinda) && state.berlinda.length);
@@ -6780,7 +6792,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         const [fresh,published]=await Promise.all([tx.get(ref),tx.get(history)]);
                         const state=fresh.data()||{},oldPool=published.data()?.eliminationPool;
                         if(!isAdmin||String(state.rodada)!==round||state.urna!==true||fauSalvationPoolReady(state.themeId,state.berlinda)||state.resultsInputVersion!==version)throw new Error('O estado da urna mudou. Confira os indicados oficiais.');
-                        if(oldPool?.length&&JSON.stringify(oldPool)!==JSON.stringify(pool))throw new Error('Já existem indicados oficiais no histórico. Revise o registro.');
+                        if(oldPool?.length&&!fauSameStateValue(oldPool,pool))throw new Error('Já existem indicados oficiais no histórico. Revise o registro.');
                         tx.set(history,{eliminationPool:pool},{merge:true});
                         tx.update(ref,{berlinda:pool});
                     });
@@ -8902,7 +8914,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(published&&(!titles||previous.resultsComplete===true||state.rankingLiberado===true))throw new Error('O ranking desta Week já foi publicado.');
             if(!state.notasEncerradas)throw new Error('Encerre as notas dos jurados antes de publicar.');
             const sameRoundInputs=['fase','themeId','elimTipo','naoEliminatoria','semEliminacao','numSubmissoes','finalistUids','critiqueTopCount','critiqueBottomCount','resultsInputVersion','berlinda','castVoteLocks','salvationBallotVersion'];
-            if(sameRoundInputs.some(key=>JSON.stringify(state[key])!==JSON.stringify(context.state[key]))||
+            if(sameRoundInputs.some(key=>!fauSameStateValue(state[key],context.state[key]))||
               state.modos?.[context.round]!==context.state.modos?.[context.round])throw new Error('A apuração mudou. Confira os dados antes de confirmar novamente.');
             if(published!==!!officialRows||(published&&!sameResultRows(previous.rows,officialRows)))throw new Error('O ranking mudou. Recarregue antes de concluir a publicação.');
             if(titles&&(isCastBallotTypeOpen(state,'veto')||isCastBallotTypeOpen(state,'fdm')))throw new Error('Encerre as votações de Ícone e Fora de Moda antes de publicar os títulos.');
@@ -9295,7 +9307,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!officialRanking(history.data(),publicHistory.data()))throw new Error('Publique o ranking oficial antes de registrar os títulos.');
             if(previous.data()?.published===true)throw new Error('Os títulos desta rodada já foram registrados.');
             if(!state.notasEncerradas||isCastBallotTypeOpen(state,'veto')||isCastBallotTypeOpen(state,'fdm'))throw new Error('Encerre as notas e as votações de Ícone e Fora de Moda antes de registrar os títulos.');
-            if(state.resultsInputVersion!==context.state.resultsInputVersion||JSON.stringify(state.castVoteLocks)!==JSON.stringify(context.state.castVoteLocks))throw new Error('A apuração mudou. Recarregue os títulos.');
+            if(state.resultsInputVersion!==context.state.resultsInputVersion||!fauSameStateValue(state.castVoteLocks,context.state.castVoteLocks))throw new Error('A apuração mudou. Recarregue os títulos.');
             const eligible=new Set(history.data().rows.map(row=>row.uid));
             if(!eligible.has(d.icon)||!eligible.has(d.fora)||d.saved.some(uid=>!eligible.has(uid)))throw new Error('Selecione os títulos entre os Designers classificados na rodada.');
             tx.set(context.titles,{...d,round,published:true,updatedAt:now(),updatedBy:context.actor},{merge:true});
@@ -10171,7 +10183,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             if(!productionConfirm('CONFIRMAR o Bottom 3 do Resta Um? A berlinda será disponibilizada aos participantes quando a produção abrir a urna.'))return;
             await db.runTransaction(async tx=>{
                 const {state:fresh,twist}=await readTwistResult(tx,context,twistRef);
-                if(twist.phase!=='pending_confirmation'||JSON.stringify(twist)!==JSON.stringify(state)||fresh.urna||fresh.resultsEliminatedRound===context.round)throw new Error('A dinâmica ou a urna mudou. Recarregue o dossiê.');
+                if(twist.phase!=='pending_confirmation'||!fauSameStateValue(twist,state)||fresh.urna||fresh.resultsEliminatedRound===context.round)throw new Error('A dinâmica ou a urna mudou. Recarregue o dossiê.');
                 tx.update(roundStateRef,{berlinda:pool,urna:false});
                 tx.update(twistRef,{phase:'completed',pool,confirmedBy:context.actor,confirmedAt:firebase.firestore.FieldValue.serverTimestamp()});
             });
@@ -10333,7 +10345,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                             const decisionRef=db.doc(`tarantino_win_decisions/${context.round}`),auditRef=db.collection('auditoria_producao').doc();
                             await db.runTransaction(async tx=>{
                                 const {state,twist}=await readTwistResult(tx,context,twistRef),previous=await tx.get(decisionRef);
-                                if(state.urna||twist.phase!=='duel_ready'||JSON.stringify(twist.duel)!==JSON.stringify(data.duel)||previous.exists)throw new Error('O duelo mudou ou a decisão do WIN já foi registrada.');
+                                if(state.urna||twist.phase!=='duel_ready'||!fauSameStateValue(twist.duel,data.duel)||previous.exists)throw new Error('O duelo mudou ou a decisão do WIN já foi registrada.');
                                 tx.set(decisionRef,{winUid:win.uid,savedUid,recordedBy:context.actor,recordedAt:firebase.firestore.FieldValue.serverTimestamp()});
                                 writeResultAudit(tx,auditRef,context,'tarantino_win_tiebreak_recorded',{winUid:win.uid,savedUid});
                             });
@@ -10351,7 +10363,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const profileRef=db.doc(`perfis/${loser.uid}`),auditRef=db.collection('auditoria_producao').doc();
             await db.runTransaction(async tx=>{
                 const {state,twist}=await readTwistResult(tx,context,twistRef),profile=(await tx.get(profileRef)).data();
-                if(state.urna||twist.phase!=='duel_ready'||JSON.stringify(twist.duel)!==JSON.stringify(data.duel)||!profile||profile.out)throw new Error('O duelo mudou ou o OUT já foi registrado.');
+                if(state.urna||twist.phase!=='duel_ready'||!fauSameStateValue(twist.duel,data.duel)||!profile||profile.out)throw new Error('O duelo mudou ou o OUT já foi registrado.');
                 tx.update(profileRef,{out:true});
                 tx.update(twistRef,{phase:'completed',second:{uid:loser.uid,ate:loser.ate},survivor:{uid:winner.uid,ate:winner.ate},votes:{[a.uid]:va,[b.uid]:vb},tiebreak:tiebreak||null,completedBy:context.actor,completedAt:firebase.firestore.FieldValue.serverTimestamp()});
                 tx.update(roundStateRef,{resultsEliminatedRound:context.round});
@@ -10393,7 +10405,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const profileRef=db.doc(`perfis/${loser.uid}`),auditRef=db.collection('auditoria_producao').doc();
             await db.runTransaction(async tx=>{
                 const {twist}=await readTwistResult(tx,context,twistRef),profile=(await tx.get(profileRef)).data();
-                if(twist.phase!=='closed'||JSON.stringify(twist.verdict)!==JSON.stringify(st.verdict)||!profile||profile.out)throw new Error('O veredito mudou ou o OUT já foi registrado.');
+                if(twist.phase!=='closed'||!fauSameStateValue(twist.verdict,st.verdict)||!profile||profile.out)throw new Error('O veredito mudou ou o OUT já foi registrado.');
                 tx.update(profileRef,{out:true});
                 tx.update(twistRef,{phase:'eliminated',outUid:loser.uid,outAte:loser.ate,eliminatedBy:context.actor,eliminatedAt:firebase.firestore.FieldValue.serverTimestamp()});
                 tx.update(roundStateRef,{resultsEliminatedRound:context.round});
@@ -10428,7 +10440,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const auditRef=db.collection('auditoria_producao').doc();
                 await db.runTransaction(async tx=>{
                     const {twist}=await readTwistResult(tx,context,twistRef);
-                    if(twist.phase!=='judging'||JSON.stringify(twist.pool)!==JSON.stringify(st.pool))throw new Error('O julgamento mudou ou já foi encerrado.');
+                    if(twist.phase!=='judging'||!fauSameStateValue(twist.pool,st.pool))throw new Error('O julgamento mudou ou já foi encerrado.');
                     tx.update(twistRef,{phase:'closed',verdict:rows,closedBy:context.actor,closedAt:firebase.firestore.FieldValue.serverTimestamp()});
                     writeResultAudit(tx,auditRef,context,'rest_funeral_closed',{});
                 });
