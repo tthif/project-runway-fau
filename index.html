@@ -5100,9 +5100,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const person=rows.find(r=>String(r.uid||r.id||'')===uid);
           const cast=castResult.status==='fulfilled'?castResult.value.docs.find(d=>d.id===uid)?.data():null;
           const name=person?.ate||cast?.ate||'Designer';
+          const candidates=publications.filter(p=>roundKey(p.round)===roundKey(round)&&p.uid===uid&&fauArchiveImage(p.image));
+          const pair=archiveWeekNumber(round)===5&&candidates.length===2&&new Set(candidates.map(p=>Number(p.slot))).size===2&&candidates.every(p=>[1,2].includes(Number(p.slot)))?candidates.sort((x,y)=>Number(x.slot)-Number(y.slot)):[];
           const pub=findImage(round,uid);
           return `<article class="fau-shame-card rounded-xl overflow-hidden">
-            ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Look não identificado com segurança no arquivo público</div>`}
+            ${pair.length===2?`<div class="grid grid-cols-2">${pair.map((p,i)=>`<div><img src="${esc(p.image)}" loading="lazy" alt="Look ${i+1} de ${esc(name)}" class="w-full aspect-[3/4] object-cover fau-archive-img"><p class="text-center text-xs p-2">${i===0?"My Vision":"Another Point of View"}</p></div>`).join("")}</div>`:pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Look não identificado com segurança no arquivo público</div>`}
             <div class="p-4"><p class="text-[10px] tracking-widest fau-shame-label">FORA DE MODA · ${esc(weekLabel(round))}</p><h4 class="font-cinzel text-white mt-2">${esc(name)}</h4></div>
           </article>`;
         }).join('');
@@ -9289,8 +9291,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const resolved=await fauResolveIcon(round);
           $('#fauOfficialIcon').value=resolved.uid||'';
           $('#fauOfficialIcon').disabled=true;
+          const fora=await fauResolveForaPreview(round,await tallyVotes('fdm',round));
+          if(!old.data()?.published)$('#fauOfficialFora').value=fora.uid||'';
           const names=uid=>rows.find(r=>r.uid===uid)?.ate||uid;
-          $('#fauOfficialStatus').textContent=(resolved.provisional?'PRÉVIA CONFIDENCIAL · ':'')+'Ícone apurado automaticamente: '+(resolved.uid?names(resolved.uid):'Sem título')+' — '+resolved.reason+(resolved.tied.length>1?' · Empatados em votos: '+resolved.tied.map(names).join(', '):'')+'.';
+          $('#fauOfficialStatus').textContent=(resolved.provisional?'PRÉVIA CONFIDENCIAL · ':'')+'Ícone apurado automaticamente: '+(resolved.uid?names(resolved.uid):'Sem título')+' — '+resolved.reason+' · Fora de Moda: '+(fora.uid?names(fora.uid):'Aguardando definição')+(resolved.tied.length>1?' · Empatados em votos: '+resolved.tied.map(names).join(', '):'')+'.';
         });
         if ($('#fauOfficialCopy')) $('#fauOfficialCopy').onclick=safeExec(async()=>{
           const d=fauOfficialGet();const label=id=>Array.from($('#fauOfficialIcon')?.options||[]).find(o=>o.value===id)?.textContent||'Não atribuído';
@@ -9320,7 +9324,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             tx.set(context.titles,{...d,round,published:true,updatedAt:now(),updatedBy:context.actor},{merge:true});
             writeResultAudit(tx,auditRef,context,'official_titles_published',{round,icon:!!d.icon,fora:!!d.fora,saved:d.saved.length});
           });
-          $('#fauOfficialStatus').textContent='Títulos registrados. Cada Designer verá sua distinção no After Show.';
+          $('#fauOfficialStatus').textContent='Títulos registrados. Sincronizando looks liberados…';
+          try{const count=await archiveReleasedLooks(round,context.actor);$('#fauOfficialStatus').textContent='Títulos registrados. '+count+' novo(s) look(s) arquivado(s).';}catch(err){$('#fauOfficialStatus').textContent='Títulos registrados. Fotos pendentes: '+err.message+' Use Arquivar looks liberados.';}
         });
         // Revalida a etapa e as entregas na mesma transação que cria o registro público.
         const archiveReleasedLooks = async (round, actor) => {
