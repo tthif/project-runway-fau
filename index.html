@@ -8763,6 +8763,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             publicHistory:db.collection('ranking_historico_publico').doc(round),
             titles:db.collection('fau_titulos_publicos').doc(round)};
         };
+        const sameSalvationPool=(a,b)=>{
+          const normalize=pool=>Array.isArray(pool)?pool.map(row=>[row?.uid??null,row?.ate??null]):null;
+          return JSON.stringify(normalize(a))===JSON.stringify(normalize(b));
+        };
         const readResultState=async(tx,context)=>{
           const state=(await tx.get(roundStateRef)).data()||{};
           if(auth.currentUser?.uid!==context.actor||String(state.rodada)!==context.round)throw new Error('A sessão ou a rodada mudou. Atualize a página.');
@@ -9500,7 +9504,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 const historical=(await tx.get(context.publicHistory)).data();
                 if(!!state.urna===opening||state.themeId!==context.state.themeId||state.fase!==context.state.fase||
                   state.resultsInputVersion!==context.state.resultsInputVersion||state.salvationBallotVersion!==context.state.salvationBallotVersion||
-                  JSON.stringify(state.berlinda)!==JSON.stringify(context.state.berlinda))throw new Error('A urna mudou. Recarregue e confira os indicados.');
+                  !sameSalvationPool(state.berlinda,context.state.berlinda))throw new Error('A urna mudou. Recarregue e confira os indicados.');
                 if(opening&&(historical?.eliminatedByVote?.uid||state.resultsEliminatedRound===context.round))throw new Error('O veredito desta rodada já foi registrado. A urna não será reaberta.');
                 if(opening&&poolToOpen.length){
                     const historicalPool=historical?.eliminationPool||[];
@@ -11164,7 +11168,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         const [profile,history]=await Promise.all([tx.get(profileRef),tx.get(context.publicHistory)]);
                         const recorded=history.data()||{},eliminated=recorded.eliminatedByVotes||[recorded.eliminatedByVote].filter(Boolean);
                         if(state.urna||state.salvationBallotVersion!==context.state.salvationBallotVersion||state.elimDupla!==context.state.elimDupla||state.themeId!==context.state.themeId||
-                          JSON.stringify(state.berlinda)!==JSON.stringify(context.state.berlinda))throw new Error('A urna mudou. Apure novamente o OUT.');
+                          !sameSalvationPool(state.berlinda,context.state.berlinda))throw new Error('A urna mudou. Apure novamente o OUT.');
                         if(!profile.exists||profile.data().out||eliminated.some(row=>row.uid===item.uid)||eliminated.length>=(state.elimDupla?2:1))throw new Error('O OUT já foi registrado.');
                         const row={uid:item.uid,ate:item.ate,confirmedAt:now()};
                         tx.update(profileRef,{out:true});
