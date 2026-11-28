@@ -5030,11 +5030,13 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           }):[];
         const eliminatedCards=eliminated.map(p=>{
           const ownLooks=publications.filter(x=>x.uid===p.uid&&typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
-          const latest=ownLooks.sort((a,b)=>fauArchiveSort(b.round,a.round))[0];
-          const photo=latest?.image||p.fotoElenco||'';
           const exit=exitInfo(p);
+          const sameWeek=ownLooks.filter(x=>archiveWeekNumber(x.round)===exit.week);
+          const original=sameWeek.filter(x=>Number(x.slot)===1);
+          const latest=exit.week===5?(original.length===1?original[0]:null):sameWeek.sort((a,b)=>fauArchiveSort(b.round,a.round))[0];
+          const photo=latest?.image||p.fotoElenco||'';
           const exitLabel=exit.week!==null?`WEEK ${String(exit.week).padStart(2,'0')} · ${exit.reason}`:exit.reason;
-          return `<article class="fau-archive-out-card"><div class="fau-archive-out-photo">${photo?`<img src="${esc(photo)}" loading="lazy" alt="${esc(p.ate||'Designer')}" class="${latest?'':'fau-archive-out-portrait'}">`:`<div class="fau-archive-out-placeholder"><i class="fa-solid fa-user" aria-hidden="true"></i><span>${esc(p.ate||'Designer')}</span></div>`}</div><div class="p-4"><span class="fau-archive-out-tag">OUT · AUF WIEDERSEHEN</span><h4 class="font-cinzel text-white text-xl mt-2">${esc(p.ate||'Designer')}</h4><p class="text-xs text-gray-400 mt-2">${esc(exitLabel)}</p>${p.publicOutRealName?`<p class="text-xs text-fashion-gold mt-2">POR TRÁS DO DESIGNER: <strong>${esc(p.publicOutRealName)}</strong></p>`:''}</div></article>`;
+          return `<article class="fau-archive-out-card"><div class="fau-archive-out-photo">${photo?`<img src="${esc(photo)}" loading="lazy" alt="${esc(p.ate||'Designer')}" class="${latest?'':'fau-archive-out-portrait'}">`:`<div class="fau-archive-out-placeholder"><i class="fa-solid fa-user" aria-hidden="true"></i><span>${esc(p.ate||'Designer')}</span></div>`}</div><div class="p-4"><span class="fau-archive-out-tag">OUT · AUF WIEDERSEHEN</span><h4 class="font-cinzel text-white text-xl mt-2">${esc(p.ate||'Designer')}</h4><p class="text-xs text-gray-400 mt-2">${esc(exitLabel)}</p>${exit.week===5&&latest?`<p class="text-xs text-fashion-gold mt-2">MY VISION · ${esc(latest.title||"")}</p><details class="text-xs mt-2"><summary>Ver conceito</summary><p>${esc(latest.description||"")}</p></details>`:""}${p.publicOutRealName?`<p class="text-xs text-fashion-gold mt-2">POR TRÁS DO DESIGNER: <strong>${esc(p.publicOutRealName)}</strong></p>`:''}</div></article>`;
         }).join('');
         const castProfiles=castResult.status==='fulfilled'?castResult.value.docs.map(d=>({uid:d.id,...d.data()})):[];
         const roundMap=new Map();
@@ -5052,7 +5054,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         // Em desafios de múltiplos looks, a galeria não adivinha qual venceu.
         const findImage=(round,uid)=>{
           const candidates=publications.filter(x=>roundKey(x.round)===roundKey(round)&&x.uid===uid&&typeof x.image==='string'&&/^(https:\/\/|data:image\/(?:jpeg|png|webp);base64,)/i.test(x.image));
-          return candidates.length===1?candidates[0]:null;
+          const eligible=archiveWeekNumber(round)===5?candidates.filter(x=>Number(x.slot)===1):candidates;
+          return eligible.length===1?eligible[0]:null;
         };
         rounds.forEach(({round,rank,title})=>{
           const rows=Array.isArray(rank?.rows)?rank.rows:[];
@@ -5084,12 +5087,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           grouped.get(k).types.add(a.type);
         });
         const hall=[...grouped.values()].sort((a,b)=>fauArchiveSort(b.round,a.round)).map(a=>{
-          const candidates=publications.filter(p=>roundKey(p.round)===roundKey(a.round)&&p.uid===a.uid&&fauArchiveImage(p.image));
-          const pair=archiveWeekNumber(a.round)===5&&candidates.length===2&&new Set(candidates.map(p=>Number(p.slot))).size===2&&candidates.every(p=>[1,2].includes(Number(p.slot)))?candidates.sort((x,y)=>Number(x.slot)-Number(y.slot)):[];
           const pub=findImage(a.round,a.uid),types=[...a.types].map(t=>/^WIN$/i.test(t)?'Winner da Rodada':t).join(' + ');
           return `<article class="rounded-xl border border-fashion-gold/25 bg-fashion-950 overflow-hidden">
-            ${pair.length===2?`<div class="grid grid-cols-2">${pair.map((p,i)=>`<div><img src="${esc(p.image)}" loading="lazy" alt="Look ${i+1} de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img"><p class="text-center text-xs p-2">${i===0?"My Vision":"Another Point of View"}</p></div>`).join("")}</div>`:pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
-            <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4></div>
+            ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(a.name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Criação premiada · imagem não identificada com segurança</div>`}
+            <div class="p-4"><p class="text-[10px] tracking-widest text-fashion-gold">${esc(types)} · ${esc(weekLabel(a.round))}</p><h4 class="font-cinzel text-white mt-2">${esc(a.name)}</h4>${archiveWeekNumber(a.round)===5&&pub?`<p class="text-xs text-fashion-gold mt-2">MY VISION · ${esc(pub.title||"")}</p><details class="text-xs mt-2"><summary>Ver conceito</summary><p>${esc(pub.description||"")}</p></details>`:""}</div>
           </article>`;
         }).join('');
         // Hall of Shame: somente Fora de Moda oficialmente publicado.
@@ -5100,12 +5101,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
           const person=rows.find(r=>String(r.uid||r.id||'')===uid);
           const cast=castResult.status==='fulfilled'?castResult.value.docs.find(d=>d.id===uid)?.data():null;
           const name=person?.ate||cast?.ate||'Designer';
-          const candidates=publications.filter(p=>roundKey(p.round)===roundKey(round)&&p.uid===uid&&fauArchiveImage(p.image));
-          const pair=archiveWeekNumber(round)===5&&candidates.length===2&&new Set(candidates.map(p=>Number(p.slot))).size===2&&candidates.every(p=>[1,2].includes(Number(p.slot)))?candidates.sort((x,y)=>Number(x.slot)-Number(y.slot)):[];
           const pub=findImage(round,uid);
           return `<article class="fau-shame-card rounded-xl overflow-hidden">
-            ${pair.length===2?`<div class="grid grid-cols-2">${pair.map((p,i)=>`<div><img src="${esc(p.image)}" loading="lazy" alt="Look ${i+1} de ${esc(name)}" class="w-full aspect-[3/4] object-cover fau-archive-img"><p class="text-center text-xs p-2">${i===0?"My Vision":"Another Point of View"}</p></div>`).join("")}</div>`:pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Look não identificado com segurança no arquivo público</div>`}
-            <div class="p-4"><p class="text-[10px] tracking-widest fau-shame-label">FORA DE MODA · ${esc(weekLabel(round))}</p><h4 class="font-cinzel text-white mt-2">${esc(name)}</h4></div>
+            ${pub?`<img src="${esc(pub.image)}" loading="lazy" alt="Look publicado de ${esc(name)}" class="w-full aspect-[3/4] object-cover fau-archive-img">`:`<div class="aspect-[3/4] bg-fashion-900 flex items-center justify-center text-gray-400 text-xs text-center p-4">Look não identificado com segurança no arquivo público</div>`}
+            <div class="p-4"><p class="text-[10px] tracking-widest fau-shame-label">FORA DE MODA · ${esc(weekLabel(round))}</p><h4 class="font-cinzel text-white mt-2">${esc(name)}</h4>${archiveWeekNumber(round)===5&&pub?`<p class="text-xs text-fashion-gold mt-2">MY VISION · ${esc(pub.title||"")}</p><details class="text-xs mt-2"><summary>Ver conceito</summary><p>${esc(pub.description||"")}</p></details>`:""}</div>
           </article>`;
         }).join('');
         // Hall of Fashion: títulos em destaque primeiro; depois os demais
@@ -9350,7 +9349,11 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                 Promise.all(refs.map(({target})=>tx.get(target)))
               ]);
               let reveal=null;
-              if(current.themeId==='theme_beauty_eye')reveal=(await tx.get(db.doc(`beauty_dinamicas/${round}`))).data();
+              if(current.themeId==='theme_beauty_eye'){
+                reveal=(await tx.get(db.doc(`beauty_dinamicas/${round}`))).data();
+                const distribution=(await tx.get(db.doc(`beauty_dinamicas/${round}/private/distribution`))).data();
+                if(reveal&&Array.isArray(distribution?.assignments))reveal={...reveal,assignments:distribution.assignments};
+              }
               if(current.themeId==='theme_next_supreme')reveal=(await tx.get(db.doc(`supreme_etapas/${round}`))).data();
               let added=0;
               sources.forEach((doc,index)=>{
