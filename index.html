@@ -10833,7 +10833,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         ${unresolved?'Empate na definição do OUT. Registre o desempate oficial antes de confirmar.':toEliminate.map(e=>`<div>🚫 ${esc(e.ate)} ➔ OUT.</div>`).join('')}
                     </div>
                     <div class="flex gap-2">
-                        ${unresolved?`<div><p>Selecione quem fica OUT conforme a decisão oficial do WIN.</p>${boundary.map(x=>`<label class="block"><input type="checkbox" data-tie-out value="${esc(x.uid)}"> ${esc(x.ate)}</label>`).join('')}<button id="resolveOutTie" class="fau-command-btn">Registrar desempate</button></div>`:''}${toEliminate.map(e => `
+                        ${unresolved?`<div><p>Selecione quem fica OUT conforme a decisão oficial do WIN.</p>${boundary.map(x=>`<label class="block"><input type="checkbox" data-tie-out value="${esc(x.uid)}"> ${esc(x.ate)}</label>`).join('')}<button id="resolveOutTie" class="fau-command-btn">Registrar desempate</button><div id="tieOutConfirmation" class="mt-3"></div></div>`:''}${toEliminate.map(e => `
                             <button data-exec="elim|${e.uid}" class="bg-fashion-red text-white px-3 py-1.5 rounded uppercase font-bold text-[10px]">
                                 Confirmar Eliminação de ${esc(e.ate)}
                             </button>
@@ -10841,13 +10841,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     </div>
                 </div>
             `;
+            output.querySelectorAll('[data-tie-out]').forEach(input=>input.addEventListener('change',()=>{eliminationPreview=null;output.querySelector('#tieOutConfirmation').innerHTML='';}));
             output.querySelector('#resolveOutTie')?.addEventListener('click',safeExec(async()=>{
                 const ids=[...output.querySelectorAll('[data-tie-out]:checked')].map(x=>x.value);
                 if(ids.length!==size-fixed.length||!ids.every(id=>boundary.some(x=>x.uid===id)))throw new Error('Selecione a quantidade correta de eliminados.');
-                if(!productionConfirm('Confirma a decisão oficial do WIN?'))return;
+                if(!productionConfirm('Confirma a decisão oficial do WIN: OUT de '+boundary.filter(x=>ids.includes(x.uid)).map(x=>x.ate).join(', ')+'?'))return;
                 const rows=[...fixed,...boundary.filter(x=>ids.includes(x.uid))];
                 eliminationPreview={context,rows};
-                output.querySelector('#resolveOutTie').parentElement.innerHTML=rows.map(e=>`<button data-exec="elim|${esc(e.uid)}" class="fau-command-btn fau-command-btn-critical">Confirmar OUT de ${esc(e.ate)}</button>`).join(' ');
+                output.querySelector('#tieOutConfirmation').innerHTML=rows.map(e=>`<button data-exec="elim|${esc(e.uid)}" class="fau-command-btn fau-command-btn-critical">Confirmar OUT de ${esc(e.ate)}</button>`).join(' ');
             }));
         });
 
