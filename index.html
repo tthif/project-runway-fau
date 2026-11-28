@@ -10791,6 +10791,10 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
         $('#btnApurarBerlinda').onclick = safeExec(async () => {
             const context=resultContext();
             eliminationPreview=null;
+            const output=$('#adminOutput');
+            for(let el=output;el&&el!==document.body;el=el.parentElement){el.classList.remove('hidden');el.removeAttribute('hidden');if(el.tagName==='DETAILS')el.open=true;}
+            output.innerHTML='Apurando votos…';
+            output.scrollIntoView({block:'center'});
             if(context.state.urna)throw new Error('Encerre a urna de salvação antes de apurar o OUT.');
             if(globalState.themeId==='w01_first_garment') { $('#adminOutput').innerHTML = '<div class="p-4 border border-fashion-gold rounded text-fashion-gold">🍎 THE FIRST GARMENT: estreia sem eliminação. Publique as notas e o ranking normalmente; ninguém vai para a berlinda.</div>'; return; }
             if(globalState.themeId==='theme_tarantino') throw new Error('Tarantino usa o First Kill e o Last Stand. Utilize os controles próprios da produção.');
@@ -10817,6 +10821,8 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
             const unresolved=(votes[cutoff.uid]||0)===(votes[next.uid]||0)&&key(cutoff.uid)===key(next.uid);
             const toEliminate=unresolved?[]:sorted.slice(0,size);
             eliminationPreview={context,rows:toEliminate};
+            const boundary=sorted.filter(x=>(votes[x.uid]||0)===(votes[cutoff.uid]||0)&&key(x.uid)===key(cutoff.uid));
+            const fixed=sorted.filter(x=>(votes[x.uid]||0)<(votes[cutoff.uid]||0)||((votes[x.uid]||0)===(votes[cutoff.uid]||0)&&key(x.uid)<key(cutoff.uid)));
 
             $('#adminOutput').innerHTML = `
                 <div class="space-y-3">
@@ -10827,7 +10833,7 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                         ${unresolved?'Empate na definição do OUT. Registre o desempate oficial antes de confirmar.':toEliminate.map(e=>`<div>🚫 ${esc(e.ate)} ➔ OUT.</div>`).join('')}
                     </div>
                     <div class="flex gap-2">
-                        ${toEliminate.map(e => `
+                        ${unresolved?`<div><p>Selecione quem fica OUT conforme a decisão oficial do WIN.</p>${boundary.map(x=>`<label class="block"><input type="checkbox" data-tie-out value="${esc(x.uid)}"> ${esc(x.ate)}</label>`).join('')}<button id="resolveOutTie" class="fau-command-btn">Registrar desempate</button></div>`:''}${toEliminate.map(e => `
                             <button data-exec="elim|${e.uid}" class="bg-fashion-red text-white px-3 py-1.5 rounded uppercase font-bold text-[10px]">
                                 Confirmar Eliminação de ${esc(e.ate)}
                             </button>
@@ -10835,6 +10841,14 @@ body:has(#fauUnifiedOperations) #fauOptimizeBtn{display:none!important}
                     </div>
                 </div>
             `;
+            output.querySelector('#resolveOutTie')?.addEventListener('click',safeExec(async()=>{
+                const ids=[...output.querySelectorAll('[data-tie-out]:checked')].map(x=>x.value);
+                if(ids.length!==size-fixed.length||!ids.every(id=>boundary.some(x=>x.uid===id)))throw new Error('Selecione a quantidade correta de eliminados.');
+                if(!productionConfirm('Confirma a decisão oficial do WIN?'))return;
+                const rows=[...fixed,...boundary.filter(x=>ids.includes(x.uid))];
+                eliminationPreview={context,rows};
+                output.querySelector('#resolveOutTie').parentElement.innerHTML=rows.map(e=>`<button data-exec="elim|${esc(e.uid)}" class="fau-command-btn fau-command-btn-critical">Confirmar OUT de ${esc(e.ate)}</button>`).join(' ');
+            }));
         });
 
         $('#btnCalcTop5').onclick = safeExec(async () => {
